@@ -9,7 +9,7 @@ English | [中文](README.md)
 
 ## Description
 
-C41811.Config is a powerful and easy-to-use configuration management package designed to simplify reading and writing configuration files. It supports several popular configuration formats, including JSON, YAML, and Pickle, to meet the needs of different projects. With its modular design, C41811.Config provides a reliable configuration processing solution to help developers quickly build and maintain high-quality applications.
+C41811.Config is a powerful and easy-to-use configuration management package designed to simplify reading and writing configuration files. It supports several popular configuration formats, including JSON, YAML, TOML and Pickle, to meet the needs of different projects. With its modular design, C41811.Config provides a reliable configuration processing solution to help developers quickly build and maintain high-quality applications.
 
 ## Installation
 
@@ -20,7 +20,12 @@ pip install C41811.Config
 ## Quick Start
 
 ``` python
+from C41811.Config import JsonSL
+from C41811.Config import DefaultConfigPool
 from C41811.Config import requireConfig
+
+
+JsonSL.registerTo(DefaultConfigPool)
 
 cfg = reqireConfig(
     '', "Hello World.json",

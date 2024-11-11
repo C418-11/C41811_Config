@@ -17,6 +17,9 @@ C = TypeVar("C", bound=ABCConfig)
 
 
 class JsonSL(ABCConfigSL):
+    """
+    json格式处理器
+    """
 
     @property
     @override

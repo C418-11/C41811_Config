@@ -22,6 +22,9 @@ C = TypeVar("C", bound=ABCConfig)
 
 
 class TomlSL(ABCConfigSL):
+    """
+    Toml格式处理器
+    """
 
     @property
     @override

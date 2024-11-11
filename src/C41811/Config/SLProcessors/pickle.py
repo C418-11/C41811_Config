@@ -17,6 +17,9 @@ C = TypeVar("C", bound=ABCConfig)
 
 
 class PickleSL(ABCConfigSL):
+    """
+    pickle格式处理器
+    """
 
     @property
     @override

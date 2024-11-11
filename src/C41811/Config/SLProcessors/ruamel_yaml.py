@@ -21,6 +21,11 @@ C = TypeVar("C", bound=ABCConfig)
 
 
 class RuamelYamlSL(ABCConfigSL):
+    """
+    基于ruamel.yaml的yaml处理器
+
+    默认尝试最大限度保留yaml中的额外信息(如注释
+    """
     yaml = YAML(typ="rt", pure=True)
 
     @property

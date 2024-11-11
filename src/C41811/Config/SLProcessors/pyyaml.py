@@ -22,7 +22,7 @@ C = TypeVar("C", bound=ABCConfig)
 
 class PyYamlSL(ABCConfigSL):
     """
-    基于PyYaml的配置文件处理器
+    基于PyYaml的yaml处理器
     """
 
     @property

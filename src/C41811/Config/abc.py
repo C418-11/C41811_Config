@@ -161,15 +161,27 @@ class ABCConfigData(ABC):
         return [(k, (type(self)(v) if isinstance(v, Mapping) else v)) for k, v in copied_items]
 
     def __getitem__(self, key):
+        """
+        getPathValue的快捷方式
+        """
         return self.getPathValue(key)
 
     def __setitem__(self, key, value) -> None:
+        """
+        setPathValue的快捷方式
+        """
         self.setPathValue(key, value)
 
     def __delitem__(self, key) -> None:
+        """
+        deletePath的快捷方式
+        """
         self.deletePath(key)
 
     def __contains__(self, key) -> bool:
+        """
+        hasPath的快捷方式
+        """
         return self.hasPath(key)
 
     def __eq__(self, other):
@@ -199,6 +211,9 @@ class ABCConfigData(ABC):
 
 
 class ABCSLProcessorPool(ABC):
+    """
+    SL处理器池
+    """
     def __init__(self, root_path: str = "./.config"):
         self._root_path = root_path
         self.SLProcessor: dict[str, ABCConfigSL] = {}  # SaveLoadProcessor {RegName: Processor}
@@ -442,11 +457,11 @@ class ABCConfigPool(ABCSLProcessorPool):
         :type file_name: str
         :param required: 必须的配置
         :type required: list[str] | dict[str, Any]
-        :param args: 详见RequireConfigDecorator.__init__
-        :param kwargs: 详见RequireConfigDecorator.__init__
+        :param args: 详见main.RequireConfigDecorator.__init__
+        :param kwargs: 详见main.RequireConfigDecorator.__init__
 
-        :return: RequireConfigDecorator
-        :rtype: RequireConfigDecorator
+        :return: main.RequireConfigDecorator
+        :rtype: main.RequireConfigDecorator
         """
 
 
