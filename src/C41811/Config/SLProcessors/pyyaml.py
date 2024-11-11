@@ -75,10 +75,6 @@ class PyYamlSL(ABCConfigSL):
         return obj
 
 
-def _register():
-    return PyYamlSL()
-
-
 __all__ = (
     "PyYamlSL",
 )

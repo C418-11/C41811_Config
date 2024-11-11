@@ -37,13 +37,6 @@ setup(
             "toml",
         ],
     },
-    entry_points={
-        "C41811.Config.SLProcessors": [
-            f"{name}=C41811.Config.SLProcessors.{name}:_register" for name in [
-                "json", "pickle", "pyyaml", "ruamel_yaml", "toml"
-            ]
-        ]
-    },
     platforms="any",
     classifiers=[
         "Development Status :: 3 - Alpha",

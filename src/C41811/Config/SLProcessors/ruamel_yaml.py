@@ -76,10 +76,6 @@ class RuamelYamlSL(ABCConfigSL):
         return obj
 
 
-def _register():
-    return RuamelYamlSL()
-
-
 __all__ = (
     "RuamelYamlSL",
 )
