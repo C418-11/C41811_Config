@@ -346,15 +346,16 @@ class ABCConfig(ABC):
         return True
 
     def __repr__(self):
-        fmt_str: list[str] = []
+        fmt_ls: list[str] = []
         for field in ["_config_format", "_data", "_namespace", "_file_name"]:
             field_value = getattr(self, field)
             if field_value is None:
                 continue
 
-            fmt_str.append(f"{field[1:]}={field_value!r}")
+            fmt_ls.append(f"{field[1:]}={field_value!r}")
 
-        return f"{self.__class__.__name__}({", ".join(fmt_str)})"
+        fmt_str = ", ".join(fmt_ls)
+        return f"{self.__class__.__name__}({fmt_str})"
 
 
 class ABCConfigPool(ABCSLProcessorPool):
