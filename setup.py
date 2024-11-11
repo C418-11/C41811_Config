@@ -5,7 +5,7 @@
 from setuptools import find_packages
 from setuptools import setup
 
-from src import __version__
+from C41811.Config import __version__
 
 setup(
     name="C41811.Config",
