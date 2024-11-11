@@ -37,7 +37,7 @@ html_favicon = "./_static/favicon.png"
 # https://sphinx-autoapi.readthedocs.io/en/latest/reference/config.html
 extensions.append('autoapi.extension')
 
-autoapi_dirs = ["../C41811"]
+autoapi_dirs = ["../src/"]
 # autoapi_ignore = ["*/tests/*", "*/build/*", "*/.venv*", "*/.git/*", "*/docs/conf.py"]
 autoapi_member_order = "groupwise"
 autoapi_python_class_content = "both"

@@ -2,10 +2,10 @@
 # cython: language_level = 3
 
 
-from setuptools import find_packages
+from setuptools import find_namespace_packages
 from setuptools import setup
 
-from C41811.Config import __version__
+from src.C41811.Config import __version__
 
 setup(
     name="C41811.Config",
@@ -22,8 +22,8 @@ setup(
         "Source Code": "https://github.com/C418-11/C41811_Config",
         "Documentation": "https://C41811Config.readthedocs.io",
     },
-    packages=find_packages(),
-    # package_dir={"": "src"},
+    packages=find_namespace_packages("./src/"),
+    package_dir={"": "src"},
     python_requires=">=3.12",
     extra_require={
         "docs": [
