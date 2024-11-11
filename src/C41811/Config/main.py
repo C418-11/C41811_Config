@@ -337,7 +337,7 @@ class ConfigPool(ABCConfigPool):
             *args,
             **kwargs,
     ):
-        return RequireConfig(self, namespace, file_name, RequiredKey(required), *args, **kwargs)
+        return RequireConfigDecorator(self, namespace, file_name, RequiredKey(required), *args, **kwargs)
 
     def __getitem__(self, item):
         return deepcopy(self.configs[item])
@@ -350,7 +350,7 @@ class ConfigPool(ABCConfigPool):
         return f"{self.__class__.__name__}({self.configs!r})"
 
 
-class RequireConfig:
+class RequireConfigDecorator:
     """
     配置获取器，可作装饰器使用
     """
@@ -485,7 +485,7 @@ __all__ = (
     "RequiredKey",
     "Config",
     "ConfigPool",
-    "RequireConfig",
+    "RequireConfigDecorator",
 
     "DefaultConfigPool",
     "requireConfig",
