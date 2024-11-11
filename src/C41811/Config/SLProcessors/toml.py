@@ -17,7 +17,6 @@ try:
 except ImportError:
     raise ImportError("toml is not installed. Please install it with `pip install toml`") from None
 
-
 C = TypeVar("C", bound=ABCConfig)
 
 

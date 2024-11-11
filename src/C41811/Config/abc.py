@@ -3,7 +3,8 @@
 
 
 import os
-from abc import ABC, abstractmethod
+from abc import ABC
+from abc import abstractmethod
 from copy import deepcopy
 from typing import Any
 from typing import Mapping
@@ -212,6 +213,7 @@ class ABCSLProcessorPool(ABC):
     """
     SL处理器池
     """
+
     def __init__(self, root_path: str = "./.config"):
         self.SLProcessor: dict[str, ABCConfigSL] = {}  # SaveLoadProcessor {RegName: Processor}
         self.FileExtProcessor: dict[str, set[str]] = {}  # {FileExt: {RegName}}

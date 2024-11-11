@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level = 3
 
+import configparser
 from typing import Optional
 from typing import TypeVar
 from typing import override
@@ -9,7 +10,6 @@ from ..abc import ABCConfig
 from ..abc import ABCConfigSL
 from ..errors import FailedProcessConfigFileError
 from ..main import ConfigData
-import configparser
 
 C = TypeVar("C", bound=ABCConfig)
 
