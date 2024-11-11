@@ -203,7 +203,7 @@ class RequiredKey:
             if (type(default) not in self.TypingType) and issubclass(_type, Mapping) and isinstance(value, type(data)):
                 value = value.data
 
-            if not isinstance(value, _type):
+            if not isinstance(value, _type):  # todo 替换成专门的类型检查器
                 path_chunks = path.split(data.sep_char)
                 raise ConfigDataTypeError(
                     path, data.sep_char, path_chunks[-1], len(path_chunks) - 1, _type, type(value)

@@ -9,12 +9,6 @@ import sys as _sys
 if _sys.version_info < (3, 12):
     raise RuntimeError("Python version must be >= 3.12")
 
+from .SLProcessors import *
 from .main import *
-from .errors import *
-
-__all__ = (
-    "abc",
-    "errors",
-    "main",
-    "__version__",
-)
+from . import abc

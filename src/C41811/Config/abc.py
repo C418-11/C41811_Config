@@ -222,7 +222,7 @@ class ABCConfig(ABC):
     ) -> None:
         """
         :param config_data: 配置数据
-        :type config_data: ConfigData
+        :type config_data: ABCConfigData
         :param namespace: 文件命名空间
         :type namespace: Optional[str]
         :param file_name: 文件名
@@ -267,7 +267,7 @@ class ABCConfig(ABC):
         保存配置到文件系统
 
         :param config_pool: 配置池
-        :type config_pool: ABCConfigPool
+        :type config_pool: ABCSLProcessorPool
         :param namespace: 文件命名空间
         :type namespace: Optional[str]
         :param file_name: 文件名
@@ -293,7 +293,7 @@ class ABCConfig(ABC):
         从文件系统加载配置
 
         :param config_pool: 配置池
-        :type config_pool: ABCConfigPool
+        :type config_pool: ABCSLProcessorPool
         :param namespace: 文件命名空间
         :type namespace: str
         :param file_name: 文件名
@@ -473,7 +473,7 @@ class ABCConfigSL(ABC):
         注册到配置池中
 
         :param config_pool: 配置池
-        :type :type config_pool: ABCConfigPool
+        :type :type config_pool: ABCSLProcessorPool
         """
 
         config_pool.SLProcessor[self.regName] = self

@@ -12,6 +12,7 @@ from ..errors import FailedProcessConfigFileError
 from ..main import ConfigData
 
 try:
+    # noinspection PyPackageRequirements, PyUnresolvedReferences
     import yaml
 except ImportError:
     raise ImportError("PyYaml is not installed. Please install it with `pip install PyYaml`") from None

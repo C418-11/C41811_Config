@@ -30,7 +30,12 @@ setup(
             "sphinx",
             "sphinx-autoapi",
             "furo",
-        ]
+        ],
+        "SLProcessorRequirements": [
+            "PyYAML",
+            "ruamel.yaml",
+            "toml",
+        ],
     },
     platforms="any",
     classifiers=[

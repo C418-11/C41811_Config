@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # cython: language_level = 3
 
-
 from typing import Optional
 from typing import TypeVar
 from typing import override
@@ -10,28 +9,26 @@ from ..abc import ABCConfig
 from ..abc import ABCConfigSL
 from ..errors import FailedProcessConfigFileError
 from ..main import ConfigData
-
-try:
-    # noinspection PyPackageRequirements, PyUnresolvedReferences
-    from ruamel.yaml import YAML
-except ImportError:
-    raise ImportError("ruamel.yaml is not installed. Please install it with `pip install ruamel.yaml`") from None
+import configparser
 
 C = TypeVar("C", bound=ABCConfig)
 
 
-class RuamelYamlSL(ABCConfigSL):
-    yaml = YAML(typ="rt", pure=True)
+class ConfigParserSL(ABCConfigSL):
+    """
+    未完成 TODO
+    """  # todo
+    _parser = configparser.ConfigParser
 
     @property
     @override
     def regName(self) -> str:
-        return "ruamel_yaml"
+        return "configparser"
 
     @property
     @override
     def fileExt(self) -> list[str]:
-        return [".yaml"]
+        return [".ini", ".properties", ".cfg"]
 
     @override
     def save(
@@ -44,11 +41,13 @@ class RuamelYamlSL(ABCConfigSL):
             **kwargs
     ) -> None:
         file_path = self._getFilePath(config, root_path, namespace, file_name)
-        with open(file_path, "w", encoding="utf-8") as f:
-            try:
-                self.yaml.dump(config.data.data, f)
-            except Exception as e:
-                raise FailedProcessConfigFileError(e) from e
+        config_data = self._parser()
+        try:
+            config_data.read_dict(config.data.data)
+            with open(file_path, "w", encoding="utf-8") as f:
+                config_data.write(f)
+        except Exception as e:
+            raise FailedProcessConfigFileError(e) from e
 
     @override
     def load(
@@ -60,17 +59,17 @@ class RuamelYamlSL(ABCConfigSL):
             *args,
             **kwargs
     ) -> C:
-        with open(self._norm_join(root_path, namespace, file_name), 'r', encoding="utf-8") as f:
-            try:
-                data = self.yaml.load(f)
-            except Exception as e:
-                raise FailedProcessConfigFileError(e) from e
-
-        obj = config_cls(ConfigData(data), namespace=namespace, file_name=file_name, config_format=self.regName)
+        file_path = self._getFilePath(config_cls, root_path, namespace, file_name)
+        data = self._parser()
+        try:
+            data.read(file_path, encoding="utf-8")
+            obj = config_cls(ConfigData(data), namespace=namespace, file_name=file_name, config_format=self.regName)
+        except Exception as e:
+            raise FailedProcessConfigFileError(e) from e
 
         return obj
 
 
 __all__ = (
-    "RuamelYamlSL",
+    "ConfigParserSL",
 )

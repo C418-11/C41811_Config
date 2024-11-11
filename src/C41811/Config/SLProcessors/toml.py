@@ -13,25 +13,25 @@ from ..main import ConfigData
 
 try:
     # noinspection PyPackageRequirements, PyUnresolvedReferences
-    from ruamel.yaml import YAML
+    import toml
 except ImportError:
-    raise ImportError("ruamel.yaml is not installed. Please install it with `pip install ruamel.yaml`") from None
+    raise ImportError("toml is not installed. Please install it with `pip install toml`") from None
+
 
 C = TypeVar("C", bound=ABCConfig)
 
 
-class RuamelYamlSL(ABCConfigSL):
-    yaml = YAML(typ="rt", pure=True)
+class TomlSL(ABCConfigSL):
 
     @property
     @override
     def regName(self) -> str:
-        return "ruamel_yaml"
+        return "toml"
 
     @property
     @override
     def fileExt(self) -> list[str]:
-        return [".yaml"]
+        return [".toml"]
 
     @override
     def save(
@@ -46,7 +46,7 @@ class RuamelYamlSL(ABCConfigSL):
         file_path = self._getFilePath(config, root_path, namespace, file_name)
         with open(file_path, "w", encoding="utf-8") as f:
             try:
-                self.yaml.dump(config.data.data, f)
+                toml.dump(config.data.data, f)
             except Exception as e:
                 raise FailedProcessConfigFileError(e) from e
 
@@ -62,7 +62,7 @@ class RuamelYamlSL(ABCConfigSL):
     ) -> C:
         with open(self._norm_join(root_path, namespace, file_name), 'r', encoding="utf-8") as f:
             try:
-                data = self.yaml.load(f)
+                data = toml.load(f)
             except Exception as e:
                 raise FailedProcessConfigFileError(e) from e
 
@@ -72,5 +72,5 @@ class RuamelYamlSL(ABCConfigSL):
 
 
 __all__ = (
-    "RuamelYamlSL",
+    "TomlSL",
 )
