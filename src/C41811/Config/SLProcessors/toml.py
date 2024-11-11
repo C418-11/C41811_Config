@@ -71,6 +71,10 @@ class TomlSL(ABCConfigSL):
         return obj
 
 
+def _register():
+    return TomlSL()
+
+
 __all__ = (
     "TomlSL",
 )

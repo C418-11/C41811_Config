@@ -72,6 +72,10 @@ class JsonSL(ABCConfigSL):
         return obj
 
 
+def _register():
+    return JsonSL()
+
+
 __all__ = (
     "JsonSL",
 )

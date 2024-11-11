@@ -72,6 +72,10 @@ class PickleSL(ABCConfigSL):
         return obj
 
 
+def _register():
+    return PickleSL()
+
+
 __all__ = (
     "PickleSL",
 )

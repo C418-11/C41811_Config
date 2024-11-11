@@ -3,7 +3,9 @@
 
 
 import os
-from abc import ABC, abstractmethod
+import warnings
+from abc import ABC
+from abc import abstractmethod
 from copy import deepcopy
 from typing import Any
 from typing import Mapping
@@ -198,13 +200,46 @@ class ABCConfigData(ABC):
 
 class ABCSLProcessorPool(ABC):
     def __init__(self, root_path: str = "./.config"):
+        self._root_path = root_path
         self.SLProcessor: dict[str, ABCConfigSL] = {}  # SaveLoadProcessor {RegName: Processor}
         self.FileExtProcessor: dict[str, set[str]] = {}  # {FileExt: {RegName}}
-        self._root_path = root_path
+        self.ProcessorPlugins: dict[str, ABCConfigSL] = {}  # {PluginName: Processor}
+        self._load_processor_plugins()
 
     @property
     def root_path(self) -> str:
         return self._root_path
+
+    def _load_processor_plugins(self) -> None:
+        """
+        从入口点C41811.Config.SLProcessors中寻找并注册SL处理器
+        """
+        try:
+            from pkg_resources import iter_entry_points
+        except ImportError:
+            return
+
+        for register in iter_entry_points("C41811.Config.SLProcessors"):
+            sl_processor = register.load()
+            if register.name in self.ProcessorPlugins:
+                warnings.warn(
+                    f"Repeat plugin name '{register.name}'"  # todo 优化提示文本
+                )
+            self.ProcessorPlugins[register.name] = sl_processor
+
+    def enable_plugin(self, name: str) -> None:
+        """
+        启用插件
+
+        :param name: 插件名
+        :type name: str
+        """
+
+        if name not in self.ProcessorPlugins:
+            plugin_names = ", ".join(self.ProcessorPlugins)
+            raise KeyError(f"Plugin name '{name}' not found (archive plugins '{plugin_names}')")  # todo 优化提示文本
+
+        self.ProcessorPlugins[name].registerTo(self)
 
 
 class ABCConfig(ABC):
