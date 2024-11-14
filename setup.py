@@ -25,8 +25,8 @@ setup(
     packages=find_namespace_packages("./src/"),
     package_dir={"": "src"},
     python_requires=">=3.12",
-    requires=[
-        "pydantic(>2.10.0)"
+    install_requires=[
+        'pydantic~=2.10.0b1',
     ],
     extra_require={
         "docs": [
