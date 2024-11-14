@@ -4,6 +4,7 @@
 from collections import OrderedDict
 from collections.abc import Mapping
 from copy import deepcopy
+from typing import MutableMapping
 from unittest import TestCase
 from unittest import main
 
@@ -16,8 +17,8 @@ from src.C41811.Config.errors import RequiredKeyNotFoundError
 
 
 class ReadOnlyMapping(Mapping):
-    def __init__(self, *args, **kwargs):
-        self._data = OrderedDict(*args, **kwargs)
+    def __init__(self, dictionary: MutableMapping):
+        self._data = dictionary
 
     def __getitem__(self, __key):
         return self._data[__key]
