@@ -4,26 +4,37 @@
 import functools
 import inspect
 import os.path
+import re
+import types
+import warnings
+from collections import OrderedDict
 from collections.abc import Mapping
 from collections.abc import MutableMapping
 from copy import deepcopy
-from types import UnionType
-from typing import Any
+from enum import Enum
+from typing import Any, TypeVar
 from typing import Callable
 from typing import Iterable
+from typing import NamedTuple
 from typing import Optional
 from typing import Self
 from typing import override
 
-from .abc import *
-from .errors import *
+from pydantic import BaseModel, ValidationError
+from pydantic import create_model
+# noinspection PyProtectedMember
+from pydantic.fields import FieldInfo
 
-
-def _is_method(func):
-    arguments = inspect.getargs(func.__code__).args
-    if len(arguments) < 1:
-        return False
-    return arguments[0] in {"self", "cls"}
+from .abc import ABCConfigData
+from .abc import ABCConfig
+from .abc import ABCConfigPool
+from .abc import ABCSLProcessorPool
+from .errors import ConfigOperate
+from .errors import ConfigDataTypeError
+from .errors import UnsupportedConfigFormatError
+from .errors import RequiredKeyNotFoundError
+from .errors import FailedProcessConfigFileError
+from .errors import UnknownErrorDuringValidate
 
 
 class ConfigData(ABCConfigData):
@@ -91,7 +102,7 @@ class ConfigData(ABCConfigData):
             if now_path not in now_data:
                 if not allow_create:
                     raise RequiredKeyNotFoundError(path, self._sep_char, now_path, path_index, ConfigOperate.Write)
-                now_data[now_path] = {}
+                now_data[now_path] = type(self._data)()
 
             if last_path is None:
                 now_data[now_path] = value
@@ -134,33 +145,222 @@ class ConfigData(ABCConfigData):
         except RequiredKeyNotFoundError:
             return default
 
+    @override
+    def set_default(self, path: str, default=None, *, get_raw: bool = False) -> Any:
+        try:
+            return self.getPathValue(path, get_raw=get_raw)
+        except RequiredKeyNotFoundError:
+            self.setPathValue(path, default)
+            return default
+
+
+class ValidatorTypes(Enum):
+    """
+    验证器类型
+    """
+    DEFAULT = None
+    PYDANTIC = "pydantic"
+
+
+class ValidatorConfig(NamedTuple):
+    """
+    验证器配置
+    """
+    allow_create: bool
+    ignore_missing: bool
+
+
+def _fill_not_exits(raw_obj: ABCConfigData, obj: ABCConfigData):
+    diff_keys = obj.keys(recursive=True) - raw_obj.keys(recursive=True)
+    for key in diff_keys:
+        raw_obj[key] = obj[key]
+
+
+def _process_pydantic_exceptions(err: ValidationError, raw_data: ABCConfigData) -> Exception:
+    e = err.errors()[0]
+
+    locate = list(e["loc"])
+    for i, path in enumerate(locate):
+        if isinstance(path, str):
+            pass
+        elif isinstance(path, int):
+            locate[i] = f"$$Index$[{path}]$"
+        else:
+            raise UnknownErrorDuringValidate("Cannot convert pydantic index to string") from err
+
+    kwargs: dict[str, Any] = dict(
+        key=raw_data.sep_char.join(locate),
+        sep_char=raw_data.sep_char,
+        current_key=locate[-1],
+        index=len(locate) - 1
+    )
+
+    if e["type"] == "missing":
+        err_type = RequiredKeyNotFoundError
+        kwargs["operate"] = ConfigOperate.Read
+    elif e["type"] == "model_type":
+        err_type = ConfigDataTypeError
+        processed_msg = re.match(r"Input should be (.*)", e["msg"]).group(1)
+        kwargs["required_type"] = processed_msg
+        kwargs["now_type"] = type(e["input"])
+    elif e["type"] == "int_type":
+        err_type = ConfigDataTypeError
+        kwargs["required_type"] = int
+        kwargs["now_type"] = type(e["input"])
+    elif e["type"] == "int_parsing":
+        err_type = ConfigDataTypeError
+        kwargs["required_type"] = int
+        kwargs["now_type"] = e["input"]
+    elif e["type"] == "string_type":
+        err_type = ConfigDataTypeError
+        kwargs["required_type"] = str
+        kwargs["now_type"] = type(e["input"])
+    else:
+        raise UnknownErrorDuringValidate(**kwargs, error=e) from err
+
+    return err_type(**kwargs)
+
+
+D = TypeVar('D', bound=ABCConfigData)
+
+
+def _default_validator(validator: Iterable[str] | Mapping[str, Any], cfg: ValidatorConfig) -> Callable[[D], D]:
+    """
+    默认的验证器工厂, 从iterable或mapping中生成验证器
+
+    :param validator: 用于生成验证器的数据
+    :type validator: Iterable[str] | Mapping[str, Any]
+    :param cfg: 验证器配置
+    :type cfg: ValidatorConfig
+    """
+    validator = deepcopy(validator)
+
+    class IgnoreMissing:
+        _instance = None
+
+        def __new__(cls, *args, **kwargs):
+            if cls._instance is None:
+                cls._instance = super().__new__(cls)
+            return cls._instance
+
+        def __str__(self):
+            return "<IgnoreMissing>"
+
+    def _fmt_mapping_key(data: Mapping[str, Any], sep_char: str) -> Mapping[str, Any]:
+        fmt_data = ConfigData(OrderedDict(), sep_char=sep_char)
+        for key, value in data.items():
+            fmt_data[key] = value
+
+        return fmt_data.data
+
+    def _mapping2model(data: Mapping[str, Any]) -> type[BaseModel]:
+        fmt_data = OrderedDict()
+        for key, value in data.items():
+            if isinstance(value, FieldInfo):
+                value = (value.annotation, value)
+            # 如果是仅类型就上空值
+            elif issubclass(type(value), (type, types.GenericAlias)):
+                value = (value, FieldInfo())
+            # 如果是仅默认值就补上类型
+            elif not isinstance(value, tuple):
+                value = (type(value), FieldInfo(default=value))
+
+            # 递归处理
+            if isinstance(value[1], FieldInfo) and isinstance(value[1].default, Mapping):
+                model_cls = _mapping2model(value[1].default)
+                value = (model_cls, FieldInfo(default_factory=model_cls if cfg.allow_create else None))
+
+            # 如果忽略不存在的键就填充特殊值
+            if cfg.ignore_missing and isinstance(value[1], FieldInfo) and value[1].is_required():
+                value = (value[0], FieldInfo(default=IgnoreMissing))
+
+            fmt_data[key] = value
+        return create_model(f"RuntimeTemplate", **fmt_data)
+
+    if isinstance(validator, (tuple, list, set, frozenset)):
+        validator = OrderedDict((k, Any) for k in validator)
+    if isinstance(validator, Mapping):
+        def _builder(data: D) -> D:
+            nonlocal validator
+            template_cls = _mapping2model(_fmt_mapping_key(validator, data.sep_char))
+
+            try:
+                dict_obj = template_cls(**data).model_dump()
+            except ValidationError as err:
+                raise _process_pydantic_exceptions(err, data) from None
+
+            config_obj = data.new_data(dict_obj)
+            if cfg.allow_create:
+                _fill_not_exits(data, config_obj)
+            return config_obj
+
+        return _builder
+    else:
+        raise TypeError(f"Invalid validator type '{type(validator).__name__}'")
+
+
+def _pydantic_validator(validator: type[BaseModel], cfg: ValidatorConfig) -> Callable[[D], D]:
+    """
+    :param validator: pydantic.BaseModel的子类
+    :type validator: type[BaseModel]
+    :param cfg: 验证器配置
+    :type cfg: ValidatorConfig
+    """
+    if not issubclass(validator, BaseModel):
+        raise TypeError(f"Invalid validator type '{validator.__name__}'")
+    if cfg.ignore_missing:
+        warnings.warn("ignore_missing is not supported in pydantic validator")
+
+    def _builder(data: D) -> D:
+        try:
+            dict_obj = validator(**data).model_dump()
+        except ValidationError as err:
+            raise _process_pydantic_exceptions(err, data) from None
+        config_obj = data.new_data(dict_obj)
+        if cfg.allow_create:
+            _fill_not_exits(data, config_obj)
+        return config_obj
+
+    return _builder
+
 
 class RequiredKey:
     """
     对需求的键进行存在检查、类型检查、填充默认值
     """
-    TypingType = {UnionType}
 
-    def __init__(self, paths: Iterable[str] | Mapping[str, Any]):
+    def __init__(
+            self,
+            validator: Any,
+            validator_factory: Optional[Callable | ValidatorTypes | str] = ValidatorTypes.DEFAULT
+    ):
         """
-        当paths为Mapping时{key: value}
+        .. note::
+           如果对性能有较高要求validator_factory建议使用 :py:attr:`ValidatorTypes.PYDANTIC`
 
-        value会被作为key不存在时的*默认值*填充，在key存在时会进行isinstance(data, type(value))检查
-
-        如果type(value) is type也就是*默认值*是类型时，会将其直接用作类型检查issubclass(data, value)且不会尝试填充默认值
-
-        :param paths: 需求的路径
-        :type paths: Iterable[str] | Mapping[str, Any]
+        :param validator: 数据验证器
+        :type validator: Any
+        :param validator_factory: 数据验证器工厂
+        :type validator_factory: Optional[Callable | ValidatorTypes]
         """
+        if not callable(validator_factory):
+            validator_factory = ValidatorTypes(validator_factory)
+        if isinstance(validator_factory, ValidatorTypes):
+            validator_factory = self.ValidatorFactories[validator_factory]
 
-        self._check_type: bool = isinstance(paths, Mapping)
-        self._paths: Iterable[str] | Mapping[str, type] = paths
+        self._validator: Iterable[str] | Mapping[str, type] = deepcopy(validator)
+        self._validator_factory: Callable = validator_factory
+
+    ValidatorFactories: dict[ValidatorTypes, Callable] = {
+        ValidatorTypes.DEFAULT: _default_validator,
+        ValidatorTypes.PYDANTIC: _pydantic_validator
+    }
 
     def filter(self, data: ABCConfigData, *, allow_create: bool = False, ignore_missing: bool = False) -> Any:
         """
         检查过滤需求的键
 
-        .. note::
+        .. attention::
            返回的配置数据是*快照*
 
         :param data: 要过滤的原始数据
@@ -172,46 +372,16 @@ class RequiredKey:
 
         :return: 处理后的配置数据*快照*
         :rtype: Any
+
+        :raise ConfigDataTypeError: 配置数据类型错误
+        :raise RequiredKeyNotFoundError: 必要的键未找到
+        :raise UnknownErrorDuringValidate: 验证过程中发生未知错误
         """
-        result = type(data)()
 
-        if not self._check_type:
-            for path in self._paths:
-                value = data.getPathValue(path)
-                result[path] = value
-            return result
+        cfg = ValidatorConfig(allow_create=allow_create, ignore_missing=ignore_missing)
 
-        for path, default in self._paths.items():
-
-            _type = default
-            if (type(default) not in self.TypingType) and (type(default) is not type):
-                _type = type(default)
-                value = deepcopy(default)
-                try:
-                    value = data.getPathValue(path)
-                except RequiredKeyNotFoundError:
-                    if allow_create:
-                        data.setPathValue(path, value, allow_create=True)
-            else:
-                try:
-                    value = data.getPathValue(path)
-                except RequiredKeyNotFoundError:
-                    if not ignore_missing:
-                        raise
-                    continue
-
-            if (type(default) not in self.TypingType) and issubclass(_type, Mapping) and isinstance(value, type(data)):
-                value = value.data
-
-            if not isinstance(value, _type):  # todo 替换成专门的类型检查器
-                path_chunks = path.split(data.sep_char)
-                raise ConfigDataTypeError(
-                    path, data.sep_char, path_chunks[-1], len(path_chunks) - 1, _type, type(value)
-                )
-
-            result[path] = value
-
-        return result
+        validator = self._validator_factory(self._validator, cfg)
+        return validator(data)
 
 
 class Config(ABCConfig):
@@ -350,6 +520,13 @@ class ConfigPool(ABCConfigPool):
         return f"{self.__class__.__name__}({self.configs!r})"
 
 
+def _is_method(func):
+    arguments = inspect.getargs(func.__code__).args
+    if len(arguments) < 1:
+        return False
+    return arguments[0] in {"self", "cls"}
+
+
 class RequireConfigDecorator:
     """
     配置获取器，可作装饰器使用
@@ -357,7 +534,7 @@ class RequireConfigDecorator:
 
     def __init__(
             self,
-            config_pool: ConfigPool,
+            config_pool: ABCConfigPool,
             namespace: str,
             raw_file_name: str,
             required: RequiredKey,
@@ -482,6 +659,8 @@ requireConfig = DefaultConfigPool.requireConfig
 
 __all__ = (
     "ConfigData",
+    "ValidatorTypes",
+    "ValidatorConfig",
     "RequiredKey",
     "Config",
     "ConfigPool",

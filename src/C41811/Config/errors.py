@@ -58,7 +58,7 @@ class RequiredKeyNotFoundError(KeyError):
         return string
 
 
-class ConfigDataTypeError(TypeError):
+class ConfigDataTypeError(ValueError):
     """
     配置数据类型错误
     """
@@ -101,6 +101,11 @@ class ConfigDataTypeError(TypeError):
             f" Must be '{self.requited_type}'"
             f", Not '{self.now_type}'"
         )
+
+
+class UnknownErrorDuringValidate(Exception):
+    def __init__(self, *args, **kwargs):
+        super().__init__(f"Args: {args}, Kwargs: {kwargs}")
 
 
 class UnsupportedConfigFormatError(Exception):
@@ -147,4 +152,5 @@ __all__ = (
     "ConfigDataTypeError",
     "UnsupportedConfigFormatError",
     "FailedProcessConfigFileError",
+    "UnknownErrorDuringValidate"
 )

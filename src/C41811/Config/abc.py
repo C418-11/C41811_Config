@@ -5,9 +5,11 @@
 import os
 from abc import ABC
 from abc import abstractmethod
+from collections import OrderedDict
+from collections.abc import Mapping
 from copy import deepcopy
 from typing import Any
-from typing import Mapping
+from typing import KeysView
 from typing import MutableMapping
 from typing import Optional
 from typing import Self
@@ -17,7 +19,7 @@ from typing import TypeVar
 D = TypeVar('D', Mapping, MutableMapping)
 
 
-class ABCConfigData(ABC):
+class ABCConfigData(ABC, Mapping):
     """
     配置数据
     """
@@ -34,25 +36,51 @@ class ABCConfigData(ABC):
 
         if data is None:
             data = {}
-        self._data = deepcopy(data)
+        self._data: D = deepcopy(data)
         self._data_read_only: bool = not isinstance(data, MutableMapping)
         self._read_only: bool = self._data_read_only
 
         self._sep_char: str = sep_char
 
+    def new_data(self, data: D) -> Self:
+        """
+        初始化同类型同格式配置数据的快捷方式
+
+        :param data: 配置的原始数据
+        :type data: Mapping | MutableMapping
+        :return: 新的配置数据
+        :rtype: Self
+        """
+        return type(self)(data, self._sep_char)
+
     @property
     def data(self) -> D:
         """
         配置的原始数据*快照*
+
+        :return: 配置的原始数据*快照*
+        :rtype: Mapping | MutableMapping
         """
         return deepcopy(self._data)
 
     @property
     def read_only(self) -> bool:
+        """
+        配置数据是否为只读
+
+        :return: 配置数据是否为只读
+        :rtype: bool
+        """
         return self._data_read_only or self._read_only
 
     @property
     def sep_char(self) -> str:
+        """
+        配置数据键的分隔符
+
+        :return: 分隔符
+        :rtype: str
+        """
         return self._sep_char
 
     @read_only.setter
@@ -83,8 +111,11 @@ class ABCConfigData(ABC):
         """
         设置路径的值
 
-        .. warning::
+        .. caution::
            value参数未默认做深拷贝，可能导致非预期的行为
+
+        .. attention::
+           allow_create时，使用与self.data一样的类型新建路径
 
         :param path: 路径
         :type path: str
@@ -142,22 +173,61 @@ class ABCConfigData(ABC):
         :param get_raw: 是否获取原始值
         :type get_raw: bool
 
-        :return: 值
+        :return: 路径的值
         :rtype: Any
 
         :raise ConfigDataTypeError: 配置数据类型错误
         """
 
-    def keys(self):
-        return self._data.keys()
+    @abstractmethod
+    def set_default(self, path: str, default=None, *, get_raw: bool = False) -> Any:
+        """
+        如果路径不在配置数据中则填充默认值到配置数据并返回
+
+        :param path: 路径
+        :type path: str
+        :param default: 默认值
+        :type default: Any
+        :param get_raw: 是否获取原始值
+        :type get_raw: bool
+
+        :return: 路径的值
+        :rtype: Any
+
+        :raise ConfigDataTypeError: 配置数据类型错误
+        """
+
+    def keys(self, recursive: bool = False) -> KeysView[str]:
+        """
+        获取所有键
+
+        :param recursive: 是否递归获取
+        :type recursive: bool
+
+        :return: 所有键
+        :rtype: KeysView[str]
+        """
+        if not recursive:
+            return self._data.keys()
+
+        def _recursive(data: Mapping) -> OrderedDict:
+            keys = OrderedDict()
+            for k, v in data.items():
+                if isinstance(v, Mapping):
+                    keys.update((f"{k}{self.sep_char}{x}", None) for x in _recursive(v))
+                    continue
+                keys[k] = None
+            return keys
+
+        return _recursive(self._data).keys()
 
     def values(self):
         copied_values = [deepcopy(x) for x in self._data.values()]
-        return [(type(self)(x) if isinstance(x, Mapping) else x) for x in copied_values]
+        return [(self.new_data(x) if isinstance(x, Mapping) else x) for x in copied_values]
 
     def items(self):
         copied_items = [(deepcopy(k), deepcopy(v)) for k, v in self._data.items()]
-        return [(k, (type(self)(v) if isinstance(v, Mapping) else v)) for k, v in copied_items]
+        return [(k, (self.new_data(v) if isinstance(v, Mapping) else v)) for k, v in copied_items]
 
     def __getitem__(self, key):
         """
@@ -183,6 +253,9 @@ class ABCConfigData(ABC):
         """
         return self.hasPath(key)
 
+    def __len__(self):
+        return len(self._data)
+
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return NotImplemented
@@ -190,7 +263,7 @@ class ABCConfigData(ABC):
 
     def __getattr__(self, item) -> Self | Any:
         item_obj = self._data[item]
-        return type(self)(item_obj) if isinstance(item_obj, Mapping) else item_obj
+        return self.new_data(item_obj) if isinstance(item_obj, Mapping) else item_obj
 
     def __iter__(self):
         return iter(self._data)
@@ -206,7 +279,7 @@ class ABCConfigData(ABC):
         return f"{self.__class__.__name__}({data_repr})"
 
     def __deepcopy__(self, memo) -> Self:
-        return type(self)(deepcopy(self._data, memo))
+        return self.new_data(self._data)
 
 
 class ABCSLProcessorPool(ABC):
@@ -425,11 +498,11 @@ class ABCConfigPool(ABCSLProcessorPool):
         :type file_name: str
         :param required: 必须的配置
         :type required: list[str] | dict[str, Any]
-        :param args: 详见main.RequireConfigDecorator.__init__
-        :param kwargs: 详见main.RequireConfigDecorator.__init__
+        :param args: 详见 :py:func:`RequireConfigDecorator`
+        :param kwargs: 详见 :py:func:`RequireConfigDecorator`
 
-        :return: main.RequireConfigDecorator
-        :rtype: main.RequireConfigDecorator
+        :return: 详见 :py:class:`RequireConfigDecorator`
+        :rtype: :py:class:`RequireConfigDecorator`
         """
 
 
@@ -491,7 +564,7 @@ class ABCConfigSL(ABC):
         注册到配置池中
 
         :param config_pool: 配置池
-        :type :type config_pool: ABCSLProcessorPool
+        :type config_pool: ABCSLProcessorPool
         """
 
         config_pool.SLProcessor[self.regName] = self
