@@ -9,12 +9,15 @@ from collections import OrderedDict
 from collections.abc import Mapping
 from copy import deepcopy
 from typing import Any
+from typing import ItemsView
 from typing import KeysView
 from typing import MutableMapping
 from typing import Optional
 from typing import Self
 from typing import Sequence
 from typing import TypeVar
+
+from pydantic_core import core_schema
 
 D = TypeVar('D', Mapping, MutableMapping)
 
@@ -197,37 +200,62 @@ class ABCConfigData(ABC, Mapping):
         :raise ConfigDataTypeError: 配置数据类型错误
         """
 
-    def keys(self, recursive: bool = False) -> KeysView[str]:
+    def keys(self, *, recursive: bool = False, end_point_only: bool = False) -> KeysView[str]:
         """
         获取所有键
 
         :param recursive: 是否递归获取
         :type recursive: bool
+        :param end_point_only: 是否只获取叶子节点
+        :type end_point_only: bool
 
         :return: 所有键
         :rtype: KeysView[str]
         """
-        if not recursive:
+
+        if not any((
+            recursive,
+            end_point_only,
+        )):
             return self._data.keys()
 
         def _recursive(data: Mapping) -> OrderedDict:
-            keys = OrderedDict()
+            ordered_keys = OrderedDict()
             for k, v in data.items():
                 if isinstance(v, Mapping):
-                    keys.update((f"{k}{self.sep_char}{x}", None) for x in _recursive(v))
-                    continue
-                keys[k] = None
-            return keys
+                    ordered_keys.update((f"{k}{self.sep_char}{x}", None) for x in _recursive(v))
+                    if end_point_only:
+                        continue
+                ordered_keys[k] = None
+            return ordered_keys
 
-        return _recursive(self._data).keys()
+        if recursive:
+            keys = _recursive(self._data)
+            return keys.keys()
+
+        if end_point_only:
+            keys = OrderedDict.fromkeys(
+                k for k, v in self._data.items() if not isinstance(v, Mapping))
+            return keys.keys()
 
     def values(self):
         copied_values = [deepcopy(x) for x in self._data.values()]
         return [(self.new_data(x) if isinstance(x, Mapping) else x) for x in copied_values]
 
-    def items(self):
+    def items(self, *, get_raw: bool = False) -> ItemsView[str, Any]:
+        """
+        获取所有键值对
+
+        :param get_raw: 是否获取原始数据
+        :type get_raw: bool
+
+        :return: 所有键值对
+        :rtype: ItemsView[str, Any]
+        """
+        if get_raw:
+            return self._data.items()
         copied_items = [(deepcopy(k), deepcopy(v)) for k, v in self._data.items()]
-        return [(k, (self.new_data(v) if isinstance(v, Mapping) else v)) for k, v in copied_items]
+        return OrderedDict((k, (self.new_data(v) if isinstance(v, Mapping) else v)) for k, v in copied_items).items()
 
     def __getitem__(self, key):
         """
@@ -280,6 +308,13 @@ class ABCConfigData(ABC, Mapping):
 
     def __deepcopy__(self, memo) -> Self:
         return self.new_data(self._data)
+
+    @staticmethod
+    def __get_pydantic_core_schema__() -> core_schema.DictSchema:
+        return core_schema.dict_schema(
+            keys_schema=core_schema.str_schema(),
+            values_schema=core_schema.any_schema()
+        )
 
 
 class ABCSLProcessorPool(ABC):
