@@ -182,6 +182,49 @@ class TestConfigData(TestCase):
         data = ConfigData(self.raw_data)
         self.assertSetEqual(set(data.keys()), set(self.raw_data.keys()))
 
+    def test_keys_with_recursive(self):
+        data = ConfigData({
+            "foo": {
+                "bar": {
+                    "baz": 123
+                }
+            },
+            "foo2": 456
+        })
+        self.assertSetEqual(
+            set(data.keys(recursive=True)),
+            {"foo", "foo.bar", "foo.bar.baz", "foo2"}
+        )
+
+    def test_keys_with_end_point_only(self):
+        data = ConfigData({
+            "foo": {
+                "bar": {
+                    "baz": 123
+                },
+                "bar2": 456
+            },
+            "foo2": 789
+        })
+        self.assertSetEqual(
+            set(data.keys(end_point_only=True)),
+            {"foo2"}
+        )
+
+    def test_keys_with_recursive_and_end_point_only(self):
+        data = ConfigData({
+            "foo": {
+                "bar": {
+                    "baz": 123
+                }
+            },
+            "foo2": 456
+        })
+        self.assertSetEqual(
+            set(data.keys(recursive=True, end_point_only=True)),
+            {"foo.bar.baz", "foo2"}
+        )
+
     def test_values(self):
         data = ConfigData(self.raw_data)
         values = [ConfigData(v) if isinstance(v, Mapping) else v for v in self.raw_data.values()]
@@ -211,9 +254,10 @@ class TestRequiredKey(TestCase):
             self.test_pydantic()
             self.test_default_iterable()
             self.test_default_mapping()
+            self.test_default_mapping_with_allow_create()
+            self.test_default_mapping_with_error()
         except Exception:
             pass
-        self.skipTest("让pydantic提前导入所需的模块，让后续测试的运行时间更有参考性")
 
     def test_pydantic(self):
         class Foo(BaseModel):
@@ -260,6 +304,7 @@ class TestRequiredKey(TestCase):
     def test_default_iterable(self):
         data = RequiredKey([
             "foo.bar",
+            "foo",
             "foo1",
             "foo2",
         ]).filter(self.data)
@@ -287,11 +332,29 @@ class TestRequiredKey(TestCase):
         self.assertEqual(data["foo1"], 114)
         self.assertSequenceEqual(data["foo2"], ["bar"])
 
+    def test_default_mapping_repeated_subkey(self):
+        data = RequiredKey({
+            "foo": dict,
+            "foo.bar1": 123,
+        }).filter(self.data)
+
+        self.assertIn("foo", data)
+        self.assertIsInstance(data["foo"], Mapping)
+        self.assertIn("foo.bar", data)
+        self.assertEqual(data["foo.bar"], 123)
+
+    def test_default_mapping_with_allow_create(self):
         data = RequiredKey({
             "foo.bar": int,
             "foo1": int,
             "foo2": list[str],
             "foo.bar1.test": 456,
+            "foo3": {
+                "bar": 789,
+                "test": {
+                    "value": 101112,
+                }
+            }
         }).filter(self.data, allow_create=True)
 
         self.assertEqual(data["foo.bar"], 123)
@@ -299,6 +362,37 @@ class TestRequiredKey(TestCase):
         self.assertSequenceEqual(data["foo2"], ["bar"])
         self.assertIn("foo.bar1.test", data)
         self.assertEqual(data["foo.bar1.test"], 456)
+        self.assertIn("foo3.bar", data)
+        self.assertEqual(data["foo3.bar"], 789)
+        self.assertIn("foo3.test.value", data)
+        self.assertEqual(data["foo3.test.value"], 101112)
+
+        data = RequiredKey({
+            f"foo3.test": dict,
+            f"foo3.test.value": int | list[int],
+        }).filter(data, allow_create=True)
+        self.assertIn("foo3.test", data)
+        self.assertIn("foo3.test.value", data)
+        self.assertEqual(data["foo3.test.value"], 101112)
+
+    def test_default_mapping_repeated_subkey_with_allow_create(self):
+        data = RequiredKey(OrderedDict((
+            ("foo3", {}),
+            ("foo3.bar", 456),
+        ))).filter(self.data, allow_create=True)
+        self.assertEqual(data["foo3.bar"], 456)
+
+        data = RequiredKey({
+            "foo": {"bar": int},
+            "foo.bar": int
+        }).filter(self.data, allow_create=True)
+        self.assertEqual(data["foo.bar"], 123)
+
+    def test_default_mapping_with_ignore_missing(self):
+        data = RequiredKey({
+            "foo3": int,
+        }).filter(self.data, ignore_missing=True)
+        self.assertNotIn("foo3", data)
 
     def test_default_mapping_with_error(self):
         with self.assertRaises(RequiredKeyNotFoundError):
