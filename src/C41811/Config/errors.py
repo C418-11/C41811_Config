@@ -95,6 +95,8 @@ class ConfigDataTypeError(ValueError):
         self.requited_type = required_type
         self.now_type = now_type
 
+        self.relative_key = self.sep_char.join(self.key.split(self.sep_char)[:self.index])
+
     def __str__(self):
         return (
             f"{self.key} -> {self.current_key} ({self.index + 1} / {len(self.key.split(self.sep_char))})"
@@ -104,7 +106,14 @@ class ConfigDataTypeError(ValueError):
 
 
 class UnknownErrorDuringValidate(Exception):
+    """
+    在验证配置数据时发生未知错误
+    """
     def __init__(self, *args, **kwargs):
+        """
+        :param args: 未知错误信息
+        :param kwargs: 未知错误信息
+        """
         super().__init__(f"Args: {args}, Kwargs: {kwargs}")
 
 
