@@ -109,6 +109,7 @@ class UnknownErrorDuringValidate(Exception):
     """
     在验证配置数据时发生未知错误
     """
+
     def __init__(self, *args, **kwargs):
         """
         :param args: 未知错误信息

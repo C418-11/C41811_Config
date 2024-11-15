@@ -1,6 +1,7 @@
 # Configuration file for the Sphinx documentation builder.
 
 import sys
+
 sys.path.append("../src")
 
 project = "C41811.Config"

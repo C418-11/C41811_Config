@@ -214,8 +214,8 @@ class ABCConfigData(ABC, Mapping):
         """
 
         if not any((
-            recursive,
-            end_point_only,
+                recursive,
+                end_point_only,
         )):
             return self._data.keys()
 
