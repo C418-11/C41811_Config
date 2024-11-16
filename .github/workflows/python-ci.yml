@@ -43,7 +43,7 @@ jobs:
           python -m pip install mypy
           mypy --strict src
           mypy --strict tests
-          
+
   smell-my-pr:
     runs-on: ubuntu-latest
     permissions:
