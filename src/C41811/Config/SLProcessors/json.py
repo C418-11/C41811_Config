@@ -61,7 +61,7 @@ class JsonSL(ABCConfigSL):
             *args,
             **kwargs
     ) -> C:
-        new_args = deepcopy(self.load_arg[0])[len(args)] = args
+        new_args = deepcopy(self.load_arg[0])[:len(args)] = args
         new_kwargs = deepcopy(self.load_arg[1]) | kwargs
 
         with open(self._norm_join(root_path, namespace, file_name), "r", encoding="utf-8") as f:
