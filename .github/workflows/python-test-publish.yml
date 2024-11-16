@@ -6,17 +6,17 @@ on:
   release:
     types: [published]
 
-environment:
-  name: testpypi
-  url: https://test.pypi.org/p/C41811.Config/
-permissions:
-  id-token: write
-
 jobs:
   test-pypi-publish:
     name: publish to test PyPI
     needs: build
     runs-on: ubuntu-latest
+
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/C41811.Config/
+    permissions:
+      id-token: write
 
     steps:
     - name: Download artifact

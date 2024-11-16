@@ -5,19 +5,17 @@ on:
   release:
     types: [published]
 
-environment:
-  name: pypi
-  url: https://pypi.org/p/C41811.Config/
-permissions:
-  id-token: write
-
 jobs:
   pypi-publish:
     name: publish to PyPI
     needs: build
     runs-on: ubuntu-latest
 
-
+    environment:
+      name: pypi
+      url: https://pypi.org/p/C41811.Config/
+    permissions:
+      id-token: write
 
     steps:
     - name: Download artifact
