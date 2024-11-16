@@ -53,7 +53,7 @@ jobs:
     runs-on: ubuntu-latest
 
     environment:
-      name: test-pypi
+      name: testpypi
       url: https://test.pypi.org/p/C41811.Config/
     permissions:
       id-token: write
