@@ -39,6 +39,7 @@ cfg = requireConfig(
         }
     }
 ).checkConfig()
+DefaultConfigPool.saveAll()
 
 print(cfg)
 print()
