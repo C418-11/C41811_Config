@@ -56,6 +56,22 @@ class ABCConfigData(ABC, Mapping):
         """
         return type(self)(data, self._sep_char)
 
+    def convert_to(self, *, sep_char: str = None) -> Self:
+        """
+        转换为同类型不同格式配置数据的快捷方式
+
+        .. attention::
+           该方法是转换当前配置数据的*快照*为指定格式
+
+        :param sep_char: 分隔符
+        :type sep_char: str
+        :return: 新的配置数据
+        :rtype: Self
+        """
+        if sep_char is None:
+            sep_char = self._sep_char
+        return type(self)(deepcopy(self._data), sep_char)
+
     @property
     def data(self) -> D:
         """

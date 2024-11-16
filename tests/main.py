@@ -106,6 +106,25 @@ class TestConfigData(TestCase):
 
         self.assertIn("foo.bar", data)
 
+    def test_new_data(self):
+        data = ConfigData(self.raw_data, sep_char='$')
+        new_data = data.new_data({"foo": {"bar": 456}})
+
+        self.assertEqual(new_data.sep_char, '$')
+        self.assertEqual(data.sep_char, new_data.sep_char)
+        self.assertEqual(new_data["foo$bar"], 456)
+        self.assertNotIn("foo.bar", new_data)
+        self.assertNotEqual(data.data, new_data.data)
+
+    def test_convert_to(self):
+        data = ConfigData(self.raw_data)
+        new_data = data.convert_to(sep_char='$')
+        self.assertEqual(new_data.sep_char, '$')
+        self.assertEqual(data.sep_char, '.')
+        self.assertIn("foo$bar", new_data)
+        self.assertEqual(new_data["foo$bar"], 123)
+        self.assertEqual(data.data, new_data.data)
+
     def test_config_data_type_error(self):
         data = ConfigData(self.raw_data)
 
