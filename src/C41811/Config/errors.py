@@ -137,7 +137,11 @@ class FailedProcessConfigFileError(Exception):
     SL处理器无法正确处理当前配置文件
     """
 
-    def __init__(self, reason: BaseException | Iterable[BaseException] | Mapping[str, BaseException]):
+    def __init__(
+            self,
+            reason: BaseException | Iterable[BaseException] | Mapping[str, BaseException],
+            msg: str = "Failed to process config file"
+    ):
         """
         :param reason: 处理配置文件失败的原因
         :type reason: BaseException | Iterable[BaseException] | Mapping[str, BaseException]
@@ -145,13 +149,19 @@ class FailedProcessConfigFileError(Exception):
 
         if isinstance(reason, Mapping):
             reason = OrderedDict(reason)
-            super().__init__('\n'.join(map(lambda _: f"{_[0]}: {_[1]}", reason.items())))
+            super().__init__('\n'.join((
+                msg,
+                *map(lambda _: f"{_[0]}: {_[1]}", reason.items()))
+            ))
         elif isinstance(reason, Iterable):
             reason = tuple(reason)
-            super().__init__('\n'.join(map(str, reason)))
+            super().__init__('\n'.join((
+                msg,
+                *map(str, reason))
+            ))
         else:
             reason = (reason,)
-            super().__init__(str(reason))
+            super().__init__(f"{msg}: {reason}")
 
         self.reasons: tuple[BaseException] | OrderedDict[str, BaseException] = reason
 
