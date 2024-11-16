@@ -2,9 +2,19 @@
 
 [English](README_EN.md) | 中文
 
-[文档](https://C41811Config.readthedocs.io)
-
 ---
+
+[![PyPi version](https://badgen.net/pypi/v/c41811.config/)](https://pypi.org/project/C41811.Config)
+[![PyPI pyversions](https://img.shields.io/pypi/pyversions/c41811.config.svg)](https://pypi.python.org/pypi/C41811.Config/)
+[![Documentation Status](https://readthedocs.org/projects/c41811config/badge/?version=latest)](https://C41811Config.readthedocs.io)
+[![PyPi license](https://badgen.net/pypi/license/c41811.config/)](https://pypi.org/project/C41811.Config/)
+[![PyPI download month](https://img.shields.io/pypi/dm/c41811.config.svg)](https://pypi.python.org/pypi/C41811.Config/)
+[![made-with-sphinx-doc](https://img.shields.io/badge/Made%20with-Sphinx-1f425f.svg)](https://www.sphinx-doc.org/)
+
+| 文档   | https://C41811Config.readthedocs.io      |
+|------|------------------------------------------|
+| PyPI | https://pypi.org/project/C41811.Config   |
+| 源码   | https://github.com/C418-11/C41811_Config |
 
 ## 简介
 
