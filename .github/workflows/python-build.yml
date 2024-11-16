@@ -1,7 +1,11 @@
 
 name: Build Python Package
 
-runs:
+on:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
   build:
     name: Build Python Package
     runs-on: ubuntu-latest
