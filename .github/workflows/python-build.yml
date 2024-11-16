@@ -34,7 +34,7 @@ jobs:
       with:
         name: python-package-raw
         path: dist
-        retention-days: 7
+        retention-days: 1
         if-no-files-found: error
         overwrite: true
 
@@ -64,3 +64,6 @@ jobs:
       with:
         name: python-package
         path: dist
+        retention-days: 7
+        if-no-files-found: error
+        overwrite: true
