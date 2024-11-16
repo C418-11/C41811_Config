@@ -1,2 +1,5 @@
-setuptools~=75.3.0
 pydantic~=2.10.0b1
+# 测试对应SL处理器的依赖
+PyYAML       # PyYamlSL
+ruamel.yaml  # RuamelYamlSL
+toml         # TomlSL

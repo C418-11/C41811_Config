@@ -1,9 +1,5 @@
 # Configuration file for the Sphinx documentation builder.
 
-import sys
-
-sys.path.append("../src")
-
 project = "C41811.Config"
 # noinspection PyShadowingBuiltins
 copyright = "2024, C418____11"

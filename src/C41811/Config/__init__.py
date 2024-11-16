@@ -9,7 +9,13 @@
 """
 
 __author__ = "C418____11 <553515788@qq.com>"
-__version__ = "0.0.1"
+
+try:
+    from ._version import __version__, __version_tuple__
+except ImportError:
+    __version__ = ''
+    __version_tuple__ = ()
+
 
 import sys as _sys
 
