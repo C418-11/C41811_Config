@@ -16,7 +16,6 @@ except ImportError:
     __version__ = ''
     __version_tuple__ = ()
 
-
 import sys as _sys
 
 if _sys.version_info < (3, 12):
