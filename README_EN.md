@@ -19,7 +19,7 @@ solution to help developers quickly build and maintain high-quality applications
 pip install C41811.Config
 ```
 
-## Quick Start
+## A simple example
 
 ``` python
 from C41811.Config import JsonSL
@@ -27,20 +27,23 @@ from C41811.Config import DefaultConfigPool
 from C41811.Config import requireConfig
 
 
-JsonSL.registerTo(DefaultConfigPool)
+JsonSL().registerTo(DefaultConfigPool)
 
-cfg = reqireConfig(
+cfg = requireConfig(
     '', "Hello World.json",
     {
-        “Hello”: "World",
-        "foo": {
-            "bar": 123
+        "Hello": "World",
+        "foo": dict,  # contains all keys under foo
+        "foo.bar": {  # foo.bar contains only the baz key
+            "baz": "qux"
         }
     }
 ).checkConfig()
 
 print(cfg)
 print()
+print(f"{cfg["Hello"]=}")
+print(cfg.foo)
 print(cfg["foo.bar"])
-print(cfg.foo.bar)
+print(cfg.foo.bar.baz)
 ```

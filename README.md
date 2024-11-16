@@ -18,7 +18,7 @@ C41811.Config 是一个功能强大且易于使用的配置管理包，旨在简
 pip install C41811.Config
 ```
 
-## 快速开始
+## 一个简单的示例
 
 ``` python
 from C41811.Config import JsonSL
@@ -26,20 +26,23 @@ from C41811.Config import DefaultConfigPool
 from C41811.Config import requireConfig
 
 
-JsonSL.registerTo(DefaultConfigPool)
+JsonSL().registerTo(DefaultConfigPool)
 
-cfg = reqireConfig(
+cfg = requireConfig(
     '', "Hello World.json",
     {
-        “Hello”: "World",
-        "foo": {
-            "bar": 123
+        "Hello": "World",
+        "foo": dict,  # 包含foo下的所有键
+        "foo.bar": {  # foo.bar仅包含baz键
+            "baz": "qux"
         }
     }
 ).checkConfig()
 
 print(cfg)
 print()
+print(f"{cfg["Hello"]=}")
+print(cfg.foo)
 print(cfg["foo.bar"])
-print(cfg.foo.bar)
+print(cfg.foo.bar.baz)
 ```
