@@ -32,9 +32,30 @@ jobs:
     - name: Build package
       run: python -m build
 
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: python-package-raw
+        path: dist
+        retention-days: 7
+        if-no-files-found: error
+        overwrite: true
+
+  signature:
+    name: Signature Python Package
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+
+    steps:
+    - name: Download artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: python-package-raw
+        path: dist
+
     - name: Sign package
-      permissions:
-        id-token: write
       uses: signature/gh-action-sigstore-python@v3.0.0
       with:
         inputs: |
@@ -46,6 +67,3 @@ jobs:
       with:
         name: python-package
         path: dist
-        retention-days: 7
-        if-no-files-found: error
-        overwrite: true
