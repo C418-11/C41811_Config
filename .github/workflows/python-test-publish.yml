@@ -1,23 +1,22 @@
 
-name: Upload Python Package
+name: Test Publish Python Package
 
 on:
+  workflow_dispatch:
   release:
     types: [published]
 
 environment:
-  name: pypi
-  url: https://pypi.org/p/C41811.Config/
+  name: testpypi
+  url: https://test.pypi.org/p/C41811.Config/
 permissions:
   id-token: write
 
 jobs:
-  pypi-publish:
-    name: publish to PyPI
+  test-pypi-publish:
+    name: publish to test PyPI
     needs: build
     runs-on: ubuntu-latest
-
-
 
     steps:
     - name: Download artifact
@@ -28,3 +27,5 @@ jobs:
 
     - name: Publish package
       uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
+      with:
+        repository_url: https://test.pypi.org/legacy/
