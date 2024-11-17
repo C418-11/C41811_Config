@@ -19,10 +19,10 @@ jobs:
 
     steps:
       - name: Download python package
-        uses: actions/cache/restore@v4
+        uses: actions/cache@v4
         with:
           path: ./dist
-          key: python-package-${{ hashFiles('src/**') }}-${{ hashFiles('pyproject.toml') }}
+          key: python-package-${{ hashFiles('./src/**') }}-${{ hashFiles('./pyproject.toml') }}
           fail-on-cache-miss: true
 
       - name: Publish package

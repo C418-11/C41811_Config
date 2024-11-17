@@ -91,4 +91,4 @@ jobs:
         path: |
           dist/*.tar.gz
           dist/*.whl
-        key: python-package-${{ hashFiles('src/**') }}-${{ hashFiles('pyproject.toml') }}
+        key: python-package-${{ hashFiles('./src/**') }}-${{ hashFiles('./pyproject.toml') }}
