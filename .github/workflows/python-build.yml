@@ -67,6 +67,7 @@ jobs:
 
     - name: Set last run id
       env:
+        name: testpypi
         RUN_ID: ${{ github.run_id }}
       run: |
         echo "RUN_ID=${RUN_ID}" >> $GITHUB_ENV
