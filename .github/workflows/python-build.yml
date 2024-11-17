@@ -64,3 +64,10 @@ jobs:
         retention-days: 7
         if-no-files-found: error
         overwrite: true
+
+    - name: Set last run id
+      environment:
+        name: testpypi
+        RUN_ID: ${{ github.run_id }}
+      run: |
+        echo "RUN_ID=${RUN_ID}" >> $GITHUB_ENV
