@@ -3,7 +3,9 @@ name: Build Python Package
 
 on:
   workflow_dispatch:
-  workflow_call:
+  push:
+    branches:
+      - main
 
 jobs:
   build:
@@ -18,7 +20,23 @@ jobs:
       with:
         python-version: '3.12'
 
+    - name: Get pip cache dir
+      id: pip-cache
+      shell: bash
+      run: |
+        echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
+
+    - name: Cache install dependencies
+      id: cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.pip-cache.outputs.dir }}
+        key: pip-cache-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          pip-cache-
+
     - name: Install dependencies
+      if: steps.cache.outputs.cache-hit != 'true'
       run: |
         python -m pip install --upgrade pip
         pip install build
@@ -65,9 +83,10 @@ jobs:
         if-no-files-found: error
         overwrite: true
 
-    - name: Set last run id
-      env:
-        name: testpypi
-        RUN_ID: ${{ github.run_id }}
-      run: |
-        echo "RUN_ID=${RUN_ID}" >> $GITHUB_ENV
+    - name: Upload package cache
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          dist/*.tar.gz
+          dist/*.whl
+        key: python-package-${{ hashFiles('dist/*.tar.gz dist/*.whl') }}
