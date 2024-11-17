@@ -1,0 +1,8 @@
+# MANIFEST.in
+
+prune *
+exclude *
+graft src
+recursive-exclude *.pyc
+
+include pyproject.toml

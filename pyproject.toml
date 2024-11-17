@@ -50,12 +50,8 @@ PyYamlSL = ["PyYAML"]
 RuamelYamlSL = ["ruamel.yaml"]
 TomlSL = ["toml"]
 
-[tool.setuptools]
-package-dir = { "" = "src" }
-
 [tool.setuptools.packages.find]
 where = ["src"]
-namespaces = true
 
 [tool.setuptools_scm]
 version_file = "src/C41811/Config/_version.py"
