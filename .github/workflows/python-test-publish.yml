@@ -22,7 +22,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ./dist
-          key: python-package-
+          key: python-package-${{ hashFiles('src/**') }}-${{ hashFiles('pyproject.toml') }}
           fail-on-cache-miss: true
 
       - name: Publish package

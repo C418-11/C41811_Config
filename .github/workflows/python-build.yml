@@ -6,6 +6,8 @@ on:
   push:
     branches:
       - main
+    paths:
+      - './src/**'
 
 jobs:
   build:
@@ -89,4 +91,4 @@ jobs:
         path: |
           dist/*.tar.gz
           dist/*.whl
-        key: python-package-${{ hashFiles('dist/*.tar.gz dist/*.whl') }}
+        key: python-package-${{ hashFiles('src/**') }}-${{ hashFiles('pyproject.toml') }}
