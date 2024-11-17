@@ -3,11 +3,7 @@ name: Build Python Package
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - './src/**'
+  workflow_call:
 
 jobs:
   build:
@@ -78,12 +74,3 @@ jobs:
         inputs: |
           dist/*.tar.gz
           dist/*.whl
-
-    - name: Upload package
-      uses: actions/upload-artifact@v4
-      with:
-        name: python-package
-        path: dist
-        retention-days: 1
-        if-no-files-found: error
-        overwrite: true
