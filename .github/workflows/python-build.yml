@@ -79,10 +79,11 @@ jobs:
           dist/*.tar.gz
           dist/*.whl
 
-    - name: Upload package cache
-      uses: actions/cache@v4
+    - name: Upload package
+      uses: actions/upload-artifact@v4
       with:
-        path: |
-          dist/*.tar.gz
-          dist/*.whl
-        key: python-package-${{ hashFiles('./src/**') }}-${{ hashFiles('./pyproject.toml') }}
+        name: python-package
+        path: dist
+        retention-days: 1
+        if-no-files-found: error
+        overwrite: true
