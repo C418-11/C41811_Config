@@ -27,7 +27,7 @@ jobs:
       - name: Download Package
         uses: actions/download-artifact@v4
         with:
-          name: python-package
+          name: python-package-raw
           path: dist
 
       - name: Publish package
