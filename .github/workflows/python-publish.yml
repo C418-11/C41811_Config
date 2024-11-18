@@ -1,9 +1,8 @@
-
 name: Upload Python Package
 
 on:
   release:
-    types: [published]
+    types: [ published ]
 
 jobs:
   pypi-publish:
@@ -17,14 +16,14 @@ jobs:
       id-token: write
 
     steps:
-    - name: Build package
-      uses: ./.github/workflows/python-build.yml
+      - name: Build package
+        uses: ./.github/workflows/python-build.yml
 
-    - name: Download artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: python-package
-        path: dist
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package
+          path: dist
 
-    - name: Publish package
-      uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
+      - name: Publish package
+        uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
