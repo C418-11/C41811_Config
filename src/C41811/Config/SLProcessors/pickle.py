@@ -9,14 +9,14 @@ from typing import TypeVar
 from typing import override
 
 from ..abc import ABCConfig
-from ..abc import ABCConfigSL
 from ..errors import FailedProcessConfigFileError
+from ..main import BaseConfigSL
 from ..main import ConfigData
 
 C = TypeVar("C", bound=ABCConfig)
 
 
-class PickleSL(ABCConfigSL):
+class PickleSL(BaseConfigSL):
     """
     pickle格式处理器
     """

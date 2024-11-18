@@ -7,6 +7,7 @@ import os.path
 import re
 import types
 import warnings
+from abc import ABC
 from collections import OrderedDict
 from collections.abc import Mapping
 from collections.abc import MutableMapping
@@ -31,6 +32,7 @@ from pydantic_core import core_schema
 from .abc import ABCConfig
 from .abc import ABCConfigData
 from .abc import ABCConfigPool
+from .abc import ABCConfigSL
 from .abc import ABCSLProcessorPool
 from .errors import ConfigDataTypeError
 from .errors import ConfigOperate
@@ -786,6 +788,16 @@ class RequireConfigDecorator:
 DefaultConfigPool = ConfigPool()
 requireConfig = DefaultConfigPool.requireConfig
 
+
+class BaseConfigSL(ABCConfigSL, ABC):
+    @override
+    def registerTo(self, config_pool: ABCSLProcessorPool = None) -> None:
+        if config_pool is None:
+            config_pool = DefaultConfigPool
+
+        super().registerTo(config_pool)
+
+
 __all__ = (
     "ConfigData",
     "ValidatorTypes",
@@ -794,6 +806,7 @@ __all__ = (
     "Config",
     "ConfigPool",
     "RequireConfigDecorator",
+    "BaseConfigSL",
 
     "DefaultConfigPool",
     "requireConfig",

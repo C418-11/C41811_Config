@@ -37,7 +37,7 @@ from C41811.Config import DefaultConfigPool
 from C41811.Config import requireConfig
 
 
-JsonSL().registerTo(DefaultConfigPool)
+JsonSL().registerTo()
 
 cfg = requireConfig(
     '', "Hello World.json",

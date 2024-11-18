@@ -7,8 +7,8 @@ from typing import TypeVar
 from typing import override
 
 from ..abc import ABCConfig
-from ..abc import ABCConfigSL
 from ..errors import FailedProcessConfigFileError
+from ..main import BaseConfigSL
 from ..main import ConfigData
 
 try:
@@ -20,7 +20,7 @@ except ImportError:
 C = TypeVar("C", bound=ABCConfig)
 
 
-class RuamelYamlSL(ABCConfigSL):
+class RuamelYamlSL(BaseConfigSL):
     """
     基于ruamel.yaml的yaml处理器
 

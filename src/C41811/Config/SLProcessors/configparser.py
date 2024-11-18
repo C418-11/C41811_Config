@@ -7,14 +7,14 @@ from typing import TypeVar
 from typing import override
 
 from ..abc import ABCConfig
-from ..abc import ABCConfigSL
 from ..errors import FailedProcessConfigFileError
+from ..main import BaseConfigSL
 from ..main import ConfigData
 
 C = TypeVar("C", bound=ABCConfig)
 
 
-class ConfigParserSL(ABCConfigSL):
+class ConfigParserSL(BaseConfigSL):
     """
     未完成 TODO
     """  # todo

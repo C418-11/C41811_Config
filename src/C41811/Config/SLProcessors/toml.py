@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # cython: language_level = 3
 
-
 from typing import Optional
 from typing import TypeVar
 from typing import override

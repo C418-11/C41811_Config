@@ -8,14 +8,14 @@ from typing import TypeVar
 from typing import override
 
 from ..abc import ABCConfig
-from ..abc import ABCConfigSL
 from ..errors import FailedProcessConfigFileError
+from ..main import BaseConfigSL
 from ..main import ConfigData
 
 C = TypeVar("C", bound=ABCConfig)
 
 
-class PythonLiteralSL(ABCConfigSL):
+class PythonLiteralSL(BaseConfigSL):
     """
     Python 字面量序列化处理器
     """
