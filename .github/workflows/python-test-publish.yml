@@ -9,6 +9,8 @@ jobs:
   build:
     name: Build Python Package
     uses: ./.github/workflows/python-build.yml
+    permissions:
+      id-token: write
 
   test-pypi-publish:
     name: publish to test PyPI
