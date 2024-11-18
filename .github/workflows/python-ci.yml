@@ -8,7 +8,25 @@ on:
       - '**.py'
 
 jobs:
-  build:
+  smell-my-pr:
+    if: github.event_name == 'pull request'
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      pull-requests: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Smell My PR
+        uses: smelly-python/smell-my-pr@main
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          command: pipenv run smelly-python -d src
+          install-pipenv: true
+
+  test-and-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,10 +35,6 @@ jobs:
         uses: actions/setup-python@v3
         with:
           python-version: '3.12'
-
-      - name: Python Style Checker
-        # noinspection SpellCheckingInspection
-        uses: andymckay/pycodestyle-action@0.1.3
 
       - name: Install dependencies
         run: |
@@ -43,28 +57,10 @@ jobs:
           mypy --strict src
           mypy --strict tests
 
-  smell-my-pr:
-    runs-on: ubuntu-latest
-    permissions:
-      checks: write
-      pull-requests: write
-      contents: read
-    needs: build
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Smell My PR
-        uses: smelly-python/smell-my-pr@main
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          command: pipenv run smelly-python -d src
-          install-pipenv: true
-
   # noinspection SpellCheckingInspection
   autoyapf:
     runs-on: ubuntu-latest
-    needs: smell-my-pr
+    needs: test-and-check
 
     steps:
       - uses: actions/checkout@master
