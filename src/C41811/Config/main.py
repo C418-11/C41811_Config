@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level = 3
 
-import functools
-import inspect
+
 import os.path
 import re
 import types
@@ -22,6 +21,7 @@ from typing import Self
 from typing import TypeVar
 from typing import override
 
+import wrapt
 from pydantic import BaseModel
 from pydantic import ValidationError
 from pydantic import create_model
@@ -651,13 +651,6 @@ class ConfigPool(ABCConfigPool):
         return f"{self.__class__.__name__}({self.configs!r})"
 
 
-def _is_method(func):
-    arguments = inspect.getargs(func.__code__).args
-    if len(arguments) < 1:
-        return False
-    return arguments[0] in {"self", "cls"}
-
-
 class RequireConfigDecorator:
     """
     配置获取器，可作装饰器使用
@@ -764,14 +757,14 @@ class RequireConfigDecorator:
         return self._wrapped_filter(**kwargs)
 
     def __call__(self, func):
-        if _is_method(func):
-            processor = self._method_processor
-        else:
-            processor = self._function_processor
+        @wrapt.decorator
+        def wrapper(wrapped, _instance, args, kwargs):
+            config_data = self._wrapped_filter(**self._filter_kwargs)
 
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            return func(*processor(*args), **kwargs)
+            return wrapped(
+                *(config_data, *args),
+                **kwargs
+            )
 
         return wrapper
 
