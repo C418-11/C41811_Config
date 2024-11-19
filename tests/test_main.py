@@ -11,6 +11,7 @@ from unittest import main
 from pydantic import BaseModel, Field
 
 from src.C41811.Config import ConfigData
+from src.C41811.Config import Config
 from src.C41811.Config import RequiredKey
 from src.C41811.Config.errors import ConfigDataTypeError
 from src.C41811.Config.errors import RequiredKeyNotFoundError
@@ -438,6 +439,53 @@ class TestRequiredKey(TestCase):
             RequiredKey({
                 "foo2": list[int]
             }).filter(self.data, allow_create=True)
+
+
+class TestConfig(TestCase):
+    def setUp(self):
+        self.data = ConfigData({
+            "foo": {
+                "bar": 123
+            },
+            "foo1": 114,
+            "foo2": ["bar"]
+        })
+
+    def test_readonly_attr(self):
+        data = Config(deepcopy(self.data))
+
+        self.assertIsNone(data.namespace)
+        with self.assertRaises(AttributeError):
+            # noinspection PyPropertyAccess
+            data.namespace = None
+
+        self.assertEqual(data.data, self.data)
+        with self.assertRaises(AttributeError):
+            # noinspection PyPropertyAccess
+            data.data = None
+
+        self.assertIsNone(data.file_name)
+        with self.assertRaises(AttributeError):
+            # noinspection PyPropertyAccess
+            data.file_name = None
+
+        self.assertIsNone(data.config_format)
+        with self.assertRaises(AttributeError):
+            # noinspection PyPropertyAccess
+            data.config_format = None
+
+    def test_dunder_method(self):
+        data = Config(deepcopy(self.data))
+
+        self.assertEqual(len(data), len(self.data), msg="__len__")
+        self.assertNotEqual(data, self.data, msg="__eq__")
+        self.assertSetEqual(set(data), set(self.data), msg="__iter__")
+
+        self.assertIn("foo.bar", data, msg="__contains__")
+        self.assertEqual(data["foo.bar"], 123, msg="__getitem__")
+        data["foo.bar"] = 456
+        del data["foo.bar"]
+        self.assertNotIn("foo.bar", data, msg="__delitem__")
 
 
 if __name__ == "__main__":

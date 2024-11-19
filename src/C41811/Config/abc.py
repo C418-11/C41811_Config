@@ -11,6 +11,7 @@ from copy import deepcopy
 from typing import Any
 from typing import ItemsView
 from typing import KeysView
+from typing import ValuesView
 from typing import MutableMapping
 from typing import Optional
 from typing import Self
@@ -254,9 +255,22 @@ class ABCConfigData(ABC, Mapping):
                 k for k, v in self._data.items() if not isinstance(v, Mapping))
             return keys.keys()
 
-    def values(self):
-        copied_values = [deepcopy(x) for x in self._data.values()]
-        return [(self.new_data(x) if isinstance(x, Mapping) else x) for x in copied_values]
+    def values(self, get_raw: bool = False) -> ValuesView[Any]:
+        """
+        获取所有值
+
+        :param get_raw: 是否获取原始数据
+        :type get_raw: bool
+
+        :return: 所有键值对
+        :rtype: ValuesView[Any]
+        """
+        if get_raw:
+            return self._data.values()
+
+        return OrderedDict(
+            (k, self.new_data(v) if isinstance(v, Mapping) else deepcopy(v)) for k, v in self._data.items()
+        ).values()
 
     def items(self, *, get_raw: bool = False) -> ItemsView[str, Any]:
         """
@@ -270,8 +284,9 @@ class ABCConfigData(ABC, Mapping):
         """
         if get_raw:
             return self._data.items()
-        copied_items = [(deepcopy(k), deepcopy(v)) for k, v in self._data.items()]
-        return OrderedDict((k, (self.new_data(v) if isinstance(v, Mapping) else v)) for k, v in copied_items).items()
+        return OrderedDict(
+            (deepcopy(k), self.new_data(v) if isinstance(v, Mapping) else deepcopy(v)) for k, v in self._data.items()
+        ).items()
 
     def __getitem__(self, key):
         """
@@ -348,7 +363,7 @@ class ABCSLProcessorPool(ABC):
         return self._root_path
 
 
-class ABCConfig(ABC):
+class ABCConfig(ABC, Mapping):
     """
     配置文件类
     """
@@ -362,6 +377,9 @@ class ABCConfig(ABC):
             config_format: Optional[str] = None
     ) -> None:
         """
+        .. caution::
+           config_data参数未默认做深拷贝，可能导致非预期的行为
+
         :param config_data: 配置数据
         :type config_data: ABCConfigData
         :param namespace: 文件命名空间
@@ -448,6 +466,27 @@ class ABCConfig(ABC):
         :raise UnsupportedConfigFormatError: 不支持的配置格式
         """
 
+    def keys(self, **kwargs):
+        """
+        .. seealso::
+           :py:func:`ABCConfigData.keys`
+        """
+        return self._data.keys(**kwargs)
+
+    def values(self, **kwargs):
+        """
+        .. seealso::
+           :py:func:`ABCConfigData.values`
+        """
+        return self._data.values(**kwargs)
+
+    def items(self, **kwargs):
+        """
+        .. seealso::
+           :py:func:`ABCConfigData.items`
+        """
+        return self._data.items(**kwargs)
+
     def __getitem__(self, key: str) -> Any:
         return self._data[key]
 
@@ -456,6 +495,12 @@ class ABCConfig(ABC):
 
     def __delitem__(self, key: str) -> None:
         del self._data[key]
+
+    def __iter__(self):
+        return iter(self._data)
+
+    def __len__(self):
+        return len(self._data)
 
     def __contains__(self, key: str) -> bool:
         return key in self._data
