@@ -11,6 +11,7 @@ jobs:
     uses: ./.github/workflows/python-build.yml
     permissions:
       id-token: write
+      contents: write
 
   test-pypi-publish:
     name: publish to test PyPI

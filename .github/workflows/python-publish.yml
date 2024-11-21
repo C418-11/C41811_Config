@@ -10,6 +10,7 @@ jobs:
     uses: ./.github/workflows/python-build.yml
     permissions:
       id-token: write
+      contents: write
 
   pypi-publish:
     name: publish to PyPI
