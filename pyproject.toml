@@ -58,3 +58,9 @@ where = ["src"]
 
 [tool.setuptools_scm]
 version_file = "src/C41811/Config/_version.py"
+
+[tool.yapf]
+based_on_style = "pep8"
+column_limit = 120
+indent_width = 4
+use_tabs = false
