@@ -79,7 +79,7 @@ class ConfigData(ABCConfigData):
         return process_return(now_data)
 
     @override
-    def getPathValue(self, path: str, *, get_raw: bool = False) -> Any:
+    def retrieve(self, path: str, *, get_raw: bool = False) -> Any:
         def checker(now_data, now_path, _last_path, path_index):
             if not isinstance(now_data, Mapping):
                 raise ConfigDataTypeError(path, self._sep_char, now_path, path_index, Mapping, type(now_data))
@@ -97,7 +97,7 @@ class ConfigData(ABCConfigData):
         return self._process_path(path, checker, process_return)
 
     @override
-    def setPathValue(self, path: str, value: Any, *, allow_create: bool = True) -> Self:
+    def modify(self, path: str, value: Any, *, allow_create: bool = True) -> Self:
         if self.read_only:
             raise TypeError("Config data is read-only")
 
@@ -116,7 +116,7 @@ class ConfigData(ABCConfigData):
         return self
 
     @override
-    def deletePath(self, path: str) -> Self:
+    def delete(self, path: str) -> Self:
         if self.read_only:
             raise TypeError("Config data is read-only")
 
@@ -134,7 +134,7 @@ class ConfigData(ABCConfigData):
         return self
 
     @override
-    def hasPath(self, path: str) -> bool:
+    def exists(self, path: str) -> bool:
         def checker(now_data, now_path, _last_path, path_index):
             if not isinstance(now_data, Mapping):
                 raise ConfigDataTypeError(path, self._sep_char, now_path, path_index, Mapping, type(now_data))
@@ -146,16 +146,16 @@ class ConfigData(ABCConfigData):
     @override
     def get(self, path: str, default=None, *, get_raw: bool = False) -> Any:
         try:
-            return self.getPathValue(path, get_raw=get_raw)
+            return self.retrieve(path, get_raw=get_raw)
         except RequiredKeyNotFoundError:
             return default
 
     @override
     def set_default(self, path: str, default=None, *, get_raw: bool = False) -> Any:
         try:
-            return self.getPathValue(path, get_raw=get_raw)
+            return self.retrieve(path, get_raw=get_raw)
         except RequiredKeyNotFoundError:
-            self.setPathValue(path, default)
+            self.modify(path, default)
             return default
 
 
@@ -603,7 +603,7 @@ class ConfigPool(ABCConfigPool):
         self._configs[namespace][file_name] = config
 
     @override
-    def saveAll(self, ignore_err: bool = False) -> None | dict[str, dict[str, tuple[ABCConfig, Exception]]]:
+    def save_all(self, ignore_err: bool = False) -> None | dict[str, dict[str, tuple[ABCConfig, Exception]]]:
         """
         保存所有配置
 
@@ -630,14 +630,7 @@ class ConfigPool(ABCConfigPool):
         return {k: v for k, v in errors.items() if v}
 
     @override
-    def requireConfig(
-            self,
-            namespace: str,
-            file_name: str,
-            required: list[str] | dict[str, Any],
-            *args,
-            **kwargs,
-    ):
+    def require(self, namespace: str, file_name: str, required: list[str] | dict[str, Any], *args, **kwargs):
         return RequireConfigDecorator(self, namespace, file_name, RequiredKey(required), *args, **kwargs)
 
     def __getitem__(self, item):
@@ -741,7 +734,7 @@ class RequireConfigDecorator:
         self._filter_kwargs = {"allow_create": True} | filter_kwargs
         self._cache_config: Callable = cache_config if cache_config is not None else lambda x: x
 
-    def checkConfig(self, *, ignore_cache: bool = False, **filter_kwargs) -> Any:
+    def check(self, *, ignore_cache: bool = False, **filter_kwargs) -> Any:
         """
         手动检查配置
 
@@ -779,16 +772,16 @@ class RequireConfigDecorator:
 
 
 DefaultConfigPool = ConfigPool()
-requireConfig = DefaultConfigPool.requireConfig
+requireConfig = DefaultConfigPool.require
 
 
 class BaseConfigSL(ABCConfigSL, ABC):
     @override
-    def registerTo(self, config_pool: ABCSLProcessorPool = None) -> None:
+    def register_to(self, config_pool: ABCSLProcessorPool = None) -> None:
         if config_pool is None:
             config_pool = DefaultConfigPool
 
-        super().registerTo(config_pool)
+        super().register_to(config_pool)
 
 
 __all__ = (

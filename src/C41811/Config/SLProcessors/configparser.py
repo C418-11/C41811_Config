@@ -22,12 +22,12 @@ class ConfigParserSL(BaseConfigSL):
 
     @property
     @override
-    def regName(self) -> str:
+    def reg_name(self) -> str:
         return "configparser"
 
     @property
     @override
-    def fileExt(self) -> list[str]:
+    def file_ext(self) -> list[str]:
         return [".ini", ".properties", ".cfg"]
 
     @override
@@ -40,7 +40,7 @@ class ConfigParserSL(BaseConfigSL):
             *args,
             **kwargs
     ) -> None:
-        file_path = self._getFilePath(config, root_path, namespace, file_name)
+        file_path = self._get_file_path(config, root_path, namespace, file_name)
         config_data = self._parser()
         try:
             config_data.read_dict(config.data.data)
@@ -59,11 +59,11 @@ class ConfigParserSL(BaseConfigSL):
             *args,
             **kwargs
     ) -> C:
-        file_path = self._getFilePath(config_cls, root_path, namespace, file_name)
+        file_path = self._get_file_path(config_cls, root_path, namespace, file_name)
         data = self._parser()
         try:
             data.read(file_path, encoding="utf-8")
-            obj = config_cls(ConfigData(data), namespace=namespace, file_name=file_name, config_format=self.regName)
+            obj = config_cls(ConfigData(data), namespace=namespace, file_name=file_name, config_format=self.reg_name)
         except Exception as e:
             raise FailedProcessConfigFileError(e) from e
 

@@ -56,7 +56,7 @@ class TestConfigData(TestCase):
         data["foo3.bar"] = 789
         self.assertEqual(data["foo3.bar"], 789)
         with self.assertRaises(RequiredKeyNotFoundError):
-            data.setPathValue("foo3.bar1", 789, allow_create=False)
+            data.modify("foo3.bar1", 789, allow_create=False)
         self.assertNotIn("foo3.bar1", data)
 
     def test_delattr(self):
@@ -130,31 +130,31 @@ class TestConfigData(TestCase):
         data = ConfigData(self.raw_data)
 
         with self.assertRaises(ConfigDataTypeError):
-            data.getPathValue("foo1.bar")
+            data.retrieve("foo1.bar")
         with self.assertRaises(ConfigDataTypeError):
-            data.setPathValue("foo1.bar", 456)
+            data.modify("foo1.bar", 456)
         with self.assertRaises(ConfigDataTypeError):
-            data.deletePath("foo1.bar")
+            data.delete("foo1.bar")
 
         readonly_data = deepcopy(self.raw_data)
         readonly_data["foo"] = ReadOnlyMapping(readonly_data["foo"])
         readonly = ConfigData(readonly_data)
         with self.assertRaises(ConfigDataTypeError):
-            readonly.setPathValue("foo.bar", 456)
-        self.assertEqual(readonly.getPathValue("foo.bar"), 123)
+            readonly.modify("foo.bar", 456)
+        self.assertEqual(readonly.retrieve("foo.bar"), 123)
         with self.assertRaises(ConfigDataTypeError):
-            readonly.deletePath("foo.bar")
-        self.assertEqual(readonly.getPathValue("foo.bar"), 123)
+            readonly.delete("foo.bar")
+        self.assertEqual(readonly.retrieve("foo.bar"), 123)
 
     def test_required_key_not_found_error(self):
         data = ConfigData(self.raw_data)
 
         with self.assertRaises(RequiredKeyNotFoundError):
-            data.getPathValue("foo3")
+            data.retrieve("foo3")
         with self.assertRaises(RequiredKeyNotFoundError):
-            data.setPathValue("foo3", 456, allow_create=False)
+            data.modify("foo3", 456, allow_create=False)
         with self.assertRaises(RequiredKeyNotFoundError):
-            data.deletePath("foo3")
+            data.delete("foo3")
 
     def test_get(self):
         data = ConfigData(self.raw_data)

@@ -110,7 +110,7 @@ class ABCConfigData(ABC, Mapping):
         self._read_only = bool(value)
 
     @abstractmethod
-    def getPathValue(self, path: str, *, get_raw: bool = False) -> Any:
+    def retrieve(self, path: str, *, get_raw: bool = False) -> Any:
         """
         获取路径的值的*快照*
 
@@ -127,9 +127,9 @@ class ABCConfigData(ABC, Mapping):
         """
 
     @abstractmethod
-    def setPathValue(self, path: str, value: Any, *, allow_create: bool = True) -> Self:
+    def modify(self, path: str, value: Any, *, allow_create: bool = True) -> Self:
         """
-        设置路径的值
+        修改路径的值
 
         .. caution::
            value参数未默认做深拷贝，可能导致非预期的行为
@@ -152,7 +152,7 @@ class ABCConfigData(ABC, Mapping):
         """
 
     @abstractmethod
-    def deletePath(self, path: str) -> Self:
+    def delete(self, path: str) -> Self:
         """
         删除路径
 
@@ -167,7 +167,7 @@ class ABCConfigData(ABC, Mapping):
         """
 
     @abstractmethod
-    def hasPath(self, path: str) -> bool:
+    def exists(self, path: str) -> bool:
         """
         判断路径是否存在
 
@@ -292,25 +292,25 @@ class ABCConfigData(ABC, Mapping):
         """
         getPathValue的快捷方式
         """
-        return self.getPathValue(key)
+        return self.retrieve(key)
 
     def __setitem__(self, key, value) -> None:
         """
         setPathValue的快捷方式
         """
-        self.setPathValue(key, value)
+        self.modify(key, value)
 
     def __delitem__(self, key) -> None:
         """
         deletePath的快捷方式
         """
-        self.deletePath(key)
+        self.delete(key)
 
     def __contains__(self, key) -> bool:
         """
         hasPath的快捷方式
         """
-        return self.hasPath(key)
+        return self.exists(key)
 
     def __len__(self):
         return len(self._data)
@@ -565,7 +565,7 @@ class ABCConfigPool(ABCSLProcessorPool):
         """
 
     @abstractmethod
-    def saveAll(self, ignore_err: bool = False) -> None | dict[str, dict[str, tuple[ABCConfig, Exception]]]:
+    def save_all(self, ignore_err: bool = False) -> None | dict[str, dict[str, tuple[ABCConfig, Exception]]]:
         """
         保存所有配置
 
@@ -577,11 +577,11 @@ class ABCConfigPool(ABCSLProcessorPool):
         """
 
     @abstractmethod
-    def requireConfig(
+    def require(
             self,
             namespace: str,
             file_name: str,
-            required: list[str] | dict[str, Any],
+            required: list[str] | dict[str, Any],  # todo RequiredKey的validator现在不在强制需求参数类型，应为Any，且应补上工厂相关参数
             *args,
             **kwargs,
     ):
@@ -593,7 +593,7 @@ class ABCConfigPool(ABCSLProcessorPool):
         :param file_name: 文件名
         :type file_name: str
         :param required: 必须的配置
-        :type required: list[str] | dict[str, Any]
+        :type required: list[str] | dict[str, Any]  # todo
         :param args: 详见 :py:func:`RequireConfigDecorator`
         :param kwargs: 详见 :py:func:`RequireConfigDecorator`
 
@@ -643,19 +643,19 @@ class ABCConfigSL(ABC):
 
     @property
     @abstractmethod
-    def regName(self) -> str:
+    def reg_name(self) -> str:
         """
         :return: SL处理器的注册名
         """
 
     @property
     @abstractmethod
-    def fileExt(self) -> list[str]:
+    def file_ext(self) -> list[str]:
         """
         :return: 支持的文件扩展名
         """
 
-    def registerTo(self, config_pool: ABCSLProcessorPool) -> None:
+    def register_to(self, config_pool: ABCSLProcessorPool) -> None:
         """
         注册到配置池中
 
@@ -663,12 +663,12 @@ class ABCConfigSL(ABC):
         :type config_pool: ABCSLProcessorPool
         """
 
-        config_pool.SLProcessor[self.regName] = self
-        for ext in self.fileExt:
+        config_pool.SLProcessor[self.reg_name] = self
+        for ext in self.file_ext:
             if ext not in config_pool.FileExtProcessor:
-                config_pool.FileExtProcessor[ext] = {self.regName}
+                config_pool.FileExtProcessor[ext] = {self.reg_name}
                 continue
-            config_pool.FileExtProcessor[ext].add(self.regName)
+            config_pool.FileExtProcessor[ext].add(self.reg_name)
 
     @abstractmethod
     def save(
@@ -730,7 +730,7 @@ class ABCConfigSL(ABC):
     def _norm_join(*paths: str) -> str:
         return os.path.normpath(os.path.join(*paths))
 
-    def _getFilePath(
+    def _get_file_path(
             self,
             config: ABCConfig,
             root_path: str,
