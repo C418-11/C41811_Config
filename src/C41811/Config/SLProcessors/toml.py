@@ -5,7 +5,7 @@ from typing import Optional
 from typing import TypeVar
 from typing import override
 
-from ..abc import ABCConfig
+from ..abc import ABCConfigFile
 from ..abc import ABCConfigSL
 from ..errors import FailedProcessConfigFileError
 from ..main import ConfigData
@@ -16,7 +16,7 @@ try:
 except ImportError:
     raise ImportError("toml is not installed. Please install it with `pip install toml`") from None
 
-C = TypeVar("C", bound=ABCConfig)
+C = TypeVar("C", bound=ABCConfigFile)
 
 
 class TomlSL(ABCConfigSL):
@@ -37,7 +37,7 @@ class TomlSL(ABCConfigSL):
     @override
     def save(
             self,
-            config: ABCConfig,
+            config: ABCConfigFile,
             root_path: str,
             namespace: Optional[str],
             file_name: Optional[str],

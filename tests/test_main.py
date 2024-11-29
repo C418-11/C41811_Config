@@ -11,7 +11,7 @@ from unittest import main
 from pydantic import BaseModel, Field
 
 from src.C41811.Config import ConfigData
-from src.C41811.Config import Config
+from src.C41811.Config import ConfigFile
 from src.C41811.Config import RequiredKey
 from src.C41811.Config.errors import ConfigDataTypeError
 from src.C41811.Config.errors import RequiredKeyNotFoundError
@@ -452,7 +452,7 @@ class TestConfig(TestCase):
         })
 
     def test_readonly_attr(self):
-        data = Config(deepcopy(self.data))
+        data = ConfigFile(deepcopy(self.data))
 
         self.assertIsNone(data.namespace)
         with self.assertRaises(AttributeError):
@@ -474,18 +474,11 @@ class TestConfig(TestCase):
             # noinspection PyPropertyAccess
             data.config_format = None
 
-    def test_dunder_method(self):
-        data = Config(deepcopy(self.data))
+    def test_bool(self):
+        data = ConfigFile(deepcopy(self.data))
 
-        self.assertEqual(len(data), len(self.data), msg="__len__")
-        self.assertNotEqual(data, self.data, msg="__eq__")
-        self.assertSetEqual(set(data), set(self.data), msg="__iter__")
-
-        self.assertIn("foo.bar", data, msg="__contains__")
-        self.assertEqual(data["foo.bar"], 123, msg="__getitem__")
-        data["foo.bar"] = 456
-        del data["foo.bar"]
-        self.assertNotIn("foo.bar", data, msg="__delitem__")
+        self.assertTrue(data)
+        self.assertFalse(ConfigFile(ConfigData()))
 
 
 if __name__ == "__main__":

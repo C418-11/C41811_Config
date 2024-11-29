@@ -29,7 +29,7 @@ from pydantic import create_model
 from pydantic.fields import FieldInfo
 from pydantic_core import core_schema
 
-from .abc import ABCConfig
+from .abc import ABCConfigFile
 from .abc import ABCConfigData
 from .abc import ABCConfigPool
 from .abc import ABCConfigSL
@@ -515,7 +515,7 @@ class RequiredKey:
         return validator(data)
 
 
-class Config(ABCConfig):
+class ConfigFile(ABCConfigFile):
     """
     配置类
     """
@@ -579,10 +579,10 @@ class ConfigPool(ABCConfigPool):
 
     def __init__(self, root_path="./.config"):
         super().__init__(root_path)
-        self._configs: dict[str, dict[str, ABCConfig]] = {}
+        self._configs: dict[str, dict[str, ABCConfigFile]] = {}
 
     @override
-    def get(self, namespace: str, file_name: Optional[str] = None) -> dict[str, ABCConfig] | ABCConfig | None:
+    def get(self, namespace: str, file_name: Optional[str] = None) -> dict[str, ABCConfigFile] | ABCConfigFile | None:
         if namespace not in self._configs:
             return None
         result = self._configs[namespace]
@@ -596,14 +596,14 @@ class ConfigPool(ABCConfigPool):
         return None
 
     @override
-    def set(self, namespace: str, file_name: str, config: ABCConfig) -> None:
+    def set(self, namespace: str, file_name: str, config: ABCConfigFile) -> None:
         if namespace not in self._configs:
             self._configs[namespace] = {}
 
         self._configs[namespace][file_name] = config
 
     @override
-    def save_all(self, ignore_err: bool = False) -> None | dict[str, dict[str, tuple[ABCConfig, Exception]]]:
+    def save_all(self, ignore_err: bool = False) -> None | dict[str, dict[str, tuple[ABCConfigFile, Exception]]]:
         """
         保存所有配置
 
@@ -611,7 +611,7 @@ class ConfigPool(ABCConfigPool):
         :type ignore_err: bool
 
         :return: ignore_err为True时返回{Namespace: {FileName: (ConfigObj, Exception)}}，否则返回None
-        :rtype: None | dict[str, dict[str, tuple[ABCConfig, Exception]]]
+        :rtype: None | dict[str, dict[str, tuple[ABCConfigFile, Exception]]]
         """
         errors = {}
         for namespace, configs in self._configs.items():
@@ -656,7 +656,7 @@ class RequireConfigDecorator:
             raw_file_name: str,
             required: RequiredKey,
             *,
-            config_cls: type[ABCConfig] = Config,
+            config_cls: type[ABCConfigFile] = ConfigFile,
             config_format: Optional[str] = None,
             cache_config: Optional[Callable[[Callable], Callable]] = None,
             allow_create: bool = True,
@@ -693,11 +693,11 @@ class RequireConfigDecorator:
         else:
             format_set = {config_format, }
 
-        def _load_config(format_: str) -> ABCConfig:
+        def _load_config(format_: str) -> ABCConfigFile:
             if format_ not in config_pool.SLProcessor:
                 raise UnsupportedConfigFormatError(format_)
 
-            result: ABCConfig | None = config_pool.get(namespace, raw_file_name)
+            result: ABCConfigFile | None = config_pool.get(namespace, raw_file_name)
             if result is None:
                 try:
                     result = config_cls.load(config_pool, namespace, raw_file_name, format_)
@@ -721,7 +721,7 @@ class RequireConfigDecorator:
             except FailedProcessConfigFileError as err:
                 errors[f] = err
                 continue
-            config: ABCConfig = ret
+            config: ABCConfigFile = ret
             break
         else:
             raise FailedProcessConfigFileError(errors)
@@ -729,7 +729,7 @@ class RequireConfigDecorator:
         if filter_kwargs is None:
             filter_kwargs = {}
 
-        self._config: ABCConfig = config
+        self._config: ABCConfigFile = config
         self._required = required
         self._filter_kwargs = {"allow_create": True} | filter_kwargs
         self._cache_config: Callable = cache_config if cache_config is not None else lambda x: x
@@ -789,7 +789,7 @@ __all__ = (
     "ValidatorTypes",
     "ValidatorConfig",
     "RequiredKey",
-    "Config",
+    "ConfigFile",
     "ConfigPool",
     "RequireConfigDecorator",
     "BaseConfigSL",

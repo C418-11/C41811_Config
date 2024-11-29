@@ -6,7 +6,7 @@ from typing import Optional
 from typing import TypeVar
 from typing import override
 
-from ..abc import ABCConfig
+from ..abc import ABCConfigFile
 from ..errors import FailedProcessConfigFileError
 from ..main import BaseConfigSL
 from ..main import ConfigData
@@ -17,7 +17,7 @@ try:
 except ImportError:
     raise ImportError("PyYaml is not installed. Please install it with `pip install PyYaml`") from None
 
-C = TypeVar("C", bound=ABCConfig)
+C = TypeVar("C", bound=ABCConfigFile)
 
 
 class PyYamlSL(BaseConfigSL):
@@ -38,7 +38,7 @@ class PyYamlSL(BaseConfigSL):
     @override
     def save(
             self,
-            config: ABCConfig,
+            config: ABCConfigFile,
             root_path: str,
             namespace: Optional[str],
             file_name: Optional[str],

@@ -363,7 +363,7 @@ class ABCSLProcessorPool(ABC):
         return self._root_path
 
 
-class ABCConfig(ABC, Mapping):
+class ABCConfigFile(ABC):
     """
     配置文件类
     """
@@ -466,44 +466,8 @@ class ABCConfig(ABC, Mapping):
         :raise UnsupportedConfigFormatError: 不支持的配置格式
         """
 
-    def keys(self, **kwargs):
-        """
-        .. seealso::
-           :py:func:`ABCConfigData.keys`
-        """
-        return self._data.keys(**kwargs)
-
-    def values(self, **kwargs):
-        """
-        .. seealso::
-           :py:func:`ABCConfigData.values`
-        """
-        return self._data.values(**kwargs)
-
-    def items(self, **kwargs):
-        """
-        .. seealso::
-           :py:func:`ABCConfigData.items`
-        """
-        return self._data.items(**kwargs)
-
-    def __getitem__(self, key: str) -> Any:
-        return self._data[key]
-
-    def __setitem__(self, key: str, value: Any) -> None:
-        self._data[key] = value
-
-    def __delitem__(self, key: str) -> None:
-        del self._data[key]
-
-    def __iter__(self):
-        return iter(self._data)
-
-    def __len__(self):
-        return len(self._data)
-
-    def __contains__(self, key: str) -> bool:
-        return key in self._data
+    def __bool__(self):
+        return bool(self._data)
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
@@ -533,7 +497,7 @@ class ABCConfigPool(ABCSLProcessorPool):
     """
 
     @abstractmethod
-    def get(self, namespace: str, file_name: Optional[str] = None) -> dict[str, ABCConfig] | ABCConfig | None:
+    def get(self, namespace: str, file_name: Optional[str] = None) -> dict[str, ABCConfigFile] | ABCConfigFile | None:
         """
         获取配置
 
@@ -545,11 +509,11 @@ class ABCConfigPool(ABCSLProcessorPool):
         :type file_name: Optional[str]
 
         :return: 配置
-        :rtype: dict[str, ABCConfig] | ABCConfig | None
+        :rtype: dict[str, ABCConfigFile] | ABCConfigFile | None
         """
 
     @abstractmethod
-    def set(self, namespace: str, file_name: str, config: ABCConfig) -> None:
+    def set(self, namespace: str, file_name: str, config: ABCConfigFile) -> None:
         """
         设置配置
 
@@ -558,14 +522,14 @@ class ABCConfigPool(ABCSLProcessorPool):
         :param file_name: 文件名
         :type file_name: str
         :param config: 配置
-        :type config: ABCConfig
+        :type config: ABCConfigFile
 
         :return: None
         :rtype: None
         """
 
     @abstractmethod
-    def save_all(self, ignore_err: bool = False) -> None | dict[str, dict[str, tuple[ABCConfig, Exception]]]:
+    def save_all(self, ignore_err: bool = False) -> None | dict[str, dict[str, tuple[ABCConfigFile, Exception]]]:
         """
         保存所有配置
 
@@ -573,7 +537,7 @@ class ABCConfigPool(ABCSLProcessorPool):
         :type ignore_err: bool
 
         :return: ignore_err为True时返回{Namespace: {FileName: (ConfigObj, Exception)}}，否则返回None
-        :rtype: None | dict[str, dict[str, tuple[ABCConfig, Exception]]]
+        :rtype: None | dict[str, dict[str, tuple[ABCConfigFile, Exception]]]
         """
 
     @abstractmethod
@@ -603,7 +567,7 @@ class ABCConfigPool(ABCSLProcessorPool):
 
 
 SLArgument = Sequence | Mapping | tuple[Sequence, Mapping[str, Any]]
-C = TypeVar("C", bound=ABCConfig)
+C = TypeVar("C", bound=ABCConfigFile)
 
 
 class ABCConfigSL(ABC):
@@ -673,7 +637,7 @@ class ABCConfigSL(ABC):
     @abstractmethod
     def save(
             self,
-            config: ABCConfig,
+            config: ABCConfigFile,
             root_path: str,
             namespace: Optional[str],
             file_name: Optional[str],
@@ -684,7 +648,7 @@ class ABCConfigSL(ABC):
         保存处理器
 
         :param config: 待保存配置
-        :type config: ABCConfig
+        :type config: ABCConfigFile
         :param root_path: 保存的根目录
         :type root_path: str
         :param namespace: 配置的命名空间
@@ -732,7 +696,7 @@ class ABCConfigSL(ABC):
 
     def _get_file_path(
             self,
-            config: ABCConfig,
+            config: ABCConfigFile,
             root_path: str,
             namespace: Optional[str] = None,
             file_name: Optional[str] = None,
@@ -741,7 +705,7 @@ class ABCConfigSL(ABC):
         获取配置文件对应的文件路径(提供给子类的便捷方法)
 
         :param config: 配置对象
-        :type config: ABCConfig
+        :type config: ABCConfigFile
         :param root_path: 保存的根目录
         :type root_path: str
         :param namespace: 配置的命名空间
@@ -773,6 +737,6 @@ __all__ = (
     "ABCConfigData",
     "ABCSLProcessorPool",
     "ABCConfigPool",
-    "ABCConfig",
+    "ABCConfigFile",
     "ABCConfigSL",
 )

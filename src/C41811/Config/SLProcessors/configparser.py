@@ -6,12 +6,12 @@ from typing import Optional
 from typing import TypeVar
 from typing import override
 
-from ..abc import ABCConfig
+from ..abc import ABCConfigFile
 from ..errors import FailedProcessConfigFileError
 from ..main import BaseConfigSL
 from ..main import ConfigData
 
-C = TypeVar("C", bound=ABCConfig)
+C = TypeVar("C", bound=ABCConfigFile)
 
 
 class ConfigParserSL(BaseConfigSL):
@@ -33,7 +33,7 @@ class ConfigParserSL(BaseConfigSL):
     @override
     def save(
             self,
-            config: ABCConfig,
+            config: ABCConfigFile,
             root_path: str,
             namespace: Optional[str],
             file_name: Optional[str],
