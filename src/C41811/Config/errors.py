@@ -18,22 +18,22 @@ class ConfigOperate(Enum):
     Unknown = None
 
 
-class RequiredKeyNotFoundError(KeyError):
+class RequiredPathNotFoundError(KeyError):
     """
     需求的键未找到错误
     """
 
     def __init__(
             self,
-            key: str,
+            path: str,
             sep_char: str,
             current_key: str,
             index: int,
             operate: ConfigOperate = ConfigOperate.Unknown,
     ):
         """
-        :param key: 完整键路径
-        :type key: str
+        :param path: 完整键路径
+        :type path: str
         :param sep_char: 键路径的分隔符
         :type sep_char: str
         :param current_key: 当前正在访问的键
@@ -45,14 +45,14 @@ class RequiredKeyNotFoundError(KeyError):
         """
         super().__init__(current_key)
 
-        self.key = key
+        self.path = path
         self.sep_char = sep_char
         self.current_key = current_key
         self.index = index
         self.operate = ConfigOperate(operate)
 
     def __str__(self):
-        string = f"{self.key} -> {self.current_key} ({self.index + 1} / {len(self.key.split(self.sep_char))})"
+        string = f"{self.path} -> {self.current_key} ({self.index + 1} / {len(self.path.split(self.sep_char))})"
         if self.operate.value is not ConfigOperate.Unknown:
             string += f" Operate: {self.operate.value}"
         return string
@@ -65,7 +65,7 @@ class ConfigDataTypeError(ValueError):
 
     def __init__(
             self,
-            key: str,
+            path: str,
             sep_char: str,
             current_key: str,
             index: int,
@@ -73,8 +73,8 @@ class ConfigDataTypeError(ValueError):
             now_type: type[object],
     ):
         """
-        :param key: 完整键路径
-        :type key: str
+        :param path: 完整键路径
+        :type path: str
         :param sep_char: 键路径的分隔符
         :type sep_char: str
         :param current_key: 当前正在访问的键
@@ -88,18 +88,18 @@ class ConfigDataTypeError(ValueError):
         """
         super().__init__(current_key)
 
-        self.key = key
+        self.path = path
         self.sep_char = sep_char
         self.current_key = current_key
         self.index = index
         self.requited_type = required_type
         self.now_type = now_type
 
-        self.relative_key = self.sep_char.join(self.key.split(self.sep_char)[:self.index])
+        self.relative_key = self.sep_char.join(self.path.split(self.sep_char)[:self.index])
 
     def __str__(self):
         return (
-            f"{self.key} -> {self.current_key} ({self.index + 1} / {len(self.key.split(self.sep_char))})"
+            f"{self.path} -> {self.current_key} ({self.index + 1} / {len(self.path.split(self.sep_char))})"
             f" Must be '{self.requited_type}'"
             f", Not '{self.now_type}'"
         )
@@ -168,7 +168,7 @@ class FailedProcessConfigFileError(Exception):
 
 __all__ = (
     "ConfigOperate",
-    "RequiredKeyNotFoundError",
+    "RequiredPathNotFoundError",
     "ConfigDataTypeError",
     "UnsupportedConfigFormatError",
     "FailedProcessConfigFileError",

@@ -12,9 +12,9 @@ from pydantic import BaseModel, Field
 
 from src.C41811.Config import ConfigData
 from src.C41811.Config import ConfigFile
-from src.C41811.Config import RequiredKey
+from src.C41811.Config import RequiredPath
 from src.C41811.Config.errors import ConfigDataTypeError
-from src.C41811.Config.errors import RequiredKeyNotFoundError
+from src.C41811.Config.errors import RequiredPathNotFoundError
 
 
 class ReadOnlyMapping(Mapping):
@@ -55,7 +55,7 @@ class TestConfigData(TestCase):
         self.assertEqual(data["foo.bar"], 456)
         data["foo3.bar"] = 789
         self.assertEqual(data["foo3.bar"], 789)
-        with self.assertRaises(RequiredKeyNotFoundError):
+        with self.assertRaises(RequiredPathNotFoundError):
             data.modify("foo3.bar1", 789, allow_create=False)
         self.assertNotIn("foo3.bar1", data)
 
@@ -149,11 +149,11 @@ class TestConfigData(TestCase):
     def test_required_key_not_found_error(self):
         data = ConfigData(self.raw_data)
 
-        with self.assertRaises(RequiredKeyNotFoundError):
+        with self.assertRaises(RequiredPathNotFoundError):
             data.retrieve("foo3")
-        with self.assertRaises(RequiredKeyNotFoundError):
+        with self.assertRaises(RequiredPathNotFoundError):
             data.modify("foo3", 456, allow_create=False)
-        with self.assertRaises(RequiredKeyNotFoundError):
+        with self.assertRaises(RequiredPathNotFoundError):
             data.delete("foo3")
 
     def test_get(self):
@@ -289,7 +289,7 @@ class TestRequiredKey(TestCase):
             foo1: int
             foo2: list[str]
 
-        data = RequiredKey(Data, "pydantic").filter(self.data)
+        data = RequiredPath(Data, "pydantic").filter(self.data)
 
         self.assertIn("foo.bar", data)
         self.assertEqual(data["foo.bar"], 123)
@@ -300,29 +300,29 @@ class TestRequiredKey(TestCase):
         class NotExist(BaseModel):
             foo3: int
 
-        with self.assertRaises(RequiredKeyNotFoundError):
-            RequiredKey(NotExist, "pydantic").filter(self.data)
+        with self.assertRaises(RequiredPathNotFoundError):
+            RequiredPath(NotExist, "pydantic").filter(self.data)
 
         class NotExist2(BaseModel):
             foo: NotExist
 
-        with self.assertRaises(RequiredKeyNotFoundError):
-            RequiredKey(NotExist2, "pydantic").filter(self.data)
+        with self.assertRaises(RequiredPathNotFoundError):
+            RequiredPath(NotExist2, "pydantic").filter(self.data)
 
         class WrongType(BaseModel):
             foo: str
 
         with self.assertRaises(ConfigDataTypeError):
-            RequiredKey(WrongType, "pydantic").filter(self.data)
+            RequiredPath(WrongType, "pydantic").filter(self.data)
 
         class WrongType2(BaseModel):
             foo2: list[int]
 
         with self.assertRaises(ConfigDataTypeError):
-            RequiredKey(WrongType2, "pydantic").filter(self.data)
+            RequiredPath(WrongType2, "pydantic").filter(self.data)
 
     def test_default_iterable(self):
-        data = RequiredKey([
+        data = RequiredPath([
             "foo.bar",
             "foo",
             "foo1",
@@ -335,13 +335,13 @@ class TestRequiredKey(TestCase):
         self.assertEqual(data["foo2"], ["bar"])
 
     def test_default_iterable_with_error(self):
-        with self.assertRaises(RequiredKeyNotFoundError):
-            RequiredKey(["foo.bar1"]).filter(self.data, allow_create=True)
+        with self.assertRaises(RequiredPathNotFoundError):
+            RequiredPath(["foo.bar1"]).filter(self.data, allow_create=True)
         with self.assertRaises(ConfigDataTypeError):
-            RequiredKey(["foo.bar.err_type"]).filter(self.data, allow_create=True)
+            RequiredPath(["foo.bar.err_type"]).filter(self.data, allow_create=True)
 
     def test_default_mapping(self):
-        data = RequiredKey({
+        data = RequiredPath({
             "foo.bar": int,
             "foo1": int,
             "foo2": list[str],
@@ -353,7 +353,7 @@ class TestRequiredKey(TestCase):
         self.assertSequenceEqual(data["foo2"], ["bar"])
 
     def test_default_mapping_repeated_subkey(self):
-        data = RequiredKey({
+        data = RequiredPath({
             "foo": dict,
             "foo.bar1": 123,
         }).filter(self.data)
@@ -364,7 +364,7 @@ class TestRequiredKey(TestCase):
         self.assertEqual(data["foo.bar"], 123)
 
     def test_default_mapping_with_allow_create(self):
-        data = RequiredKey({
+        data = RequiredPath({
             "foo.bar": int,
             "foo1": int,
             "foo2": list[str],
@@ -387,7 +387,7 @@ class TestRequiredKey(TestCase):
         self.assertIn("foo3.test.value", data)
         self.assertEqual(data["foo3.test.value"], 101112)
 
-        data = RequiredKey({
+        data = RequiredPath({
             f"foo3.test": dict,
             f"foo3.test.value": int | list[int],
         }).filter(data, allow_create=True)
@@ -396,47 +396,47 @@ class TestRequiredKey(TestCase):
         self.assertEqual(data["foo3.test.value"], 101112)
 
     def test_default_mapping_repeated_subkey_with_allow_create(self):
-        data = RequiredKey(OrderedDict((
+        data = RequiredPath(OrderedDict((
             ("foo3", {}),
             ("foo3.bar", 456),
         ))).filter(self.data, allow_create=True)
         self.assertEqual(data["foo3.bar"], 456)
 
-        data = RequiredKey({
+        data = RequiredPath({
             "foo": {"bar": int},
             "foo.bar": int
         }).filter(self.data, allow_create=True)
         self.assertEqual(data["foo.bar"], 123)
 
     def test_default_mapping_with_ignore_missing(self):
-        data = RequiredKey({
+        data = RequiredPath({
             "foo3": int,
         }).filter(self.data, ignore_missing=True)
         self.assertNotIn("foo3", data)
 
     def test_default_mapping_with_error(self):
-        with self.assertRaises(RequiredKeyNotFoundError):
-            RequiredKey({
+        with self.assertRaises(RequiredPathNotFoundError):
+            RequiredPath({
                 "foo3": int
             }).filter(self.data)
 
         with self.assertRaises(ConfigDataTypeError):
-            RequiredKey({
+            RequiredPath({
                 "foo.bar": str,
             }).filter(self.data)
 
         with self.assertRaises(ConfigDataTypeError):
-            RequiredKey({
+            RequiredPath({
                 "foo.bar": str,
             }).filter(self.data, allow_create=True)
 
         with self.assertRaises(ConfigDataTypeError):
-            RequiredKey({
+            RequiredPath({
                 "foo2": list[int]
             }).filter(self.data)
 
         with self.assertRaises(ConfigDataTypeError):
-            RequiredKey({
+            RequiredPath({
                 "foo2": list[int]
             }).filter(self.data, allow_create=True)
 

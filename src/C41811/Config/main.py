@@ -37,7 +37,7 @@ from .abc import ABCSLProcessorPool
 from .errors import ConfigDataTypeError
 from .errors import ConfigOperate
 from .errors import FailedProcessConfigFileError
-from .errors import RequiredKeyNotFoundError
+from .errors import RequiredPathNotFoundError
 from .errors import UnknownErrorDuringValidate
 from .errors import UnsupportedConfigFormatError
 
@@ -84,7 +84,7 @@ class ConfigData(ABCConfigData):
             if not isinstance(now_data, Mapping):
                 raise ConfigDataTypeError(path, self._sep_char, now_path, path_index, Mapping, type(now_data))
             if now_path not in now_data:
-                raise RequiredKeyNotFoundError(path, self._sep_char, now_path, path_index, ConfigOperate.Read)
+                raise RequiredPathNotFoundError(path, self._sep_char, now_path, path_index, ConfigOperate.Read)
 
         def process_return(now_data):
             if get_raw:
@@ -106,7 +106,7 @@ class ConfigData(ABCConfigData):
                 raise ConfigDataTypeError(path, self._sep_char, now_path, path_index, MutableMapping, type(now_data))
             if now_path not in now_data:
                 if not allow_create:
-                    raise RequiredKeyNotFoundError(path, self._sep_char, now_path, path_index, ConfigOperate.Write)
+                    raise RequiredPathNotFoundError(path, self._sep_char, now_path, path_index, ConfigOperate.Write)
                 now_data[now_path] = type(self._data)()
 
             if last_path is None:
@@ -124,7 +124,7 @@ class ConfigData(ABCConfigData):
             if not isinstance(now_data, MutableMapping):
                 raise ConfigDataTypeError(path, self._sep_char, now_path, path_index, MutableMapping, type(now_data))
             if now_path not in now_data:
-                raise RequiredKeyNotFoundError(path, self._sep_char, now_path, path_index, ConfigOperate.Delete)
+                raise RequiredPathNotFoundError(path, self._sep_char, now_path, path_index, ConfigOperate.Delete)
 
             if last_path is None:
                 del now_data[now_path]
@@ -147,14 +147,14 @@ class ConfigData(ABCConfigData):
     def get(self, path: str, default=None, *, get_raw: bool = False) -> Any:
         try:
             return self.retrieve(path, get_raw=get_raw)
-        except RequiredKeyNotFoundError:
+        except RequiredPathNotFoundError:
             return default
 
     @override
     def set_default(self, path: str, default=None, *, get_raw: bool = False) -> Any:
         try:
             return self.retrieve(path, get_raw=get_raw)
-        except RequiredKeyNotFoundError:
+        except RequiredPathNotFoundError:
             self.modify(path, default)
             return default
 
@@ -212,7 +212,7 @@ def _process_pydantic_exceptions(err: ValidationError, raw_data: ABCConfigData) 
 
     types_kwarg: dict[str, Callable[[], ErrInfo]] = {
         "missing": lambda: ErrInfo(
-            RequiredKeyNotFoundError,
+            RequiredPathNotFoundError,
             dict(operate=ConfigOperate.Read)
         ),
         "model_type": lambda: ErrInfo(
@@ -446,7 +446,7 @@ def _pydantic_validator(validator: type[BaseModel], cfg: ValidatorConfig) -> Cal
     return _builder
 
 
-class RequiredKey:
+class RequiredPath:
     """
     对需求的键进行存在检查、类型检查、填充默认值
     """
@@ -505,7 +505,7 @@ class RequiredKey:
         :rtype: Any
 
         :raise ConfigDataTypeError: 配置数据类型错误
-        :raise RequiredKeyNotFoundError: 必要的键未找到
+        :raise RequiredPathNotFoundError: 必要的键未找到
         :raise UnknownErrorDuringValidate: 验证过程中发生未知错误
         """
 
@@ -631,7 +631,7 @@ class ConfigPool(ABCConfigPool):
 
     @override
     def require(self, namespace: str, file_name: str, required: list[str] | dict[str, Any], *args, **kwargs):
-        return RequireConfigDecorator(self, namespace, file_name, RequiredKey(required), *args, **kwargs)
+        return RequireConfigDecorator(self, namespace, file_name, RequiredPath(required), *args, **kwargs)
 
     def __getitem__(self, item):
         return deepcopy(self.configs[item])
@@ -654,7 +654,7 @@ class RequireConfigDecorator:
             config_pool: ABCConfigPool,
             namespace: str,
             raw_file_name: str,
-            required: RequiredKey,
+            required: RequiredPath,
             *,
             config_cls: type[ABCConfigFile] = ConfigFile,
             config_format: Optional[str] = None,
@@ -670,14 +670,14 @@ class RequireConfigDecorator:
         :param raw_file_name: 源文件名
         :type raw_file_name: str
         :param required: 需求的键
-        :type required: RequiredKey
+        :type required: RequiredPath
         :param config_format: 配置文件格式
         :type config_format: Optional[str]
         :param cache_config: 缓存配置的装饰器，默认为None，即不缓存
         :type cache_config: Optional[Callable[[Callable], Callable]]
         :param allow_create: 是否允许在文件不存在时新建文件
         :type allow_create: bool
-        :param filter_kwargs: RequiredKey.filter要绑定的默认参数，默认为allow_create=True
+        :param filter_kwargs: :py:func:`RequiredPath.filter`要绑定的默认参数，默认为allow_create=True
         :type filter_kwargs: dict[str, Any]
 
         :raise UnsupportedConfigFormatError: 不支持的配置格式
@@ -788,7 +788,7 @@ __all__ = (
     "ConfigData",
     "ValidatorTypes",
     "ValidatorConfig",
-    "RequiredKey",
+    "RequiredPath",
     "ConfigFile",
     "ConfigPool",
     "RequireConfigDecorator",

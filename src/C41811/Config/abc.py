@@ -123,7 +123,7 @@ class ABCConfigData(ABC, Mapping):
         :rtype: Any
 
         :raise ConfigDataTypeError: 配置数据类型错误
-        :raise RequiredKeyNotFoundError: 需求的键不存在
+        :raise RequiredPathNotFoundError: 需求的键不存在
         """
 
     @abstractmethod
@@ -148,7 +148,7 @@ class ABCConfigData(ABC, Mapping):
         :rtype: Self
 
         :raise ConfigDataTypeError: 配置数据类型错误
-        :raise RequiredKeyNotFoundError: 需求的键不存在
+        :raise RequiredPathNotFoundError: 需求的键不存在
         """
 
     @abstractmethod
@@ -163,7 +163,7 @@ class ABCConfigData(ABC, Mapping):
         :rtype: Self
 
         :raise ConfigDataTypeError: 配置数据类型错误
-        :raise RequiredKeyNotFoundError: 需求的键不存在
+        :raise RequiredPathNotFoundError: 需求的键不存在
         """
 
     @abstractmethod
