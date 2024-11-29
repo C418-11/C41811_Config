@@ -197,7 +197,7 @@ def _process_pydantic_exceptions(err: ValidationError, raw_data: ABCConfigData) 
             raise UnknownErrorDuringValidate("Cannot convert pydantic index to string") from err
 
     kwargs: dict[str, Any] = dict(
-        key=raw_data.sep_char.join(locate),
+        path=raw_data.sep_char.join(locate),
         sep_char=raw_data.sep_char,
         current_key=locate[-1],
         index=len(locate) - 1
