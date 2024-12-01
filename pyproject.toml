@@ -64,3 +64,19 @@ based_on_style = "pep8"
 column_limit = 120
 indent_width = 4
 use_tabs = false
+
+[tool.tox]
+envlist = ["py312", "py313", "cov"]
+
+[tool.tox.env_run_base]
+deps = ["pytest", "pytest-html"]
+commands = [["pytest", "--html=./docs/_static/_reports/{env_name}.html"]]
+
+[tool.tox.env.cov]
+skip_install = true
+commands = [
+    ["pip", "install", "-r", "requirements.txt"],
+    [
+        "pytest", "--cov=src", "--cov-report=term-missing", "--cov-report=html:docs/_static/_coverage",
+    ]
+]

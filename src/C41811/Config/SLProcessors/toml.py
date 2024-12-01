@@ -37,24 +37,24 @@ class TomlSL(ABCConfigSL):
     @override
     def save(
             self,
-            config: ABCConfigFile,
+            config_file: ABCConfigFile,
             root_path: str,
             namespace: Optional[str],
             file_name: Optional[str],
             *args,
             **kwargs
     ) -> None:
-        file_path = self._get_file_path(config, root_path, namespace, file_name)
+        file_path = self._get_file_path(config_file, root_path, namespace, file_name)
         with open(file_path, "w", encoding="utf-8") as f:
             try:
-                toml.dump(config.data.data, f)
+                toml.dump(config_file.data.data, f)
             except Exception as e:
                 raise FailedProcessConfigFileError(e) from e
 
     @override
-    def load(
+    def load[C: ABCConfigFile](
             self,
-            config_cls: type[C],
+            config_file_cls: type[C],
             root_path: str,
             namespace: Optional[str],
             file_name: Optional[str],
@@ -67,7 +67,7 @@ class TomlSL(ABCConfigSL):
             except Exception as e:
                 raise FailedProcessConfigFileError(e) from e
 
-        obj = config_cls(ConfigData(data), namespace=namespace, file_name=file_name, config_format=self.reg_name)
+        obj = config_file_cls(ConfigData(data), namespace=namespace, file_name=file_name, config_format=self.reg_name)
 
         return obj
 

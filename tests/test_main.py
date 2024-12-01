@@ -1,20 +1,26 @@
 # -*- coding: utf-8 -*-
-
-
 from collections import OrderedDict
 from collections.abc import Mapping
 from copy import deepcopy
 from typing import MutableMapping
-from unittest import TestCase
-from unittest import main
-
+from pytest import fixture, mark, raises
 from pydantic import BaseModel, Field
+import sys
+import os.path
 
-from src.C41811.Config import ConfigData
-from src.C41811.Config import ConfigFile
-from src.C41811.Config import RequiredPath
-from src.C41811.Config.errors import ConfigDataTypeError
-from src.C41811.Config.errors import RequiredPathNotFoundError
+import importlib.util
+
+try:
+    if importlib.util.find_spec("C41811.Config") is None:
+        raise ModuleNotFoundError
+except ModuleNotFoundError:
+    sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
+
+from C41811.Config import ConfigData
+from C41811.Config import ConfigFile
+from C41811.Config import RequiredPath
+from C41811.Config.errors import ConfigDataTypeError
+from C41811.Config.errors import RequiredPathNotFoundError
 
 
 class ReadOnlyMapping(Mapping):
@@ -31,255 +37,364 @@ class ReadOnlyMapping(Mapping):
         return iter(self._data)
 
 
-class TestConfigData(TestCase):
-    def setUp(self):
-        self.raw_data: OrderedDict = OrderedDict((
+class TestConfigData:
+
+    @staticmethod
+    @fixture
+    def odict():
+        return OrderedDict((
             ("foo", OrderedDict((
                 ("bar", 123),
             ))),
             ("foo1", 114),
-            ("foo2", ["bar"])
+            ("foo2", ["bar"]),
+            ('a', {
+                'b': 1,
+                'c': {
+                    'd': 2,
+                    'e': {
+                        'f': 3,
+                    },
+                }
+            })
         ))
 
-    def test_init(self):
-        data = ConfigData(self.raw_data)
-        data["foo.bar"] = 456
-        self.assertNotEqual(self.raw_data, data.data)
+    @staticmethod
+    @fixture
+    def data(odict):
+        return ConfigData(odict)
 
-    def test_getattr(self):
-        self.assertEqual(ConfigData(self.raw_data)["foo.bar"], 123)
+    @staticmethod
+    @fixture
+    def readonly_odict(odict):
+        return ReadOnlyMapping(odict)
 
-    def test_setattr(self):
-        data = ConfigData(self.raw_data)
-        data["foo.bar"] = 456
-        self.assertEqual(data["foo.bar"], 456)
-        data["foo3.bar"] = 789
-        self.assertEqual(data["foo3.bar"], 789)
-        with self.assertRaises(RequiredPathNotFoundError):
-            data.modify("foo3.bar1", 789, allow_create=False)
-        self.assertNotIn("foo3.bar1", data)
+    @staticmethod
+    @fixture
+    def readonly_data(readonly_odict):
+        return ConfigData(readonly_odict)
 
-    def test_delattr(self):
-        data = ConfigData(self.raw_data)
-        del data["foo.bar"]
-        self.assertNotIn("foo.bar", data)
+    @staticmethod
+    def test_init_deepcopy(odict, readonly_odict):
+        data = ConfigData(odict)
+        assert data.data is not odict
+        assert data.data == odict
 
-    def test_readonly_attr(self):
-        data = ConfigData(self.raw_data)
-        self.assertFalse(data.read_only)
-        readonly = ConfigData(ReadOnlyMapping(self.raw_data))
-        self.assertTrue(readonly.read_only)
+        readonly_data = ConfigData(readonly_odict)
+        assert readonly_data.data is not readonly_odict
+        assert readonly_data.data == readonly_odict
 
-    def test_data_attr(self):
-        data = ConfigData(self.raw_data)
+    RetrieveTests = (
+        "path,       value,                    ignore_excs,                  kwargs", (  # @formatter:off # noqa: E122
+        ("foo",      ConfigData({"bar": 123}), (),                           {}),
+        ("foo",      {"bar": 123},             (),                           {"get_raw": True}),
+        ("foo.bar",  123,                      (),                           {}),
+        ("foo1",     114,                      (),                           {}),
+        ("foo2",     ["bar"],                  (),                           {}),
+        ("foo2.bar", None,                     (ConfigDataTypeError, ),      {}),
+        ("foo3",     None,                     (RequiredPathNotFoundError,), {}),
+    ))  # @formatter:on
+
+    @staticmethod
+    @mark.parametrize(*RetrieveTests)
+    def test_retrieve(data, path, value, ignore_excs, kwargs):
+        if kwargs is None:
+            kwargs = {}
+        if not ignore_excs:
+            assert data.retrieve(path, **kwargs) == value
+            return
+
+        with raises(ignore_excs):
+            assert data.retrieve(path, **kwargs) == value
+
+    ModifyTests = (
+        "path,       value,        ignore_excs,                  kwargs", (  # @formatter:off # noqa: E122
+        ("foo",      {"bar": 456}, (),                           {}),
+        ("foo.bar",  123,          (),                           {}),
+        ("foo1",     114,          (),                           {}),
+        ("foo2",     ["bar"],      (),                           {}),
+        ("foo2.bar", None,         (ConfigDataTypeError,),       {}),
+        ("foo3",     None,         (),                           {}),
+        ("foo3",     None,         (RequiredPathNotFoundError,), {"allow_create": False}, ),
+    ))  # @formatter:on
+
+    @staticmethod
+    @mark.parametrize(*ModifyTests)
+    def test_modify(data, path, value, ignore_excs, kwargs):
+        if kwargs is None:
+            kwargs = {}
+        if not ignore_excs:
+            data.modify(path, value, **kwargs)
+            assert data.retrieve(path, get_raw=True) == value
+            return
+
+        with raises(ignore_excs):
+            data.modify(path, value, **kwargs)
+            assert data.retrieve(path, get_raw=True) == value
+
+    DeleteTests = (
+        "path,       ignore_excs", (  # @formatter:off # noqa: E122
+        ("foo.bar",  ()),
+        ("foo1",     ()),
+        ("foo2",     ()),
+        ("foo2.bar", (ConfigDataTypeError, )),
+        ("foo3",     (RequiredPathNotFoundError,)),
+    ))  # @formatter:on
+
+    @staticmethod
+    @mark.parametrize(*DeleteTests)
+    def test_delete(data, path, ignore_excs):
+        if not ignore_excs:
+            data.delete(path)
+            assert path not in data
+            return
+
+        with raises(ignore_excs):
+            data.delete(path)
+            assert path not in data
+
+    ExistsTests = (
+        "path,            is_exist, ignore_excs", (  # @formatter:off # noqa: E122
+        ("foo",           True,     ()),
+        ("foo.bar",       True,     ()),
+        ("foo.not exist", False,    ()),
+        ("foo1",          True,     ()),
+        ("foo2",          True,     ()),
+        ("foo2.bar",      None,    (ConfigDataTypeError,)),
+        ("foo3",          False,    ()),
+    ))  # @formatter:on
+
+    @staticmethod
+    @mark.parametrize(*ExistsTests)
+    def test_exists(data, path, is_exist, ignore_excs):
+        if not ignore_excs:
+            assert data.exists(path) == is_exist
+            return
+
+        with raises(ignore_excs):
+            assert data.exists(path) == is_exist
+
+    GetTests = (
+        RetrieveTests[0],
+        (
+            *RetrieveTests[1],  # @formatter:off
+            # path             value            ignore_excs             kwargs
+            ("not exist",      "default value", (),                     {"default": "default value"}),
+            ("foo.not exist",  "default value", (),                     {"default": "default value"}),
+            ("foo2.not exist", "default value", (ConfigDataTypeError,), {"default": "default value"}),
+        )  # @formatter:on
+    )
+
+    @staticmethod
+    @mark.parametrize(*GetTests)
+    def test_get(data, path, value, ignore_excs, kwargs):
+        if kwargs is None:
+            kwargs = {}
+
+        if any(issubclass(exc, KeyError) for exc in ignore_excs):
+            ignore_excs = tuple(exc for exc in ignore_excs if not issubclass(exc, KeyError))
+            value = None
+
+        if not ignore_excs:
+            assert data.get(path, **kwargs) == value
+            return
+
+        with raises(ignore_excs):
+            assert data.get(path, **kwargs) == value
+
+    SetDefaultTests = (
+        RetrieveTests[0],
+        (
+            *((*x[:3], x[3] | {"get_raw": True}) for x in RetrieveTests[1]),  # @formatter:off
+            # path             value            ignore_excs             kwargs
+            ("not exist",      "default value", (),                     {"default": "default value"}),
+            ("foo.not exist",  "default value", (),                     {"default": "default value"}),
+            ("foo2.not exist", "default value", (ConfigDataTypeError,), {"default": "default value"}),
+        )  # @formatter:on
+    )
+
+    @staticmethod
+    @mark.parametrize(*GetTests)
+    def test_set_default(data, path, value, ignore_excs, kwargs):
+        ignore_excs = tuple(exc for exc in ignore_excs if not issubclass(exc, KeyError))
+        if "default" in kwargs:
+            value = [value, kwargs["default"]]
+        else:
+            value = value,
+
+        if data.exists(path, ignore_wrong_type=True):
+            value = *value, data.retrieve(path, get_raw=True)
+
+        if not ignore_excs:
+            assert data.set_default(path, **kwargs) in value
+            assert path in data
+            assert data.retrieve(path, get_raw=True) in value
+            return
+
+        with raises(ignore_excs):
+            assert data.set_default(path, **kwargs) in value
+            assert path in data
+            assert data.retrieve(path, get_raw=True) in value
+
+    @staticmethod
+    @mark.parametrize(
+        "path, value", (
+                ("foo", ConfigData({"bar": 123}),),
+                ("foo.bar", 123,),
+                ("foo1", 114,),
+                ("foo2", ["bar"],),
+        ))
+    def test_getitem(data, path, value):
+        assert data[path] == value
+
+    @staticmethod
+    @mark.parametrize("path, new_value", (
+            ("foo.bar", 456),
+            ("foo2", {"test": "value"}),
+            ("foo3", 789),
+            ("foo4.bar", 101112),
+    ))
+    def test_setitem(data, path, new_value):
+        data[path] = new_value
+        assert path in data
+        assert data[path].data == new_value if isinstance(data[path], ConfigData) else data[path] == new_value
+
+    @staticmethod
+    @mark.parametrize(*DeleteTests)
+    def test_delitem(data, path, ignore_excs):
+        if not ignore_excs:
+            del data[path]
+            assert path not in data
+            return
+
+        with raises(ignore_excs):
+            del data[path]
+            assert path not in data
+
+    @staticmethod
+    @mark.parametrize(*ExistsTests)
+    def test_contains(data, path, is_exist, ignore_excs):
+        if not ignore_excs:
+            assert (path in data) == is_exist
+            return
+
+        with raises(ignore_excs):
+            assert (path in data) == is_exist
+
+    @staticmethod
+    def test_readonly_attr(data, readonly_data):
+        assert not data.read_only
+        assert readonly_data.read_only
+
+    @staticmethod
+    def test_data_attr(data):
         last_data = data.data
         data["foo.bar"] = 456
-        self.assertNotEqual(last_data, data.data)
+        assert last_data != data.data
 
-        with self.assertRaises(AttributeError):
+        with raises(AttributeError):
             # noinspection PyPropertyAccess
             data.data = {}
 
-    def test_readonly_getattr(self):
-        data = ConfigData(ReadOnlyMapping(self.raw_data))
-        self.assertEqual(data["foo.bar"], 123)
+    @classmethod
+    @mark.parametrize(*RetrieveTests)
+    def test_readonly_retrieve(cls, readonly_data, path, value, ignore_excs, kwargs):
+        cls.test_retrieve(readonly_data, path, value, ignore_excs, kwargs)
 
-        data = ConfigData(self.raw_data)
-        data.read_only = True
-        with self.assertRaisesRegex(TypeError, r"read-only"):
-            data["foo.bar"] = 456
+    ReadOnlyModifyTests = (
+        ','.join(arg for arg in ModifyTests[0].split(',') if "ignore_excs" not in arg),
+        ((*x[:-2], x[-1]) for x in ModifyTests[1])
+    )
 
-        self.assertEqual(data["foo.bar"], 123)
+    @classmethod
+    @mark.parametrize(*ReadOnlyModifyTests)
+    def test_readonly_modify(cls, readonly_data, path, value, kwargs):
+        cls.test_modify(readonly_data, path, value, TypeError, kwargs)
 
-    def test_readonly_setattr(self):
-        data = ConfigData(ReadOnlyMapping(self.raw_data))
+    ReadOnlyDeleteTests = (
+        ', '.join(arg for arg in DeleteTests[0].split(', ') if "ignore_excs" not in arg),
+        tuple(x[:-1] for x in DeleteTests[1])
+    )
 
-        with self.assertRaisesRegex(TypeError, r"read-only"):
-            data["foo.bar"] = 456
+    @classmethod
+    @mark.parametrize(*ReadOnlyDeleteTests)
+    def test_readonly_delete(cls, readonly_data, path):
+        cls.test_delete(readonly_data, path, TypeError)
 
-        self.assertEqual(data["foo.bar"], 123)
+    @staticmethod
+    def test_eq(data, readonly_data):
+        assert data == readonly_data
 
-    def test_readonly_delattr(self):
-        data = ConfigData(ReadOnlyMapping(self.raw_data))
-
-        with self.assertRaisesRegex(TypeError, r"read-only"):
-            del data["foo.bar"]
-
-        self.assertIn("foo.bar", data)
-
-    def test_new_data(self):
-        data = ConfigData(self.raw_data, sep_char='$')
-        new_data = data.new_data({"foo": {"bar": 456}})
-
-        self.assertEqual(new_data.sep_char, '$')
-        self.assertEqual(data.sep_char, new_data.sep_char)
-        self.assertEqual(new_data["foo$bar"], 456)
-        self.assertNotIn("foo.bar", new_data)
-        self.assertNotEqual(data.data, new_data.data)
-
-    def test_convert_to(self):
-        data = ConfigData(self.raw_data)
-        new_data = data.convert_to(sep_char='$')
-        self.assertEqual(new_data.sep_char, '$')
-        self.assertEqual(data.sep_char, '.')
-        self.assertIn("foo$bar", new_data)
-        self.assertEqual(new_data["foo$bar"], 123)
-        self.assertEqual(data.data, new_data.data)
-
-    def test_config_data_type_error(self):
-        data = ConfigData(self.raw_data)
-
-        with self.assertRaises(ConfigDataTypeError):
-            data.retrieve("foo1.bar")
-        with self.assertRaises(ConfigDataTypeError):
-            data.modify("foo1.bar", 456)
-        with self.assertRaises(ConfigDataTypeError):
-            data.delete("foo1.bar")
-
-        readonly_data = deepcopy(self.raw_data)
-        readonly_data["foo"] = ReadOnlyMapping(readonly_data["foo"])
-        readonly = ConfigData(readonly_data)
-        with self.assertRaises(ConfigDataTypeError):
-            readonly.modify("foo.bar", 456)
-        self.assertEqual(readonly.retrieve("foo.bar"), 123)
-        with self.assertRaises(ConfigDataTypeError):
-            readonly.delete("foo.bar")
-        self.assertEqual(readonly.retrieve("foo.bar"), 123)
-
-    def test_required_key_not_found_error(self):
-        data = ConfigData(self.raw_data)
-
-        with self.assertRaises(RequiredPathNotFoundError):
-            data.retrieve("foo3")
-        with self.assertRaises(RequiredPathNotFoundError):
-            data.modify("foo3", 456, allow_create=False)
-        with self.assertRaises(RequiredPathNotFoundError):
-            data.delete("foo3")
-
-    def test_get(self):
-        data = ConfigData(self.raw_data)
-        self.assertEqual(data.get("foo.bar"), 123)
-        self.assertIsNone(data.get("not exist"))
-        self.assertEqual(data.get("not exist", 456), 456)
-
-    def test_set_default(self):
-        data = ConfigData(self.raw_data)
-        self.assertEqual(data.set_default("foo.bar", 123), 123)
-        self.assertIsNone(data.set_default("not_exist"))
-        self.assertIn("not_exist", data)
-        self.assertEqual(data.set_default("not_exist1", {"bar": 456}), {"bar": 456})
-        self.assertIn("not_exist1.bar", data)
-        self.assertEqual(data["not_exist1.bar"], 456)
-
-    def test_contains(self):
-        data = ConfigData(self.raw_data)
-        self.assertIn("foo", data)
-        self.assertIn("foo.bar", data)
-
-    def test_eq(self):
-        data = ConfigData(self.raw_data)
-        readonly = ConfigData(ReadOnlyMapping(self.raw_data))
-        self.assertEqual(data, readonly)
-
-    def test_sep_char(self):
-        data = ConfigData(self.raw_data)
-        self.assertEqual(data.sep_char, '.')
-        data = ConfigData(self.raw_data, sep_char='$')
-        self.assertEqual(data.sep_char, '$')
-        self.assertEqual(data["foo$bar"], 123)
-
-        with self.assertRaises(AttributeError):
-            # noinspection PyPropertyAccess
-            data.sep_char = '.'
-
-    def test_deepcopy(self):
-        data = ConfigData(self.raw_data)
+    @staticmethod
+    def test_deepcopy(data):
         last_data = deepcopy(data)
         data["foo.bar"] = 456
-        self.assertNotEqual(last_data, data)
+        assert last_data != data
 
-    def test_keys(self):
-        data = ConfigData(self.raw_data)
-        self.assertSetEqual(set(data.keys()), set(self.raw_data.keys()))
+    KeysTests = ("kwargs, keys", (
+        ({}, {"a", "foo", "foo1", "foo2"}),
+        ({"recursive": True}, {"a.c.e.f", "a.c", 'a', "a.c.d", "foo.bar", "a.c.e", "foo", "foo1", "a.b", "foo2"}),
+        ({"end_point_only": True}, {"foo1", "foo2"}),
+        ({"recursive": True, "end_point_only": True}, {'a.c.d', 'foo.bar', 'foo2', 'a.b', 'a.c.e.f', 'foo1'})
+    ))
 
-    def test_keys_with_recursive(self):
-        data = ConfigData({
-            "foo": {
-                "bar": {
-                    "baz": 123
-                }
-            },
-            "foo2": 456
-        })
-        self.assertSetEqual(
-            set(data.keys(recursive=True)),
-            {"foo", "foo.bar", "foo.bar.baz", "foo2"}
+    @staticmethod
+    @mark.parametrize(*KeysTests)
+    def test_keys(data, kwargs, keys):
+        assert set(data.keys(**kwargs)) == keys
+
+    ValuesTests = (
+        "kwargs, values",
+        (
+            ({}, [ConfigData({"bar": 123}), 114, ["bar"], ConfigData({'b': 1, 'c': {'d': 2, 'e': {'f': 3}}})]),
+            ({"get_raw": True}, [{"bar": 123}, 114, ["bar"], {'b': 1, 'c': {'d': 2, 'e': {'f': 3}}}]),
         )
+    )
 
-    def test_keys_with_end_point_only(self):
-        data = ConfigData({
-            "foo": {
-                "bar": {
-                    "baz": 123
-                },
-                "bar2": 456
-            },
-            "foo2": 789
-        })
-        self.assertSetEqual(
-            set(data.keys(end_point_only=True)),
-            {"foo2"}
-        )
+    @staticmethod
+    @mark.parametrize(*ValuesTests)
+    def test_values(data, kwargs, values):
+        assert list(data.values(**kwargs)) == values
 
-    def test_keys_with_recursive_and_end_point_only(self):
-        data = ConfigData({
-            "foo": {
-                "bar": {
-                    "baz": 123
-                }
-            },
-            "foo2": 456
-        })
-        self.assertSetEqual(
-            set(data.keys(recursive=True, end_point_only=True)),
-            {"foo.bar.baz", "foo2"}
-        )
+    ItemsTests = ("kwargs, items", (
+        ({}, [
+            ("foo", ConfigData({"bar": 123})),
+            ("foo1", 114),
+            ("foo2", ["bar"]),
+            ("a", ConfigData({'b': 1, 'c': {'d': 2, 'e': {'f': 3}}})),
+        ]),
+        ({"get_raw": True}, [
+            ("foo", {"bar": 123}),
+            ("foo1", 114),
+            ("foo2", ["bar"]),
+            ("a", {'b': 1, 'c': {'d': 2, 'e': {'f': 3}}}),
+        ]),
+    ))
 
-    def test_values(self):
-        data = ConfigData(self.raw_data)
-        values = [ConfigData(v) if isinstance(v, Mapping) else v for v in self.raw_data.values()]
-        self.assertSequenceEqual(list(data.values()), values)
-
-    def test_items(self):
-        data = ConfigData(self.raw_data)
-        data_items = tuple((k, v) for k, v in data.items())
-        items = tuple((k, ConfigData(v)) if isinstance(v, Mapping) else (k, v) for k, v in self.raw_data.items())
-        self.assertTupleEqual(data_items, items)
+    @staticmethod
+    @mark.parametrize(*ItemsTests)
+    def test_items(data, kwargs, items):
+        assert list(data.items(**kwargs)) == items
 
 
-class TestRequiredKey(TestCase):
-    def setUp(self):
-        self.data = ConfigData({
-            "foo": {
-                "bar": 123
-            },
+class TestRequiredKey:
+    @staticmethod
+    @fixture
+    def data():
+        return ConfigData({
+            "foo": {"bar": 123, "bar1": 456},
             "foo1": 114,
-            "foo2": ["bar"]
+            "foo2": ["bar"],
         })
 
-    def test_build_cache(self):
-        # 提前执行一次让pydantic提前导入所需的模块，让后续测试的运行时间更有参考性
-        # noinspection PyBroadException
-        try:
-            self.test_pydantic()
-            self.test_default_iterable()
-            self.test_default_mapping()
-            self.test_default_mapping_with_allow_create()
-            self.test_default_mapping_with_error()
-        except Exception:
-            pass
+    @staticmethod
+    @fixture
+    def readonly_data(data):
+        return RequiredPath(data, "readonly")
 
-    def test_pydantic(self):
+    @staticmethod
+    @fixture
+    def pydantic_model():
         class Foo(BaseModel):
             bar: int = Field(123)
             bar1: int = Field(456)
@@ -289,197 +404,254 @@ class TestRequiredKey(TestCase):
             foo1: int
             foo2: list[str]
 
-        data = RequiredPath(Data, "pydantic").filter(self.data)
+        return Data
 
-        self.assertIn("foo.bar", data)
-        self.assertEqual(data["foo.bar"], 123)
-        self.assertIn("foo.bar1", data)
-        self.assertEqual(data["foo.bar1"], 456)
+    PydanticTests = "path, value", (
+        ("foo", ConfigData({"bar": 123, "bar1": 456})),
+        ("foo.bar", 123),
+        ("foo1", 114),
+        ("foo2", ["bar"]),
+    )
 
-    def test_pydantic_with_error(self):
+    # @classmethod
+    # @fixture(autouse=True, scope="function")
+    # def __preload(cls, data, pydantic_model):
+    #     if hasattr(cls, "cached") and cls.cached:
+    #         return
+    #     cls.cached = True
+    #
+    #     def _arg_tool(tests: tuple[str, tuple[tuple, ...]]):
+    #         keys = tests[0].replace(' ', '').split(',')
+    #         for args in tests[1]:
+    #             yield dict(zip(keys, args))
+    #
+    #     def _test_all(func, *args, tests):
+    #         for kwargs in _arg_tool(tests):
+    #             # noinspection PyBroadException
+    #             try:
+    #                 func(*(deepcopy(a) for a in args), **kwargs)
+    #             except Exception:
+    #                 pass
+    #
+    #     _test_all(cls.test_pydantic, data, pydantic_model, tests=cls.PydanticTests)
+    #     _test_all(cls.test_pydantic_with_error, data, tests=('', ()))
+    #     _test_all(cls.test_default_iterable, data, tests=cls.IterableTests)
+    #     _test_all(cls.test_default_mapping, data, tests=cls.MappingTests)
+
+    @staticmethod
+    @mark.parametrize("path, value", (
+            ("foo", ConfigData({"bar": 123, "bar1": 456})),
+            ("foo.bar", 123),
+            ("foo1", 114),
+            ("foo2", ["bar"]),
+    ))
+    def test_pydantic(data, pydantic_model, path, value):
+
+        data = RequiredPath(pydantic_model, "pydantic").filter(data)
+        assert data[path] == value
+
+    @staticmethod
+    def test_pydantic_with_error(data):
         class NotExist(BaseModel):
             foo3: int
 
-        with self.assertRaises(RequiredPathNotFoundError):
-            RequiredPath(NotExist, "pydantic").filter(self.data)
+        with raises(RequiredPathNotFoundError):
+            RequiredPath(NotExist, "pydantic").filter(data)
 
         class NotExist2(BaseModel):
             foo: NotExist
 
-        with self.assertRaises(RequiredPathNotFoundError):
-            RequiredPath(NotExist2, "pydantic").filter(self.data)
+        with raises(RequiredPathNotFoundError):
+            RequiredPath(NotExist2, "pydantic").filter(data)
 
         class WrongType(BaseModel):
             foo: str
 
-        with self.assertRaises(ConfigDataTypeError):
-            RequiredPath(WrongType, "pydantic").filter(self.data)
+        with raises(ConfigDataTypeError):
+            RequiredPath(WrongType, "pydantic").filter(data)
 
         class WrongType2(BaseModel):
             foo2: list[int]
 
-        with self.assertRaises(ConfigDataTypeError):
-            RequiredPath(WrongType2, "pydantic").filter(self.data)
+        with raises(ConfigDataTypeError):
+            RequiredPath(WrongType2, "pydantic").filter(data)
 
-    def test_default_iterable(self):
-        data = RequiredPath([
-            "foo.bar",
-            "foo",
-            "foo1",
-            "foo2",
-        ]).filter(self.data)
+    IterableTests = ("paths, values, kwargs, ignore_excs", (
+        (
+            ["foo", "foo1", "foo2"],
+            [ConfigData({"bar": 123, "bar1": 456}), 114, ["bar"]],
+            {}, ()
+        ),
+        (
+            ["foo", "foo.bar"],
+            [ConfigData({"bar": 123, "bar1": 456}), 123],
+            {}, ()
+        ),
+        (
+            ["foo.bar", "foo"],  # 无论顺序先后都应该在父路径单独存在时包含父路径下的所有子路径
+            [123, ConfigData({"bar": 123, "bar1": 456})],
+            {}, ()
+        ),
+        (
+            ["foo2.bar"],
+            [987],
+            {}, (ConfigDataTypeError,)
+        ),
+        (
+            ["foo.bar2"],
+            [987],
+            {}, (RequiredPathNotFoundError,)
+        ),
+        (
+            ["foo.bar2"],
+            [987],
+            {"allow_create": True}, (RequiredPathNotFoundError,)  # 因为没有默认值所以即便allow_create=True也会报错
+        ),
+        (
+            ["foo.bar2", "foo1"],
+            [float("-inf"), 114],  # -inf是占位符,表示该值可以不存在
+            {"ignore_missing": True}, ()
+        ),
+        (
+            ["foo2.bar", "foo1"],
+            [float("-inf"), 114],
+            {"ignore_missing": True, "allow_create": True}, (ConfigDataTypeError,)
+        )
+    ))
 
-        self.assertIn("foo.bar", data)
-        self.assertEqual(data["foo.bar"], 123)
-        self.assertEqual(data["foo1"], 114)
-        self.assertEqual(data["foo2"], ["bar"])
+    @staticmethod
+    @mark.parametrize(*IterableTests)
+    def test_default_iterable(data, paths, values, kwargs, ignore_excs):
+        if ignore_excs:
+            with raises(ignore_excs):
+                RequiredPath(paths).filter(data, **kwargs)
+            return
 
-    def test_default_iterable_with_error(self):
-        with self.assertRaises(RequiredPathNotFoundError):
-            RequiredPath(["foo.bar1"]).filter(self.data, allow_create=True)
-        with self.assertRaises(ConfigDataTypeError):
-            RequiredPath(["foo.bar.err_type"]).filter(self.data, allow_create=True)
+        data = RequiredPath(paths).filter(data, **kwargs)
 
-    def test_default_mapping(self):
-        data = RequiredPath({
-            "foo.bar": int,
-            "foo1": int,
-            "foo2": list[str],
-        }).filter(self.data)
+        for path, value in zip(paths, values):
+            if isinstance(value, float) and value == float("-inf"):
+                assert path not in data
+                continue
+            assert data[path] == value
 
-        self.assertIn("foo.bar", data)
-        self.assertEqual(data["foo.bar"], 123)
-        self.assertEqual(data["foo1"], 114)
-        self.assertSequenceEqual(data["foo2"], ["bar"])
+    MappingTests = ("mapping, result, kwargs, ignore_excs", (
+        ({
+             "foo": dict,
+             "foo.bar": int,
+             "foo1": int,
+             "foo2": list[str],
+         },
+         {
+             "foo": {"bar": 123, "bar1": 456},
+             "foo1": 114,
+             "foo2": ["bar"],
+         }, {}, ()),
+        ({
+             "foo.bar": 111,
+             "foo": dict,
+             "foo1": 222,
+             "foo2": [333],
+             "foo3.bar": 789,
+             "foo3.test.value": 101112,
+             "foo4": {
+                 "bar": 789,
+                 "test": {
+                     "value": 101112,
+                 }
+             }
+         },
+         {
+             "foo": {"bar": 123, "bar1": 456},
+             "foo1": 114,
+             "foo2": ["bar"],
+             "foo3": {
+                 "bar": 789,
+                 "test": {
+                     "value": 101112,
+                 }
+             },
+             "foo4": {
+                 "bar": 789,
+                 "test": {
+                     "value": 101112,
+                 }
+             }
+         }, {"allow_create": True}, ()),
+        ({
+             "foo.bar": int,
+             "foo": dict,
+             "foo1": int,
+             "foo2": list[str],
+             "foo3": {
+                 "bar": int,
+                 "test": {
+                     "value": 101112,
+                 }
+             }
+         },
+         {
+             "foo": {"bar": 123, "bar1": 456},
+             "foo1": 114,
+             "foo2": ["bar"],
+             "foo3": {
+                 "test": {
+                     "value": 101112,
+                 }
+             }
+         }, {"allow_create": True, "ignore_missing": True}, ()),
+        ({
+             "foo.bar.baz": int,
+         },
+         {},
+         {"ignore_missing": True}, (ConfigDataTypeError,))
+    ))
 
-    def test_default_mapping_repeated_subkey(self):
-        data = RequiredPath({
-            "foo": dict,
-            "foo.bar1": 123,
-        }).filter(self.data)
+    @staticmethod
+    @mark.parametrize(*MappingTests)
+    def test_default_mapping(data, mapping, result, kwargs, ignore_excs):
+        if ignore_excs:
+            with raises(ignore_excs):
+                RequiredPath(mapping).filter(data, **kwargs)
+            return
 
-        self.assertIn("foo", data)
-        self.assertIsInstance(data["foo"], Mapping)
-        self.assertIn("foo.bar", data)
-        self.assertEqual(data["foo.bar"], 123)
-
-    def test_default_mapping_with_allow_create(self):
-        data = RequiredPath({
-            "foo.bar": int,
-            "foo1": int,
-            "foo2": list[str],
-            "foo.bar1.test": 456,
-            "foo3": {
-                "bar": 789,
-                "test": {
-                    "value": 101112,
-                }
-            }
-        }).filter(self.data, allow_create=True)
-
-        self.assertEqual(data["foo.bar"], 123)
-        self.assertEqual(data["foo1"], 114)
-        self.assertSequenceEqual(data["foo2"], ["bar"])
-        self.assertIn("foo.bar1.test", data)
-        self.assertEqual(data["foo.bar1.test"], 456)
-        self.assertIn("foo3.bar", data)
-        self.assertEqual(data["foo3.bar"], 789)
-        self.assertIn("foo3.test.value", data)
-        self.assertEqual(data["foo3.test.value"], 101112)
-
-        data = RequiredPath({
-            f"foo3.test": dict,
-            f"foo3.test.value": int | list[int],
-        }).filter(data, allow_create=True)
-        self.assertIn("foo3.test", data)
-        self.assertIn("foo3.test.value", data)
-        self.assertEqual(data["foo3.test.value"], 101112)
-
-    def test_default_mapping_repeated_subkey_with_allow_create(self):
-        data = RequiredPath(OrderedDict((
-            ("foo3", {}),
-            ("foo3.bar", 456),
-        ))).filter(self.data, allow_create=True)
-        self.assertEqual(data["foo3.bar"], 456)
-
-        data = RequiredPath({
-            "foo": {"bar": int},
-            "foo.bar": int
-        }).filter(self.data, allow_create=True)
-        self.assertEqual(data["foo.bar"], 123)
-
-    def test_default_mapping_with_ignore_missing(self):
-        data = RequiredPath({
-            "foo3": int,
-        }).filter(self.data, ignore_missing=True)
-        self.assertNotIn("foo3", data)
-
-    def test_default_mapping_with_error(self):
-        with self.assertRaises(RequiredPathNotFoundError):
-            RequiredPath({
-                "foo3": int
-            }).filter(self.data)
-
-        with self.assertRaises(ConfigDataTypeError):
-            RequiredPath({
-                "foo.bar": str,
-            }).filter(self.data)
-
-        with self.assertRaises(ConfigDataTypeError):
-            RequiredPath({
-                "foo.bar": str,
-            }).filter(self.data, allow_create=True)
-
-        with self.assertRaises(ConfigDataTypeError):
-            RequiredPath({
-                "foo2": list[int]
-            }).filter(self.data)
-
-        with self.assertRaises(ConfigDataTypeError):
-            RequiredPath({
-                "foo2": list[int]
-            }).filter(self.data, allow_create=True)
+        data = RequiredPath(mapping).filter(data, **kwargs)
+        assert data.data == result
 
 
-class TestConfig(TestCase):
-    def setUp(self):
-        self.data = ConfigData({
+class TestConfigFile:
+    @fixture
+    def file(self):
+        return ConfigFile(ConfigData({
             "foo": {
                 "bar": 123
             },
             "foo1": 114,
             "foo2": ["bar"]
-        })
+        }), namespace='ns', file_name='f')
 
-    def test_readonly_attr(self):
-        data = ConfigFile(deepcopy(self.data))
-
-        self.assertIsNone(data.namespace)
-        with self.assertRaises(AttributeError):
+    @staticmethod
+    def test_attr_readonly(file):
+        with raises(AttributeError):
             # noinspection PyPropertyAccess
-            data.namespace = None
+            file.namespace = None
 
-        self.assertEqual(data.data, self.data)
-        with self.assertRaises(AttributeError):
+        with raises(AttributeError):
             # noinspection PyPropertyAccess
-            data.data = None
+            file.data = None
 
-        self.assertIsNone(data.file_name)
-        with self.assertRaises(AttributeError):
+        with raises(AttributeError):
             # noinspection PyPropertyAccess
-            data.file_name = None
+            file.file_name = None
 
-        self.assertIsNone(data.config_format)
-        with self.assertRaises(AttributeError):
+        with raises(AttributeError):
             # noinspection PyPropertyAccess
-            data.config_format = None
+            file.config_format = None
 
-    def test_bool(self):
-        data = ConfigFile(deepcopy(self.data))
-
-        self.assertTrue(data)
-        self.assertFalse(ConfigFile(ConfigData()))
-
-
-if __name__ == "__main__":
-    main()
+    @staticmethod
+    @mark.parametrize("file, is_empty", (
+            (ConfigFile(ConfigData({})), True),
+            (ConfigFile(ConfigData({"foo": 123})), False),
+    ))
+    def test_bool(file, is_empty):
+        assert bool(file) is not is_empty

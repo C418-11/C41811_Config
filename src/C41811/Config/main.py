@@ -29,8 +29,8 @@ from pydantic import create_model
 from pydantic.fields import FieldInfo
 from pydantic_core import core_schema
 
-from .abc import ABCConfigFile
 from .abc import ABCConfigData
+from .abc import ABCConfigFile
 from .abc import ABCConfigPool
 from .abc import ABCConfigSL
 from .abc import ABCSLProcessorPool
@@ -134,9 +134,11 @@ class ConfigData(ABCConfigData):
         return self
 
     @override
-    def exists(self, path: str) -> bool:
+    def exists(self, path: str, *, ignore_wrong_type: bool = False) -> bool:
         def checker(now_data, now_path, _last_path, path_index):
             if not isinstance(now_data, Mapping):
+                if ignore_wrong_type:
+                    return False
                 raise ConfigDataTypeError(path, self._sep_char, now_path, path_index, Mapping, type(now_data))
             if now_path not in now_data:
                 return False
@@ -262,8 +264,11 @@ class IgnoreMissingType:
         return "<IgnoreMissing>"
 
     @staticmethod
-    def __get_pydantic_core_schema__(*_) -> core_schema.AnySchema:
-        return core_schema.any_schema()
+    def __get_pydantic_core_schema__(*_):
+        # 构造一个永远无法匹配的schema, 使 IgnoreMissing | int 可以正常工作 (等价于 Never | int)
+        return core_schema.chain_schema(
+            [core_schema.none_schema(), core_schema.is_subclass_schema(type)]
+        )
 
 
 IgnoreMissing = IgnoreMissingType()
@@ -322,11 +327,12 @@ class DefaultValidatorFactory:
             try:
                 fmt_data[key] = value
             except ConfigDataTypeError as err:
-                # 如果旧类型为Mapping那么就允许新的键递归创建
+                # 如果旧类型为Mapping, Any那么就允许新的键创建
                 try:
                     MappingType(value=fmt_data[err.relative_key])
                 except (ValidationError, TypeError):
-                    raise err from None
+                    if fmt_data[err.relative_key] is not Any:
+                        raise err from None
                 fmt_data[err.relative_key] = OrderedDict()
                 father_set.add(err.relative_key)
                 continue
@@ -407,7 +413,7 @@ class DefaultValidatorFactory:
 
     def __call__(self, data: D) -> D:
         try:
-            dict_obj = self.model(**data).model_dump()
+            dict_obj = self.model(**data.data).model_dump()
         except ValidationError as err:
             raise _process_pydantic_exceptions(err, data) from None
 
@@ -457,9 +463,6 @@ class RequiredPath:
             validator_factory: Optional[Callable | ValidatorTypes | str] = ValidatorTypes.DEFAULT
     ):
         """
-        .. note::
-           如果对性能有较高要求validator_factory建议使用 :py:attr:`ValidatorTypes.PYDANTIC`
-
         :param validator: 数据验证器
         :type validator: Any
         :param validator_factory: 数据验证器工厂
@@ -539,14 +542,8 @@ class ConfigFile(ABCConfigFile):
         if config_format not in config_pool.SLProcessor:
             raise UnsupportedConfigFormatError(config_format)
 
-        return config_pool.SLProcessor[config_format].save(
-            self,
-            config_pool.root_path,
-            namespace,
-            file_name,
-            *processor_args,
-            **processor_kwargs
-        )
+        return config_pool.SLProcessor[config_format].save(self, config_pool.root_path, namespace, file_name,
+                                                           *processor_args, **processor_kwargs)
 
     @classmethod
     @override
@@ -565,14 +562,7 @@ class ConfigFile(ABCConfigFile):
 
         return config_pool.SLProcessor[
             config_format
-        ].load(
-            cls,
-            config_pool.root_path,
-            namespace,
-            file_name,
-            *processor_args,
-            **processor_kwargs
-        )
+        ].load(cls, config_pool.root_path, namespace, file_name, *processor_args, **processor_kwargs)
 
 
 class ConfigPool(ABCConfigPool):
@@ -677,7 +667,7 @@ class RequireConfigDecorator:
         :type cache_config: Optional[Callable[[Callable], Callable]]
         :param allow_create: 是否允许在文件不存在时新建文件
         :type allow_create: bool
-        :param filter_kwargs: :py:func:`RequiredPath.filter`要绑定的默认参数，默认为allow_create=True
+        :param filter_kwargs: :py:func:`RequiredPath.filter` 要绑定的默认参数，默认为allow_create=True
         :type filter_kwargs: dict[str, Any]
 
         :raise UnsupportedConfigFormatError: 不支持的配置格式

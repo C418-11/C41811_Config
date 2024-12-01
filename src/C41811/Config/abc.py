@@ -11,19 +11,16 @@ from copy import deepcopy
 from typing import Any
 from typing import ItemsView
 from typing import KeysView
-from typing import ValuesView
 from typing import MutableMapping
 from typing import Optional
 from typing import Self
 from typing import Sequence
-from typing import TypeVar
+from typing import ValuesView
 
 from pydantic_core import core_schema
 
-D = TypeVar('D', Mapping, MutableMapping)
 
-
-class ABCConfigData(ABC, Mapping):
+class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
     """
     配置数据
     """
@@ -46,7 +43,7 @@ class ABCConfigData(ABC, Mapping):
 
         self._sep_char: str = sep_char
 
-    def new_data(self, data: D) -> Self:
+    def new_data(self, data: D) -> Self:  # todo 弃用转换为转义
         """
         初始化同类型同格式配置数据的快捷方式
 
@@ -56,22 +53,6 @@ class ABCConfigData(ABC, Mapping):
         :rtype: Self
         """
         return type(self)(data, self._sep_char)
-
-    def convert_to(self, *, sep_char: str = None) -> Self:
-        """
-        转换为同类型不同格式配置数据的快捷方式
-
-        .. attention::
-           该方法是转换当前配置数据的*快照*为指定格式
-
-        :param sep_char: 分隔符
-        :type sep_char: str
-        :return: 新的配置数据
-        :rtype: Self
-        """
-        if sep_char is None:
-            sep_char = self._sep_char
-        return type(self)(deepcopy(self._data), sep_char)
 
     @property
     def data(self) -> D:
@@ -321,7 +302,10 @@ class ABCConfigData(ABC, Mapping):
         return self._data == other._data
 
     def __getattr__(self, item) -> Self | Any:
-        item_obj = self._data[item]
+        try:
+            item_obj = self._data[item]
+        except KeyError:
+            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{item}'")
         return self.new_data(item_obj) if isinstance(item_obj, Mapping) else item_obj
 
     def __iter__(self):
@@ -567,7 +551,6 @@ class ABCConfigPool(ABCSLProcessorPool):
 
 
 SLArgument = Sequence | Mapping | tuple[Sequence, Mapping[str, Any]]
-C = TypeVar("C", bound=ABCConfigFile)
 
 
 class ABCConfigSL(ABC):
@@ -637,7 +620,7 @@ class ABCConfigSL(ABC):
     @abstractmethod
     def save(
             self,
-            config: ABCConfigFile,
+            config_file: ABCConfigFile,
             root_path: str,
             namespace: Optional[str],
             file_name: Optional[str],
@@ -647,8 +630,8 @@ class ABCConfigSL(ABC):
         """
         保存处理器
 
-        :param config: 待保存配置
-        :type config: ABCConfigFile
+        :param config_file: 待保存配置
+        :type config_file: ABCConfigFile
         :param root_path: 保存的根目录
         :type root_path: str
         :param namespace: 配置的命名空间
@@ -663,9 +646,9 @@ class ABCConfigSL(ABC):
         """
 
     @abstractmethod
-    def load(
+    def load[C: ABCConfigFile](
             self,
-            config_cls: type[C],
+            config_file_cls: type[C],
             root_path: str,
             namespace: Optional[str],
             file_name: Optional[str],
@@ -675,8 +658,8 @@ class ABCConfigSL(ABC):
         """
         加载处理器
 
-        :param config_cls: 配置类
-        :type config_cls: type[C]
+        :param config_file_cls: 配置类
+        :type config_file_cls: type[C]
         :param root_path: 保存的根目录
         :type root_path: str
         :param namespace: 配置的命名空间
@@ -685,7 +668,7 @@ class ABCConfigSL(ABC):
         :type file_name: Optional[str]
 
         :return: 配置对象
-        :rtype: C
+        :rtype: ABCConfigFile
 
         :raise FailedProcessConfigFileError: 处理配置文件失败
         """
@@ -696,7 +679,7 @@ class ABCConfigSL(ABC):
 
     def _get_file_path(
             self,
-            config: ABCConfigFile,
+            configfile: ABCConfigFile,
             root_path: str,
             namespace: Optional[str] = None,
             file_name: Optional[str] = None,
@@ -704,8 +687,8 @@ class ABCConfigSL(ABC):
         """
         获取配置文件对应的文件路径(提供给子类的便捷方法)
 
-        :param config: 配置对象
-        :type config: ABCConfigFile
+        :param configfile: 配置对象
+        :type configfile: ABCConfigFile
         :param root_path: 保存的根目录
         :type root_path: str
         :param namespace: 配置的命名空间
@@ -719,9 +702,9 @@ class ABCConfigSL(ABC):
         :raise ValueError: 当 namespace 和 file_name (即便尝试从config读值)都为 None 时
         """
         if namespace is None:
-            namespace = config.namespace
+            namespace = configfile.namespace
         if file_name is None:
-            file_name = config.file_name
+            file_name = configfile.file_name
 
         if namespace is None or file_name is None:
             raise ValueError("namespace and file_name can't be None")
