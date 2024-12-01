@@ -49,6 +49,12 @@ dev = [
     "ruamel.yaml",
     "toml",
 ]
+test = [
+    "tox",
+    "pytest",
+    "pytest-cov",
+    "pytest-html"
+]
 PyYamlSL = ["PyYAML"]
 RuamelYamlSL = ["ruamel.yaml"]
 TomlSL = ["toml"]
@@ -75,7 +81,8 @@ commands = [["pytest", "--html=./docs/_static/_reports/{env_name}.html"]]
 [tool.tox.env.cov]
 skip_install = true
 commands = [
-    ["pip", "install", "-r", "requirements.txt"],
+    ["pip", "install", "-e", ".[dev,test]"],
+    ["pip", "uninstall", "-y", "C41811.Config"],
     [
         "pytest", "--cov=src", "--cov-report=term-missing", "--cov-report=html:docs/_static/_coverage",
     ]
