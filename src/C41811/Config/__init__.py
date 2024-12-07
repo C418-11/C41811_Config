@@ -12,13 +12,13 @@ __author__ = "C418____11 <553515788@qq.com>"
 
 try:
     from ._version import __version__, __version_tuple__
-except ImportError:
+except ImportError:  # pragma: no cover
     __version__ = ''
     __version_tuple__ = ()
 
 import sys as _sys
 
-if _sys.version_info < (3, 12):
+if _sys.version_info < (3, 12):  # pragma: no cover
     raise RuntimeError("Python version must be >= 3.12")
 
 from .SLProcessors import *

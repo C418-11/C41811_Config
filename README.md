@@ -43,7 +43,7 @@ cfg = requireConfig(
     {
         "Hello": "World",
         "foo": dict,  # 包含foo下的所有键
-        "foo.bar": {  # foo.bar仅包含baz键
+        "foo\\.bar": {  # foo.bar仅包含baz键
             "baz": "qux"
         }
     }
@@ -54,6 +54,6 @@ print(cfg)
 print()
 print(f"{cfg["Hello"]=}")
 print(cfg.foo)
-print(cfg["foo.bar"])
+print(cfg["foo"]["bar"])
 print(cfg.foo.bar.baz)
 ```

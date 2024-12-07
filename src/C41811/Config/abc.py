@@ -9,7 +9,9 @@ from collections import OrderedDict
 from collections.abc import Mapping
 from copy import deepcopy
 from typing import Any
+from typing import Generator
 from typing import ItemsView
+from typing import Iterable
 from typing import KeysView
 from typing import MutableMapping
 from typing import Optional
@@ -20,12 +22,104 @@ from typing import ValuesView
 from pydantic_core import core_schema
 
 
+class ABCKey(ABC):
+    """
+    用于获取配置的键
+    """
+
+    def __init__(self, key: Any):
+        self._key = deepcopy(key)
+
+    @property
+    def key(self):
+        return deepcopy(self._key)
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return NotImplemented
+
+        return self._key == other._key
+
+    def __hash__(self):
+        return hash(self._key)
+
+    def __deepcopy__(self, memo):
+        return type(self)(self.key)
+
+    def __str__(self):
+        return str(self._key)
+
+    def __repr__(self):
+        return f"<{type(self).__name__}({self._key})>"
+
+
+class ABCPath(ABC):
+    """
+    用于获取数据的路径
+    """
+
+    def __init__(self, keys: Iterable[ABCKey]):
+        self._keys = deepcopy(tuple(keys))
+
+    def __getitem__(self, item):
+        return self._keys[item]
+
+    def __contains__(self, item):
+        return item in self._keys
+
+    def __len__(self):
+        return len(self._keys)
+
+    def __iter__(self):
+        return iter(self._keys)
+
+    def __hash__(self):
+        return hash(self._keys)
+
+    def __deepcopy__(self, memo):
+        return type(self)(self._keys)
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return NotImplemented
+        return self._keys == other._keys
+
+    def __repr__(self):
+        return f"<{type(self).__name__}{self._keys}>"
+
+
+class ABCPathSyntaxParser(ABC):
+    @staticmethod
+    def tokenize(string: str) -> list[str]:
+        r"""
+        将字符串分词为以\开头的有意义片段
+
+        :param string: 待分词字符串
+        :type string: str
+
+        :return: 分词结果
+        :rtype: list[str]
+        """
+
+    @classmethod
+    def parse(cls, string: str) -> ABCPath:
+        """
+        解析字符串为路径
+
+        :param string: 待解析字符串
+        :type string: str
+
+        :return: 路径对象
+        :rtype: ABCPath
+        """
+
+
 class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
     """
     配置数据
     """
 
-    def __init__(self, data: Optional[D] = None, sep_char: str = '.'):
+    def __init__(self, data: Optional[D] = None):
         """
         data为None时，默认为空字典
 
@@ -41,18 +135,17 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
         self._data_read_only: bool = not isinstance(data, MutableMapping)
         self._read_only: bool = self._data_read_only
 
-        self._sep_char: str = sep_char
-
-    def new_data(self, data: D) -> Self:  # todo 弃用转换为转义
+    @classmethod
+    def from_data(cls, data: D) -> Self:
         """
-        初始化同类型同格式配置数据的快捷方式
+        提供创建同类型配置数据的快捷方式
 
         :param data: 配置的原始数据
         :type data: Mapping | MutableMapping
         :return: 新的配置数据
         :rtype: Self
         """
-        return type(self)(data, self._sep_char)
+        return cls(data)
 
     @property
     def data(self) -> D:
@@ -74,16 +167,6 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
         """
         return self._data_read_only or self._read_only
 
-    @property
-    def sep_char(self) -> str:
-        """
-        配置数据键的分隔符
-
-        :return: 分隔符
-        :rtype: str
-        """
-        return self._sep_char
-
     @read_only.setter
     def read_only(self, value: Any):
         if self._data_read_only:
@@ -91,7 +174,7 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
         self._read_only = bool(value)
 
     @abstractmethod
-    def retrieve(self, path: str, *, get_raw: bool = False) -> Any:
+    def retrieve(self, path: str | ABCPath, *, get_raw: bool = False) -> Any:
         """
         获取路径的值的*快照*
 
@@ -108,7 +191,7 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
         """
 
     @abstractmethod
-    def modify(self, path: str, value: Any, *, allow_create: bool = True) -> Self:
+    def modify(self, path: str | ABCPath, value: Any, *, allow_create: bool = True) -> Self:
         """
         修改路径的值
 
@@ -133,7 +216,7 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
         """
 
     @abstractmethod
-    def delete(self, path: str) -> Self:
+    def delete(self, path: str | ABCPath) -> Self:
         """
         删除路径
 
@@ -148,7 +231,7 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
         """
 
     @abstractmethod
-    def exists(self, path: str) -> bool:
+    def exists(self, path: str | ABCPath) -> bool:
         """
         判断路径是否存在
 
@@ -162,7 +245,7 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
         """
 
     @abstractmethod
-    def get(self, path: str, default=None, *, get_raw: bool = False) -> Any:
+    def get(self, path: str | ABCPath, default=None, *, get_raw: bool = False) -> Any:
         """
         获取路径的值
 
@@ -181,7 +264,7 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
         """
 
     @abstractmethod
-    def set_default(self, path: str, default=None, *, get_raw: bool = False) -> Any:
+    def set_default(self, path: str | ABCPath, default=None, *, get_raw: bool = False) -> Any:
         """
         如果路径不在配置数据中则填充默认值到配置数据并返回
 
@@ -217,24 +300,22 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
         )):
             return self._data.keys()
 
-        def _recursive(data: Mapping) -> OrderedDict:
-            ordered_keys = OrderedDict()
+        def _recursive(data: Mapping) -> Generator[str, None, None]:
             for k, v in data.items():
+                k: str = k.replace('\\', "\\\\")
                 if isinstance(v, Mapping):
-                    ordered_keys.update((f"{k}{self.sep_char}{x}", None) for x in _recursive(v))
+                    yield from (f"{k}\\.{x}" for x in _recursive(v))
                     if end_point_only:
                         continue
-                ordered_keys[k] = None
-            return ordered_keys
+                yield k
 
         if recursive:
-            keys = _recursive(self._data)
-            return keys.keys()
+            return OrderedDict.fromkeys(x for x in _recursive(self._data)).keys()
 
         if end_point_only:
-            keys = OrderedDict.fromkeys(
-                k for k, v in self._data.items() if not isinstance(v, Mapping))
-            return keys.keys()
+            return OrderedDict.fromkeys(
+                k.replace('\\', "\\\\") for k, v in self._data.items() if not isinstance(v, Mapping)
+            ).keys()
 
     def values(self, get_raw: bool = False) -> ValuesView[Any]:
         """
@@ -250,7 +331,7 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
             return self._data.values()
 
         return OrderedDict(
-            (k, self.new_data(v) if isinstance(v, Mapping) else deepcopy(v)) for k, v in self._data.items()
+            (k, self.from_data(v) if isinstance(v, Mapping) else deepcopy(v)) for k, v in self._data.items()
         ).values()
 
     def items(self, *, get_raw: bool = False) -> ItemsView[str, Any]:
@@ -266,32 +347,20 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
         if get_raw:
             return self._data.items()
         return OrderedDict(
-            (deepcopy(k), self.new_data(v) if isinstance(v, Mapping) else deepcopy(v)) for k, v in self._data.items()
+            (deepcopy(k), self.from_data(v) if isinstance(v, Mapping) else deepcopy(v)) for k, v in self._data.items()
         ).items()
 
     def __getitem__(self, key):
-        """
-        getPathValue的快捷方式
-        """
-        return self.retrieve(key)
+        return self.from_data(self._data[key]) if isinstance(self._data[key], Mapping) else deepcopy(self._data[key])
 
     def __setitem__(self, key, value) -> None:
-        """
-        setPathValue的快捷方式
-        """
-        self.modify(key, value)
+        self._data[key] = value
 
     def __delitem__(self, key) -> None:
-        """
-        deletePath的快捷方式
-        """
-        self.delete(key)
+        del self._data[key]
 
     def __contains__(self, key) -> bool:
-        """
-        hasPath的快捷方式
-        """
-        return self.exists(key)
+        return key in self._data
 
     def __len__(self):
         return len(self._data)
@@ -306,7 +375,7 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
             item_obj = self._data[item]
         except KeyError:
             raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{item}'")
-        return self.new_data(item_obj) if isinstance(item_obj, Mapping) else item_obj
+        return self.from_data(item_obj) if isinstance(item_obj, Mapping) else item_obj
 
     def __iter__(self):
         return iter(self._data)
@@ -322,12 +391,12 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
         return f"{self.__class__.__name__}({data_repr})"
 
     def __deepcopy__(self, memo) -> Self:
-        return self.new_data(self._data)
+        return self.from_data(self._data)
 
     @staticmethod
-    def __get_pydantic_core_schema__() -> core_schema.DictSchema:
+    def __get_pydantic_core_schema__() -> core_schema.DictSchema:  # pragma: no cover
         return core_schema.dict_schema(
-            keys_schema=core_schema.str_schema(),
+            keys_schema=core_schema.any_schema(),
             values_schema=core_schema.any_schema()
         )
 
@@ -529,7 +598,8 @@ class ABCConfigPool(ABCSLProcessorPool):
             self,
             namespace: str,
             file_name: str,
-            required: list[str] | dict[str, Any],  # todo RequiredKey的validator现在不在强制需求参数类型，应为Any，且应补上工厂相关参数
+            validator: Any,
+            validator_factory: Any,
             *args,
             **kwargs,
     ):
@@ -540,10 +610,11 @@ class ABCConfigPool(ABCSLProcessorPool):
         :type namespace: str
         :param file_name: 文件名
         :type file_name: str
-        :param required: 必须的配置
-        :type required: list[str] | dict[str, Any]  # todo
-        :param args: 详见 :py:func:`RequireConfigDecorator`
-        :param kwargs: 详见 :py:func:`RequireConfigDecorator`
+        :param validator: 详见 :py:class:`RequiredPath`
+        :param validator_factory: 详见 :py:class:`RequiredPath`
+
+        :param args: 详见 :py:class:`RequireConfigDecorator`
+        :param kwargs: 详见 :py:class:`RequireConfigDecorator`
 
         :return: 详见 :py:class:`RequireConfigDecorator`
         :rtype: :py:class:`RequireConfigDecorator`
@@ -658,7 +729,7 @@ class ABCConfigSL(ABC):
         """
         加载处理器
 
-        :param config_file_cls: 配置类
+        :param config_file_cls: 配置文件类
         :type config_file_cls: type[C]
         :param root_path: 保存的根目录
         :type root_path: str
@@ -717,6 +788,9 @@ class ABCConfigSL(ABC):
 
 
 __all__ = (
+    "ABCKey",
+    "ABCPath",
+    "ABCPathSyntaxParser",
     "ABCConfigData",
     "ABCSLProcessorPool",
     "ABCConfigPool",

@@ -7,6 +7,42 @@ from enum import Enum
 from typing import Iterable
 from typing import Mapping
 
+from .types import KeyInfo
+from .types import TokenInfo
+
+
+class ConfigDataPathSyntaxException(Exception):
+    """
+    配置数据检索路径语法错误
+    """
+
+    def __init__(self, token_info: TokenInfo, msg: str = None):
+        """
+        :param token_info: token相关信息
+        :type token_info: TokenInfo
+        :param msg: 错误信息
+        :type msg: str
+        """
+        self.token_info = token_info
+
+        if not (msg is None and hasattr(self, "msg")):
+            self.msg = msg
+
+    def __str__(self):  # pragma: no cover
+        return (
+            f"{self.msg}"
+            f"{self.token_info.raw_string} -> {self.token_info.current_token}"
+            f" ({self.token_info.index + 1} / {len(self.token_info.tokens)})"
+        )
+
+
+class UnknownTokenType(ConfigDataPathSyntaxException):
+    """
+    未知的键类型
+    """
+
+    msg = "Unknown token type: "
+
 
 class ConfigOperate(Enum):
     """
@@ -25,34 +61,23 @@ class RequiredPathNotFoundError(KeyError):
 
     def __init__(
             self,
-            path: str,
-            sep_char: str,
-            current_key: str,
-            index: int,
+            key_info: KeyInfo,
             operate: ConfigOperate = ConfigOperate.Unknown,
     ):
         """
-        :param path: 完整键路径
-        :type path: str
-        :param sep_char: 键路径的分隔符
-        :type sep_char: str
-        :param current_key: 当前正在访问的键
-        :type current_key: str
-        :param index: 当前访问的键在完整键路径中的索引
-        :type index: int
+        :param key_info: 键相关信息
+        :type key_info: KeyInfo
         :param operate: 何种操作过程中发生的该错误
         :type operate: ConfigOperate
         """
-        super().__init__(current_key)
-
-        self.path = path
-        self.sep_char = sep_char
-        self.current_key = current_key
-        self.index = index
+        self.key_info = key_info
         self.operate = ConfigOperate(operate)
 
-    def __str__(self):
-        string = f"{self.path} -> {self.current_key} ({self.index + 1} / {len(self.path.split(self.sep_char))})"
+    def __str__(self):  # pragma: no cover
+        string = (
+            f"{self.key_info.path} -> {self.key_info.current_key}"
+            f" ({self.key_info.index + 1} / {len(self.key_info.path)})"
+        )
         if self.operate.value is not ConfigOperate.Unknown:
             string += f" Operate: {self.operate.value}"
         return string
@@ -65,41 +90,26 @@ class ConfigDataTypeError(ValueError):
 
     def __init__(
             self,
-            path: str,
-            sep_char: str,
-            current_key: str,
-            index: int,
+            key_info: KeyInfo,
             required_type: type[object],
             now_type: type[object],
     ):
         """
-        :param path: 完整键路径
-        :type path: str
-        :param sep_char: 键路径的分隔符
-        :type sep_char: str
-        :param current_key: 当前正在访问的键
-        :type current_key: str
-        :param index: 当前访问的键在完整键路径中的索引
-        :type index: int
+        :param key_info: 键相关信息
+        :type key_info: KeyInfo
         :param required_type: 该键需求的数据类型
         :type required_type: type[object]
         :param now_type: 当前键的数据类型
         :type now_type: type[object]
         """
-        super().__init__(current_key)
-
-        self.path = path
-        self.sep_char = sep_char
-        self.current_key = current_key
-        self.index = index
+        self.key_info = key_info
         self.requited_type = required_type
         self.now_type = now_type
 
-        self.relative_key = self.sep_char.join(self.path.split(self.sep_char)[:self.index])
-
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return (
-            f"{self.path} -> {self.current_key} ({self.index + 1} / {len(self.path.split(self.sep_char))})"
+            f"{self.key_info.path} -> {self.key_info.current_key}"
+            f" ({self.key_info.index + 1} / {len(self.key_info.relative_keys)})"
             f" Must be '{self.requited_type}'"
             f", Not '{self.now_type}'"
         )
@@ -110,7 +120,7 @@ class UnknownErrorDuringValidate(Exception):
     在验证配置数据时发生未知错误
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):  # pragma: no cover
         """
         :param args: 未知错误信息
         :param kwargs: 未知错误信息
@@ -167,6 +177,8 @@ class FailedProcessConfigFileError(Exception):
 
 
 __all__ = (
+    "ConfigDataPathSyntaxException",
+    "UnknownTokenType",
     "ConfigOperate",
     "RequiredPathNotFoundError",
     "ConfigDataTypeError",

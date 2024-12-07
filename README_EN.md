@@ -44,7 +44,7 @@ cfg = requireConfig(
     {
         "Hello": "World",
         "foo": dict,  # contains all keys under foo
-        "foo.bar": {  # foo.bar contains only the baz key
+        "foo\\.bar": {  # foo.bar contains only the baz key
             "baz": "qux"
         }
     }
@@ -55,6 +55,6 @@ print(cfg)
 print()
 print(f"{cfg["Hello"]=}")
 print(cfg.foo)
-print(cfg["foo.bar"])
+print(cfg["foo"]["bar"])
 print(cfg.foo.bar.baz)
 ```
