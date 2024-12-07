@@ -10,6 +10,8 @@ build:
   tools:
     python: "3.12"
   jobs:
+    pre_create_environment:
+      - "asdf install python 3.13"
     pre_install:
       - "pip install -e .[docs,dev,test]"
       - "pip uninstall -y C41811.Config"
