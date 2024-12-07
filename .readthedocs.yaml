@@ -12,9 +12,7 @@ build:
   jobs:
     pre_create_environment:
       - "asdf install python 3.13.1"
-      - "asdf global python 3.13.1"
-      - "pip install -U pip"
-      - "pip install -U virtualenv"
+      - "export PATH=/home/docs/.asdf/installs/python/3.13.1/bin:$PATH"
     pre_install:
       - "pip install -e .[docs,dev,test]"
       - "pip uninstall -y C41811.Config"
