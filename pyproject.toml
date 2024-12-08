@@ -29,8 +29,8 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "pydantic~=2.10.0b1",
-    "wrapt~=1.17.0rc1",
+    "pydantic~=2.10.3",
+    "wrapt~=1.17.0",
 ]
 
 [project.urls]
@@ -40,24 +40,24 @@ dependencies = [
 
 [project.optional-dependencies]
 docs = [
-    "sphinx",
-    "sphinx-autoapi",
-    "furo",
+    "sphinx~=8.1.3",
+    "sphinx-autoapi~=3.4.0",
+    "furo==2024.8.6",
 ]
 dev = [
-    "PyYAML",
-    "ruamel.yaml",
-    "toml",
+    "PyYAML~=6.0.2",
+    "ruamel.yaml~=0.18.6",
+    "toml~=0.10.2",
 ]
 test = [
-    "tox",
-    "pytest",
-    "pytest-cov",
-    "pytest-html"
+    "tox~=4.23.2",
+    "pytest~=8.3.4",
+    "pytest-cov~=6.0.0",
+    "pytest-html~=4.1.1"
 ]
-PyYamlSL = ["PyYAML"]
-RuamelYamlSL = ["ruamel.yaml"]
-TomlSL = ["toml"]
+PyYamlSL = ["PyYAML~=6.0.2"]
+RuamelYamlSL = ["ruamel.yaml~=0.18.6"]
+TomlSL = ["toml~=0.10.2"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -85,7 +85,7 @@ exclude_also = [
 envlist = ["py312", "py313", "cov"]
 
 [tool.tox.env_run_base]
-deps = ["pytest", "pytest-html"]
+deps = ["pytest~=8.3.4", "pytest-html~=4.1.1"]
 commands = [["pytest", "--html=./docs/_static/_reports/{env_name}.html"]]
 
 [tool.tox.env.cov]
