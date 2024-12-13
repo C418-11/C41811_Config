@@ -3,7 +3,7 @@ name: Test Publish Python Package
 on:
   workflow_dispatch:
   release:
-    types: [ published ]
+    types: [ created ]
 
 jobs:
   build:
