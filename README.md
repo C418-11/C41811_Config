@@ -10,7 +10,7 @@
 [![PyPi license](https://badgen.net/pypi/license/c41811.config/)](https://pypi.org/project/C41811.Config/)
 [![PyPI download month](https://img.shields.io/pypi/dm/c41811.config.svg)](https://pypi.python.org/pypi/C41811.Config/)
 [![made-with-sphinx-doc](https://img.shields.io/badge/Made%20with-Sphinx-1f425f.svg)](https://www.sphinx-doc.org/)
-[![Python CI](https://github.com/C418-11/C41811_Config/actions/workflows/python-ci.yml/badge.svg)](https://github.com/C418-11/C41811_Config/actions/workflows/python-ci.yml)
+[![Python CI](https://github.com/C418-11/C41811_Config/actions/workflows/python-ci.yml/badge.svg?branch=develop)](https://github.com/C418-11/C41811_Config/actions/workflows/python-ci.yml)
 
 | 文档   | https://C41811Config.readthedocs.io      |
 |------|------------------------------------------|
@@ -33,11 +33,10 @@ pip install C41811.Config
 
 ``` python
 from C41811.Config import JsonSL
-from C41811.Config import DefaultConfigPool
 from C41811.Config import requireConfig
+from C41811.Config import saveAll
 
-
-JsonSL().registerTo()
+JsonSL().register_to()
 
 cfg = requireConfig(
     '', "Hello World.json",
@@ -48,8 +47,8 @@ cfg = requireConfig(
             "baz": "qux"
         }
     }
-).checkConfig()
-DefaultConfigPool.saveAll()
+).check()
+saveAll()
 
 print(cfg)
 print()
@@ -57,4 +56,5 @@ print(f"{cfg["Hello"]=}")
 print(cfg.foo)
 print(cfg["foo"]["bar"])
 print(cfg.foo.bar.baz)
+
 ```
