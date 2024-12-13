@@ -304,10 +304,10 @@ class RequireConfigDecorator:
 DefaultConfigPool = ConfigPool()
 requireConfig = DefaultConfigPool.require
 saveAll = DefaultConfigPool.save_all
-getConfig = DefaultConfigPool.get
-setConfig = DefaultConfigPool.set
-saveConfig = DefaultConfigPool.save
-loadConfig = DefaultConfigPool.load
+get = DefaultConfigPool.get
+set_ = DefaultConfigPool.set
+save = DefaultConfigPool.save
+load = DefaultConfigPool.load
 
 
 class BaseConfigSL(ABCConfigSL, ABC):
@@ -486,4 +486,9 @@ __all__ = (
 
     "DefaultConfigPool",
     "requireConfig",
+    "saveAll",
+    "get",
+    "set_",
+    "save",
+    "load",
 )
