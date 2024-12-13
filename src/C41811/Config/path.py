@@ -7,11 +7,9 @@ from typing import Generator
 from typing import Iterable
 from typing import Optional
 from typing import Self
-from typing import override
 
 from .abc import ABCKey
 from .abc import ABCPath
-from .abc import ABCPathSyntaxParser
 from .errors import ConfigDataPathSyntaxException
 from .errors import TokenInfo
 from .errors import UnknownTokenType
@@ -19,6 +17,10 @@ from .errors import UnknownTokenType
 
 class AttrKey(ABCKey):
     def __init__(self, key: str):
+        """
+        :param key: 键名
+        :type key: str
+        """
         super().__init__(key)
 
     def __len__(self):
@@ -35,6 +37,10 @@ class AttrKey(ABCKey):
 
 class IndexKey(ABCKey):
     def __init__(self, key: int):
+        """
+        :param key: 索引值
+        :type key: int
+        """
         super().__init__(key)
 
 
@@ -57,14 +63,23 @@ class Path(ABCPath):
         return cls(keys)
 
 
-class PathSyntaxParser(ABCPathSyntaxParser):
+class PathSyntaxParser:
     """
     路径语法解析器
     """
 
     @staticmethod
-    @override
     def tokenize(string: str) -> Generator[str, None, None]:
+        r"""
+        将字符串分词为以\开头的有意义片段
+
+        :param string: 待分词字符串
+        :type string: str
+
+        :return: 分词结果
+        :rtype: Generator[str, None, None]
+        """
+
         token_cache = []
         if not string.startswith('\\'):
             chunk, sep, string = string.partition('\\')
@@ -109,8 +124,16 @@ class PathSyntaxParser(ABCPathSyntaxParser):
             token_cache = []
 
     @classmethod
-    @override
     def parse(cls, string: str) -> list[ABCKey]:
+        """
+        解析字符串为路径
+
+        :param string: 待解析字符串
+        :type string: str
+
+        :return: 路径对象
+        :rtype: list[ABCKey]
+        """
         path: list[ABCKey] = []
         item: Optional[str] = None
 

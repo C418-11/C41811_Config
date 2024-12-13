@@ -2,72 +2,59 @@
 # cython: language_level = 3
 
 
+import pprint
 from ast import literal_eval
-from typing import Optional
-from typing import TypeVar
 from typing import override
 
+from .._io_protocol import SupportsReadAndReadline
+from .._io_protocol import SupportsWrite
 from ..abc import ABCConfigFile
+from ..base import ConfigData
 from ..errors import FailedProcessConfigFileError
-from ..main import BaseConfigSL
-from ..main import ConfigData
-
-C = TypeVar("C", bound=ABCConfigFile)
+from ..main import BaseLocalFileConfigSL
 
 
-class PythonLiteralSL(BaseConfigSL):
+class PythonLiteralSL(BaseLocalFileConfigSL):
     """
     Python 字面量序列化处理器
     """
 
     @property
     @override
-    def reg_name(self) -> str:
+    def processor_reg_name(self) -> str:
         return "python_literal"
 
     @property
     @override
-    def file_ext(self) -> list[str]:
-        return [".py", ".python_literal", ".pyl"]
+    def file_ext(self) -> tuple[str, ...]:
+        return ".py", ".python_literal", ".pyl"
 
     @override
-    def save(
+    def save_file(
             self,
             config_file: ABCConfigFile,
-            root_path: str,
-            namespace: Optional[str],
-            file_name: Optional[str],
-            *args,
-            **kwargs
+            target_file: SupportsWrite[str],
+            *merged_args,
+            **merged_kwargs
     ) -> None:
-
-        file_path = self._get_file_path(config_file, root_path, namespace, file_name)
-        with open(file_path, "w", encoding="utf-8") as f:
-            try:
-                f.write(str(config_file.data))
-            except Exception as e:
-                raise FailedProcessConfigFileError(e) from e
+        try:
+            target_file.write(pprint.pformat(config_file.data, *merged_args, **merged_kwargs))
+        except Exception as e:
+            raise FailedProcessConfigFileError(e) from e
 
     @override
-    def load[C: ABCConfigFile](
-            self,
-            config_file_cls: type[C],
-            root_path: str,
-            namespace: Optional[str],
-            file_name: Optional[str],
-            *args,
-            **kwargs
+    def load_file[C: ABCConfigFile](
+            self, config_file_cls: type[C],
+            source_file: SupportsReadAndReadline[str],
+            *merged_args,
+            **merged_kwargs
     ) -> C:
+        try:
+            data = literal_eval(source_file.read())
+        except Exception as e:
+            raise FailedProcessConfigFileError(e) from e
 
-        with open(self._norm_join(root_path, namespace, file_name), "r", encoding="utf-8") as f:
-            try:
-                data = literal_eval(f.read())
-            except Exception as e:
-                raise FailedProcessConfigFileError(e) from e
-
-        obj = config_file_cls(ConfigData(data), namespace=namespace, file_name=file_name, config_format=self.reg_name)
-
-        return obj
+        return config_file_cls(ConfigData(data), config_format=self.processor_reg_name)
 
 
 __all__ = (

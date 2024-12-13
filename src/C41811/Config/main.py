@@ -4,6 +4,7 @@
 
 import os.path
 from abc import ABC
+from abc import abstractmethod
 from collections.abc import Mapping
 from copy import deepcopy
 from typing import Any
@@ -14,12 +15,17 @@ from typing import Optional
 from typing import override
 
 import wrapt
+from pyrsistent import PMap
+from pyrsistent import pmap
 
+from ._io_protocol import SupportsReadAndReadline
+from ._io_protocol import SupportsWrite
 from .abc import ABCConfigData
 from .abc import ABCConfigFile
 from .abc import ABCConfigPool
 from .abc import ABCConfigSL
 from .abc import ABCSLProcessorPool
+from .abc import SLArgument
 from .base import BaseConfigPool
 from .base import ConfigData
 from .base import ConfigFile
@@ -136,20 +142,84 @@ class RequiredPath:
 
 class ConfigPool(BaseConfigPool):
     @override
+    def load[F: ABCConfigFile](
+            self,
+            namespace: str,
+            file_name: str,
+            *,
+            config_file_cls: type[F] = ConfigFile,
+            config_formats: Optional[str | Iterable[str]] = None,
+            allow_create: bool = False
+    ) -> F:
+        if config_formats is None:
+            config_formats = set()
+        elif isinstance(config_formats, str):
+            config_formats = {config_formats}
+        else:
+            config_formats = set(config_formats)
+
+        format_set: set[str]
+        # 配置文件格式未提供时尝试从文件后缀推断
+        if not config_formats:
+            _, config_format = os.path.splitext(file_name)
+            if not config_format:
+                raise UnsupportedConfigFormatError("Unknown")
+            if config_format not in self.FileExtProcessor:
+                raise UnsupportedConfigFormatError(config_format)
+            format_set = self.FileExtProcessor[config_format]
+        else:
+            format_set = config_formats
+
+        # 单次尝试加载配置文件的的逻辑，定义为函数是为了方便后面尝试从多个SL加载器中找到能正确加载的那一个
+        def _load_config(format_: str) -> ABCConfigFile:
+            if format_ not in self.SLProcessor:
+                raise UnsupportedConfigFormatError(format_)
+
+            result: ABCConfigFile | None = self.get(namespace, file_name)
+            if result is None:
+                try:
+                    result = config_file_cls.load(self, namespace, file_name, format_)
+                except FileNotFoundError:
+                    if not allow_create:
+                        raise
+                    result = config_file_cls(
+                        ConfigData(),
+                        config_format=format_
+                    )
+
+                self.set(namespace, file_name, result)
+            return result
+
+        # 尝试从多个SL加载器中找到能正确加载的那一个
+        errors = {}
+        for f in format_set:
+            try:
+                ret = _load_config(f)
+            except (UnsupportedConfigFormatError, FailedProcessConfigFileError, FileNotFoundError) as err:
+                errors[f] = err
+                continue
+            config: ABCConfigFile = ret
+            break
+        else:  # 如果没有一个SL加载器能正确加载，则抛出异常
+            raise FailedProcessConfigFileError(errors)
+
+        return config
+
+    @override
     def require(
             self,
             namespace: str,
             file_name: str,
             validator: Any,
-            validator_factory: Any,
-            *args, **kwargs
+            validator_factory: Any = ValidatorTypes.DEFAULT,
+            static_config: Optional[Any] = None,
+            **kwargs
     ):
         return RequireConfigDecorator(
             self,
             namespace,
             file_name,
-            RequiredPath(validator, validator_factory),
-            *args,
+            RequiredPath(validator, validator_factory, static_config),
             **kwargs
         )
 
@@ -163,78 +233,34 @@ class RequireConfigDecorator:
             self,
             config_pool: ABCConfigPool,
             namespace: str,
-            raw_file_name: str,
+            file_name: str,
             required: RequiredPath,
             *,
-            config_cls: type[ABCConfigFile] = ConfigFile,
-            config_format: Optional[str] = None,
-            cache_config: Optional[Callable[[Callable], Callable]] = None,
+            config_file_cls: type[ABCConfigFile] = ConfigFile,
+            config_formats: Optional[str | Iterable[str]] = None,
             allow_create: bool = True,
+            cache_config: Optional[Callable[[Callable], Callable]] = None,
             filter_kwargs: Optional[dict[str, Any]] = None
     ):
         """
         :param config_pool: 所在的配置池
         :type config_pool: ConfigPool
-        :param namespace: 命名空间
-        :type namespace: str
-        :param raw_file_name: 源文件名
-        :type raw_file_name: str
+        :param namespace: 详见 :py:func:`ConfigPool.load`
+        :param file_name: 详见 :py:func:`ConfigPool.load`
         :param required: 需求的键
         :type required: RequiredPath
-        :param config_format: 配置文件格式
-        :type config_format: Optional[str]
+        :param config_file_cls: 详见 :py:func:`ConfigPool.load`
+        :param config_formats: 详见 :py:func:`ConfigPool.load`
+        :param allow_create: 详见 :py:func:`ConfigPool.load`
         :param cache_config: 缓存配置的装饰器，默认为None，即不缓存
         :type cache_config: Optional[Callable[[Callable], Callable]]
-        :param allow_create: 是否允许在文件不存在时新建文件
-        :type allow_create: bool
         :param filter_kwargs: :py:func:`RequiredPath.filter` 要绑定的默认参数，默认为allow_create=True
         :type filter_kwargs: dict[str, Any]
 
         :raise UnsupportedConfigFormatError: 不支持的配置格式
         """
-        format_set: set[str]
-        if config_format is None:
-            _, config_format = os.path.splitext(raw_file_name)
-            if not config_format:
-                raise UnsupportedConfigFormatError("Unknown")
-            if config_format not in config_pool.FileExtProcessor:
-                raise UnsupportedConfigFormatError(config_format)
-            format_set = config_pool.FileExtProcessor[config_format]
-        else:
-            format_set = {config_format, }
-
-        def _load_config(format_: str) -> ABCConfigFile:
-            if format_ not in config_pool.SLProcessor:
-                raise UnsupportedConfigFormatError(format_)
-
-            result: ABCConfigFile | None = config_pool.get(namespace, raw_file_name)
-            if result is None:
-                try:
-                    result = config_cls.load(config_pool, namespace, raw_file_name, format_)
-                except FileNotFoundError:
-                    if not allow_create:
-                        raise
-                    result = config_cls(
-                        ConfigData(),
-                        namespace=namespace,
-                        file_name=raw_file_name,
-                        config_format=format_
-                    )
-
-                config_pool.set(namespace, raw_file_name, result)
-            return result
-
-        errors = {}
-        for f in format_set:
-            try:
-                ret = _load_config(f)
-            except FailedProcessConfigFileError as err:
-                errors[f] = err
-                continue
-            config: ABCConfigFile = ret
-            break
-        else:
-            raise FailedProcessConfigFileError(errors)
+        config = config_pool.load(namespace, file_name, config_file_cls=config_file_cls, config_formats=config_formats,
+                                  allow_create=allow_create)
 
         if filter_kwargs is None:
             filter_kwargs = {}
@@ -269,16 +295,10 @@ class RequireConfigDecorator:
                 **kwargs
             )
 
-        return wrapper
+        return wrapper(func)
 
     def _wrapped_filter(self, **kwargs):
         return self._cache_config(self._required.filter(self._config.data, **kwargs))
-
-    def _function_processor(self, *args):
-        return self._wrapped_filter(**self._filter_kwargs), *args
-
-    def _method_processor(self, obj, *args):
-        return obj, self._wrapped_filter(**self._filter_kwargs), *args
 
 
 DefaultConfigPool = ConfigPool()
@@ -286,9 +306,15 @@ requireConfig = DefaultConfigPool.require
 saveAll = DefaultConfigPool.save_all
 getConfig = DefaultConfigPool.get
 setConfig = DefaultConfigPool.set
+saveConfig = DefaultConfigPool.save
+loadConfig = DefaultConfigPool.load
 
 
 class BaseConfigSL(ABCConfigSL, ABC):
+    """
+    基础配置SL管理器 提供了一些实用功能
+    """
+
     @override
     def register_to(self, config_pool: Optional[ABCSLProcessorPool] = None) -> None:
         """
@@ -303,11 +329,160 @@ class BaseConfigSL(ABCConfigSL, ABC):
         super().register_to(config_pool)
 
 
+class BaseLocalFileConfigSL(BaseConfigSL, ABC):
+    """
+    基础本地配置文件SL管理器
+    """
+
+    _s_open_kwargs: dict[str, Any] = dict(mode='w', encoding="utf-8")
+    _l_open_kwargs: dict[str, Any] = dict(mode='r', encoding="utf-8")
+
+    def __init__(
+            self,
+            s_arg: SLArgument = None,
+            l_arg: SLArgument = None,
+            *,
+            reg_alias: Optional[str] = None,
+            create_dir: bool = True
+    ):
+        # noinspection GrazieInspection
+        """
+        :param s_arg: 详见 :py:class:`BaseConfigSL`
+        :param l_arg: 详见 :py:class:`BaseConfigSL`
+        :param reg_alias: 详见 :py:class:`BaseConfigSL`
+        :param create_dir: 是否允许创建目录
+        :type create_dir: bool
+
+        .. seealso::
+           :py:class:`BaseConfigSL`
+        """
+        super().__init__(s_arg, l_arg, reg_alias=reg_alias)
+
+        self.create_dir = create_dir
+
+    @staticmethod
+    def _merge_args(
+            base_arguments: tuple[tuple, PMap[str, Any]],
+            args: tuple,
+            kwargs: dict
+    ) -> tuple[tuple, PMap[str, Any]]:
+        """
+        合并参数
+
+        :param base_arguments: 基础参数
+        :type base_arguments: tuple[tuple, PMap[str, Any]]
+        :param args: 新参数
+        :type args: tuple
+        :param kwargs: 新参数
+        :type kwargs: dict
+
+        :return: 合并后的参数
+        :rtype: tuple[tuple, PMap[str, Any]]
+        """
+        base_arguments = list(base_arguments[0]), dict(base_arguments[1])
+
+        merged_args = deepcopy(base_arguments[0])[:len(args)] = args
+        merged_kwargs = deepcopy(base_arguments[1]) | kwargs
+
+        return tuple(merged_args), pmap(merged_kwargs)
+
+    @override
+    def save(
+            self,
+            config_file: ABCConfigFile,
+            root_path: str,
+            namespace: str,
+            file_name: str,
+            *args, **kwargs
+    ) -> None:
+        merged_args, merged_kwargs = self._merge_args(self._saver_args, args, kwargs)
+
+        with open(self._process_file_path(root_path, namespace, file_name), **self._s_open_kwargs) as f:
+            self.save_file(config_file, f, *merged_args, **merged_kwargs)
+
+    @override
+    def load[C: ABCConfigFile](
+            self,
+            config_file_cls: type[C],
+            root_path: str,
+            namespace: str,
+            file_name: str,
+            *args, **kwargs
+    ) -> C:
+        merged_args, merged_kwargs = self._merge_args(self._loader_args, args, kwargs)
+
+        with open(self._process_file_path(root_path, namespace, file_name), **self._l_open_kwargs) as f:
+            return self.load_file(config_file_cls, f, *merged_args, **merged_kwargs)
+
+    @abstractmethod
+    def save_file(
+            self,
+            config_file: ABCConfigFile,
+            target_file: SupportsWrite,
+            *merged_args,
+            **merged_kwargs,
+    ) -> None:
+        """
+        :param config_file: 配置文件
+        :type config_file: ABCConfigFile
+        :param target_file: 目标文件
+        :type target_file: SupportsWrite
+        :param merged_args: 合并后的位置参数
+        :param merged_kwargs: 合并后的关键字参数
+        """
+
+    @abstractmethod
+    def load_file[C: ABCConfigFile](
+            self,
+            config_file_cls: type[C],
+            source_file: SupportsReadAndReadline,
+            *merged_args,
+            **merged_kwargs,
+    ) -> C:
+        """
+        :param config_file_cls: 配置文件类
+        :type config_file_cls: type[ABCConfigFile]
+        :param source_file: 源文件
+        :type source_file: _SupportsReadAndReadline
+        :param merged_args: 合并后的位置参数
+        :param merged_kwargs: 合并后的关键字参数
+        """
+
+    def _process_file_path(
+            self,
+            root_path: str,
+            namespace: str,
+            file_name: str,
+    ) -> str:
+        """
+        处理配置文件对应的文件路径
+
+        :param root_path: 保存的根目录
+        :type root_path: str
+        :param namespace: 配置的命名空间
+        :type namespace: Optional[str]
+        :param file_name: 配置文件名
+        :type file_name: Optional[str]
+
+        :return: 配置文件路径
+        :rtype: str
+
+        :raise ValueError: 当 `namespace` 和 `file_name` 都为 None 时
+        """
+
+        full_path = os.path.normpath(os.path.join(root_path, namespace, file_name))
+        if self.create_dir:
+            os.makedirs(os.path.dirname(full_path), exist_ok=True)
+
+        return full_path
+
+
 __all__ = (
     "RequiredPath",
     "ConfigPool",
     "RequireConfigDecorator",
     "BaseConfigSL",
+    "BaseLocalFileConfigSL",
 
     "DefaultConfigPool",
     "requireConfig",

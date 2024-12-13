@@ -167,8 +167,8 @@ class ConfigFile(ABCConfigFile):
     def save(
             self,
             config_pool: ABCSLProcessorPool,
-            namespace: str | None = None,
-            file_name: str | None = None,
+            namespace: str,
+            file_name: str,
             config_format: str | None = None,
             *processor_args,
             **processor_kwargs
@@ -233,13 +233,17 @@ class BaseConfigPool(ABCConfigPool, ABC):
         self._configs[namespace][file_name] = config
 
     @override
+    def save(self, namespace: str, file_name: str, *args, **kwargs) -> None:
+        self._configs[namespace][file_name].save(self, namespace, file_name, *args, **kwargs)
+
+    @override
     def save_all(self, ignore_err: bool = False) -> None | dict[str, dict[str, tuple[ABCConfigFile, Exception]]]:
         errors = {}
         for namespace, configs in self._configs.items():
             errors[namespace] = {}
             for file_name, config in configs.items():
                 try:
-                    config.save(self)
+                    config.save(self, namespace=namespace, file_name=file_name)
                 except Exception as e:
                     if not ignore_err:
                         raise
@@ -250,8 +254,21 @@ class BaseConfigPool(ABCConfigPool, ABC):
 
         return {k: v for k, v in errors.items() if v}
 
+    def delete(self, namespace: str, file_name: str) -> None:
+        del self._configs[namespace][file_name]
+
     def __getitem__(self, item):
+        if isinstance(item, tuple):
+            if len(item) != 2:
+                raise ValueError(f"item must be a tuple of length 2, got {item}")
+            return self[item[0]][item[1]]
         return deepcopy(self.configs[item])
+
+    def __len__(self):
+        """
+        配置文件总数
+        """
+        return sum(len(v) for v in self._configs.values())
 
     @property
     def configs(self):

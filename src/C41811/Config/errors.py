@@ -28,7 +28,7 @@ class TokenInfo:
     """
 
     @property
-    def raw_string(self):
+    def raw_string(self):  # pragma: no cover
         return ''.join(self.tokens)
 
 
@@ -182,6 +182,9 @@ class UnsupportedConfigFormatError(Exception):
         super().__init__(f"Unsupported config format: {_format}")
         self.format = _format
 
+    def __eq__(self, other):
+        return isinstance(other, UnsupportedConfigFormatError) and self.format == other.format
+
 
 class FailedProcessConfigFileError(Exception):
     """
@@ -204,7 +207,7 @@ class FailedProcessConfigFileError(Exception):
                 msg,
                 *map(lambda _: f"{_[0]}: {_[1]}", reason.items()))
             ))
-        elif isinstance(reason, Iterable):
+        elif isinstance(reason, Iterable):  # pragma: no cover
             reason = tuple(reason)
             super().__init__('\n'.join((
                 msg,

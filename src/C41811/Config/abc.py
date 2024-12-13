@@ -2,7 +2,6 @@
 # cython: language_level = 3
 
 
-import os
 from abc import ABC
 from abc import abstractmethod
 from collections import OrderedDict
@@ -17,9 +16,12 @@ from typing import MutableMapping
 from typing import Optional
 from typing import Self
 from typing import Sequence
+from typing import TypeAlias
 from typing import ValuesView
 
 from pydantic_core import core_schema
+from pyrsistent import PMap
+from pyrsistent import pmap
 
 
 class ABCKey(ABC):
@@ -88,32 +90,6 @@ class ABCPath(ABC):
         return f"<{type(self).__name__}{self._keys}>"
 
 
-class ABCPathSyntaxParser(ABC):
-    @staticmethod
-    def tokenize(string: str) -> list[str]:
-        r"""
-        将字符串分词为以\开头的有意义片段
-
-        :param string: 待分词字符串
-        :type string: str
-
-        :return: 分词结果
-        :rtype: list[str]
-        """
-
-    @classmethod
-    def parse(cls, string: str) -> ABCPath:
-        """
-        解析字符串为路径
-
-        :param string: 待解析字符串
-        :type string: str
-
-        :return: 路径对象
-        :rtype: ABCPath
-        """
-
-
 class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
     """
     配置数据
@@ -179,7 +155,7 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
         获取路径的值的*快照*
 
         :param path: 路径
-        :type path: str
+        :type path: str | ABCPath
         :param get_raw: 是否获取原始值，为False时，会将Mapping转换为当前类
         :type get_raw: bool
 
@@ -202,7 +178,7 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
            allow_create时，使用与self.data一样的类型新建路径
 
         :param path: 路径
-        :type path: str
+        :type path: str | ABCPath
         :param value: 值
         :type value: Any
         :param allow_create: 是否允许创建不存在的路径，默认为True
@@ -221,7 +197,7 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
         删除路径
 
         :param path: 路径
-        :type path: str
+        :type path: str | ABCPath
 
         :return: 返回当前实例便于链式调用
         :rtype: Self
@@ -236,7 +212,7 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
         判断路径是否存在
 
         :param path: 路径
-        :type path: str
+        :type path: str | ABCPath
 
         :return: 路径是否存在
         :rtype: bool
@@ -250,7 +226,7 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
         获取路径的值
 
         :param path: 路径
-        :type path: str
+        :type path: str | ABCPath
 
         :param default: 默认值
         :type default: Any
@@ -269,7 +245,7 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
         如果路径不在配置数据中则填充默认值到配置数据并返回
 
         :param path: 路径
-        :type path: str
+        :type path: str | ABCPath
         :param default: 默认值
         :type default: Any
         :param get_raw: 是否获取原始值
@@ -413,6 +389,9 @@ class ABCSLProcessorPool(ABC):
 
     @property
     def root_path(self) -> str:
+        """
+        :return: 配置文件根目录
+        """
         return self._root_path
 
 
@@ -425,8 +404,6 @@ class ABCConfigFile(ABC):
             self,
             config_data: ABCConfigData,
             *,
-            namespace: Optional[str] = None,
-            file_name: Optional[str] = None,
             config_format: Optional[str] = None
     ) -> None:
         """
@@ -435,43 +412,35 @@ class ABCConfigFile(ABC):
 
         :param config_data: 配置数据
         :type config_data: ABCConfigData
-        :param namespace: 文件命名空间
-        :type namespace: Optional[str]
-        :param file_name: 文件名
-        :type file_name: Optional[str]
         :param config_format: 配置文件的格式
         :type config_format: Optional[str]
         """
 
         self._data: ABCConfigData = config_data
 
-        self._namespace: str | None = namespace
-        self._file_name: str | None = file_name
         self._config_format: str | None = config_format
 
     @property
     def data(self) -> ABCConfigData:
+        """
+        :return: 配置数据
+        """
         return self._data
 
     @property
-    def namespace(self) -> str | None:
-        return self._namespace
-
-    @property
-    def file_name(self) -> str | None:
-        return self._file_name
-
-    @property
     def config_format(self) -> str | None:
+        """
+        :return: 配置文件的格式
+        """
         return self._config_format
 
     @abstractmethod
     def save(
             self,
             config_pool: ABCSLProcessorPool,
-            namespace: str | None = None,
-            file_name: str | None = None,
-            config_format: str | None = None,
+            namespace: str,
+            file_name: str,
+            config_format: Optional[str] = None,
             *processor_args,
             **processor_kwargs
     ) -> None:
@@ -481,9 +450,9 @@ class ABCConfigFile(ABC):
         :param config_pool: 配置池
         :type config_pool: ABCSLProcessorPool
         :param namespace: 文件命名空间
-        :type namespace: Optional[str]
+        :type namespace: str
         :param file_name: 文件名
-        :type file_name: Optional[str]
+        :type file_name: str
         :param config_format: 配置文件的格式
         :type config_format: Optional[str]
 
@@ -526,14 +495,14 @@ class ABCConfigFile(ABC):
         if not isinstance(other, type(self)):
             return NotImplemented
 
-        for field in ["_config_format", "_data", "_namespace", "_file_name"]:
+        for field in ["_config_format", "_data"]:
             if getattr(self, field) != getattr(other, field):
                 return False
         return True
 
     def __repr__(self):
         fmt_ls: list[str] = []
-        for field in ["_config_format", "_data", "_namespace", "_file_name"]:
+        for field in ["_config_format", "_data"]:
             field_value = getattr(self, field)
             if field_value is None:
                 continue
@@ -578,7 +547,21 @@ class ABCConfigPool(ABCSLProcessorPool):
         :type config: ABCConfigFile
 
         :return: None
-        :rtype: None
+        :rtype: NoneType
+        """
+
+    @abstractmethod
+    def save(self, namespace: str, file_name: str, *args, **kwargs) -> None:
+        """
+        保存配置
+
+        :param namespace: 命名空间
+        :type namespace: str
+        :param file_name: 文件名
+        :type file_name: str
+
+        :return: None
+        :rtype: NoneType
         """
 
     @abstractmethod
@@ -594,13 +577,55 @@ class ABCConfigPool(ABCSLProcessorPool):
         """
 
     @abstractmethod
+    def load[F: ABCConfigFile](
+            self,
+            namespace: str,
+            file_name: str,
+            *,
+            config_file_cls: type[F],
+            config_formats: Optional[str | Iterable[str]] = None,
+            allow_create: bool = False,
+    ) -> F:
+        """
+        加载配置
+
+        :param namespace: 命名空间
+        :type namespace: str
+        :param file_name: 文件名
+        :type file_name: str
+        :param config_file_cls: 配置文件类
+        :type config_file_cls: type[ABCConfigFile]
+        :param config_formats: 配置格式
+        :type config_formats: Optional[str | Iterable[str]]
+        :param allow_create: 是否允许创建配置文件
+        :type allow_create: bool
+
+        :return: 配置对象
+        :rtype: ABCConfigFile
+        """
+
+    @abstractmethod
+    def delete(self, namespace: str, file_name: str) -> None:
+        """
+        删除配置文件
+
+        :param namespace: 命名空间
+        :type namespace: str
+        :param file_name: 文件名
+        :type file_name: str
+
+        :return: None
+        :rtype: NoneType
+        """
+
+    @abstractmethod
     def require(
             self,
             namespace: str,
             file_name: str,
             validator: Any,
             validator_factory: Any,
-            *args,
+            static_config: Optional[Any] = None,
             **kwargs,
     ):
         """
@@ -612,8 +637,8 @@ class ABCConfigPool(ABCSLProcessorPool):
         :type file_name: str
         :param validator: 详见 :py:class:`RequiredPath`
         :param validator_factory: 详见 :py:class:`RequiredPath`
+        :param static_config: 详见 :py:class:`RequiredPath`
 
-        :param args: 详见 :py:class:`RequireConfigDecorator`
         :param kwargs: 详见 :py:class:`RequireConfigDecorator`
 
         :return: 详见 :py:class:`RequireConfigDecorator`
@@ -621,12 +646,12 @@ class ABCConfigPool(ABCSLProcessorPool):
         """
 
 
-SLArgument = Sequence | Mapping | tuple[Sequence, Mapping[str, Any]]
+SLArgument: TypeAlias = Optional[Sequence | Mapping | tuple[Sequence, Mapping[str, Any]]]
 
 
 class ABCConfigSL(ABC):
     """
-    配置文件SaveLoad管理器抽象类
+    配置SaveLoad处理器抽象类
     """
 
     def __init__(
@@ -634,41 +659,68 @@ class ABCConfigSL(ABC):
             s_arg: SLArgument = None,
             l_arg: SLArgument = None,
             *,
-            create_dir: bool = True,
+            reg_alias: Optional[str] = None,
     ):
         """
         :param s_arg: 保存器默认参数
-        :type s_arg: Sequence | Mapping | tuple[Sequence, Mapping[str, Any]]
+        :type s_arg: Optional[Sequence | Mapping | tuple[Sequence, Mapping[str, Any]]]
         :param l_arg: 加载器默认参数
-        :type l_arg: Sequence | Mapping | tuple[Sequence, Mapping[str, Any]]
-        :param create_dir: 是否允许创建目录
-        :type create_dir: bool
+        :type l_arg: Optional[Sequence | Mapping | tuple[Sequence, Mapping[str, Any]]]
+        :param reg_alias: sl处理器注册别名
+        :type reg_alias: Optional[str]
         """
 
-        def _build_arg(value: SLArgument) -> tuple[list, dict[str, Any]]:
+        def _build_arg(value: SLArgument) -> tuple[tuple, PMap[str, Any]]:
             if value is None:
-                return [], {}
+                return (), pmap()
             if isinstance(value, Sequence):
-                return list(value), {}
+                return tuple(value), pmap()
             if isinstance(value, Mapping):
-                return [], dict(value)
+                return (), pmap(value)
             raise TypeError(f"Invalid argument type, must be '{SLArgument}'")
 
-        self.save_arg: tuple[list, dict[str, Any]] = _build_arg(s_arg)
-        self.load_arg: tuple[list, dict[str, Any]] = _build_arg(l_arg)
+        self._saver_args: tuple[tuple, PMap[str, Any]] = _build_arg(s_arg)
+        self._loader_args: tuple[tuple, PMap[str, Any]] = _build_arg(l_arg)
+        self._reg_alias: Optional[str] = reg_alias
 
-        self.create_dir = create_dir
+    @property
+    def saver_args(self) -> tuple[tuple, PMap[str, Any]]:
+        """
+        :return: 保存器默认参数
+        """
+        return self._saver_args
+
+    @property
+    def loader_args(self) -> tuple[tuple, PMap[str, Any]]:
+        """
+        :return: 加载器默认参数
+        """
+        return self._loader_args
 
     @property
     @abstractmethod
+    def processor_reg_name(self) -> str:
+        """
+        :return: SL处理器的默认注册名
+        """
+
+    @property
+    def reg_alias(self) -> Optional[str]:
+        """
+        :return: 处理器的别名
+        """
+        return self._reg_alias
+
+    @property
     def reg_name(self) -> str:
         """
-        :return: SL处理器的注册名
+        :return: 处理器的注册名
         """
+        return self.processor_reg_name if self._reg_alias is None else self._reg_alias
 
     @property
     @abstractmethod
-    def file_ext(self) -> list[str]:
+    def file_ext(self) -> tuple[str, ...]:
         """
         :return: 支持的文件扩展名
         """
@@ -693,8 +745,8 @@ class ABCConfigSL(ABC):
             self,
             config_file: ABCConfigFile,
             root_path: str,
-            namespace: Optional[str],
-            file_name: Optional[str],
+            namespace: str,
+            file_name: str,
             *args,
             **kwargs
     ) -> None:
@@ -706,12 +758,12 @@ class ABCConfigSL(ABC):
         :param root_path: 保存的根目录
         :type root_path: str
         :param namespace: 配置的命名空间
-        :type namespace: Optional[str]
+        :type namespace: str
         :param file_name: 配置文件名
-        :type file_name: Optional[str]
+        :type file_name: str
 
         :return: None
-        :rtype: None
+        :rtype: NoneType
 
         :raise FailedProcessConfigFileError: 处理配置文件失败
         """
@@ -721,8 +773,8 @@ class ABCConfigSL(ABC):
             self,
             config_file_cls: type[C],
             root_path: str,
-            namespace: Optional[str],
-            file_name: Optional[str],
+            namespace: str,
+            file_name: str,
             *args,
             **kwargs
     ) -> C:
@@ -734,9 +786,9 @@ class ABCConfigSL(ABC):
         :param root_path: 保存的根目录
         :type root_path: str
         :param namespace: 配置的命名空间
-        :type namespace: Optional[str]
+        :type namespace: str
         :param file_name: 配置文件名
-        :type file_name: Optional[str]
+        :type file_name: str
 
         :return: 配置对象
         :rtype: ABCConfigFile
@@ -744,56 +796,41 @@ class ABCConfigSL(ABC):
         :raise FailedProcessConfigFileError: 处理配置文件失败
         """
 
-    @staticmethod
-    def _norm_join(*paths: str) -> str:
-        return os.path.normpath(os.path.join(*paths))
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return NotImplemented
 
-    def _get_file_path(
-            self,
-            configfile: ABCConfigFile,
-            root_path: str,
-            namespace: Optional[str] = None,
-            file_name: Optional[str] = None,
-    ) -> str:
-        """
-        获取配置文件对应的文件路径(提供给子类的便捷方法)
+        processor_reg_name = self.processor_reg_name == other.processor_reg_name
+        reg_alias = self.reg_alias == other.reg_alias
+        file_ext_eq = self.file_ext == other.file_ext
+        saver_args_eq = self._saver_args == other._saver_args
+        loader_args_eq = self._loader_args == other._loader_args
 
-        :param configfile: 配置对象
-        :type configfile: ABCConfigFile
-        :param root_path: 保存的根目录
-        :type root_path: str
-        :param namespace: 配置的命名空间
-        :type namespace: Optional[str]
-        :param file_name: 配置文件名
-        :type file_name: Optional[str]
+        return all((
+            processor_reg_name,
+            reg_alias,
+            file_ext_eq,
+            saver_args_eq,
+            loader_args_eq
+        ))
 
-        :return: 配置文件路径
-        :rtype: str
-
-        :raise ValueError: 当 namespace 和 file_name (即便尝试从config读值)都为 None 时
-        """
-        if namespace is None:
-            namespace = configfile.namespace
-        if file_name is None:
-            file_name = configfile.file_name
-
-        if namespace is None or file_name is None:
-            raise ValueError("namespace and file_name can't be None")
-
-        full_path = self._norm_join(root_path, namespace, file_name)
-        if self.create_dir:
-            os.makedirs(os.path.dirname(full_path), exist_ok=True)
-
-        return full_path
+    def __hash__(self):
+        return hash((
+            self.processor_reg_name,
+            self.reg_alias,
+            self.file_ext,
+            self._saver_args,
+            self._loader_args
+        ))
 
 
 __all__ = (
     "ABCKey",
     "ABCPath",
-    "ABCPathSyntaxParser",
     "ABCConfigData",
     "ABCSLProcessorPool",
     "ABCConfigPool",
     "ABCConfigFile",
+    "SLArgument",
     "ABCConfigSL",
 )

@@ -176,9 +176,13 @@ class DefaultValidatorFactory:
         """
 
         validator = deepcopy(validator)
-        if isinstance(validator, (tuple, list, set, frozenset)):
+        if isinstance(validator, Mapping):  # 先检查Mapping因为Mapping可以是Iterable
+            ...
+        elif isinstance(validator, Iterable):
+            # 预处理为
+            # k: Any
             validator = OrderedDict((k, Any) for k in validator)
-        elif not isinstance(validator, Mapping):
+        else:
             raise TypeError(f"Invalid validator type '{type(validator).__name__}'")
         self.validator = validator
         self.validator_config = validator_config
