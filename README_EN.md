@@ -10,6 +10,7 @@ English | [中文](README.md)
 [![PyPi license](https://badgen.net/pypi/license/c41811.config/)](https://pypi.org/project/C41811.Config/)
 [![PyPI download month](https://img.shields.io/pypi/dm/c41811.config.svg)](https://pypi.python.org/pypi/C41811.Config/)
 [![made-with-sphinx-doc](https://img.shields.io/badge/Made%20with-Sphinx-1f425f.svg)](https://www.sphinx-doc.org/)
+[![Python CI](https://github.com/C418-11/C41811_Config/actions/workflows/python-ci.yml/badge.svg)](https://github.com/C418-11/C41811_Config/actions/workflows/python-ci.yml)
 
 | Document    | https://C41811Config.readthedocs.io      |
 |-------------|------------------------------------------|
