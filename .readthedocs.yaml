@@ -14,7 +14,7 @@ build:
     pre_install:
       - "pip install -e .[test]"
     pre_build:
-      - "tox -e doc"
+      - "tox -e prepare-doc"
 
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:

@@ -101,7 +101,7 @@ commands = [
     ["pytest", "--cov=src", "--cov-report=term-missing", "--cov-report=html:docs/_static/_coverage"]
 ]
 
-[tool.tox.env.doc]
+[tool.tox.env.prepare-doc]
 allowlist_externals=["npm", "lessc"]
 commands_pre = [
     ["pip", "install", "-e", ".[docs,test]"],
@@ -110,19 +110,15 @@ commands_pre = [
 ]
 commands = [
     ["tox"],
-    ["lessc", ".\\docs\\_static\\darcula.less", ".\\docs\\_static\\darcula.css"],
-    ["sphinx-build", "-b", "html", ".\\docs", ".\\docs\\_build"]
+    ["lessc", "./docs/_static/darcula.less", "./docs/_static/darcula.css"],
 ]
 
-[tool.tox.env.cdoc]
-allowlist_externals=["npm", "lessc"]
+[tool.tox.env.doc]
 commands_pre = [
-    ["pip", "install", "-e", ".[docs,test]", "-i", "https://pypi.tuna.tsinghua.edu.cn/simple"],
+    ["pip", "install", "-e", ".[test]"],
     ["pip", "uninstall", "-y", "C41811.Config"],
-    ["npm", "install", "less", "--registry=https://registry.npmmirror.com"],
 ]
 commands = [
-    ["tox"],
-    ["lessc", ".\\docs\\_static\\darcula.less", ".\\docs\\_static\\darcula.css"],
-    ["sphinx-build", "-b", "html", ".\\docs", ".\\docs\\_build"]
+    ["tox", "-e", "prepare-doc"],
+    ["sphinx-build", "-b", "html", "./docs", "./docs/_build"],
 ]
