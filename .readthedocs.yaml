@@ -9,12 +9,12 @@ build:
   os: ubuntu-22.04
   tools:
     python: "3.13"
+    nodejs: "18"
   jobs:
     pre_install:
-      - "pip install -e .[docs,dev,test]"
-      - "pip uninstall -y C41811.Config"
+      - "pip install -e .[test]"
     pre_build:
-      - "tox"
+      - "tox -e doc"
 
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:

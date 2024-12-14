@@ -24,6 +24,9 @@ add_module_names = False
 
 html_theme = "furo"
 html_static_path = ["_static"]
+html_css_files = [
+    "darcula.css",
+]
 html_short_title = "C41811.Config"
 html_favicon = "./_static/favicon.png"
 
