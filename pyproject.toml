@@ -11,7 +11,7 @@ requires-python = ">=3.12"
 authors = [
     { name = "C418____11", email = "553515788@qq.com" }
 ]
-license = { file = "LICENSE" }
+license = "MIT License"
 keywords = ["config", "yaml", "toml", "json"]
 classifiers = [
     "Development Status :: 3 - Alpha",
