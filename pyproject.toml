@@ -11,7 +11,7 @@ requires-python = ">=3.12"
 authors = [
     { name = "C418____11", email = "553515788@qq.com" }
 ]
-license = "MIT License"
+license = { text = "MIT License" }
 keywords = ["config", "yaml", "toml", "json"]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -102,7 +102,7 @@ commands = [
 ]
 
 [tool.tox.env.prepare-doc]
-allowlist_externals=["npm", "lessc"]
+allowlist_externals = ["npm", "lessc"]
 commands_pre = [
     ["pip", "install", "-e", ".[docs,test]"],
     ["pip", "uninstall", "-y", "C41811.Config"],
