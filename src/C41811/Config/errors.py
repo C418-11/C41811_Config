@@ -116,7 +116,7 @@ class RequiredPathNotFoundError(KeyError):
 
     def __str__(self):  # pragma: no cover
         string = (
-            f"{self.key_info.path} -> {self.key_info.current_key}"
+            f"{self.key_info.path.unparse()} -> {self.key_info.current_key.unparse()}"
             f" ({self.key_info.index + 1} / {len(self.key_info.path)})"
         )
         if self.operate.value is not ConfigOperate.Unknown:
@@ -149,7 +149,7 @@ class ConfigDataTypeError(ValueError):
 
     def __str__(self):  # pragma: no cover
         return (
-            f"{self.key_info.path} -> {self.key_info.current_key}"
+            f"{self.key_info.path.unparse()} -> {self.key_info.current_key.unparse()}"
             f" ({self.key_info.index + 1} / {len(self.key_info.relative_keys)})"
             f" Must be '{self.requited_type}'"
             f", Not '{self.now_type}'"

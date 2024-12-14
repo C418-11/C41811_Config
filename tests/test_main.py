@@ -318,7 +318,7 @@ class TestRequiredPath:
                 ("foo", dict),
                 ("foo\\.bar", int),
             )),
-            {'foo': {'bar': 123, 'bar1': 456}},
+            {"foo": {"bar": 123, "bar1": 456}},
             {}, ()
         ),
         (
@@ -326,7 +326,7 @@ class TestRequiredPath:
                 ("foo\\.bar", int),
                 ("foo", dict),
             )),
-            {'foo': {'bar': 123, 'bar1': 456}},
+            {"foo": {"bar": 123, "bar1": 456}},
             {}, ()
         ),
         (
@@ -334,7 +334,7 @@ class TestRequiredPath:
                 "foo": dict,
                 "foo\\.bar": int,
             },
-            {'foo': {'bar': 123, 'bar1': 456}},
+            {"foo": {"bar": 123, "bar1": 456}},
             {"model_config_key": "$$__model_config_key$$"}, ()
         ),
         ({

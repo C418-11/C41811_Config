@@ -7,6 +7,7 @@ from typing import Generator
 from typing import Iterable
 from typing import Optional
 from typing import Self
+from typing import override
 
 from .abc import ABCKey
 from .abc import ABCPath
@@ -16,12 +17,23 @@ from .errors import UnknownTokenType
 
 
 class AttrKey(ABCKey):
+    _key: str
+
     def __init__(self, key: str):
         """
         :param key: 键名
         :type key: str
+
+        :raise TypeError: key不为str时抛出
         """
+        if not isinstance(key, str):
+            raise TypeError(f"key must be str, not {type(key).__name__}")
         super().__init__(key)
+
+    @override
+    def unparse(self) -> str:
+        print(self._key, self._key.replace('\\', "\\\\"))
+        return f"\\.{self._key.replace('\\', "\\\\")}"
 
     def __len__(self):
         return len(self._key)
@@ -36,21 +48,49 @@ class AttrKey(ABCKey):
 
 
 class IndexKey(ABCKey):
+    _key: int
+
     def __init__(self, key: int):
         """
         :param key: 索引值
         :type key: int
+
+        :raise TypeError: key不为int时抛出
         """
+        if not isinstance(key, int):
+            raise TypeError(f"key must be int, not {type(key).__name__}")
         super().__init__(key)
+
+    @override
+    def unparse(self) -> str:
+        return f"\\[{self._key}\\]"
 
 
 class Path(ABCPath):
     @classmethod
     def from_str(cls, string: str) -> Self:
+        """
+        从字符串解析路径
+
+        :param string: 路径字符串
+        :type string: str
+
+        :return: 解析后的路径
+        :rtype: Path
+        """
         return cls(PathSyntaxParser.parse(string))
 
     @classmethod
     def from_locate(cls, locate: Iterable[str | int]) -> Self:
+        """
+        从列表解析路径
+
+        :param locate: 键列表
+        :type locate: Iterable[str | int]
+
+        :return: 解析后的路径
+        :rtype: Path
+        """
         keys: list[ABCKey] = []
         for loc in locate:
             if isinstance(loc, int):
@@ -61,6 +101,19 @@ class Path(ABCPath):
                 continue
             raise ValueError("locate element must be 'int' or 'str'")
         return cls(keys)
+
+    def to_locate(self) -> list[str | int]:
+        """
+        转换为列表
+        """
+        return [key.key for key in self._keys]
+
+    @override
+    def unparse(self) -> str:
+        """
+        还原为可被解析的字符串
+        """
+        return ''.join(key.unparse() for key in self._keys)
 
 
 class PathSyntaxParser:
@@ -95,6 +148,9 @@ class PathSyntaxParser:
                 next_char = ''
 
             if not chunk:
+                if next_char == '\\':
+                    string = string[1:]
+                    token_cache.append("\\\\")
                 continue
 
             token_cache.append('\\')
@@ -123,15 +179,18 @@ class PathSyntaxParser:
             yield ''.join(token_cache)
             token_cache = []
 
+        if token_cache:
+            yield ''.join(token_cache)
+
     @classmethod
     def parse(cls, string: str) -> list[ABCKey]:
         """
-        解析字符串为路径
+        解析字符串为键列表
 
         :param string: 待解析字符串
         :type string: str
 
-        :return: 路径对象
+        :return: 键列表
         :rtype: list[ABCKey]
         """
         path: list[ABCKey] = []

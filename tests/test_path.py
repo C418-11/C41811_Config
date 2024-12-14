@@ -5,6 +5,7 @@ from copy import deepcopy
 
 from pytest import fixture
 from pytest import mark
+from pytest import raises
 
 from C41811.Config import AttrKey
 from C41811.Config import IndexKey
@@ -23,6 +24,7 @@ class TestKey:
             (IndexKey(99), 99),
             (AttrKey("aaa"), "aaa"),
             (AttrKey("bcd"), "bcd"),
+            (AttrKey(r"z\\z"), r"z\\z"),
     ))
     def test_both(key, other):
         assert key.key == other
@@ -30,11 +32,15 @@ class TestKey:
         assert str(key) == str(other)
         assert key == deepcopy(key)
         assert key != NotImplemented
+        assert key == PathSyntaxParser.parse(key.unparse())[0]
+        with raises(TypeError, match="key must be "):
+            type(key)(NotImplemented)
 
     @staticmethod
     @mark.parametrize("key, other", (
             (AttrKey("aaa"), "aaa"),
             (AttrKey("bcd"), "bcd"),
+            (AttrKey(r"z\\z"), r"z\\z"),
     ))
     def test_attr_key(key, other):
         assert len(key) == len(other)
@@ -48,17 +54,28 @@ class TestPath:
         return Path.from_str(r"\.aaa\.bbb\.ccc\[0\]\.ddd\.eee\[1\]")
 
     @staticmethod
+    @mark.parametrize("string", (
+            r"\.aaa\.bbb\.ccc\[0\]\.ddd\.eee\[1\]",
+            r"\.a\[2\]\.b\[3\]",
+            r"\.a.a\\.a\.b\[18\]\[7\]\.e",
+            r"\[2\]\[3\]",
+    ))
+    def test_string(string):
+        assert string == Path.from_str(string).unparse()
+
+    @staticmethod
     @mark.parametrize("locate, keys, ignore_excs", (
             (["aaa", 0, "bbb"], [AttrKey("aaa"), IndexKey(0), AttrKey("bbb")], ()),
             ([2, "aaa"], [IndexKey(2), AttrKey("aaa")], ()),
             ([4, 2, "aaa"], [IndexKey(4), IndexKey(2), AttrKey("aaa")], ()),
             (["a", 1, None], None, (ValueError,)),
     ))
-    def test_from_locate(locate, keys, ignore_excs):
+    def test_locate(locate, keys, ignore_excs):
         with safe_raises(ignore_excs) as info:
             path = Path.from_locate(locate)
         if not info:
             assert path == Path(keys)
+            assert path == path.from_locate(path.to_locate())
 
     @staticmethod
     @mark.parametrize("index, value", (
@@ -136,6 +153,7 @@ class TestPathSyntaxParser:
                 [r"\.a.a\\.a", r"\.b", r"\[c", r"\]", r"\[2", r"\]", r"\.e"],
                 ()
             ),
+            (r"\\\\", [r"\\\\"], ()),
             (r"\[c\]\[d\]", [r"\[c", r"\]", r"\[d", r"\]"], ()),
             (r"\[c\]abc\[4\]", [r"\[c", r"\]", "abc", r"\[4", r"\]"], ()),
             (r"\[d\]abc", [r"\[d", r"\]", "abc"], ()),

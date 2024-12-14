@@ -36,6 +36,12 @@ class ABCKey(ABC):
     def key(self):
         return deepcopy(self._key)
 
+    @abstractmethod
+    def unparse(self) -> str:
+        """
+        还原为可被解析的字符串
+        """
+
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return NotImplemented
@@ -62,6 +68,12 @@ class ABCPath(ABC):
 
     def __init__(self, keys: Iterable[ABCKey]):
         self._keys = deepcopy(tuple(keys))
+
+    @abstractmethod
+    def unparse(self) -> str:
+        """
+        还原为可被解析的字符串
+        """
 
     def __getitem__(self, item):
         return self._keys[item]

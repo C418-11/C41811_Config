@@ -32,7 +32,7 @@ pip install C41811.Config
 
 ## A simple example
 
-``` python
+```python
 from C41811.Config import JsonSL
 from C41811.Config import requireConfig
 from C41811.Config import saveAll

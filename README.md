@@ -31,7 +31,7 @@ pip install C41811.Config
 
 ## 一个简单的示例
 
-``` python
+```python
 from C41811.Config import JsonSL
 from C41811.Config import requireConfig
 from C41811.Config import saveAll
@@ -56,5 +56,4 @@ print(f"{cfg["Hello"]=}")
 print(cfg.foo)
 print(cfg["foo"]["bar"])
 print(cfg.foo.bar.baz)
-
 ```

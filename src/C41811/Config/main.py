@@ -52,7 +52,7 @@ class RequiredPath:
     ):
         """
         .. tip::
-           提供static_config参数，可以避免在filter中反复调用validator_factory(filter配置一切都为默认值的前提下)
+           提供static_config参数，可以避免在filter中反复调用validator_factory以提高性能(filter配置一切都为默认值的前提下)
 
         :param validator: 数据验证器
         :type validator: Any
