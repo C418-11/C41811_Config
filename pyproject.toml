@@ -106,7 +106,7 @@ allowlist_externals=["npm", "lessc"]
 commands_pre = [
     ["pip", "install", "-e", ".[docs,test]"],
     ["pip", "uninstall", "-y", "C41811.Config"],
-    ["npm", "install", "less"],
+    ["npm", "install", "-g", "less"],
 ]
 commands = [
     ["tox"],
