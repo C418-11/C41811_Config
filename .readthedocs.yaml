@@ -12,7 +12,7 @@ build:
     nodejs: "18"
   jobs:
     pre_install:
-      - "pip install -e .[docs,test]"
+      - "pip install -e .[docs,tox]"
     pre_build:
       - "tox -e prepare-doc"
 
