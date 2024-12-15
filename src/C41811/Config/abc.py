@@ -40,6 +40,8 @@ class ABCKey(ABC):
     def unparse(self) -> str:
         """
         还原为可被解析的字符串
+
+        .. versionadded:: 0.1.1
         """
 
     def __eq__(self, other):
@@ -73,6 +75,8 @@ class ABCPath(ABC):
     def unparse(self) -> str:
         """
         还原为可被解析的字符串
+
+        .. versionadded:: 0.1.1
         """
 
     def __getitem__(self, item):
@@ -104,7 +108,7 @@ class ABCPath(ABC):
 
 class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
     """
-    配置数据
+    配置数据抽象基类
     """
 
     def __init__(self, data: Optional[D] = None):
@@ -132,6 +136,21 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
         :type data: Mapping | MutableMapping
         :return: 新的配置数据
         :rtype: Self
+
+        .. note::
+           套壳__init__，主要是为了方便内部快速创建与传入的ABCConfigData同类型的对象
+
+           例如：
+
+           .. code-block:: python
+
+              type(instance)(data)
+
+           可以简写为
+
+           .. code-block:: python
+
+              instance.from_data(data)
         """
         return cls(data)
 
@@ -152,6 +171,12 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
 
         :return: 配置数据是否为只读
         :rtype: bool
+
+        .. note::
+           配置数据是否为只读模式
+
+           当 :py:attr:`ABCConfigData.data` 为 ``Mapping`` 但不为 ``MutableMapping`` 时，此属性始终为True
+           并且在尝试setattr时会抛出TypeError提示配置数据为只读
         """
         return self._data_read_only or self._read_only
 

@@ -103,7 +103,7 @@ class RequiredPath:
            返回的配置数据是*快照*
 
         .. caution::
-           提供了任意配置参数(`allow_create`, `ignore_missing`, ...)时,这次调用将完全舍弃static_config使用当前提供的配置参数
+           提供了任意配置参数(``allow_create``, ``ignore_missing``, ...)时,这次调用将完全舍弃static_config使用当前提供的配置参数
 
            这会导致调用validator_factory产生额外开销(如果你提供static_config参数是为了避免反复调用validator_factory的话)
 
@@ -467,7 +467,7 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
         :return: 配置文件路径
         :rtype: str
 
-        :raise ValueError: 当 `namespace` 和 `file_name` 都为 None 时
+        :raise ValueError: 当 ``namespace`` 和 ``file_name`` 都为 None 时
         """
 
         full_path = os.path.normpath(os.path.join(root_path, namespace, file_name))

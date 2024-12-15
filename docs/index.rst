@@ -5,7 +5,6 @@ Minecraft Function Compiler 的文档
    :maxdepth: 2
 
    /test/index
-   /usage/index
 
 索引和表
 ========

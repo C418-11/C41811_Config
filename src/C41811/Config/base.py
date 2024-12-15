@@ -35,6 +35,13 @@ def _fmt_path(path: str | ABCPath) -> ABCPath:
 
 
 class ConfigData(ABCConfigData):
+    r"""
+    配置数据类
+
+    .. note::
+       所有参数可以为 ``未解析路径转义字符串`` 的参数都做了预操作
+       可以省略字符串开头的 ``\.``
+    """
 
     def _process_path(
             self,

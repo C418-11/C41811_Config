@@ -105,14 +105,13 @@ class Path(ABCPath):
     def to_locate(self) -> list[str | int]:
         """
         转换为列表
+
+        .. versionadded:: 0.1.1
         """
         return [key.key for key in self._keys]
 
     @override
     def unparse(self) -> str:
-        """
-        还原为可被解析的字符串
-        """
         return ''.join(key.unparse() for key in self._keys)
 
 
