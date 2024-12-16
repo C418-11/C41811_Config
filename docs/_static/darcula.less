@@ -1,10 +1,15 @@
 .highlight-mixin() {
    .highlight {
     .k // Keyword
+    , .kn // Keyword.Name
     { color:#CC7832; }
 
-    .nx{
-      color: white;
+    .n // Name
+    , .nn // Name.Namespace
+    , .nx
+    {
+      color: #D0D0D0;
+      text-decoration: initial
     }
 
     .p{ // 模拟Rainbow-Brackets IDE插件
@@ -55,7 +60,6 @@
     { color: #888888 }
 
     .gp // Generic.Prompt
-    , .nn // Name.Namespace
     { color: #555555 }
 
     .gs // Generic.Strong
