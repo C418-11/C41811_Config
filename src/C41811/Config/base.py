@@ -41,6 +41,14 @@ class ConfigData(ABCConfigData):
     .. note::
        所有参数可以为 ``未解析路径转义字符串`` 的参数都做了预操作
        可以省略字符串开头的 ``\.``
+
+       例如：
+
+       ``r"\.first\.second\.third“``
+
+       可以简写为
+
+       ``r"first\.second\.third"``
     """
 
     def _process_path(

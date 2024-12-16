@@ -260,7 +260,7 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
     @abstractmethod
     def get(self, path: str | ABCPath, default=None, *, get_raw: bool = False) -> Any:
         """
-        获取路径的值
+        获取路径的值的*快照*，路径不存在时填充默认值
 
         :param path: 路径
         :type path: str | ABCPath
@@ -274,6 +274,29 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
         :rtype: Any
 
         :raise ConfigDataTypeError: 配置数据类型错误
+
+        例子
+        ----
+
+           >>> from C41811.Config import ConfigData
+           >>> data = ConfigData({
+           ...     "key": "value"
+           ... })
+
+           路径存在时返回值
+
+           >>> data.get("key")
+           "value"
+
+           路径不存在时返回默认值None
+
+           >>> data.get("not exists")
+           None
+
+           自定义默认值
+
+           >>> data.get("with default", default="default value")
+           "default value"
         """
 
     @abstractmethod
@@ -292,6 +315,33 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
         :rtype: Any
 
         :raise ConfigDataTypeError: 配置数据类型错误
+
+        例子
+        ----
+
+           >>> from C41811.Config import ConfigData
+           >>> data = ConfigData({
+           ...     "key": "value"
+           ... })
+
+           路径存在时返回值
+
+           >>> data.set_default("key")
+           "value"
+
+           路径不存在时返回默认值None并填充到原始数据
+
+           >>> data.set_default("not exists")
+           None
+           >>> data
+           ConfigData({'key': 'value', 'not exists': None})
+
+           自定义默认值
+
+           >>> data.set_default("with default", default="default value")
+           "default value"
+           >>> data
+           ConfigData({'key': 'value', 'not exists': None, 'with default': 'default value'})
         """
 
     def keys(self, *, recursive: bool = False, end_point_only: bool = False) -> KeysView[str]:
@@ -305,6 +355,41 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
 
         :return: 所有键
         :rtype: KeysView[str]
+
+        例子
+        ----
+
+           >>> from C41811.Config import ConfigData
+           >>> data = ConfigData({
+           ...     "foo": {
+           ...         "bar": {
+           ...             "baz": "value"
+           ...         },
+           ...         "bar1": "value1"
+           ...     },
+           ...     "foo1": "value2"
+           ... })
+
+           不带参数行为与普通字典一样
+
+           >>> data.keys()
+           dict_keys(['foo', 'foo1'])
+
+           参数 ``end_point_only`` 会滤掉非 ``叶子节点`` 的键
+
+           >>> data.keys(end_point_only=True)
+           odict_keys(['foo1'])
+
+           参数 ``recursive`` 用于获取所有的 ``路径``
+
+           >>> data.keys(recursive=True)
+           odict_keys(['foo\\.bar\\.baz', 'foo\\.bar', 'foo\\.bar1', 'foo', 'foo1'])
+
+           同时提供 ``recursice`` 和 ``end_point_only`` 会产出所有 ``叶子节点`` 的路径
+
+           >>> data.keys(recursive=True, end_point_only=True)
+           odict_keys(['foo\\.bar\\.baz', 'foo\\.bar1', 'foo1'])
+
         """
 
         if not any((
@@ -482,7 +567,7 @@ class ABCConfigFile(ABC):
             **processor_kwargs
     ) -> None:
         """
-        保存配置到文件系统
+        使用SL处理保存配置
 
         :param config_pool: 配置池
         :type config_pool: ABCSLProcessorPool
@@ -508,7 +593,7 @@ class ABCConfigFile(ABC):
             **processor_kwargs
     ) -> Self:
         """
-        从文件系统加载配置
+        从SL处理器加载配置
 
         :param config_pool: 配置池
         :type config_pool: ABCSLProcessorPool

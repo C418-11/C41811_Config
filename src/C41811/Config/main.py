@@ -302,12 +302,57 @@ class RequireConfigDecorator:
 
 
 DefaultConfigPool = ConfigPool()
+"""
+默认配置池
+"""
 requireConfig = DefaultConfigPool.require
+"""
+:py:attr:`DefaultConfigPool` ``.require()``
+
+.. seealso::
+   
+   :py:func:`ConfigPool.require`
+"""
 saveAll = DefaultConfigPool.save_all
+"""
+:py:attr:`DefaultConfigPool` ``.save_all()``
+
+.. seealso::
+   
+   :py:func:`ConfigPool.save_all`
+"""
 get = DefaultConfigPool.get
+"""
+:py:attr:`DefaultConfigPool` ``.get()``
+
+.. seealso::
+   
+   :py:func:`ConfigPool.get`
+"""
 set_ = DefaultConfigPool.set
+"""
+:py:attr:`DefaultConfigPool` ``.set()``
+
+.. seealso::
+   
+   :py:func:`ConfigPool.set`
+"""
 save = DefaultConfigPool.save
+"""
+:py:attr:`DefaultConfigPool` ``.save()``
+
+.. seealso::
+   
+   :py:func:`ConfigPool.save`
+"""
 load = DefaultConfigPool.load
+"""
+:py:attr:`DefaultConfigPool` ``.load()``
+
+.. seealso::
+   
+   :py:func:`ConfigPool.load`
+"""
 
 
 class BaseConfigSL(ABCConfigSL, ABC):
@@ -423,9 +468,11 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
             **merged_kwargs,
     ) -> None:
         """
+        将配置保存到文件
+
         :param config_file: 配置文件
         :type config_file: ABCConfigFile
-        :param target_file: 目标文件
+        :param target_file: 目标文件对象
         :type target_file: SupportsWrite
         :param merged_args: 合并后的位置参数
         :param merged_kwargs: 合并后的关键字参数
@@ -440,9 +487,11 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
             **merged_kwargs,
     ) -> C:
         """
+        从文件加载配置
+
         :param config_file_cls: 配置文件类
         :type config_file_cls: type[ABCConfigFile]
-        :param source_file: 源文件
+        :param source_file: 源文件对象
         :type source_file: _SupportsReadAndReadline
         :param merged_args: 合并后的位置参数
         :param merged_kwargs: 合并后的关键字参数
