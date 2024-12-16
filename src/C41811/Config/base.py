@@ -221,6 +221,11 @@ class ConfigFile(ABCConfigFile):
 
 
 class BaseConfigPool(ABCConfigPool, ABC):
+    """
+    基础配置池类
+
+    实现了一些通用方法
+    """
 
     def __init__(self, root_path="./.config"):
         super().__init__(root_path)

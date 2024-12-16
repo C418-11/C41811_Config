@@ -637,7 +637,7 @@ class ABCConfigFile(ABC):
 
 class ABCConfigPool(ABCSLProcessorPool):
     """
-    配置池
+    配置池抽象类
     """
 
     @abstractmethod

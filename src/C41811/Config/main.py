@@ -141,6 +141,10 @@ class RequiredPath:
 
 
 class ConfigPool(BaseConfigPool):
+    """
+    配置池
+    """
+
     @override
     def load[F: ABCConfigFile](
             self,
