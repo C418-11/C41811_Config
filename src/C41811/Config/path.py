@@ -32,7 +32,6 @@ class AttrKey(ABCKey):
 
     @override
     def unparse(self) -> str:
-        print(self._key, self._key.replace('\\', "\\\\"))
         return f"\\.{self._key.replace('\\', "\\\\")}"
 
     def __len__(self):
