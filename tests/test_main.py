@@ -312,7 +312,7 @@ class TestRequiredPath:
                 continue
             assert data.retrieve(path, get_raw=True) == value
 
-    MappingTests = ("mapping, result, kwargs, ignore_excs", (
+    MappingTests = ("mapping, result, kwargs, ignores", (
         (
             OrderedDict((
                 ("foo", dict),
@@ -386,7 +386,7 @@ class TestRequiredPath:
         (OrderedDict((
             ("foo\\.bar", int),
             ("foo", str),
-        )), None, {}, (ConfigDataTypeError,)),
+        )), None, {}, (ConfigDataTypeError, UserWarning)),
         ({
              "foo\\.bar": int,
              "foo": dict,
@@ -431,8 +431,11 @@ class TestRequiredPath:
 
     @staticmethod
     @mark.parametrize(*MappingTests)
-    def test_default_mapping(data, mapping, result, kwargs, ignore_excs):
-        with safe_raises(ignore_excs):
+    def test_default_mapping(data, mapping, result, kwargs, ignores):
+        ignore_warns = tuple(e for e in ignores if issubclass(e, Warning))
+        ignore_excs = tuple(set(ignores) - set(ignore_warns))
+
+        with safe_raises(ignore_excs), safe_warns(ignore_warns):
             data = RequiredPath(mapping).filter(data, **kwargs)
             assert data.data == result
 
@@ -490,3 +493,70 @@ class TestRequiredPath:
         print(f"average_static_time: {average_static_time}ms")
         print(f"average_dynamic_time: {average_dynamic_time}ms")
         print(f"speedup: {average_dynamic_time / average_static_time}")
+
+    @staticmethod
+    @fixture
+    def recursive_data():
+        return ConfigData({
+            "first": {
+                "second": {
+                    "third": 111,
+                    "foo": 222
+                },
+                "bar": 333
+            },
+            "baz": 444
+        })
+
+    @staticmethod  # 专门针对保留子键的测试
+    @mark.parametrize("validator, result, ignores", (
+            ((
+                "first\\.second\\.third",
+                "first"
+            ), {
+                "first": {
+                    "second": {
+                        "third": 111
+                    },
+                    "bar": 333
+                }
+            }, ()),
+            ((
+                "first",
+                "first\\.second\\.third",
+            ), {
+                "first": {
+                    "second": {
+                        "third": 111
+                    },
+                    "bar": 333
+                }
+            }, ()),
+            ((
+                "first\\.second\\.third",
+                "first\\.second"
+            ), {
+                "first": {
+                    "second": {
+                        "third": 111,
+                        "foo": 222
+                    },
+                }
+            }, ()),
+            (OrderedDict((
+                    ("first\\.second\\.third", int),
+                    ("first", int)
+            )), None, ((UserWarning,), (ConfigDataTypeError,)))
+    ))
+    def test_include_sub_keys(recursive_data, validator, result, ignores):
+        if not ignores:
+            ignores = ((), ())
+        ignore_warns, ignore_excs = ignores
+
+        with safe_warns(ignore_warns), safe_raises(ignore_excs) as info:
+            data = RequiredPath(validator).filter(recursive_data)
+
+        if info:
+            return
+
+        assert data.data == result

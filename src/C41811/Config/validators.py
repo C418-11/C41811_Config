@@ -206,30 +206,59 @@ class DefaultValidatorFactory:
         fmt_data = ConfigData(OrderedDict())
         iterator = iter(self.validator.items())
 
-        try:
-            key, value = next(iterator)
-        except StopIteration:
+        key: Any = None
+        value: Any = None
+
+        def _next():
+            nonlocal key, value
+            try:
+                key, value = next(iterator)
+            except StopIteration:
+                return True
+        if _next():
             return {}, set()
+
+        def _is_mapping(type_):
+            if type_ is Any:
+                return True
+            try:
+                MappingType(value=type_)
+                return True
+            except (ValidationError, TypeError):
+                return False
 
         father_set: set = set()
         while True:
+            # 如果传入了任意路径的父路径那就检查新值和旧值是否都为Mapping
+            # 如果是那就把父路径直接加入father_set不进行后续操作
+            # 否则发出警告提示意外的复写验证器路径
+            if key in fmt_data:
+                target_value = fmt_data.retrieve(key)
+                if not issubclass(type(target_value), self.typehint_types):
+                    target_value = type(target_value)
+
+                if _is_mapping(value) and _is_mapping(target_value):
+                    father_set.add(key)
+                    if _next():
+                        break
+                    continue
+
+                warnings.warn((
+                    f"Overwriting exists validator path with unexpected type"
+                    f" '{value}'(new) and '{target_value}'(exists)"
+                ))
             try:
                 fmt_data.modify(key, value)
             except ConfigDataTypeError as err:
                 relative_path = Path(err.key_info.relative_keys)
                 # 如果旧类型为Mapping, Any那么就允许新的键创建
-                try:
-                    MappingType(value=fmt_data.retrieve(relative_path))
-                except (ValidationError, TypeError):
-                    if fmt_data.retrieve(relative_path) is not Any:
-                        raise err from None
+                if not _is_mapping(fmt_data.retrieve(relative_path)):
+                    raise err from None
                 fmt_data.modify(relative_path, OrderedDict())
                 father_set.add(relative_path)
                 continue
 
-            try:
-                key, value = next(iterator)
-            except StopIteration:
+            if _next():
                 break
 
         return fmt_data.data, father_set
