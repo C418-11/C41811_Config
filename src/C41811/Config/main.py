@@ -313,8 +313,7 @@ requireConfig = DefaultConfigPool.require
 """
 :py:attr:`DefaultConfigPool` ``.require()``
 
-.. seealso::
-   
+.. seealso::   
    :py:func:`ConfigPool.require`
 """
 saveAll = DefaultConfigPool.save_all
@@ -322,15 +321,13 @@ saveAll = DefaultConfigPool.save_all
 :py:attr:`DefaultConfigPool` ``.save_all()``
 
 .. seealso::
-   
    :py:func:`ConfigPool.save_all`
 """
 get = DefaultConfigPool.get
 """
 :py:attr:`DefaultConfigPool` ``.get()``
 
-.. seealso::
-   
+.. seealso::   
    :py:func:`ConfigPool.get`
 """
 set_ = DefaultConfigPool.set
@@ -338,23 +335,20 @@ set_ = DefaultConfigPool.set
 :py:attr:`DefaultConfigPool` ``.set()``
 
 .. seealso::
-   
    :py:func:`ConfigPool.set`
 """
 save = DefaultConfigPool.save
 """
 :py:attr:`DefaultConfigPool` ``.save()``
 
-.. seealso::
-   
+.. seealso::   
    :py:func:`ConfigPool.save`
 """
 load = DefaultConfigPool.load
 """
 :py:attr:`DefaultConfigPool` ``.load()``
 
-.. seealso::
-   
+.. seealso::   
    :py:func:`ConfigPool.load`
 """
 
@@ -480,6 +474,8 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
         :type target_file: SupportsWrite
         :param merged_args: 合并后的位置参数
         :param merged_kwargs: 合并后的关键字参数
+
+        :raise FailedProcessConfigFileError: 处理配置文件失败
         """
 
     @abstractmethod
@@ -499,6 +495,8 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
         :type source_file: _SupportsReadAndReadline
         :param merged_args: 合并后的位置参数
         :param merged_kwargs: 合并后的关键字参数
+
+        :raise FailedProcessConfigFileError: 处理配置文件失败
         """
 
     def _process_file_path(

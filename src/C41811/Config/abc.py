@@ -904,7 +904,7 @@ class ABCConfigSL(ABC):
         加载处理器
 
         :param config_file_cls: 配置文件类
-        :type config_file_cls: type[C]
+        :type config_file_cls: type[ABCConfigFile]
         :param root_path: 保存的根目录
         :type root_path: str
         :param namespace: 配置的命名空间
