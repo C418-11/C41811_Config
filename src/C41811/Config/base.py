@@ -395,11 +395,15 @@ class BaseConfigPool(ABCConfigPool, ABC):
         """
         .. versionadded:: 0.1.2
         """
-        if isinstance(item, tuple):
-            if len(item) != 2:
-                raise ValueError(f"item must be a tuple of length 2, got {item}")
-            return (item[0] in self._configs) and (item[1] in self._configs[item[0]])
-        return item in self._configs
+        if isinstance(item, str):
+            return item in self._configs
+        if isinstance(item, Iterable):
+            item = tuple(item)
+        if len(item) == 1:
+            return item[0] in self._configs
+        if len(item) != 2:
+            raise ValueError(f"item must be a tuple of length 2, got {item}")
+        return (item[0] in self._configs) and (item[1] in self._configs[item[0]])
 
     def __len__(self):
         """

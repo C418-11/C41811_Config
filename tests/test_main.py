@@ -157,6 +157,16 @@ class TestConfigPool:
             pool['', "test", "extra"]
 
     @staticmethod
+    def test_contains(pool, file):
+        pool.set('', "test", deepcopy(file))
+        assert '' in pool
+        assert [''] in pool
+        assert ['', "test"] in pool
+        with raises(ValueError, match="item must be a tuple of length 2, got"):
+            # noinspection PyStatementEffect
+            ['', "test", "extra"] in pool
+
+    @staticmethod
     def test_len(pool, file):
         pool.set('a', "1", file)
         pool.set('a', "2", file)
