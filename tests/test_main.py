@@ -66,10 +66,20 @@ class TestConfigPool:
     @staticmethod
     def test_save_load(pool, file):
         pool.set('', "test", deepcopy(file))
+
         pool.save('', "test", config_formats="json")
-        pool.save('', "test", config_formats={"pickle", "json"})
         assert pool.load('', "test", config_formats="json") == file
+
+        pool.save('', "test", config_formats={"pickle", "json"})
         assert pool.load('', "test", config_formats={"pickle", "json"}) == file
+        assert pool.load('', "test", config_formats={"pickle", "json"}) == file
+
+        json_file = ConfigFile(file.data, config_format="json")
+        pool.save('', "test", config=deepcopy(json_file))
+        assert pool.load('', "test", config_formats="json") == json_file
+
+        pool.save('', "test1", config_formats="json", config=deepcopy(file))
+        assert pool.load('', "test1", config_formats="json") == file
 
     @staticmethod
     def test_file_not_found_load(pool):

@@ -694,6 +694,7 @@ class ABCConfigPool(ABCSLProcessorPool):
             namespace: str,
             file_name: str,
             config_formats: Optional[str | Iterable[str]] = None,
+            config: Optional[ABCConfigFile] = None,
             *args, **kwargs
     ) -> None:
         """
@@ -705,12 +706,14 @@ class ABCConfigPool(ABCSLProcessorPool):
         :type file_name: str
         :param config_formats: 配置格式
         :type config_formats: Optional[str | Iterable[str]]
+        :param config: 配置文件，可选，提供此参数相当于自动调用了一遍pool.set
+        :type config: Optional[ABCConfigFile]
 
         :return: None
         :rtype: NoneType
 
         .. versionchanged:: 0.1.2
-           添加 ``config_formats`` 参数
+           添加 ``config_formats`` 和 ``config`` 参数
         """
 
     @abstractmethod

@@ -354,8 +354,12 @@ class BaseConfigPool(ABCConfigPool, ABC):
             namespace: str,
             file_name: str,
             config_formats: Optional[str | Iterable[str]] = None,
+            config: Optional[ABCConfigFile] = None,
             *args, **kwargs
     ) -> None:
+        if config is not None:
+            self.set(namespace, file_name, config)
+
         file = self._configs[namespace][file_name]
 
         def processor(pool: Self, ns: str, fn: str, cf: str):
