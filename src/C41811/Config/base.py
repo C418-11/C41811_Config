@@ -312,18 +312,19 @@ class BaseConfigPool(ABCConfigPool, ABC):
 
         format_set: set[str]
         # 配置文件格式未提供时尝试从文件后缀推断
-        if not config_formats:
-            _, config_format = os.path.splitext(file_name)
-            if not config_format:
-                raise UnsupportedConfigFormatError("Unknown")
-            if config_format not in self.FileExtProcessor:
-                raise UnsupportedConfigFormatError(config_format)
-            format_set = self.FileExtProcessor[config_format]
+        _, file_ext = os.path.splitext(file_name)
+        if not config_formats and file_ext:
+            if file_ext not in self.FileExtProcessor:
+                raise UnsupportedConfigFormatError(file_ext)
+            format_set = self.FileExtProcessor[file_ext]
         else:
             format_set = config_formats
 
         if (not format_set) and (file_config_format is not None):
             format_set.add(file_config_format)
+
+        if not format_set:
+            raise UnsupportedConfigFormatError("Unknown")
 
         def callback_wrapper(cfg_fmt: str):
             return processor(self, namespace, file_name, cfg_fmt)
