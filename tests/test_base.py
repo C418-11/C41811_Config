@@ -130,6 +130,14 @@ class TestConfigData:
             data.delete(path)
         assert path not in data
 
+    @staticmethod
+    @mark.parametrize(*DeleteTests)
+    def test_unset(data, path, ignore_excs):
+        ignore_excs = tuple(exc for exc in ignore_excs if not issubclass(exc, RequiredPathNotFoundError))
+        with safe_raises(ignore_excs):
+            data.unset(path)
+        assert path not in data
+
     ExistsTests = (
         "path,              is_exist, ignore_excs", (  # @formatter:off # noqa: E122
         ("foo",             True,     ()),
@@ -322,6 +330,11 @@ class TestConfigData:
     @mark.parametrize(*ReadOnlyDeleteTests)
     def test_readonly_delete(cls, readonly_data, path):
         cls.test_delete(readonly_data, path, TypeError)
+
+    @classmethod
+    @mark.parametrize(*ReadOnlyDeleteTests)
+    def test_readonly_unset(cls, readonly_data, path):
+        cls.test_unset(readonly_data, path, (TypeError,))
 
     @staticmethod
     def test_eq(data, readonly_data):

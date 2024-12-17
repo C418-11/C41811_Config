@@ -244,6 +244,22 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
         """
 
     @abstractmethod
+    def unset(self, path: str | ABCPath) -> Self:
+        """
+        确保路径不存在 (删除路径，但是找不到路径时不会报错)
+
+        :param path: 路径
+        :type path: str | ABCPath
+
+        :return: 返回当前实例便于链式调用
+        :rtype: Self
+
+        :raise ConfigDataTypeError: 配置数据类型错误
+
+        .. versionadded:: 0.1.2
+        """
+
+    @abstractmethod
     def exists(self, path: str | ABCPath) -> bool:
         """
         判断路径是否存在

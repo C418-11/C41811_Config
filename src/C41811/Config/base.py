@@ -147,6 +147,14 @@ class ConfigData(ABCConfigData):
         return self
 
     @override
+    def unset(self, path: str | ABCPath) -> Self:
+        try:
+            self.delete(path)
+        except RequiredPathNotFoundError:
+            pass
+        return self
+
+    @override
     def exists(self, path: str | ABCPath, *, ignore_wrong_type: bool = False) -> bool:
         path = _fmt_path(path)
 
