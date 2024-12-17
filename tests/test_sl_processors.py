@@ -130,7 +130,6 @@ def test_multi_register(pool):
     JsonSL().register_to(pool)
     assert len(pool.SLProcessor) == 1
     JsonSL({"indent": 4}, reg_alias="json.fmt").register_to(pool)
-    print(pool.SLProcessor)
     assert len(pool.SLProcessor) == 2
 
 
