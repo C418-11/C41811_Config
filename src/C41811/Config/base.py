@@ -2,10 +2,12 @@
 # cython: language_level = 3
 
 
+import os.path
 from abc import ABC
 from copy import deepcopy
 from typing import Any
 from typing import Callable
+from typing import Iterable
 from typing import Mapping
 from typing import MutableMapping
 from typing import Optional
@@ -20,6 +22,7 @@ from .abc import ABCPath
 from .abc import ABCSLProcessorPool
 from .errors import ConfigDataTypeError
 from .errors import ConfigOperate
+from .errors import FailedProcessConfigFileError
 from .errors import KeyInfo
 from .errors import RequiredPathNotFoundError
 from .errors import UnsupportedConfigFormatError
@@ -252,9 +255,104 @@ class BaseConfigPool(ABCConfigPool, ABC):
 
         self._configs[namespace][file_name] = config
 
+    def _test_all_sl[R: Any](
+            self,
+            namespace: str,
+            file_name: str,
+            config_formats: Optional[str | Iterable[str]],
+            processor: Callable[[Self, str, str, str], R],
+            file_config_format: Optional[str] = None
+    ) -> R:
+        """
+        尝试自动推断ABCConfigFile所支持的config_format
+
+        :param namespace: 命名空间
+        :type namespace: str
+        :param file_name: 文件名
+        :type file_name: str
+        :param config_formats: 配置格式
+        :type config_formats: Optional[str | Iterable[str]]
+        :param processor:
+           处理器，参数为[配置池对象, 命名空间, 文件名, 配置格式]返回值会被直接返回，
+           出现意料内的SL处理器无法处理需抛出FailedProcessConfigFileError以允许继续尝试别的SL处理器
+        :type processor: Callable[[Self, str, str, str], Any]
+        :param file_config_format:
+           可选项，一般在保存时填入
+           :py:attr:`ABCConfigData.config_format`
+           用于在没手动指定配置格式且没文件后缀时使用该值进行尝试
+
+        :raise UnsupportedConfigFormatError: 不支持的配置格式
+        :raise FailedProcessConfigFileError: 处理配置文件失败
+
+        .. versionadded:: 0.1.2
+
+        格式推断优先级
+        --------------
+
+        1.如果传入了config_formats且非None非空集则直接使用
+
+        2.如果有文件后缀则查找文件后缀是否注册了对应的SL处理器，如果有就直接使用
+
+        3.如果传入了file_config_format且非None则直接使用
+        """
+        if config_formats is None:
+            config_formats = set()
+        elif isinstance(config_formats, str):
+            config_formats = {config_formats}
+        else:
+            config_formats = set(config_formats)
+
+        format_set: set[str]
+        # 配置文件格式未提供时尝试从文件后缀推断
+        if not config_formats:
+            _, config_format = os.path.splitext(file_name)
+            if not config_format:
+                raise UnsupportedConfigFormatError("Unknown")
+            if config_format not in self.FileExtProcessor:
+                raise UnsupportedConfigFormatError(config_format)
+            format_set = self.FileExtProcessor[config_format]
+        else:
+            format_set = config_formats
+
+        if (not format_set) and (file_config_format is not None):
+            format_set.add(file_config_format)
+
+        def callback_wrapper(cfg_fmt: str):
+            return processor(self, namespace, file_name, cfg_fmt)
+
+        # 尝试从多个SL加载器中找到能正确加载的那一个
+        errors = {}
+        for fmt in format_set:
+            if fmt not in self.SLProcessor:
+                errors[fmt] = UnsupportedConfigFormatError(fmt)
+                continue
+            try:
+                # 能正常运行直接返回结果，不再进行尝试
+                return callback_wrapper(fmt)
+            except FailedProcessConfigFileError as err:
+                errors[fmt] = err
+
+        for err in errors.values():
+            if isinstance(err, UnsupportedConfigFormatError):
+                raise err from None
+
+        # 如果没有一个SL加载器能正确加载，则抛出异常
+        raise FailedProcessConfigFileError(errors)
+
     @override
-    def save(self, namespace: str, file_name: str, *args, **kwargs) -> None:
-        self._configs[namespace][file_name].save(self, namespace, file_name, *args, **kwargs)
+    def save(
+            self,
+            namespace: str,
+            file_name: str,
+            config_formats: Optional[str | Iterable[str]] = None,
+            *args, **kwargs
+    ) -> None:
+        file = self._configs[namespace][file_name]
+
+        def processor(pool: Self, ns: str, fn: str, cf: str):
+            file.save(pool, ns, fn, cf, *args, **kwargs)
+
+        self._test_all_sl(namespace, file_name, config_formats, processor, file_config_format=file.config_format)
 
     @override
     def save_all(self, ignore_err: bool = False) -> None | dict[str, dict[str, tuple[ABCConfigFile, Exception]]]:
@@ -283,6 +381,16 @@ class BaseConfigPool(ABCConfigPool, ABC):
                 raise ValueError(f"item must be a tuple of length 2, got {item}")
             return self[item[0]][item[1]]
         return deepcopy(self.configs[item])
+
+    def __contains__(self, item):
+        """
+        .. versionadded:: 0.1.2
+        """
+        if isinstance(item, tuple):
+            if len(item) != 2:
+                raise ValueError(f"item must be a tuple of length 2, got {item}")
+            return (item[0] in self._configs) and (item[1] in self._configs[item[0]])
+        return item in self._configs
 
     def __len__(self):
         """

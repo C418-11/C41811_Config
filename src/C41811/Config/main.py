@@ -29,8 +29,6 @@ from .abc import SLArgument
 from .base import BaseConfigPool
 from .base import ConfigData
 from .base import ConfigFile
-from .errors import FailedProcessConfigFileError
-from .errors import UnsupportedConfigFormatError
 from .validators import DefaultValidatorFactory
 from .validators import ValidatorFactoryConfig
 from .validators import ValidatorTypes
@@ -155,59 +153,24 @@ class ConfigPool(BaseConfigPool):
             config_formats: Optional[str | Iterable[str]] = None,
             allow_create: bool = False
     ) -> F:
-        if config_formats is None:
-            config_formats = set()
-        elif isinstance(config_formats, str):
-            config_formats = {config_formats}
-        else:
-            config_formats = set(config_formats)
+        if (namespace, file_name) in self:
+            return self.get(namespace, file_name)
 
-        format_set: set[str]
-        # 配置文件格式未提供时尝试从文件后缀推断
-        if not config_formats:
-            _, config_format = os.path.splitext(file_name)
-            if not config_format:
-                raise UnsupportedConfigFormatError("Unknown")
-            if config_format not in self.FileExtProcessor:
-                raise UnsupportedConfigFormatError(config_format)
-            format_set = self.FileExtProcessor[config_format]
-        else:
-            format_set = config_formats
+        def processor(pool, ns, fn, cf):
+            try:
+                result = config_file_cls.load(pool, ns, fn, cf)
+            except FileNotFoundError:
+                if not allow_create:
+                    raise
+                result = config_file_cls(
+                    ConfigData(),
+                    config_format=cf
+                )
 
-        # 单次尝试加载配置文件的的逻辑，定义为函数是为了方便后面尝试从多个SL加载器中找到能正确加载的那一个
-        def _load_config(format_: str) -> ABCConfigFile:
-            if format_ not in self.SLProcessor:
-                raise UnsupportedConfigFormatError(format_)
-
-            result: ABCConfigFile | None = self.get(namespace, file_name)
-            if result is None:
-                try:
-                    result = config_file_cls.load(self, namespace, file_name, format_)
-                except FileNotFoundError:
-                    if not allow_create:
-                        raise
-                    result = config_file_cls(
-                        ConfigData(),
-                        config_format=format_
-                    )
-
-                self.set(namespace, file_name, result)
+            pool.set(namespace, file_name, result)
             return result
 
-        # 尝试从多个SL加载器中找到能正确加载的那一个
-        errors = {}
-        for f in format_set:
-            try:
-                ret = _load_config(f)
-            except (UnsupportedConfigFormatError, FailedProcessConfigFileError, FileNotFoundError) as err:
-                errors[f] = err
-                continue
-            config: ABCConfigFile = ret
-            break
-        else:  # 如果没有一个SL加载器能正确加载，则抛出异常
-            raise FailedProcessConfigFileError(errors)
-
-        return config
+        return self._test_all_sl(namespace, file_name, config_formats, processor)
 
     @override
     def require(

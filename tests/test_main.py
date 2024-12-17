@@ -22,7 +22,6 @@ from C41811.Config import JsonSL
 from C41811.Config import RequiredPath
 from C41811.Config import ValidatorFactoryConfig
 from C41811.Config.errors import ConfigDataTypeError
-from C41811.Config.errors import FailedProcessConfigFileError
 from C41811.Config.errors import RequiredPathNotFoundError
 from C41811.Config.errors import UnsupportedConfigFormatError
 from utils import safe_raises
@@ -67,13 +66,14 @@ class TestConfigPool:
     @staticmethod
     def test_save_load(pool, file):
         pool.set('', "test", deepcopy(file))
-        pool.save('', "test", config_format="json")
+        pool.save('', "test", config_formats="json")
+        pool.save('', "test", config_formats={"pickle", "json"})
         assert pool.load('', "test", config_formats="json") == file
         assert pool.load('', "test", config_formats={"pickle", "json"}) == file
 
     @staticmethod
     def test_file_not_found_load(pool):
-        with raises(FailedProcessConfigFileError, match="No such file or directory"):
+        with raises(FileNotFoundError, match="No such file or directory"):
             pool.load('', "test", config_formats="json")
 
         assert pool.load(
@@ -89,7 +89,7 @@ class TestConfigPool:
             pool.save('', "test")
 
         with raises(UnsupportedConfigFormatError, match="Unsupported config format: wrong"):
-            pool.save('', "test", config_format="wrong")
+            pool.save('', "test", config_formats="wrong")
 
     @staticmethod
     def test_wrong_load(pool, data):
@@ -99,14 +99,16 @@ class TestConfigPool:
         with raises(UnsupportedConfigFormatError, match="Unsupported config format: .wrong"):
             pool.load('', "test.wrong")
 
-        with raises(FailedProcessConfigFileError, match="Unsupported config format: "):
+        with raises(UnsupportedConfigFormatError, match="Unsupported config format: "):
             pool.load('', "test", config_formats={''})
 
     @staticmethod
     def test_save_all(pool, file, data):
         pool.set('', "test", ConfigFile(data, config_format="json"))
+        pool.set('', "test1", ConfigFile(data, config_format="json"))
         pool.save_all()
         assert pool.load('', "test", config_formats="json").data == data
+        assert pool.load('', "test1", config_formats="json").data == data
 
     @staticmethod
     def test_save_all_with_error(pool, data):

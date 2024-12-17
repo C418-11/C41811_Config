@@ -673,7 +673,13 @@ class ABCConfigPool(ABCSLProcessorPool):
         """
 
     @abstractmethod
-    def save(self, namespace: str, file_name: str, *args, **kwargs) -> None:
+    def save(
+            self,
+            namespace: str,
+            file_name: str,
+            config_formats: Optional[str | Iterable[str]] = None,
+            *args, **kwargs
+    ) -> None:
         """
         保存配置
 
@@ -681,9 +687,14 @@ class ABCConfigPool(ABCSLProcessorPool):
         :type namespace: str
         :param file_name: 文件名
         :type file_name: str
+        :param config_formats: 配置格式
+        :type config_formats: Optional[str | Iterable[str]]
 
         :return: None
         :rtype: NoneType
+
+        .. versionchanged:: 0.1.2
+           添加 ``config_formats`` 参数
         """
 
     @abstractmethod
