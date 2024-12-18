@@ -25,6 +25,7 @@ from pydantic_core import core_schema
 
 from .abc import ABCConfigData
 from .abc import ABCKey
+from .abc import ABCPath
 from .base import ConfigData
 from .errors import ConfigDataTypeError
 from .errors import ConfigOperate
@@ -168,11 +169,15 @@ class DefaultValidatorFactory:
     """
 
     def __init__(self, validator: Iterable[str] | Mapping[str, Any], validator_config: ValidatorFactoryConfig):
+        # noinspection GrazieInspection
         """
         :param validator: 用于生成验证器的数据
         :type validator: Iterable[str] | Mapping[str, Any]
         :param validator_config: 验证器配置
         :type validator_config: ValidatorFactoryConfig
+
+        .. versionchanged:: 0.1.2
+           支持验证器混搭路径字符串和嵌套字典
         """
 
         validator = deepcopy(validator)
@@ -192,9 +197,12 @@ class DefaultValidatorFactory:
         self._compile()
         self.model: BaseModel
 
-    def _fmt_mapping_key(self) -> tuple[Mapping[str, Any], set[str]]:
+    def _fmt_mapping_key(self, validator: Mapping) -> tuple[Mapping[str, Any], set[str]]:
         """
-        格式化映射键
+        格式化验证器键
+
+        :param validator: Mapping验证器
+        :type validator: Mapping
 
         :return: 格式化后的映射键和被覆盖的Mapping父路径
         :rtype: tuple[Mapping[str, Any], set[str]]
@@ -204,9 +212,9 @@ class DefaultValidatorFactory:
             value: type[Mapping]
 
         fmt_data = ConfigData(OrderedDict())
-        iterator = iter(self.validator.items())
+        iterator = iter(validator.items())
 
-        key: Any = None
+        key: str | None = None
         value: Any = None
 
         def _next():
@@ -215,6 +223,7 @@ class DefaultValidatorFactory:
                 key, value = next(iterator)
             except StopIteration:
                 return True
+
         if _next():
             return {}, set()
 
@@ -227,7 +236,7 @@ class DefaultValidatorFactory:
             except (ValidationError, TypeError):
                 return False
 
-        father_set: set = set()
+        father_set: set[str | ABCPath] = set()
         while True:
             # 如果传入了任意路径的父路径那就检查新值和旧值是否都为Mapping
             # 如果是那就把父路径直接加入father_set不进行后续操作
@@ -247,6 +256,11 @@ class DefaultValidatorFactory:
                     f"Overwriting exists validator path with unexpected type"
                     f" '{value}'(new) and '{target_value}'(exists)"
                 ))
+
+            if isinstance(value, Mapping):
+                value, sub_fpath = self._fmt_mapping_key(value)
+                father_set.update(f"{key}\\.{sf_path}" for sf_path in sub_fpath)
+
             try:
                 fmt_data.modify(key, value)
             except ConfigDataTypeError as err:
@@ -331,7 +345,7 @@ class DefaultValidatorFactory:
         """
         编译模板
         """
-        fmt_validator, father_set = self._fmt_mapping_key()
+        fmt_validator, father_set = self._fmt_mapping_key(self.validator)
         model_config = ConfigData()
         for path in father_set:
             model_config.modify(path, {self.model_config_key: {"extra": "allow"}})

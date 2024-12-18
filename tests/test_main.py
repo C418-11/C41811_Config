@@ -19,6 +19,7 @@ from C41811.Config import ConfigFile
 from C41811.Config import ConfigPool
 from C41811.Config import FieldDefinition
 from C41811.Config import JsonSL
+from C41811.Config import Path
 from C41811.Config import RequiredPath
 from C41811.Config import ValidatorFactoryConfig
 from C41811.Config.errors import ConfigDataTypeError
@@ -530,47 +531,66 @@ class TestRequiredPath:
             "baz": 444
         })
 
-    @staticmethod  # 专门针对保留子键的测试
-    @mark.parametrize("validator, result, ignores", (
-            ((
-                "first\\.second\\.third",
-                "first"
-            ), {
-                "first": {
-                    "second": {
-                        "third": 111
-                    },
-                    "bar": 333
-                }
-            }, ()),
-            ((
-                "first",
-                "first\\.second\\.third",
-            ), {
-                "first": {
-                    "second": {
-                        "third": 111
-                    },
-                    "bar": 333
-                }
-            }, ()),
-            ((
-                "first\\.second\\.third",
-                "first\\.second"
-            ), {
-                "first": {
-                    "second": {
-                        "third": 111,
-                        "foo": 222
-                    },
-                }
-            }, ()),
-            (OrderedDict((
-                    ("first\\.second\\.third", int),
-                    ("first", int)
-            )), None, ((UserWarning,), (ConfigDataTypeError,)))
+    IncludeSubKeyTests = ("validator, result, ignores", (
+        ((
+             "first\\.second\\.third",
+             "first"
+         ), {
+             "first": {
+                 "second": {
+                     "third": 111
+                 },
+                 "bar": 333
+             }
+         }, ()),
+        ((
+             "first",
+             "first\\.second\\.third",
+         ), {
+             "first": {
+                 "second": {
+                     "third": 111
+                 },
+                 "bar": 333
+             }
+         }, ()),
+        ((
+             "first\\.second\\.third",
+             "first\\.second"
+         ), {
+             "first": {
+                 "second": {
+                     "third": 111,
+                     "foo": 222
+                 },
+             }
+         }, ()),
+        ({
+             "first": {  # 混搭
+                 Path.from_str("\\.second\\.third"): int,
+                 "second": dict,
+                 "bar": int
+             },
+             "baz": int
+         }, {
+             "first": {
+                 "second": {
+                     "third": 111,
+                     "foo": 222
+                 },
+                 "bar": 333
+             },
+             "baz": 444
+         }, ()),
+        (OrderedDict((
+            ("first\\.second\\.third", int),
+            ("first", int)
+        )), None, ((UserWarning,), (ConfigDataTypeError,)))
     ))
-    def test_include_sub_keys(recursive_data, validator, result, ignores):
+
+    @staticmethod  # 专门针对保留子键的测试
+    @mark.parametrize(*IncludeSubKeyTests)
+    def test_include_sub_key(recursive_data, validator, result, ignores):
         if not ignores:
             ignores = ((), ())
         ignore_warns, ignore_excs = ignores
