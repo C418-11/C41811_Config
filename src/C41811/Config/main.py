@@ -90,7 +90,7 @@ class RequiredPath:
             self,
             data: D,
             *,
-            allow_create: Optional[bool] = None,
+            allow_modify: Optional[bool] = None,
             ignore_missing: Optional[bool] = None,
             **extra
     ) -> D:
@@ -101,14 +101,14 @@ class RequiredPath:
            返回的配置数据是*快照*
 
         .. caution::
-           提供了任意配置参数(``allow_create``, ``ignore_missing``, ...)时,这次调用将完全舍弃static_config使用当前提供的配置参数
+           提供了任意配置参数(``allow_modify``, ``ignore_missing``, ...)时,这次调用将完全舍弃static_config使用当前提供的配置参数
 
            这会导致调用validator_factory产生额外开销(如果你提供static_config参数是为了避免反复调用validator_factory的话)
 
         :param data: 要过滤的原始数据
         :type data: ABCConfigData
-        :param allow_create: 是否允许值不存在时修改data参数对象填充默认值(即使为False仍然会在结果中填充默认值,但不会修改data参数对象)
-        :type allow_create: bool
+        :param allow_modify: 是否允许值不存在时修改data参数对象填充默认值(即使为False仍然会在结果中填充默认值,但不会修改data参数对象)
+        :type allow_modify: bool
         :param ignore_missing: 忽略丢失的键
         :type ignore_missing: bool
         :param extra: 额外参数
@@ -122,8 +122,8 @@ class RequiredPath:
         :raise UnknownErrorDuringValidate: 验证过程中发生未知错误
         """
         config_kwargs = {}
-        if allow_create is not None:
-            config_kwargs["allow_create"] = allow_create
+        if allow_modify is not None:
+            config_kwargs["allow_modify"] = allow_modify
         if ignore_missing is not None:
             config_kwargs["ignore_missing"] = ignore_missing
         if extra:
@@ -221,7 +221,7 @@ class RequireConfigDecorator:
         :param allow_create: 详见 :py:func:`ConfigPool.load`
         :param cache_config: 缓存配置的装饰器，默认为None，即不缓存
         :type cache_config: Optional[Callable[[Callable], Callable]]
-        :param filter_kwargs: :py:func:`RequiredPath.filter` 要绑定的默认参数，默认为allow_create=True
+        :param filter_kwargs: :py:func:`RequiredPath.filter` 要绑定的默认参数，默认为allow_modify=True
         :type filter_kwargs: dict[str, Any]
 
         :raise UnsupportedConfigFormatError: 不支持的配置格式
@@ -234,7 +234,7 @@ class RequireConfigDecorator:
 
         self._config: ABCConfigFile = config
         self._required = required
-        self._filter_kwargs = {"allow_create": True} | filter_kwargs
+        self._filter_kwargs = {"allow_modify": True} | filter_kwargs
         self._cache_config: Callable = cache_config if cache_config is not None else lambda x: x
 
     def check(self, *, ignore_cache: bool = False, **filter_kwargs) -> Any:

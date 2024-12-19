@@ -220,9 +220,9 @@ class TestRequiredPath:
     @staticmethod
     @mark.parametrize("kwargs", (
             {},
-            {"allow_create": True},
+            {"allow_modify": True},
             {"ignore_missing": True},
-            {"allow_create": True, "ignore_missing": True},
+            {"allow_modify": True, "ignore_missing": True},
     ))
     def test_ignore(data, kwargs):
         assert RequiredPath(lambda _: _, "ignore").filter(deepcopy(data), **kwargs) == data
@@ -233,7 +233,7 @@ class TestRequiredPath:
         ("foo.bar", 123, {}, (RequiredPathNotFoundError,), ()),
         ("foo1", 114, {}, (), ()),
         ("foo2", ["bar"], {}, (), ()),
-        ("foo2", ["bar"], {"allow_create": True}, (), ()),
+        ("foo2", ["bar"], {"allow_modify": True}, (), ()),
         ("foo.bar", None, {"ignore_missing": True}, (RequiredPathNotFoundError,), (UserWarning,)),
     ))
 
@@ -304,7 +304,7 @@ class TestRequiredPath:
         (
             ["foo\\.bar2"],
             [987],
-            {"allow_create": True}, (RequiredPathNotFoundError,)  # 因为没有默认值所以即便allow_create=True也会报错
+            {"allow_modify": True}, (RequiredPathNotFoundError,)  # 因为没有默认值所以即便allow_modify=True也会报错
         ),
         (
             ["foo\\.bar2", "foo1"],
@@ -314,7 +314,7 @@ class TestRequiredPath:
         (
             ["foo2\\.bar", "foo1"],  # foo2为list 所以foo2.bar会报错
             [float("-inf"), 114],
-            {"ignore_missing": True, "allow_create": True}, (ConfigDataTypeError,)
+            {"ignore_missing": True, "allow_modify": True}, (ConfigDataTypeError,)
         ),
         (
             None, [], {}, (TypeError,)
@@ -401,7 +401,7 @@ class TestRequiredPath:
                      "value": 101112,
                  }
              }
-         }, {"allow_create": True}, ()),
+         }, {"allow_modify": True}, ()),
         (OrderedDict((
             ("foo", str),
             ("foo\\.bar", int),
@@ -431,7 +431,7 @@ class TestRequiredPath:
                      "value": 101112,
                  }
              }
-         }, {"allow_create": True, "ignore_missing": True}, ()),
+         }, {"ignore_missing": True}, ()),
         ({
              "foo\\.bar": FieldInfo(annotation=int),
              "foo\\.qux": FieldInfo(annotation=int, default=7),
@@ -445,6 +445,13 @@ class TestRequiredPath:
          },
          {
              "foo": {"bar": 123, "qux": 7},
+         }, {}, ()),
+        ({
+             "foo\\.bar": FieldDefinition(int, 999),
+             "foo\\.qux": FieldDefinition(int, 888),
+         },
+         {
+             "foo": {"bar": 123, "qux": 888},
          }, {}, ()),
         ({"foo\\.bar\\.baz": int},
          None,
@@ -487,7 +494,7 @@ class TestRequiredPath:
                          "value": 101112,
                      }
                  }
-             }, ValidatorFactoryConfig(allow_create=True), 100),
+             }, ValidatorFactoryConfig(allow_modify=True), 100),
     ))
     def test_static_config_usetime(data, validator, static_config, times):
         static_filter = RequiredPath(validator, static_config=static_config).filter

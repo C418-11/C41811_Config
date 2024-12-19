@@ -46,13 +46,22 @@ class ValidatorTypes(Enum):
     PYDANTIC = "pydantic"
 
 
-@dataclass
+@dataclass(kw_only=True)
 class ValidatorFactoryConfig:
     """
     验证器配置
     """
-    allow_create: bool = False
+    allow_modify: bool = False
+    """
+    是否允许在填充默认值时同步填充源数据
+
+    .. versionchanged:: 0.1.2
+       从 ``allow_create`` 重命名为 ``allow_modify``
+    """
     ignore_missing: bool = False
+    """
+    是否忽略不存在的路径
+    """
 
     extra: dict = dataclasses.field(default_factory=dict)
 
@@ -330,7 +339,7 @@ class DefaultValidatorFactory:
                 )
                 definition = FieldDefinition(
                     model_cls,
-                    FieldInfo(default_factory=model_cls if self.validator_config.allow_create else None)
+                    FieldInfo(default_factory=model_cls)
                 )
 
             # 如果忽略不存在的键就填充特殊值
@@ -372,13 +381,15 @@ class DefaultValidatorFactory:
                 if config_obj.retrieve(key) is IgnoreMissing:
                     config_obj.delete(key)
 
-        if self.validator_config.allow_create:
+        if self.validator_config.allow_modify:
             _fill_not_exits(data, config_obj)
         return config_obj
 
 
 def pydantic_validator[D: ABCConfigData](validator: type[BaseModel], cfg: ValidatorFactoryConfig) -> Callable[[D], D]:
     """
+    验证器工厂配置 ``ignore_missing`` 与 ``allow_create`` 无效
+
     :param validator: pydantic.BaseModel的子类
     :type validator: type[BaseModel]
     :param cfg: 验证器配置
@@ -395,7 +406,7 @@ def pydantic_validator[D: ABCConfigData](validator: type[BaseModel], cfg: Valida
         except ValidationError as err:
             raise _process_pydantic_exceptions(err) from None
         config_obj = data.from_data(dict_obj)
-        if cfg.allow_create:
+        if cfg.allow_modify:
             _fill_not_exits(data, config_obj)
         return config_obj
 
