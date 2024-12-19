@@ -154,12 +154,20 @@ class IgnoreMissingType:
 IgnoreMissing = IgnoreMissingType()
 
 
-@dataclass
-class FieldDefinition:
+@dataclass(init=False)
+class FieldDefinition[T: type | types.UnionType | types.EllipsisType | types.GenericAlias]:
     """
     字段定义，包含类型注解和默认值
     """
-    type: type | types.UnionType | types.EllipsisType | types.GenericAlias
+
+    def __init__(self, type_: T, value):
+        if not isinstance(value, FieldInfo):
+            value = FieldInfo(default=value)
+
+        self.type = type_
+        self.value = value
+
+    type: T
     value: FieldInfo
 
 
