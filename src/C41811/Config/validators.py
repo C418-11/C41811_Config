@@ -7,13 +7,13 @@ import re
 import types
 import warnings
 from collections import OrderedDict
+from collections.abc import Callable
+from collections.abc import Iterable
 from collections.abc import Mapping
 from copy import deepcopy
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any
-from typing import Callable
-from typing import Iterable
 from typing import NamedTuple
 
 from pydantic import BaseModel

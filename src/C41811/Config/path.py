@@ -3,8 +3,8 @@
 
 
 import warnings
-from typing import Generator
-from typing import Iterable
+from collections.abc import Generator
+from collections.abc import Iterable
 from typing import Optional
 from typing import Self
 from typing import override

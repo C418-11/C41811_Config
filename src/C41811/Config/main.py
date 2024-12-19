@@ -5,11 +5,11 @@
 import os.path
 from abc import ABC
 from abc import abstractmethod
+from collections.abc import Callable
+from collections.abc import Iterable
 from collections.abc import Mapping
 from copy import deepcopy
 from typing import Any
-from typing import Callable
-from typing import Iterable
 from typing import Literal
 from typing import Optional
 from typing import override

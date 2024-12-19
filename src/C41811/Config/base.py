@@ -4,12 +4,12 @@
 
 import os.path
 from abc import ABC
+from collections.abc import Callable
+from collections.abc import Iterable
+from collections.abc import Mapping
+from collections.abc import MutableMapping
 from copy import deepcopy
 from typing import Any
-from typing import Callable
-from typing import Iterable
-from typing import Mapping
-from typing import MutableMapping
 from typing import Optional
 from typing import Self
 from typing import override

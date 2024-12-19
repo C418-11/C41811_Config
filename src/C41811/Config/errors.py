@@ -3,10 +3,10 @@
 
 
 from collections import OrderedDict
+from collections.abc import Iterable
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
-from typing import Iterable
-from typing import Mapping
 
 from .abc import ABCKey
 from .abc import ABCPath
