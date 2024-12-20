@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 dynamic = ["version"]
 name = "C41811.Config"
-description = "A useful config module."
+description = "Simplifies config management with flexible API and formats."
 readme = "README.md"
 requires-python = ">=3.12"
 authors = [

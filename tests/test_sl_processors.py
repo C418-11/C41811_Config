@@ -9,11 +9,11 @@ from pytest import mark
 from pytest import raises
 
 from C41811.Config import BaseConfigSL
+from C41811.Config import BaseLocalFileConfigSL
 from C41811.Config import ConfigData
 from C41811.Config import ConfigFile
 from C41811.Config import ConfigPool
 from C41811.Config import JsonSL
-from C41811.Config import BaseLocalFileConfigSL
 from C41811.Config import PickleSL
 from C41811.Config.SLProcessors.python_literal import PythonLiteralSL
 from C41811.Config.SLProcessors.pyyaml import PyYamlSL
@@ -253,8 +253,8 @@ def test_local_file_sl(sl_cls):
 
     with raises(FailedProcessConfigFileError):
         # noinspection PyTypeChecker
-        sl_obj.load_file(ConfigFile,  None)
+        sl_obj.load_file(ConfigFile, None)
 
     with raises(FailedProcessConfigFileError):
         # noinspection PyTypeChecker
-        sl_obj.save_file(ConfigFile,  None)
+        sl_obj.save_file(ConfigFile, None)
