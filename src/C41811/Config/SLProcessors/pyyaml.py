@@ -14,7 +14,7 @@ from ..main import BaseLocalFileConfigSL
 try:
     # noinspection PyPackageRequirements, PyUnresolvedReferences
     import yaml
-except ImportError:
+except ImportError:  # pragma: no cover
     raise ImportError("PyYaml is not installed. Please install it with `pip install PyYaml`") from None
 
 

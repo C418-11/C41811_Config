@@ -14,7 +14,7 @@ from ..main import BaseLocalFileConfigSL
 try:
     # noinspection PyPackageRequirements, PyUnresolvedReferences
     from ruamel.yaml import YAML
-except ImportError:
+except ImportError:  # pragma: no cover
     raise ImportError("ruamel.yaml is not installed. Please install it with `pip install ruamel.yaml`") from None
 
 

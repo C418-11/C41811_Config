@@ -14,7 +14,7 @@ from ..main import BaseLocalFileConfigSL
 try:
     # noinspection PyPackageRequirements, PyUnresolvedReferences
     import toml
-except ImportError:
+except ImportError:  # pragma: no cover
     raise ImportError("toml is not installed. Please install it with `pip install toml`") from None
 
 

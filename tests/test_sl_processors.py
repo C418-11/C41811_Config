@@ -13,6 +13,7 @@ from C41811.Config import ConfigData
 from C41811.Config import ConfigFile
 from C41811.Config import ConfigPool
 from C41811.Config import JsonSL
+from C41811.Config import BaseLocalFileConfigSL
 from C41811.Config import PickleSL
 from C41811.Config.SLProcessors.python_literal import PythonLiteralSL
 from C41811.Config.SLProcessors.pyyaml import PyYamlSL
@@ -108,31 +109,44 @@ RuamelYamlTests = (
         OrderedDict((('b', 2), ('a', 1))),
         (), ()
     ),
+    (
+        NotImplemented,
+        ((FailedProcessConfigFileError,), ()), ()
+    ),
 )
 
 TOMLTests = RuamelYamlTests
 
 
+class ErrDuringRepr:
+    def __repr__(self):
+        raise Exception("repr error")
+
+
 PythonLiteralTests = (
     (
-        {"a": 1, "b": 2},
+        {"a": 1, "b": .5},
         (), ()
     ),
     (
-        {"a": 1, "b": {"c": 2}},
+        {"a": True, "b": False, "c": None},
         (), ()
     ),
     (
-        {"a": 1, "b": {"c", 2}},
+        {"a": {"c": 2}, "b": {"c", 2}},
         (), ()
     ),
     (
-        {"a": 1, "b": ["c", 2]},
+        {"a": ["c", 2], "b": ("c", 2)},
         (), ()
     ),
     (
-        {"a": 1, "b": ("c", 2)},
-        (), ()
+        {"a": float("-inf"), "b": frozenset()},
+        ((), (FailedProcessConfigFileError,)), ()
+    ),
+    (
+        {"a": ErrDuringRepr()},
+        ((FailedProcessConfigFileError,), (FailedProcessConfigFileError,)), ()
     ),
 )
 
@@ -190,15 +204,20 @@ def test_wrong_sl_arguments():
         JsonSL(NotImplemented)
 
 
-def test_multi_register(pool):
-    JsonSL().register_to(pool)
-    JsonSL().register_to(pool)
+SLProcessors = (JsonSL, PickleSL, PythonLiteralSL, PyYamlSL, RuamelYamlSL, TomlSL)
+
+
+@mark.parametrize("sl_cls", SLProcessors)
+def test_multi_register(pool, sl_cls):
+    sl_cls().register_to(pool)
+    sl_obj = sl_cls()
+    sl_obj.register_to(pool)
     assert len(pool.SLProcessor) == 1
-    JsonSL({"indent": 4}, reg_alias="json.fmt").register_to(pool)
+    sl_cls(reg_alias=f"{sl_obj.reg_name}$test").register_to(pool)
     assert len(pool.SLProcessor) == 2
 
 
-@mark.parametrize("sl_cls", (JsonSL, PickleSL, PythonLiteralSL, PyYamlSL, RuamelYamlSL, TomlSL))
+@mark.parametrize("sl_cls", SLProcessors)
 def test_base(sl_cls: type[BaseConfigSL]):
     attr_tests = (
         "saver_args",
@@ -223,3 +242,19 @@ def test_base(sl_cls: type[BaseConfigSL]):
     assert sl_cls(reg_alias="alias").reg_name == "alias"
 
     sl_cls().register_to()
+
+
+LocalSLProcessors = tuple(cls for cls in SLProcessors if issubclass(cls, BaseLocalFileConfigSL))
+
+
+@mark.parametrize("sl_cls", LocalSLProcessors)
+def test_local_file_sl(sl_cls):
+    sl_obj = sl_cls()
+
+    with raises(FailedProcessConfigFileError):
+        # noinspection PyTypeChecker
+        sl_obj.load_file(ConfigFile,  None)
+
+    with raises(FailedProcessConfigFileError):
+        # noinspection PyTypeChecker
+        sl_obj.save_file(ConfigFile,  None)
