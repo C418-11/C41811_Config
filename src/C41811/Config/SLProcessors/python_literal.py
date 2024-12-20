@@ -27,7 +27,7 @@ class PythonLiteralSL(BaseLocalFileConfigSL):
     @property
     @override
     def file_ext(self) -> tuple[str, ...]:
-        return ".py", ".python_literal", ".pyl"
+        return ".python_literal", ".pyl", ".py"
 
     @override
     def save_file(
@@ -38,7 +38,7 @@ class PythonLiteralSL(BaseLocalFileConfigSL):
             **merged_kwargs
     ) -> None:
         try:
-            target_file.write(pprint.pformat(config_file.data, *merged_args, **merged_kwargs))
+            target_file.write(pprint.pformat(config_file.data.data, *merged_args, **merged_kwargs))
         except Exception as e:
             raise FailedProcessConfigFileError(e) from e
 

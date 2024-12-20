@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+
+
 import re
 from collections import OrderedDict
 
@@ -12,17 +14,21 @@ from C41811.Config import ConfigFile
 from C41811.Config import ConfigPool
 from C41811.Config import JsonSL
 from C41811.Config import PickleSL
+from C41811.Config.SLProcessors.python_literal import PythonLiteralSL
+from C41811.Config.SLProcessors.pyyaml import PyYamlSL
+from C41811.Config.SLProcessors.ruamel_yaml import RuamelYamlSL
+from C41811.Config.SLProcessors.toml import TomlSL
 from C41811.Config.abc import ABCConfigSL
 from C41811.Config.errors import FailedProcessConfigFileError
 from utils import safe_raises
 
 JsonSLTests = (
     (
-        {"a": 1, "b": 2},
+        {"a": 1, "b": {"c": 2}},
         (), ()
     ),
     (
-        {"a": 1, "b": 2},
+        {"a": 1, "b": {"c": 2}},
         (), ({"indent": 4}, {})
     ),
     (
@@ -74,6 +80,62 @@ PickleSLTests = (
     ),
 )
 
+PyYamlTests = (
+    (
+        {"a": 1, "b": {"c": 2}},
+        (), ()
+    ),
+    (
+        {"a": 1, "b": {"c": 2}},
+        (), ({"indent": 4}, {})
+    ),
+    (
+        NotImplemented,
+        ((FailedProcessConfigFileError,), ()), ()
+    ),
+    (
+        OrderedDict((('b', 2), ('a', 1))),
+        ((FailedProcessConfigFileError,), (FailedProcessConfigFileError,)), ()
+    ),
+)
+
+RuamelYamlTests = (
+    (
+        {"a": 1, "b": {"c": 2}},
+        (), ()
+    ),
+    (
+        OrderedDict((('b', 2), ('a', 1))),
+        (), ()
+    ),
+)
+
+TOMLTests = RuamelYamlTests
+
+
+PythonLiteralTests = (
+    (
+        {"a": 1, "b": 2},
+        (), ()
+    ),
+    (
+        {"a": 1, "b": {"c": 2}},
+        (), ()
+    ),
+    (
+        {"a": 1, "b": {"c", 2}},
+        (), ()
+    ),
+    (
+        {"a": 1, "b": ["c", 2]},
+        (), ()
+    ),
+    (
+        {"a": 1, "b": ("c", 2)},
+        (), ()
+    ),
+)
+
 
 def _insert_sl_cls(sl_cls, tests: tuple):
     yield from ((sl_cls, *test) for test in tests)
@@ -84,6 +146,10 @@ Tests = (
     (
         *_insert_sl_cls(JsonSL, JsonSLTests),
         *_insert_sl_cls(PickleSL, PickleSLTests),
+        *_insert_sl_cls(PyYamlSL, PyYamlTests),
+        *_insert_sl_cls(RuamelYamlSL, RuamelYamlTests),
+        *_insert_sl_cls(TomlSL, TOMLTests),
+        *_insert_sl_cls(PythonLiteralSL, PythonLiteralTests),
     )
 )
 
@@ -103,13 +169,12 @@ def test_sl_processors(pool, sl_cls: type[ABCConfigSL], raw_data, ignore_excs, s
         config_format=sl_obj.reg_name
     )
     file_name = f"TestConfigFile{sl_obj.file_ext[0]}"
-    pool.set('', file_name, file)
 
     if not ignore_excs:
         ignore_excs = ((), ())
 
     with safe_raises(ignore_excs[0]) as info:
-        pool.save('', file_name)
+        pool.save('', file_name, config=file)
     if info:
         return
     pool.delete('', file_name)
@@ -133,7 +198,7 @@ def test_multi_register(pool):
     assert len(pool.SLProcessor) == 2
 
 
-@mark.parametrize("sl_cls", (JsonSL, PickleSL))
+@mark.parametrize("sl_cls", (JsonSL, PickleSL, PythonLiteralSL, PyYamlSL, RuamelYamlSL, TomlSL))
 def test_base(sl_cls: type[BaseConfigSL]):
     attr_tests = (
         "saver_args",
