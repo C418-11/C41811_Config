@@ -1,4 +1,4 @@
-Minecraft Function Compiler 的文档
+C41811.Config 的文档
 ==================================
 
 .. toctree::
