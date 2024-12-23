@@ -1,10 +1,17 @@
+# -*- coding: utf-8 -*-
 # Configuration file for the Sphinx documentation builder.
+
+
+from setuptools_scm import get_version
 
 project = "C41811.Config"
 # noinspection PyShadowingBuiltins
 copyright = "2024, C418____11"
 author = "C418____11"
-release = "0.1.1"
+release = get_version(
+    fallback_version="0.0+UNKNOWN",
+    search_parent_directories=True
+)
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -18,7 +25,7 @@ extensions = [
 templates_path = ["_templates"]
 exclude_patterns = []
 
-language = 'zh_CN'
+language = "zh_CN"
 
 python_display_short_literal_types = True
 add_module_names = False
