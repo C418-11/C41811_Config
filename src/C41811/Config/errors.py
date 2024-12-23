@@ -134,6 +134,7 @@ class ConfigDataReadOnlyError(TypeError):
 
     .. versionadded:: 0.1.3
     """
+
     def __init__(self, msg: str = None):
         if msg is None:
             msg = "ConfigData is read-only"
