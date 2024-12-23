@@ -28,7 +28,7 @@ class TokenInfo:
     """
 
     @property
-    def raw_string(self):  # pragma: no cover
+    def raw_string(self):
         return ''.join(self.tokens)
 
 
@@ -49,7 +49,7 @@ class ConfigDataPathSyntaxException(Exception):
         if not (msg is None and hasattr(self, "msg")):
             self.msg = msg
 
-    def __str__(self):  # pragma: no cover
+    def __str__(self):
         return (
             f"{self.msg}"
             f"{self.token_info.raw_string} -> {self.token_info.current_token}"
@@ -118,7 +118,7 @@ class RequiredPathNotFoundError(KeyError):
         self.key_info = key_info
         self.operate = ConfigOperate(operate)
 
-    def __str__(self):  # pragma: no cover
+    def __str__(self):
         string = (
             f"{self.key_info.path.unparse()} -> {self.key_info.current_key.unparse()}"
             f" ({self.key_info.index + 1} / {len(self.key_info.path)})"
@@ -163,7 +163,7 @@ class ConfigDataTypeError(ValueError):
         self.requited_type = required_type
         self.now_type = now_type
 
-    def __str__(self):  # pragma: no cover
+    def __str__(self):
         return (
             f"{self.key_info.path.unparse()} -> {self.key_info.current_key.unparse()}"
             f" ({self.key_info.index + 1} / {len(self.key_info.relative_keys)})"
@@ -181,7 +181,7 @@ class UnknownErrorDuringValidateError(Exception):
        从 ``UnknownErrorDuringValidate`` 重命名为 ``UnknownErrorDuringValidateError``
     """
 
-    def __init__(self, *args, **kwargs):  # pragma: no cover
+    def __init__(self, *args, **kwargs):
         """
         :param args: 未知错误信息
         :param kwargs: 未知错误信息
@@ -227,7 +227,7 @@ class FailedProcessConfigFileError(Exception):
                 msg,
                 *map(lambda _: f"{_[0]}: {_[1]}", reason.items()))
             ))
-        elif isinstance(reason, Iterable):  # pragma: no cover
+        elif isinstance(reason, Iterable):
             reason = tuple(reason)
             super().__init__('\n'.join((
                 msg,
