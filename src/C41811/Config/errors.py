@@ -7,6 +7,7 @@ from collections.abc import Iterable
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
+from typing import Optional
 
 from .abc import ABCKey
 from .abc import ABCPath
@@ -14,9 +15,12 @@ from .abc import ABCPath
 
 @dataclass
 class TokenInfo:
+    """
+    一段标记的相关信息 用于快速定位到指定标记
+    """
     tokens: list[str]
     """
-    当前完整token列表
+    当前完整标记列表
     """
     current_token: str
     """
@@ -43,6 +47,13 @@ class ConfigDataPathSyntaxException(Exception):
         :type token_info: TokenInfo
         :param msg: 错误信息
         :type msg: str
+
+        .. tip::
+           错误信息获取优先级
+
+           1.msg参数
+
+           2.类字段msg (供快速创建子类)
         """
         self.token_info = token_info
 
@@ -81,6 +92,9 @@ class ConfigOperate(Enum):
 
 @dataclass
 class KeyInfo:
+    """
+    一段路径的相关信息 用于快速定位到指定键
+    """
     path: ABCPath
     """
     当前完整路径
@@ -91,7 +105,7 @@ class KeyInfo:
     """
     index: int
     """
-    current_key在full_path的下标
+    current_key在path的下标
     """
 
     @property
@@ -135,7 +149,11 @@ class ConfigDataReadOnlyError(TypeError):
     .. versionadded:: 0.1.3
     """
 
-    def __init__(self, msg: str = None):
+    def __init__(self, msg: Optional[str] = None):
+        """
+        :param msg: 错误信息
+        :type msg: Optional[str]
+        """
         if msg is None:
             msg = "ConfigData is read-only"
         super().__init__(msg)
@@ -195,13 +213,13 @@ class UnsupportedConfigFormatError(Exception):
     不支持的配置文件格式错误
     """
 
-    def __init__(self, _format: str):
+    def __init__(self, format_: str):
         """
-        :param _format: 不支持的配置的文件格式
-        :type _format: str
+        :param format_: 不支持的配置的文件格式
+        :type format_: str
         """
-        super().__init__(f"Unsupported config format: {_format}")
-        self.format = _format
+        super().__init__(f"Unsupported config format: {format_}")
+        self.format = format_
 
     def __eq__(self, other):
         return isinstance(other, UnsupportedConfigFormatError) and self.format == other.format
