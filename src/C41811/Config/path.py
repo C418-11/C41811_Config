@@ -13,7 +13,7 @@ from .abc import ABCKey
 from .abc import ABCPath
 from .errors import ConfigDataPathSyntaxException
 from .errors import TokenInfo
-from .errors import UnknownTokenType
+from .errors import UnknownTokenTypeError
 
 
 class AttrKey(ABCKey):
@@ -197,7 +197,7 @@ class PathSyntaxParser:
         tokenized_path = list(cls.tokenize(string))
         for i, token in enumerate(tokenized_path):
             if not token.startswith('\\'):
-                raise UnknownTokenType(TokenInfo(tokenized_path, token, i))
+                raise UnknownTokenTypeError(TokenInfo(tokenized_path, token, i))
 
             token_type = token[1]
             context = token[2:].replace("\\\\", '\\')
@@ -223,7 +223,7 @@ class PathSyntaxParser:
                 path.append(AttrKey(context))
                 continue
 
-            raise UnknownTokenType(TokenInfo(tokenized_path, token, i))
+            raise UnknownTokenTypeError(TokenInfo(tokenized_path, token, i))
 
         if item:
             raise ConfigDataPathSyntaxException(

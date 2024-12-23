@@ -12,7 +12,7 @@ from C41811.Config import IndexKey
 from C41811.Config import Path
 from C41811.Config import PathSyntaxParser
 from C41811.Config.errors import ConfigDataPathSyntaxException
-from C41811.Config.errors import UnknownTokenType
+from C41811.Config.errors import UnknownTokenTypeError
 from utils import safe_raises
 from utils import safe_warns
 
@@ -185,12 +185,12 @@ class TestPathSyntaxParser:
             (r"\[2", None, (ConfigDataPathSyntaxException,), ()),
             (r"\[a\]", None, (ValueError,), ()),
             (r"\.a\[2\]\.b\[3\]", [AttrKey('a'), IndexKey(2), AttrKey('b'), IndexKey(3)], (), ()),
-            (r"\[4\]abc\[9\]", None, (UnknownTokenType,), ()),
-            (r"\[5\]abc", None, (UnknownTokenType,), ()),
-            (r"abc\[2\]", None, (UnknownTokenType,), ()),
-            (r"abc", None, (UnknownTokenType,), ()),
+            (r"\[4\]abc\[9\]", None, (UnknownTokenTypeError,), ()),
+            (r"\[5\]abc", None, (UnknownTokenTypeError,), ()),
+            (r"abc\[2\]", None, (UnknownTokenTypeError,), ()),
+            (r"abc", None, (UnknownTokenTypeError,), ()),
             (r"\.\a", [AttrKey(r"\a")], (), (SyntaxWarning,)),
-            (r"\a\a", None, (UnknownTokenType,), (SyntaxWarning,)),
+            (r"\a\a", None, (UnknownTokenTypeError,), (SyntaxWarning,)),
         )
     )
 

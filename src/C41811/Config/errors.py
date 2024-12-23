@@ -57,9 +57,13 @@ class ConfigDataPathSyntaxException(Exception):
         )
 
 
-class UnknownTokenType(ConfigDataPathSyntaxException):
+class UnknownTokenTypeError(ConfigDataPathSyntaxException):
+    # noinspection GrazieInspection
     """
     未知的键类型
+
+    .. versionchanged:: 0.1.3
+       从 ``UnknownTokenType`` 重命名为 ``UnknownTokenTypeError``
     """
 
     msg = "Unknown token type: "
@@ -235,7 +239,7 @@ class FailedProcessConfigFileError(Exception):
 __all__ = (
     "TokenInfo",
     "ConfigDataPathSyntaxException",
-    "UnknownTokenType",
+    "UnknownTokenTypeError",
     "ConfigOperate",
     "KeyInfo",
     "RequiredPathNotFoundError",
