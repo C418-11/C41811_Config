@@ -31,7 +31,7 @@ from .errors import ConfigDataTypeError
 from .errors import ConfigOperate
 from .errors import KeyInfo
 from .errors import RequiredPathNotFoundError
-from .errors import UnknownErrorDuringValidate
+from .errors import UnknownErrorDuringValidateError
 from .path import AttrKey
 from .path import IndexKey
 from .path import Path
@@ -84,7 +84,7 @@ def _process_pydantic_exceptions(err: ValidationError) -> Exception:
         elif isinstance(key, int):
             locate_keys.append(IndexKey(key))
         else:  # pragma: no cover
-            raise UnknownErrorDuringValidate("Cannot convert pydantic index to string") from err
+            raise UnknownErrorDuringValidateError("Cannot convert pydantic index to string") from err
 
     kwargs: dict[str, Any] = dict(
         key_info=KeyInfo(
@@ -133,7 +133,7 @@ def _process_pydantic_exceptions(err: ValidationError) -> Exception:
 
     err_type_processor = types_kwarg.get(e["type"], None)
     if err_type_processor is None:  # pragma: no cover
-        raise UnknownErrorDuringValidate(**kwargs, error=e) from err
+        raise UnknownErrorDuringValidateError(**kwargs, error=e) from err
     err_info = err_type_processor()
     return err_info.err_type(**(kwargs | err_info.kwargs))
 

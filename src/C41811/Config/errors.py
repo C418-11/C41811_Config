@@ -172,9 +172,13 @@ class ConfigDataTypeError(ValueError):
         )
 
 
-class UnknownErrorDuringValidate(Exception):
+class UnknownErrorDuringValidateError(Exception):
+    # noinspection GrazieInspection
     """
     在验证配置数据时发生未知错误
+
+    .. versionchanged:: 0.1.3
+       从 ``UnknownErrorDuringValidate`` 重命名为 ``UnknownErrorDuringValidateError``
     """
 
     def __init__(self, *args, **kwargs):  # pragma: no cover
@@ -247,5 +251,5 @@ __all__ = (
     "ConfigDataTypeError",
     "UnsupportedConfigFormatError",
     "FailedProcessConfigFileError",
-    "UnknownErrorDuringValidate"
+    "UnknownErrorDuringValidateError"
 )

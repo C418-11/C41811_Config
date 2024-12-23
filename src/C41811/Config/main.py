@@ -119,7 +119,7 @@ class RequiredPath:
 
         :raise ConfigDataTypeError: 配置数据类型错误
         :raise RequiredPathNotFoundError: 必要的键未找到
-        :raise UnknownErrorDuringValidate: 验证过程中发生未知错误
+        :raise UnknownErrorDuringValidateError: 验证过程中发生未知错误
         """
         config_kwargs = {}
         if allow_modify is not None:
