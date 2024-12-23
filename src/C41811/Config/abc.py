@@ -165,26 +165,36 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
         return deepcopy(self._data)
 
     @property
-    def read_only(self) -> bool:
+    def data_read_only(self) -> bool:
         """
         配置数据是否为只读
 
         :return: 配置数据是否为只读
         :rtype: bool
 
-        .. note::
-           配置数据是否为只读模式
+        .. versionadded:: 0.1.3
+        """
+        return self._data_read_only
 
-           当 :py:attr:`ABCConfigData.data` 为 ``Mapping`` 但不为 ``MutableMapping`` 时，此属性始终为True
-           并且在尝试setattr时会抛出TypeError提示配置数据为只读
+    @property
+    @abstractmethod
+    def read_only(self) -> bool:
+        """
+        配置数据是否为 ``只读模式``
+
+        :return: 配置数据是否为 ``只读模式``
+        :rtype: bool
         """
         return self._data_read_only or self._read_only
 
     @read_only.setter
-    def read_only(self, value: Any):
-        if self._data_read_only:
-            raise TypeError("ConfigData is read-only")
-        self._read_only = bool(value)
+    @abstractmethod
+    def read_only(self, value: Any) -> None:
+        """
+        设置配置数据是否为 ``只读模式``
+
+        :raise ConfigDataReadOnlyError: 配置数据为只读
+        """
 
     @abstractmethod
     def retrieve(self, path: str | ABCPath, *, get_raw: bool = False) -> Any:
@@ -224,6 +234,7 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
         :return: 返回当前实例便于链式调用
         :rtype: Self
 
+        :raise ConfigDataReadOnlyError: 配置数据为只读
         :raise ConfigDataTypeError: 配置数据类型错误
         :raise RequiredPathNotFoundError: 需求的键不存在
         """
@@ -239,6 +250,7 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
         :return: 返回当前实例便于链式调用
         :rtype: Self
 
+        :raise ConfigDataReadOnlyError: 配置数据为只读
         :raise ConfigDataTypeError: 配置数据类型错误
         :raise RequiredPathNotFoundError: 需求的键不存在
         """
@@ -254,6 +266,7 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
         :return: 返回当前实例便于链式调用
         :rtype: Self
 
+        :raise ConfigDataReadOnlyError: 配置数据为只读
         :raise ConfigDataTypeError: 配置数据类型错误
 
         .. versionadded:: 0.1.2
@@ -330,6 +343,7 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
         :return: 路径的值
         :rtype: Any
 
+        :raise ConfigDataReadOnlyError: 配置数据为只读
         :raise ConfigDataTypeError: 配置数据类型错误
 
         例子

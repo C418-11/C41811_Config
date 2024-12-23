@@ -15,6 +15,7 @@ from pytest import raises
 from C41811.Config import ConfigData
 from C41811.Config import ConfigFile
 from C41811.Config import ConfigPool
+from C41811.Config.errors import ConfigDataReadOnlyError
 from C41811.Config.errors import ConfigDataTypeError
 from C41811.Config.errors import RequiredPathNotFoundError
 from C41811.Config.errors import UnsupportedConfigFormatError
@@ -285,15 +286,28 @@ class TestConfigData:
         assert str(ConfigData(raw_dict)) == str(raw_dict)
 
     @staticmethod
+    def test_data_readonly_attr(data, readonly_data):
+        assert readonly_data.data_read_only
+        assert not data.data_read_only
+
+        with raises(AttributeError):
+            # noinspection PyPropertyAccess
+            data.data_read_only = None
+
+        with raises(AttributeError):
+            # noinspection PyPropertyAccess
+            readonly_data.data_read_only = None
+
+    @staticmethod
     def test_readonly_attr(data, readonly_data):
         assert readonly_data.read_only
-        with raises(TypeError):
+        with raises(ConfigDataReadOnlyError):
             readonly_data.read_only = False
 
         assert not data.read_only
         data.read_only = True
         assert data.read_only
-        with raises(TypeError):
+        with raises(ConfigDataReadOnlyError):
             data.modify("new_key", 123)
 
     @staticmethod
@@ -319,7 +333,7 @@ class TestConfigData:
     @classmethod
     @mark.parametrize(*ReadOnlyModifyTests)
     def test_readonly_modify(cls, readonly_data, path, value, kwargs):
-        cls.test_modify(readonly_data, path, value, TypeError, kwargs)
+        cls.test_modify(readonly_data, path, value, ConfigDataReadOnlyError, kwargs)
 
     ReadOnlyDeleteTests = (
         ', '.join(arg for arg in DeleteTests[0].split(', ') if "ignore_excs" not in arg),
@@ -329,12 +343,12 @@ class TestConfigData:
     @classmethod
     @mark.parametrize(*ReadOnlyDeleteTests)
     def test_readonly_delete(cls, readonly_data, path):
-        cls.test_delete(readonly_data, path, TypeError)
+        cls.test_delete(readonly_data, path, ConfigDataReadOnlyError)
 
     @classmethod
     @mark.parametrize(*ReadOnlyDeleteTests)
     def test_readonly_unset(cls, readonly_data, path):
-        cls.test_unset(readonly_data, path, (TypeError,))
+        cls.test_unset(readonly_data, path, (ConfigDataReadOnlyError,))
 
     @staticmethod
     def test_eq(data, readonly_data):

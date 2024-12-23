@@ -124,6 +124,18 @@ class RequiredPathNotFoundError(KeyError):
         return string
 
 
+class ConfigDataReadOnlyError(TypeError):
+    """
+    配置数据为只读
+
+    .. versionadded:: 0.1.3
+    """
+    def __init__(self, msg: str = None):
+        if msg is None:
+            msg = "ConfigData is read-only"
+        super().__init__(msg)
+
+
 class ConfigDataTypeError(ValueError):
     """
     配置数据类型错误
@@ -227,6 +239,7 @@ __all__ = (
     "ConfigOperate",
     "KeyInfo",
     "RequiredPathNotFoundError",
+    "ConfigDataReadOnlyError",
     "ConfigDataTypeError",
     "UnsupportedConfigFormatError",
     "FailedProcessConfigFileError",

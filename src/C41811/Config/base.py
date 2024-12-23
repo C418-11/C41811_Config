@@ -20,6 +20,7 @@ from .abc import ABCConfigPool
 from .abc import ABCKey
 from .abc import ABCPath
 from .abc import ABCSLProcessorPool
+from .errors import ConfigDataReadOnlyError
 from .errors import ConfigDataTypeError
 from .errors import ConfigOperate
 from .errors import FailedProcessConfigFileError
@@ -53,6 +54,18 @@ class ConfigData(ABCConfigData):
 
        ``r"first\.second\.third"``
     """
+
+    @property
+    @override
+    def read_only(self) -> bool:
+        return super().read_only
+
+    @read_only.setter
+    @override
+    def read_only(self, value: Any):
+        if self._data_read_only:
+            raise ConfigDataReadOnlyError
+        self._read_only = bool(value)
 
     def _process_path(
             self,
@@ -110,7 +123,7 @@ class ConfigData(ABCConfigData):
     @override
     def modify(self, path: str | ABCPath, value: Any, *, allow_create: bool = True) -> Self:
         if self.read_only:
-            raise TypeError("Config data is read-only")
+            raise ConfigDataReadOnlyError
         path = _fmt_path(path)
 
         def checker(now_data, now_key: ABCKey, last_key: list[ABCKey], key_index: int):
@@ -130,7 +143,7 @@ class ConfigData(ABCConfigData):
     @override
     def delete(self, path: str | ABCPath) -> Self:
         if self.read_only:
-            raise TypeError("Config data is read-only")
+            raise ConfigDataReadOnlyError
         path = _fmt_path(path)
 
         def checker(now_data, now_key: ABCKey, last_key: list[ABCKey], key_index: int):
