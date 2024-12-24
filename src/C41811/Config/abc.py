@@ -512,11 +512,7 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
         return str(self._data)
 
     def __repr__(self) -> str:
-        data_repr = f"{self._data!r}"
-        if type(self) is dict:
-            data_repr = data_repr[1:-1]
-
-        return f"{self.__class__.__name__}({data_repr})"
+        return f"{self.__class__.__name__}({self._data!r})"
 
     def __deepcopy__(self, memo) -> Self:
         return self.from_data(self._data)

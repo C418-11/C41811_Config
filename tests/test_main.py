@@ -192,6 +192,10 @@ class TestConfigPool:
         pool.set('', "test", deepcopy(file))
         assert pool.configs == {'': {'test': file}}
 
+    @staticmethod
+    def test_repr(pool):
+        assert repr(pool.configs) in repr(pool)
+
 
 class TestRequiredPath:
     @staticmethod

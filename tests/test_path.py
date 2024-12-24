@@ -36,6 +36,9 @@ class TestKey:
         with raises(TypeError, match="key must be "):
             type(key)(NotImplemented)
 
+        assert str(key.key) in str(key)
+        assert str(key.key) in repr(key)
+
     @staticmethod
     @mark.parametrize("key, other", (
             (AttrKey("aaa"), "aaa"),
@@ -138,6 +141,17 @@ class TestPath:
         p = Path.from_str(path)
         assert p == deepcopy(p)
         assert p != NotImplemented
+
+    @staticmethod
+    @mark.parametrize("path", (
+            r"\.aaa",
+            r"\[1\]\.ccc\[2\]",
+            r"\.aaa\.bbb\.ccc\[0\]",
+            r"\.aaa\.bbb\.ccc\[0\]\.ddd",
+    ))
+    def test_repr(path):
+        keys = PathSyntaxParser.parse(path)
+        assert repr(keys)[1:-1] in repr(Path(keys))
 
 
 class TestPathSyntaxParser:

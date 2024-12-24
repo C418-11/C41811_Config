@@ -419,6 +419,11 @@ class TestConfigData:
     def test_items(data, kwargs, items):
         assert list(data.items(**kwargs)) == items
 
+    @staticmethod
+    def test_repr(data):
+        assert repr(data.data) in repr(data)
+        assert repr({"a": 1, "b": 2}) in repr(ConfigData({"a": 1, "b": 2}))
+
 
 class TestConfigFile:
     @staticmethod
@@ -509,3 +514,9 @@ class TestConfigFile:
     ))
     def test_bool(raw_data, is_empty):
         assert bool(ConfigFile(ConfigData(raw_data))) is not is_empty
+
+    @staticmethod
+    def test_repr(file, data):
+        print(file.config_format)
+        assert repr(file.data) in repr(file)
+        assert repr(data) in repr(ConfigFile(data))
