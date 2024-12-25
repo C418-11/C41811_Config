@@ -299,12 +299,26 @@ Mapping[str | ABCPath, Any]
 
     # 在提供默认值的同时提供类型检查
     # 一般情况下用不着，因为会自动根据默认值的类型来设置类型检查
-    # 仅在传入的默认值类型与类型检查的类型不同时使用
+    # 一般在传入的默认值类型与类型检查的类型不同或规避特殊语法时使用
     print(requireConfig('', "test.json", {
         "first\\.second\\.third": FieldDefinition(int, 999),
         "not\\.exists": FieldDefinition(int, 987),
         "baz": FieldDefinition(Sequence[int], [654]),
     }).check())  # 打印：{'first': {'second': {'third': 111}}, 'not': {'exists': 987}, 'baz': [444]}
+    print(requireConfig('', "test.json", {
+        "first\\.second": FieldDefinition(dict, {"key": int}, allow_recursive=False),  # 并不会被递归处理,会被当作默认处理
+        "not exists": FieldDefinition(dict, {"key": int}, allow_recursive=False),
+        "type": FieldDefinition(type, frozenset),
+    }).check())
+    # 打印：
+    #  {'first': {'second': {'third': 111, 'foo': 222}}, 'not exists': {'key': <class 'int'>}, 'type': <class 'frozenset'>}
+
+    # 含有非字符串键的验证器不会被递归处理
+    print(requireConfig('', "test.json", {
+        "first\\.second": {"third": str, 3: 4},
+        # 效果等同于FieldDefinition(dict, {"third": str, 3: 4}, allow_recursive=False)
+        "not exists": {1: 2},
+    }).check())  # 打印：{'first': {'second': {'third': 111, 'foo': 222}}, 'not exists': {'key': <class 'int'>}}
 
 几个关键字参数
 

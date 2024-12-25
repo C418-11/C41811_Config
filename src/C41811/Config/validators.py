@@ -167,17 +167,67 @@ IgnoreMissing = IgnoreMissingType()
 class FieldDefinition[T: type | types.UnionType | types.EllipsisType | types.GenericAlias]:
     """
     字段定义，包含类型注解和默认值
+
+    .. versionchanged:: 0.1.4
+       新增 ``allow_recursive`` 字段
     """
 
-    def __init__(self, type_: T, value):
+    def __init__(self, type_: T, value, *, allow_recursive: bool = True):
+        """
+        :param type_: 用于类型检查的类型
+        :type type_: type | types.UnionType | types.EllipsisType | types.GenericAlias
+        :param value: 字段值
+        :type value: Any
+        :param allow_recursive: 是否允许递归处理字段值
+        :type allow_recursive: bool
+        """
         if not isinstance(value, FieldInfo):
             value = FieldInfo(default=value)
 
         self.type = type_
         self.value = value
+        self.allow_recursive = allow_recursive
 
     type: T
+    """
+    用于类型检查的类型
+    """
     value: FieldInfo
+    """
+    字段值
+    """
+    allow_recursive: bool
+    """
+    是否允许递归处理字段值
+    
+    .. versionadded:: 0.1.4
+    """
+
+
+class MappingType(BaseModel):
+    value: type[Mapping]
+
+
+class RecursiveMapping(BaseModel):
+    value: Mapping[str, Any]
+
+
+def _is_mapping(type_):
+    if type_ is Any:
+        return True
+    try:
+        MappingType(value=type_)
+        return True
+    except (ValidationError, TypeError):
+        return False
+
+
+def _allow_recursive(type_):
+    try:
+        RecursiveMapping(value=type_)
+        return True
+    except (ValidationError, TypeError):
+        return False
 
 
 class DefaultValidatorFactory:
@@ -195,6 +245,9 @@ class DefaultValidatorFactory:
 
         .. versionchanged:: 0.1.2
            支持验证器混搭路径字符串和嵌套字典
+
+        .. versionchanged:: 0.1.4
+           支持验证器非字符串键 (含有非字符串键的子验证器不会被递归处理)
         """
 
         validator = deepcopy(validator)
@@ -225,12 +278,7 @@ class DefaultValidatorFactory:
         :rtype: tuple[Mapping[str, Any], set[str]]
         """
 
-        class MappingType(BaseModel):
-            value: type[Mapping]
-
-        fmt_data = ConfigData(OrderedDict())
         iterator = iter(validator.items())
-
         key: str | None = None
         value: Any = None
 
@@ -244,15 +292,7 @@ class DefaultValidatorFactory:
         if _next():
             return {}, set()
 
-        def _is_mapping(type_):
-            if type_ is Any:
-                return True
-            try:
-                MappingType(value=type_)
-                return True
-            except (ValidationError, TypeError):
-                return False
-
+        fmt_data = ConfigData(OrderedDict())
         father_set: set[str | ABCPath] = set()
         while True:
             # 如果传入了任意路径的父路径那就检查新值和旧值是否都为Mapping
@@ -274,7 +314,7 @@ class DefaultValidatorFactory:
                     f" '{value}'(new) and '{target_value}'(exists)"
                 ))
 
-            if isinstance(value, Mapping):
+            if _allow_recursive(value):
                 value, sub_fpath = self._fmt_mapping_key(value)
                 father_set.update(f"{key}\\.{sf_path}" for sf_path in sub_fpath)
 
@@ -327,11 +367,11 @@ class DefaultValidatorFactory:
 
             # 递归处理
             if all((
-                    isinstance(definition.value, FieldInfo),
-                    isinstance(definition.value.default, Mapping),
+                    definition.allow_recursive,
+                    _allow_recursive(definition.value.default),
                     # foo.bar = {}
                     # 这种情况下不进行递归解析，获取所有键(foo.bar.*)如果进行了解析就只会返回foo.bar={}
-                    definition.value.default
+                    definition.value.default,
             )):
                 model_cls = self._mapping2model(
                     mapping=definition.value.default,
@@ -345,7 +385,6 @@ class DefaultValidatorFactory:
             # 如果忽略不存在的键就填充特殊值
             if all((
                     self.validator_config.ignore_missing,
-                    isinstance(definition.value, FieldInfo),
                     definition.value.is_required()
             )):
                 definition = FieldDefinition(definition.type | IgnoreMissingType, FieldInfo(default=IgnoreMissing))

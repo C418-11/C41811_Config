@@ -364,6 +364,11 @@ class TestRequiredPath:
             {"foo": {"bar": 123, "bar1": 456}},
             {"model_config_key": "$$__model_config_key$$"}, ()
         ),
+        (
+            {"foo": {"bar": 2, 3: 4}},  # 遇到键不完全为字符串时禁止递归检查
+            {"foo": {"bar": 123, "bar1": 456}},
+            {}, ()
+        ),
         ({
              "foo": dict,
              "foo\\.bar": int,
@@ -596,7 +601,12 @@ class TestRequiredPath:
         (OrderedDict((
             ("first\\.second\\.third", int),
             ("first", int)
-        )), None, ((UserWarning,), (ConfigDataTypeError,)))
+        )), None, ((UserWarning,), (ConfigDataTypeError,))),
+        (
+            {"first": {"second\\.third": str, 3: 4}},  # 遇到键不完全为字符串时禁止递归检查
+            {"first": {"bar": 333, "second": {"foo": 222, "third": 111}}},
+            ()
+        ),
     ))
 
     @staticmethod  # 专门针对保留子键的测试
