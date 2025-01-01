@@ -5,6 +5,7 @@
 from collections import OrderedDict
 from collections.abc import Iterable
 from collections.abc import Mapping
+from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
@@ -167,25 +168,30 @@ class ConfigDataTypeError(ValueError):
     def __init__(
             self,
             key_info: KeyInfo,
-            required_type: type[object],
-            now_type: type[object],
+            required_type: tuple[type] | type,
+            now_type: type,
     ):
         """
         :param key_info: 键相关信息
         :type key_info: KeyInfo
         :param required_type: 该键需求的数据类型
-        :type required_type: type[object]
+        :type required_type: tuple[type] | type
         :param now_type: 当前键的数据类型
-        :type now_type: type[object]
+        :type now_type: type
+
+        .. versionchanged:: 0.1.4
+           ``required_type`` 支持传入多个需求的数据类型
         """
+        if isinstance(required_type, Sequence) and (len(required_type) == 1):
+            required_type = required_type[0]
+
         self.key_info = key_info
         self.requited_type = required_type
         self.now_type = now_type
 
-    def __str__(self):
-        return (
+        super().__init__(
             f"{self.key_info.path.unparse()} -> {self.key_info.current_key.unparse()}"
-            f" ({self.key_info.index + 1} / {len(self.key_info.relative_keys)})"
+            f" ({self.key_info.index + 1} / {len(self.key_info.path)})"
             f" Must be '{self.requited_type}'"
             f", Not '{self.now_type}'"
         )

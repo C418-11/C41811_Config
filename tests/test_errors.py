@@ -3,6 +3,8 @@
 
 import re
 from collections.abc import Mapping
+from collections.abc import MutableMapping
+from collections.abc import Sequence
 
 from pytest import fixture
 from pytest import mark
@@ -111,6 +113,9 @@ def test_config_data_readonly_error():
         (list[str], str),
         (dict, KeyInfo),
         (Mapping, float),
+        ((MutableMapping, Sequence), Mapping),
+        ((str, bytes), float),
+        ((bool, int, float), frozenset),
 ))
 def test_config_data_type_error(key_info, required_type, now_type):
     def _repr(t: type):
