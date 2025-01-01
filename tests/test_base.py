@@ -140,21 +140,22 @@ class TestConfigData:
         assert path not in data
 
     ExistsTests = (
-        "path,              is_exist, ignore_excs", (  # @formatter:off # noqa: E122
-        ("foo",             True,     ()),
-        ("foo\\.bar",       True,     ()),
-        ("foo\\.not exist", False,    ()),
-        ("foo1",            True,     ()),
-        ("foo2",            True,     ()),
-        ("foo2\\.bar",      None,    (ConfigDataTypeError,)),
-        ("foo3",            False,    ()),
+        "path,              is_exist, ignore_excs,            kwargs", (  # @formatter:off # noqa: E122
+        ("foo",             True,     (),                     {}),
+        ("foo\\.bar",       True,     (),                     {}),
+        ("foo\\.not exist", False,    (),                     {}),
+        ("foo1",            True,     (),                     {}),
+        ("foo2",            True,     (),                     {}),
+        ("foo3",            False,    (),                     {}),
+        ("foo2\\.bar",      False,    (),                     {"ignore_wrong_type": True}),
+        ("foo2\\.bar",      None,     (ConfigDataTypeError,), {}),
     ))  # @formatter:on
 
     @staticmethod
     @mark.parametrize(*ExistsTests)
-    def test_exists(data, path, is_exist, ignore_excs):
+    def test_exists(data, path, is_exist, ignore_excs, kwargs):
         with safe_raises(ignore_excs) as info:
-            exists = data.exists(path)
+            exists = data.exists(path, **kwargs)
         if not info:
             assert exists == is_exist
 

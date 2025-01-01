@@ -273,12 +273,14 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
         """
 
     @abstractmethod
-    def exists(self, path: str | ABCPath) -> bool:
+    def exists(self, path: str | ABCPath, *, ignore_wrong_type: bool = False) -> bool:
         """
         判断路径是否存在
 
         :param path: 路径
         :type path: str | ABCPath
+        :param ignore_wrong_type: 忽略配置数据类型错误
+        :type ignore_wrong_type: bool
 
         :return: 路径是否存在
         :rtype: bool
