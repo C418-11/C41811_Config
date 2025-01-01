@@ -113,12 +113,15 @@ def test_config_data_readonly_error():
         (list[str], str),
         (dict, KeyInfo),
         (Mapping, float),
+        ((int,), float),
         ((MutableMapping, Sequence), Mapping),
         ((str, bytes), float),
         ((bool, int, float), frozenset),
 ))
 def test_config_data_type_error(key_info, required_type, now_type):
-    def _repr(t: type):
+    def _repr(t: tuple[type] | type):
+        if isinstance(t, tuple) and len(t) == 1:
+            t = t[0]
         return re.escape(repr(t))
 
     with raises(ConfigDataTypeError, match=f"{_repr(required_type)}.*{_repr(now_type)}"):
