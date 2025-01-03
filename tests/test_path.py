@@ -111,6 +111,7 @@ class TestPath:
     @staticmethod
     @mark.parametrize("path, length", (
             (r"\.aaa", 1),
+            (r"aaa", 1),
             (r"\[1\]\.ccc\[2\]", 3),
             (r"\.aaa\.bbb\.ccc\[0\]", 4),
             (r"\.aaa\.bbb\.ccc\[0\]\.ddd", 5),
@@ -122,6 +123,7 @@ class TestPath:
     @staticmethod
     @mark.parametrize("path, keys", (
             (r"\.aaa", [AttrKey("aaa")]),
+            (r"aaa", [AttrKey("aaa")]),
             (r"\[1\]\.ccc\[2\]", [IndexKey(1), AttrKey("ccc"), IndexKey(2)]),
             (r"\.aaa\.bbb\.ccc\[0\]", [AttrKey("aaa"), AttrKey("bbb"), AttrKey("ccc"), IndexKey(0)]),
             (r"\.aaa\.bbb\.ccc\[0\]\.ddd",
@@ -133,6 +135,7 @@ class TestPath:
     @staticmethod
     @mark.parametrize("path", (
             r"\.aaa",
+            r"aaa",
             r"\[1\]\.ccc\[2\]",
             r"\.aaa\.bbb\.ccc\[0\]",
             r"\.aaa\.bbb\.ccc\[0\]\.ddd",
@@ -145,6 +148,7 @@ class TestPath:
     @staticmethod
     @mark.parametrize("path", (
             r"\.aaa",
+            r"aaa",
             r"\[1\]\.ccc\[2\]",
             r"\.aaa\.bbb\.ccc\[0\]",
             r"\.aaa\.bbb\.ccc\[0\]\.ddd",
@@ -160,6 +164,11 @@ class TestPathSyntaxParser:
     def parser():
         return PathSyntaxParser()
 
+    @staticmethod
+    @fixture(autouse=True, scope="function")
+    def _clear_cache():
+        PathSyntaxParser.tokenize.cache_clear()
+
     TokenizeTests = (
         "string, result, ignore_warns", (
             (
@@ -167,14 +176,16 @@ class TestPathSyntaxParser:
                 [r"\.a.a\\.a", r"\.b", r"\[c", r"\]", r"\[2", r"\]", r"\.e"],
                 ()
             ),
-            (r"\\\\", [r"\\\\"], ()),
+            (r"\\\\", [r"\.\\\\"], ()),
             (r"\[c\]\[d\]", [r"\[c", r"\]", r"\[d", r"\]"], ()),
             (r"\[c\]abc\[4\]", [r"\[c", r"\]", "abc", r"\[4", r"\]"], ()),
             (r"\[d\]abc", [r"\[d", r"\]", "abc"], ()),
-            (r"abc\[e\]", ["abc", r"\[e", r"\]"], ()),
-            ("abc", ["abc"], ()),
+            (r"\[d\]\abc", [r"\[d", r"\]", r"\abc"], ()),
+            (r"abc\[e\]", [r"\.abc", r"\[e", r"\]"], ()),
+            (r"abc", [r"\.abc"], ()),
+            (r"\\abc", [r"\.\\abc"], ()),
             (r"\.\a", [r"\.\a"], (SyntaxWarning,)),
-            (r"\a\a", [r"\a\a"], (SyntaxWarning,)),
+            (r"\a\a", [r"\.\a\a"], (SyntaxWarning,)),
         )
     )
 
@@ -192,19 +203,26 @@ class TestPathSyntaxParser:
                 [AttrKey(r"a.a\.a"), AttrKey('b'), IndexKey(18), IndexKey(7), AttrKey('e')],
                 (), ()
             ),
+            (r"abc\[2\]", [AttrKey("abc"), IndexKey(2)], (), ()),
+            (r"\.abc\[2\]", [AttrKey("abc"), IndexKey(2)], (), ()),
+            (r"abc", [AttrKey("abc")], (), ()),
+            (r"\\abc", [AttrKey(r"\abc")], (), ()),
+            (r"\.abc", [AttrKey("abc")], (), ()),
             (r"\[2\]\[3\]", [IndexKey(2), IndexKey(3)], (), ()),
+            (r"[2]\[3\]", [AttrKey(r"[2]"), IndexKey(3)], (), ()),
+            (r"\.a\[2\]\.b\[3\]", [AttrKey('a'), IndexKey(2), AttrKey('b'), IndexKey(3)], (), ()),
+            (r"\.\a", [AttrKey(r"\a")], (), (SyntaxWarning,)),
+            (r"\a", [AttrKey(r"\a")], (), (SyntaxWarning,)),
+            (r"\a\a", [AttrKey(r"\a\a")], (), (SyntaxWarning,)),
+            (r"[2\]\[3\]", None, (ConfigDataPathSyntaxException,), ()),
             (r"\[2\[3\]", None, (ConfigDataPathSyntaxException,), ()),
             (r"\[2\]\.3\]", None, (ConfigDataPathSyntaxException,), ()),
             (r"\[2\.3", None, (ConfigDataPathSyntaxException,), ()),
             (r"\[2", None, (ConfigDataPathSyntaxException,), ()),
             (r"\[a\]", None, (ValueError,), ()),
-            (r"\.a\[2\]\.b\[3\]", [AttrKey('a'), IndexKey(2), AttrKey('b'), IndexKey(3)], (), ()),
             (r"\[4\]abc\[9\]", None, (UnknownTokenTypeError,), ()),
             (r"\[5\]abc", None, (UnknownTokenTypeError,), ()),
-            (r"abc\[2\]", None, (UnknownTokenTypeError,), ()),
-            (r"abc", None, (UnknownTokenTypeError,), ()),
-            (r"\.\a", [AttrKey(r"\a")], (), (SyntaxWarning,)),
-            (r"\a\a", None, (UnknownTokenTypeError,), (SyntaxWarning,)),
+            (r"\[5\]\abc", None, (UnknownTokenTypeError,), ()),
         )
     )
 

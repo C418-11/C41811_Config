@@ -5,6 +5,7 @@
 import warnings
 from collections.abc import Generator
 from collections.abc import Iterable
+from functools import lru_cache
 from typing import Optional
 from typing import Self
 from typing import override
@@ -120,65 +121,80 @@ class PathSyntaxParser:
     """
 
     @staticmethod
-    def tokenize(string: str) -> Generator[str, None, None]:
+    @lru_cache
+    def tokenize(string: str) -> tuple[str, ...]:
+        # noinspection GrazieInspection
         r"""
         将字符串分词为以\开头的有意义片段
+
+        .. note::
+           可以省略字符串开头的 ``\.``
+
+           例如：
+
+           ``r"\.first\.second\.third“``
+
+           可以简写为
+
+           ``r"first\.second\.third"``
 
         :param string: 待分词字符串
         :type string: str
 
         :return: 分词结果
-        :rtype: Generator[str, None, None]
+        :rtype: tuple[str, ...]
+
+        .. versionchanged:: 0.1.4
+           允许省略字符串开头的 ``\.``
+
+           更改返回值类型为 ``tuple[str, ...]``
+
+           添加缓存
         """
+        if not string.startswith((r"\.", r"\[")):
+            string = rf"\.{string}"
 
-        token_cache = []
-        if not string.startswith('\\'):
-            chunk, sep, string = string.partition('\\')
-            yield chunk
-            if not sep:
-                return
-
+        tokens: list[str] = ['']
         while string:
-            chunk, _, string = string.partition('\\')
-            try:
-                next_char = string[0]
-            except IndexError:
-                next_char = ''
+            string, sep, token = string.rpartition('\\')
 
-            if not chunk:
-                if next_char == '\\':
-                    string = string[1:]
-                    token_cache.append("\\\\")
-                continue
+            # 处理r"\\"防止转义
+            if not token:
+                token += tokens.pop()
 
-            token_cache.append('\\')
+            # 对不存在的转义进行警告
+            elif sep and (token[0] not in {'.', '\\', '[', ']'}):
+                def _count_backslash(s: str) -> int:
+                    count = 1
+                    while s and (s[-1] == '\\'):
+                        count += 1
+                        s = s[:-1]
+                    return count
 
-            if chunk[0] == ']':
-                yield "\\]"
-                chunk = chunk[1:]
-                token_cache.pop()
-                if not chunk:
-                    continue
+                # 检查这个转义符号是否已经被转义
+                if _count_backslash(string) % 2:
+                    warnings.warn(
+                        rf"invalid escape sequence '\{token[0]}'",
+                        SyntaxWarning
+                    )
 
-            token_cache.append(chunk)
+            # 连接不应单独存在的token
+            index_safe = (len(tokens) > 0) and (len(tokens[-1]) > 1)
+            if index_safe and (tokens[-1][1] not in {'.', '[', ']'}):
+                token += tokens.pop()
 
-            if next_char not in set("\\.[]") | {''}:
-                warnings.warn(
-                    rf"invalid escape sequence '\{next_char}'",
-                    SyntaxWarning
-                )
-                continue
+            # 将r"\\]"后面紧随的字符单独切割出来
+            if token.startswith(']') and token[1:]:
+                tokens.append(token[1:])
+                token = token[:1]
 
-            if next_char == '\\':
-                string = string[1:]
-                token_cache.append('\\')
-                continue
+            tokens.append(sep + token)
 
-            yield ''.join(token_cache)
-            token_cache = []
+        tokens.reverse()
+        if tokens[-1] == '':
+            tokens.pop()
 
-        if token_cache:
-            yield ''.join(token_cache)
+        return tuple(tokens)
 
     @classmethod
     def parse(cls, string: str) -> list[ABCKey]:
@@ -194,7 +210,7 @@ class PathSyntaxParser:
         path: list[ABCKey] = []
         item: Optional[str] = None
 
-        tokenized_path = list(cls.tokenize(string))
+        tokenized_path = cls.tokenize(string)
         for i, token in enumerate(tokenized_path):
             if not token.startswith('\\'):
                 raise UnknownTokenTypeError(TokenInfo(tokenized_path, token, i))

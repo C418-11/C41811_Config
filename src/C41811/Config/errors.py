@@ -19,7 +19,7 @@ class TokenInfo:
     """
     一段标记的相关信息 用于快速定位到指定标记
     """
-    tokens: list[str]
+    tokens: tuple[str, ...]
     """
     当前完整标记列表
     """

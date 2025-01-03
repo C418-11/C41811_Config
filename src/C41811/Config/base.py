@@ -33,35 +33,21 @@ from .path import Path
 def _fmt_path(path: str | ABCPath) -> ABCPath:
     if isinstance(path, ABCPath):
         return path
-    if not path.startswith('\\'):
-        path = rf"\.{path}"
     return Path.from_str(path)
 
 
 class ConfigData(ABCConfigData):
-    r"""
+    """
     配置数据类
-
-    .. note::
-       所有参数可以为 ``未解析路径转义字符串`` 的参数都做了预操作
-       可以省略字符串开头的 ``\.``
-
-       例如：
-
-       ``r"\.first\.second\.third“``
-
-       可以简写为
-
-       ``r"first\.second\.third"``
     """
 
-    @property
     @override
+    @property
     def read_only(self) -> bool:
         return super().read_only
 
-    @read_only.setter
     @override
+    @read_only.setter
     def read_only(self, value: Any):
         if self._data_read_only:
             raise ConfigDataReadOnlyError
