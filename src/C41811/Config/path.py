@@ -3,9 +3,14 @@
 
 
 import warnings
-from collections.abc import Generator
+from abc import ABC
 from collections.abc import Iterable
+from collections.abc import Mapping
+from collections.abc import MutableMapping
+from collections.abc import MutableSequence
+from collections.abc import Sequence
 from functools import lru_cache
+from typing import Any
 from typing import Optional
 from typing import Self
 from typing import override
@@ -17,7 +22,22 @@ from .errors import TokenInfo
 from .errors import UnknownTokenTypeError
 
 
-class AttrKey(ABCKey):
+class ItemMixin(ABCKey, ABC):
+
+    @override
+    def __get_inner_element__[T: Any](self, data: T) -> T:
+        return data[self._key]
+
+    @override
+    def __set_inner_element__(self, data: Any, value: Any) -> None:
+        data[self._key] = value
+
+    @override
+    def __delete_inner_element__(self, data: Any) -> None:
+        del data[self._key]
+
+
+class AttrKey(ItemMixin, ABCKey):
     _key: str
 
     def __init__(self, key: str):
@@ -30,6 +50,18 @@ class AttrKey(ABCKey):
         if not isinstance(key, str):
             raise TypeError(f"key must be str, not {type(key).__name__}")
         super().__init__(key)
+
+    @override
+    def __contains_inner_element__(self, data: Mapping) -> bool:
+        return self._key in data
+
+    @override
+    def __supports__(self, data: Any) -> tuple:
+        return () if isinstance(data, Mapping) else (Mapping,)
+
+    @override
+    def __supports_modify__(self, data: Any) -> tuple:
+        return () if isinstance(data, MutableMapping) else (MutableMapping,)
 
     @override
     def unparse(self) -> str:
@@ -47,7 +79,7 @@ class AttrKey(ABCKey):
         return super().__hash__()
 
 
-class IndexKey(ABCKey):
+class IndexKey(ItemMixin, ABCKey):
     _key: int
 
     def __init__(self, key: int):
@@ -60,6 +92,22 @@ class IndexKey(ABCKey):
         if not isinstance(key, int):
             raise TypeError(f"key must be int, not {type(key).__name__}")
         super().__init__(key)
+
+    @override
+    def __contains_inner_element__(self, data: Sequence) -> bool:
+        try:
+            data[self._key]
+        except IndexError:
+            return False
+        return True
+
+    @override
+    def __supports__(self, data: Any) -> tuple:
+        return () if isinstance(data, Sequence) else (Sequence,)
+
+    @override
+    def __supports_modify__(self, data: Any) -> tuple:
+        return () if isinstance(data, MutableSequence) else (MutableSequence,)
 
     @override
     def unparse(self) -> str:

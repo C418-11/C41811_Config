@@ -44,6 +44,88 @@ class ABCKey(ABC):
         .. versionadded:: 0.1.1
         """
 
+    @abstractmethod
+    def __get_inner_element__[T: Any](self, data: T) -> T:
+        """
+        获取内层元素
+
+        :param data: 配置数据
+        :type data: Any
+        :return: 内层配置数据
+        :rtype: Any
+
+        .. versionadded:: 0.1.4
+        """
+
+    @abstractmethod
+    def __set_inner_element__(self, data: Any, value: Any) -> None:
+        """
+        设置内层元素
+
+        :param data: 配置数据
+        :type data: Any
+        :param value: 值
+        :type value: Any
+        :rtype: None
+
+        .. versionadded:: 0.1.4
+        """
+
+    @abstractmethod
+    def __delete_inner_element__(self, data: Any) -> None:
+        """
+        删除内层元素
+
+        :param data: 配置数据
+        :type data: Any
+        :rtype: None
+
+        .. versionadded:: 0.1.4
+        """
+
+    @abstractmethod
+    def __contains_inner_element__(self, data: Any) -> bool:
+        """
+        是否包含内层元素
+
+        :param data: 配置数据
+        :type data: Any
+        :return: 是否包含内层配置数据
+        :rtype: bool
+
+        .. versionadded:: 0.1.4
+        """
+
+    @abstractmethod
+    def __supports__(self, data: Any) -> tuple:
+        """
+        检查此键是否支持该配置数据
+
+        返回缺失的协议
+
+        :param data: 配置数据
+        :type data: Any
+        :return: 此键缺失支持的数据类型
+        :rtype: tuple
+
+        .. versionadded:: 0.1.4
+        """
+
+    @abstractmethod
+    def __supports_modify__(self, data: Any) -> tuple:
+        """
+        检查此键是否支持修改该配置数据
+
+        返回缺失的协议
+
+        :param data: 配置数据
+        :type data: Any
+        :return: 此键缺失支持的数据类型
+        :rtype: tuple
+
+        .. versionadded:: 0.1.4
+        """
+
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return NotImplemented

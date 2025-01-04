@@ -15,6 +15,8 @@ from pytest import raises
 from C41811.Config import ConfigData
 from C41811.Config import ConfigFile
 from C41811.Config import ConfigPool
+from C41811.Config import IndexKey
+from C41811.Config import Path
 from C41811.Config.errors import ConfigDataReadOnlyError
 from C41811.Config.errors import ConfigDataTypeError
 from C41811.Config.errors import RequiredPathNotFoundError
@@ -71,14 +73,18 @@ class TestConfigData:
         assert readonly_data.data == readonly_odict
 
     RetrieveTests = (
-        "path,         value,                      ignore_excs,                  kwargs", (  # @formatter:off # noqa: E122
-        ("foo",        ConfigData({"bar": 123}),   (),                           {}),
-        ("foo",        {"bar": 123},               (),                           {"get_raw": True}),
-        ("foo\\.bar",  123,                        (),                           {}),
-        ("foo1",       114,                        (),                           {}),
-        ("foo2",       ["bar"],                    (),                           {}),
-        ("foo2\\.bar", None,                       (ConfigDataTypeError, ),      {}),
-        ("foo3",       None,                       (RequiredPathNotFoundError,), {}),
+        "path,          value,                    ignore_excs,                  kwargs", (  # @formatter:off # noqa: E122
+        ("foo",         ConfigData({"bar": 123}), (),                           {}),
+        ("foo",         {"bar": 123},             (),                           {"get_raw": True}),
+        ("foo\\.bar",   123,                      (),                           {}),
+        ("foo1",        114,                      (),                           {}),
+        ("foo2",        ["bar"],                  (),                           {}),
+        ("foo2\\[0\\]", "bar",                    (),                           {}),
+        ("foo2\\.bar",  None,                     (ConfigDataTypeError, ),      {}),
+        ("foo3",        None,                     (RequiredPathNotFoundError,), {}),
+        ("foo2\\[1\\]", None,                     (RequiredPathNotFoundError,), {}),
+        ("foo\\[0\\]",  None,                     (ConfigDataTypeError,),       {}),
+        ("\\[0\\]",     None,                     (ConfigDataTypeError,),       {}),
     ))  # @formatter:on
 
     @staticmethod
@@ -116,12 +122,18 @@ class TestConfigData:
             assert result == value
 
     DeleteTests = (
-        "path,         ignore_excs", (  # @formatter:off # noqa: E122
-        ("foo\\.bar",  ()),
-        ("foo1",       ()),
-        ("foo2",       ()),
-        ("foo2\\.bar", (ConfigDataTypeError, )),
-        ("foo3",       (RequiredPathNotFoundError,)),
+        "path,           ignore_excs", (  # @formatter:off # noqa: E122
+        ("foo\\.bar",    ()),
+        ("foo1",         ()),
+        ("foo2",         ()),
+        ("foo2\\[0\\]",  ()),
+        ("foo2\\[-1\\]", ()),
+        ("\\[0\\]",      (ConfigDataTypeError,)),
+        ("foo\\[0\\]",   (ConfigDataTypeError,)),
+        ("foo2\\.bar",   (ConfigDataTypeError, )),
+        ("foo2\\[1\\]",  (RequiredPathNotFoundError,)),
+        ("foo2\\[-2\\]", (RequiredPathNotFoundError,)),
+        ("foo3",         (RequiredPathNotFoundError,)),
     ))  # @formatter:on
 
     @staticmethod
@@ -147,8 +159,14 @@ class TestConfigData:
         ("foo1",            True,     (),                     {}),
         ("foo2",            True,     (),                     {}),
         ("foo3",            False,    (),                     {}),
+        ("foo2\\[0\\]",     True,     (),                     {}),
+        ("foo2\\[1\\]",     False,    (),                     {}),
+        ("foo2\\[-1\\]",    True,     (),                     {}),
         ("foo2\\.bar",      False,    (),                     {"ignore_wrong_type": True}),
+        ("\\[0\\]",         False,    (),                     {"ignore_wrong_type": True}),
         ("foo2\\.bar",      None,     (ConfigDataTypeError,), {}),
+        ("foo\\[0\\]",      False,    (ConfigDataTypeError,), {}),
+        ("\\[0\\]",         False,    (ConfigDataTypeError,), {}),
     ))  # @formatter:on
 
     @staticmethod
@@ -199,6 +217,13 @@ class TestConfigData:
     @staticmethod
     @mark.parametrize(*GetTests)
     def test_set_default(data, path, value, ignore_excs, kwargs):
+        has_index_key = any(isinstance(k, IndexKey) for k in Path.from_str(path))
+        ignore_config_data_type_error = any(issubclass(exc, ConfigDataTypeError) for exc in ignore_excs)
+
+        if has_index_key and (not data.exists(path, ignore_wrong_type=ignore_config_data_type_error)):
+            print(f"Skipping test because cannot set default value for non-existent index key: {path}")
+            return
+
         ignore_excs = tuple(exc for exc in ignore_excs if not issubclass(exc, KeyError))
         if "default" in kwargs:
             value = [value, kwargs["default"]]

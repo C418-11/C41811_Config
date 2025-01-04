@@ -33,15 +33,16 @@ pip install C41811.Config
 ## 一个简单的示例
 
 ```python
+from C41811.Config import ConfigData
 from C41811.Config import JsonSL
 from C41811.Config import requireConfig
 from C41811.Config import saveAll
 
 JsonSL().register_to()
 
-cfg = requireConfig(
+cfg: ConfigData = requireConfig(
     '', "Hello World.json",
-    {
+    {  # 简单且强大的配置数据验证器
         "Hello": "World",
         "foo": dict,  # 包含foo下的所有键
         "foo\\.bar": {  # foo.bar仅包含baz键
@@ -51,10 +52,24 @@ cfg = requireConfig(
 ).check()
 saveAll()
 
-print(cfg)
+print(f"{cfg=}")
 print()
+print("与dict完全相同的数据访问方式")
 print(f"{cfg["Hello"]=}")
-print(cfg.foo)
-print(cfg["foo"]["bar"])
-print(cfg.foo.bar.baz)
+print(f"{cfg["foo"]["bar"]=}")
+print()
+print("通过属性访问数据")
+print(f"{cfg.foo=}")
+print(f"{cfg.foo.bar.baz=}")
+print()
+print("通过特殊语法访问数据")
+print(f"{cfg.retrieve("foo\\.bar\\.baz")=}")
+print()
+print("一些常用方法")
+print(f"{cfg.unset("foo\\.bar\\.baz").exists("foo\\.bar\\.baz")=}")
+print(f"{cfg.get("foo\\.bar\\.baz")=}")
+print(f"{cfg.set_default("foo\\.bar\\.baz", "qux")=}")
+print(f"{cfg.get("foo\\.bar\\.baz", default="default")=}")
+print(f"{cfg.modify("foo\\.bar\\.baz", [1, 2, 3]).retrieve("foo\\.bar\\.baz\\[1\\]")=}")
+print(f"{cfg.delete("foo\\.bar\\.baz").get("foo\\.bar\\.baz", default="default")=}")
 ```

@@ -82,7 +82,7 @@ class ConfigData(ABCConfigData):
             if check_result is not None:
                 return check_result
 
-            now_data = now_data[now_key]
+            now_data = now_key.__get_inner_element__(now_data)
 
         return process_return(now_data)
 
@@ -91,9 +91,10 @@ class ConfigData(ABCConfigData):
         path = _fmt_path(path)
 
         def checker(now_data, now_key: ABCKey, _last_key: list[ABCKey], key_index: int):
-            if not isinstance(now_data, Mapping):
-                raise ConfigDataTypeError(KeyInfo(path, now_key, key_index), Mapping, type(now_data))
-            if now_key not in now_data:
+            missing_protocol = now_key.__supports__(now_data)
+            if missing_protocol:
+                raise ConfigDataTypeError(KeyInfo(path, now_key, key_index), missing_protocol, type(now_data))
+            if not now_key.__contains_inner_element__(now_data):
                 raise RequiredPathNotFoundError(KeyInfo(path, now_key, key_index), ConfigOperate.Read)
 
         def process_return(now_data):
@@ -113,15 +114,16 @@ class ConfigData(ABCConfigData):
         path = _fmt_path(path)
 
         def checker(now_data, now_key: ABCKey, last_key: list[ABCKey], key_index: int):
-            if not isinstance(now_data, MutableMapping):
-                raise ConfigDataTypeError(KeyInfo(path, now_key, key_index), MutableMapping, type(now_data))
-            if now_key not in now_data:
+            missing_protocol = now_key.__supports_modify__(now_data)
+            if missing_protocol:
+                raise ConfigDataTypeError(KeyInfo(path, now_key, key_index), missing_protocol, type(now_data))
+            if not now_key.__contains_inner_element__(now_data):
                 if not allow_create:
                     raise RequiredPathNotFoundError(KeyInfo(path, now_key, key_index), ConfigOperate.Write)
-                now_data[now_key.key] = type(self._data)()
+                now_key.__set_inner_element__(now_data, type(self._data)())
 
             if not last_key:
-                now_data[now_key.key] = value
+                now_key.__set_inner_element__(now_data, value)
 
         self._process_path(path, checker, lambda *_: None)
         return self
@@ -133,13 +135,14 @@ class ConfigData(ABCConfigData):
         path = _fmt_path(path)
 
         def checker(now_data, now_key: ABCKey, last_key: list[ABCKey], key_index: int):
-            if not isinstance(now_data, MutableMapping):
-                raise ConfigDataTypeError(KeyInfo(path, now_key, key_index), MutableMapping, type(now_data))
-            if now_key not in now_data:
+            missing_protocol = now_key.__supports_modify__(now_data)
+            if missing_protocol:
+                raise ConfigDataTypeError(KeyInfo(path, now_key, key_index), missing_protocol, type(now_data))
+            if not now_key.__contains_inner_element__(now_data):
                 raise RequiredPathNotFoundError(KeyInfo(path, now_key, key_index), ConfigOperate.Delete)
 
             if not last_key:
-                del now_data[now_key]
+                now_key.__delete_inner_element__(now_data)
                 return True
 
         self._process_path(path, checker, lambda *_: None)
@@ -158,11 +161,12 @@ class ConfigData(ABCConfigData):
         path = _fmt_path(path)
 
         def checker(now_data, now_key: ABCKey, _last_key: list[ABCKey], key_index: int):
-            if not isinstance(now_data, Mapping):
+            missing_protocol = now_key.__supports__(now_data)
+            if missing_protocol:
                 if ignore_wrong_type:
                     return False
-                raise ConfigDataTypeError(KeyInfo(path, now_key, key_index), Mapping, type(now_data))
-            if now_key not in now_data:
+                raise ConfigDataTypeError(KeyInfo(path, now_key, key_index), missing_protocol, type(now_data))
+            if not now_key.__contains_inner_element__(now_data):
                 return False
 
         return self._process_path(path, checker, lambda *_: True)
