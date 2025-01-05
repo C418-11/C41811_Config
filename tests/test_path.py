@@ -180,7 +180,7 @@ class TestPathSyntaxParser:
             (r"\[c\]\[d\]", [r"\[c", r"\]", r"\[d", r"\]"], ()),
             (r"\[c\]abc\[4\]", [r"\[c", r"\]", "abc", r"\[4", r"\]"], ()),
             (r"\[d\]abc", [r"\[d", r"\]", "abc"], ()),
-            (r"\[d\]\abc", [r"\[d", r"\]", r"\abc"], ()),
+            (r"\[d\]\abc", [r"\[d", r"\]", r"\abc"], (SyntaxWarning,)),
             (r"abc\[e\]", [r"\.abc", r"\[e", r"\]"], ()),
             (r"abc", [r"\.abc"], ()),
             (r"\\abc", [r"\.\\abc"], ()),
@@ -222,7 +222,7 @@ class TestPathSyntaxParser:
             (r"\[a\]", None, (ValueError,), ()),
             (r"\[4\]abc\[9\]", None, (UnknownTokenTypeError,), ()),
             (r"\[5\]abc", None, (UnknownTokenTypeError,), ()),
-            (r"\[5\]\abc", None, (UnknownTokenTypeError,), ()),
+            (r"\[5\]\abc", None, (UnknownTokenTypeError,), (SyntaxWarning,)),
         )
     )
 
