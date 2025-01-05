@@ -43,7 +43,7 @@ def test_token_info(args, raw_string):
 
 @fixture
 def token_info():
-    return TokenInfo(["abc"], "abc", 0)
+    return TokenInfo(("abc",), "abc", 0)
 
 
 def test_config_data_path_syntax_exception(token_info):
