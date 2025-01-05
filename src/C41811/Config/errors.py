@@ -231,38 +231,58 @@ class UnsupportedConfigFormatError(Exception):
         return isinstance(other, UnsupportedConfigFormatError) and self.format == other.format
 
 
-class FailedProcessConfigFileError(Exception):
+class FailedProcessConfigFileError[E: BaseException](BaseExceptionGroup, Exception):
     """
     SL处理器无法正确处理当前配置文件
+
+    .. versionchanged:: 0.1.4
+       现在继承自BaseExceptionGroup
     """
 
-    def __init__(
-            self,
-            reason: BaseException | Iterable[BaseException] | Mapping[str, BaseException],
+    reasons: tuple[E] | OrderedDict[str, E]
+
+    @staticmethod
+    def __new__(
+            cls,
+            reason: E | Iterable[E] | Mapping[str, E],
             msg: str = "Failed to process config file"
     ):
         """
         :param reason: 处理配置文件失败的原因
         :type reason: BaseException | Iterable[BaseException] | Mapping[str, BaseException]
+        :param msg: 提示信息
+        :type msg: str
         """
 
+        reasons: tuple[E, ...] | OrderedDict[str, E]
+        message: str
+        exceptions: tuple[E, ...]
         if isinstance(reason, Mapping):
-            reason = OrderedDict(reason)
-            super().__init__('\n'.join((
+            reasons = OrderedDict(reason)
+            message = '\n'.join((
                 msg,
-                *map(lambda _: f"{_[0]}: {_[1]}", reason.items()))
-            ))
+                *map(lambda _: f"{_[0]}: {_[1]}", reason.items())))
+            exceptions = tuple(reason.values())
         elif isinstance(reason, Iterable):
-            reason = tuple(reason)
-            super().__init__('\n'.join((
+            reasons = tuple(reason)
+            message = '\n'.join((
                 msg,
                 *map(str, reason))
-            ))
+            )
+            exceptions = tuple(reason)
         else:
-            reason = (reason,)
-            super().__init__(f"{msg}: {reason}")
+            reason: E
+            reasons = (reason,)
+            message = f"{msg}: {reason}"
+            exceptions = reasons
 
-        self.reasons: tuple[BaseException] | OrderedDict[str, BaseException] = reason
+        obj = super().__new__(
+            cls,
+            message,
+            exceptions
+        )
+        obj.reasons = reasons
+        return obj
 
 
 __all__ = (
