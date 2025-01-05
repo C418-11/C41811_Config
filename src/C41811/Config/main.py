@@ -8,6 +8,7 @@ from abc import abstractmethod
 from collections.abc import Callable
 from collections.abc import Iterable
 from collections.abc import Mapping
+from contextlib import contextmanager
 from copy import deepcopy
 from typing import Any
 from typing import Literal
@@ -29,6 +30,7 @@ from .abc import SLArgument
 from .base import BaseConfigPool
 from .base import ConfigData
 from .base import ConfigFile
+from .errors import FailedProcessConfigFileError
 from .validators import DefaultValidatorFactory
 from .validators import ValidatorFactoryConfig
 from .validators import ValidatorTypes
@@ -391,6 +393,25 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
         merged_kwargs = deepcopy(base_arguments[1]) | kwargs
 
         return tuple(merged_args), pmap(merged_kwargs)
+
+    @contextmanager
+    def raises(self, excs: Exception | tuple[Exception, ...] = Exception) -> None:
+        """
+        包装意料内的异常
+
+        提供给子类的便捷方法
+
+        :param excs: 意料内的异常
+        :type excs: Exception | tuple[Exception, ...]
+
+        :raise FailedProcessConfigFileError: 当触发了对应的异常时
+
+        .. versionadded:: 0.1.4
+        """
+        try:
+            yield
+        except excs as err:
+            raise FailedProcessConfigFileError(err) from err
 
     @override
     def save(

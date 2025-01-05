@@ -9,7 +9,6 @@ from .._io_protocol import SupportsReadAndReadline
 from .._io_protocol import SupportsWrite
 from ..abc import ABCConfigFile
 from ..base import ConfigData
-from ..errors import FailedProcessConfigFileError
 from ..main import BaseLocalFileConfigSL
 
 
@@ -38,10 +37,8 @@ class PickleSL(BaseLocalFileConfigSL):
             *merged_args,
             **merged_kwargs
     ) -> None:
-        try:
+        with self.raises():
             pickle.dump(config_file.data.data, target_file, *merged_args, **merged_kwargs)
-        except Exception as e:
-            raise FailedProcessConfigFileError(e) from e
 
     _l_open_kwargs = dict(mode="rb")
 
@@ -52,10 +49,8 @@ class PickleSL(BaseLocalFileConfigSL):
             *merged_args,
             **merged_kwargs
     ) -> C:
-        try:
+        with self.raises():
             data = pickle.load(source_file, *merged_args, **merged_kwargs)
-        except Exception as e:
-            raise FailedProcessConfigFileError(e) from e
 
         return config_file_cls(ConfigData(data), config_format=self.processor_reg_name)
 

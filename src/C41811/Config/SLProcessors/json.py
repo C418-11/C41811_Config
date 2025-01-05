@@ -9,7 +9,6 @@ from .._io_protocol import SupportsReadAndReadline
 from .._io_protocol import SupportsWrite
 from ..abc import ABCConfigFile
 from ..base import ConfigData
-from ..errors import FailedProcessConfigFileError
 from ..main import BaseLocalFileConfigSL
 
 
@@ -36,10 +35,8 @@ class JsonSL(BaseLocalFileConfigSL):
             *merged_args,
             **merged_kwargs
     ) -> None:
-        try:
+        with self.raises():
             json.dump(config_file.data.data, target_file, *merged_args, **merged_kwargs)
-        except Exception as e:
-            raise FailedProcessConfigFileError(e) from e
 
     @override
     def load_file[C: ABCConfigFile](
@@ -48,10 +45,8 @@ class JsonSL(BaseLocalFileConfigSL):
             *merged_args,
             **merged_kwargs
     ) -> C:
-        try:
+        with self.raises():
             data = json.load(source_file, *merged_args, **merged_kwargs)
-        except Exception as e:
-            raise FailedProcessConfigFileError(e) from e
 
         return config_file_cls(ConfigData(data), config_format=self.processor_reg_name)
 
