@@ -543,6 +543,5 @@ class TestConfigFile:
 
     @staticmethod
     def test_repr(file, data):
-        print(file.config_format)
         assert repr(file.data) in repr(file)
         assert repr(data) in repr(ConfigFile(data))
