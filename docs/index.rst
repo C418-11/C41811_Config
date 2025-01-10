@@ -1,6 +1,57 @@
 C41811.Config 的文档
 ==================================
 
+.. image:: https://img.shields.io/pypi/pyversions/c41811.config.svg
+   :target: https://pypi.python.org/pypi/C41811.Config/
+   :alt: PyPI pyversions
+
+.. image:: https://img.shields.io/pypi/l/C41811.Config?color=blue
+   :target: https://github.com/C418-11/C41811_Config/blob/main/LICENSE
+   :alt: PyPI - License
+
+.. list-table::
+   :widths: auto
+   :align: center
+
+   * - 文档
+     -
+       .. image:: https://readthedocs.org/projects/c41811config/badge/?version=latest
+          :target: ./index.html
+          :alt: Documentation Status
+
+       .. image:: https://img.shields.io/badge/%E5%B8%B8%E8%A7%81-%E7%94%A8%E6%B3%95-green?logo=googledocs&logoColor=white
+          :target: ./CommonUsage.html
+          :alt: Common Usage
+
+       .. image:: https://img.shields.io/badge/Made%20with-Sphinx-1f425f.svg
+          :target: https://www.sphinx-doc.org/
+          :alt: made-with-sphinx-doc
+   * - PyPI
+     -
+       .. image:: https://img.shields.io/pypi/v/C41811.Config
+          :target: https://pypi.python.org/pypi/C41811.Config/
+          :alt: PyPI - Version
+
+       .. image:: https://img.shields.io/pypi/wheel/C41811.Config
+          :target: https://pypi.python.org/pypi/C41811.Config/
+          :alt: PyPI - Wheel
+
+       .. image:: https://img.shields.io/pypi/dm/c41811.config.svg
+          :target: https://pypi.python.org/pypi/C41811.Config/
+          :alt: PyPI download month
+   * - 源码
+     -
+       .. image:: https://img.shields.io/badge/Github-C41811.Config-green?logo=github
+          :target: https://github.com/C418-11/C41811_Config/
+          :alt: Github
+       .. image:: https://github.com/C418-11/C41811_Config/actions/workflows/python-ci.yml/badge.svg?branch=develop
+          :target: https://github.com/C418-11/C41811_Config/actions/workflows/python-ci.yml
+          :alt: Python CI
+
+       .. image:: https://img.shields.io/github/actions/workflow/status/C418-11/C41811_Config/python-publish.yml
+          :target: https://github.com/C418-11/C41811_Config/actions/workflows/python-publish.yml
+          :alt: GitHub Actions Workflow Status
+
 .. toctree::
    :maxdepth: 2
 
