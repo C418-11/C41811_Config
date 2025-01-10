@@ -38,17 +38,18 @@ pip install C41811.Config
 ## A simple example
 
 ```python
+from C41811.Config import ConfigData
 from C41811.Config import JsonSL
 from C41811.Config import requireConfig
 from C41811.Config import saveAll
 
 JsonSL().register_to()
 
-cfg = requireConfig(
+cfg: ConfigData = requireConfig(
     '', "Hello World.json",
-    {
+    {  # Simple and powerful configuration data validator
         "Hello": "World",
-        "foo": dict,  # contains all keys under foo
+        "foo": dict,  # Contains all keys under foo
         "foo\\.bar": {  # foo.bar contains only the baz key
             "baz": "qux"
         }
@@ -56,10 +57,24 @@ cfg = requireConfig(
 ).check()
 saveAll()
 
-print(cfg)
+print(f"{cfg=}")
 print()
+print("Identical data access method as dict")
 print(f"{cfg["Hello"]=}")
-print(cfg.foo)
-print(cfg["foo"]["bar"])
-print(cfg.foo.bar.baz)
+print(f"{cfg["foo"]["bar"]=}")
+print()
+print("Accessing data through attributes")
+print(f"{cfg.foo=}")
+print(f"{cfg.foo.bar.baz=}")
+print()
+print("Accessing data through special syntax")
+print(f"{cfg.retrieve("foo\\.bar\\.baz")=}")
+print()
+print("Some common methods")
+print(f"{cfg.unset("foo\\.bar\\.baz").exists("foo\\.bar\\.baz")=}")
+print(f"{cfg.get("foo\\.bar\\.baz")=}")
+print(f"{cfg.set_default("foo\\.bar\\.baz", "qux")=}")
+print(f"{cfg.get("foo\\.bar\\.baz", default="default")=}")
+print(f"{cfg.modify("foo\\.bar\\.baz", [1, 2, 3]).retrieve("foo\\.bar\\.baz\\[1\\]")=}")
+print(f"{cfg.delete("foo\\.bar\\.baz").get("foo\\.bar\\.baz", default="default")=}")
 ```
