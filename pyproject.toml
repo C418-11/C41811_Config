@@ -64,6 +64,10 @@ cov = [
     "pytest~=8.3.4",
     "pytest-cov~=6.0.0",
 ]
+flake8 = [
+    "flake8~=7.1.1",
+    "flake8-html~=0.4.3",
+]
 PyYamlSL = ["PyYAML~=6.0.2"]
 RuamelYamlSL = ["ruamel.yaml~=0.18.6"]
 TomlSL = ["toml~=0.10.2"]
@@ -83,6 +87,13 @@ column_limit = 120
 indent_width = 4
 use_tabs = false
 
+[tool.flake8]
+max-line-length = 120
+show-source = true
+doctests = true
+max-complexity = 10
+statistics = true
+
 [tool.coverage.run]
 omit = [
     "**/_version.py",
@@ -94,23 +105,34 @@ omit = [
 #]
 
 [tool.tox]
-envlist = ["py312", "py313", "cov"]
+envlist = ["py312", "py313", "cov", "flake8"]
 
 [tool.tox.env_run_base]
 skip_install = true
 commands_pre = [
     ["pip", "install", "-e", ".[dev,test]"],
-    ["pip", "install", "--force-reinstall", "--no-deps", "-e", '.'],
 ]
-commands = [["pytest", "--html=./docs/_static/_reports/{env_name}.html"]]
+commands = [["pytest", "--html=./docs/_static/_pytest/{env_name}.html"]]
 
 [tool.tox.env.cov]
 commands_pre = [
     ["pip", "install", "-e", ".[dev,cov]"],
-    ["pip", "install", "--force-reinstall", "--no-deps", "-e", '.'],
 ]
 commands = [
     ["pytest", "--cov=src", "--cov-report=term-missing", "--cov-report=html:docs/_static/_coverage"]
+]
+
+[tool.tox.env.flake8]
+commands_pre = [
+    ["pip", "install", "-e", ".[flake8]"],
+]
+commands = [
+    ["flake8",
+        "--doctests", "--max-line-length=120", "--max-complexity=15",
+        "--show-source", "--count", "--statistics",
+        "--exit-zero", "--format=html", "--htmldir=./docs/_static/_flake8", "--tee",
+        "tests", "src"
+    ],
 ]
 
 [tool.tox.env.prepare-doc]

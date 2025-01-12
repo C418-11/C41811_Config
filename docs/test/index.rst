@@ -1,22 +1,15 @@
 单元测试报告
 =============
 
-.. raw:: html
+.. list-table::
+   :widths: auto
 
-    <div class="table-wrapper longtable docutils container">
-        <table class="longtable docutils align-default">
-            <tbody>
-                <tr>
-                    <td><a href="#coverage">覆盖率</a></td>
-                    <td><a href="../_static/_coverage/index.html">🛠️</a></td>
-                </tr>
-                <tr>
-                    <td><a href="#py313">Python3.13</a></td>
-                    <td><a href="../_static/_reports/py313.html">🛠️</a></td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+   * - `覆盖率 <#coverage>`_
+     - `📊 <../_static/_coverage/index.html>`_
+   * - `PyTest - Python 3.13 <#pytest>`_
+     - `🛠️ <../_static/_pytest/py313.html>`_
+   * - `Flake8 <#flake8>`_
+     - `⚙️ <../_static/_flake8/index.html>`_
 
 覆盖率
 -----------
@@ -28,11 +21,20 @@
     </iframe>
 
 
-Python 3.13
+PyTest - Python 3.13
+-----------------------
+
+.. raw:: html
+
+    <iframe src="../_static/_pytest/py313.html" id="pytest" style="height: 97vh;width: -webkit-fill-available;" frameborder="0">
+        您的浏览器不支持iframe
+    </iframe>
+
+Flake8
 -----------
 
 .. raw:: html
 
-    <iframe src="../_static/_reports/py313.html" id="py313" style="height: 97vh;width: -webkit-fill-available;" frameborder="0">
+    <iframe src="../_static/_flake8/index.html" id="flake8" style="height: 97vh;width: -webkit-fill-available;" frameborder="0">
         您的浏览器不支持iframe
     </iframe>
