@@ -28,6 +28,57 @@
 requireConfig的所有详细用法？
 -----------------------------
 
+支持手动调用和装饰器两种获取验证数据的方式
+
+.. code-block:: python
+    :caption: 手动调用和装饰器
+    :linenos:
+
+    from C41811.Config import ConfigData
+    from C41811.Config import JsonSL
+    from C41811.Config import requireConfig
+
+    JsonSL().register_to()
+
+    require = requireConfig(
+        '', "config.json", {
+            "config": "data",
+        },
+    )
+
+    # 调用check手动获取配置数据
+    config: ConfigData = require.check()
+    print(config)  # 打印：{'config': 'data'}
+
+
+    # 使用装饰器自动注入配置数据
+    @require
+    def test(cfg):
+        print(cfg)  # 打印：{'config': 'data'}
+
+
+    test()
+
+
+    class Test:
+        @require
+        def __init__(self, cfg):
+            print(self, cfg)  # 打印：<__main__.Test object at 0x0000025B37D812E0> {'config': 'data'}
+
+        @classmethod
+        @require
+        def cls_func(cls, cfg):
+            print(cls, cfg)  # 打印：<class '__main__.Test'> {'config': 'data'}
+            return cls
+
+        @staticmethod
+        @require
+        def static_func(cfg):
+            print(cfg)  # 打印：{'config': 'data'}
+
+
+    Test().cls_func().static_func()
+
 Pydantic验证器工厂
 ^^^^^^^^^^^^^^^^^^
 
