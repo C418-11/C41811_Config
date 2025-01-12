@@ -144,7 +144,7 @@ commands_pre = [
 ]
 commands = [
     ["tox"],
-    ["lessc", "./docs/_static/darcula.less", "./docs/_static/darcula.css"],
+    ["lessc", "./docs/_static/pygments_darcula.less", "./docs/_static/pygments_darcula.css"],
 ]
 
 [tool.tox.env.doc]

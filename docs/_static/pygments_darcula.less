@@ -1,5 +1,7 @@
 .highlight-mixin() {
    .highlight {
+    background-color: #2B2B2CFF;
+
     .k // Keyword
     , .kc // Keyword.Constant
     , .kn // Keyword.Name
@@ -8,28 +10,24 @@
     { color:#CC7832; }
 
     .n // Name
+    , .o // Operator
     , .nn // Name.Namespace
     , .nx // Name.Other
     , .nc // Name.Class
     {
-      color: #D0D0D0;
+      color: #A9B7C6;
       text-decoration: initial
     }
 
-    .p{ // 模拟Rainbow-Brackets IDE插件
-      color: #D3B233;
-    }
-
-    .o // Operator
-    { color: #D8D8D8; }
+    .p
+    { color: #E8BA36 } // 模拟Rainbow-Brackets IDE插件
 
     .c   // Comment
     , .cm  // Comment.Multiline
     , .c1  // Comment.Single
     { color: #666; font-style: italic }
 
-    .bp // Name.Builtin.Pseudo
-    , .cp // Comment.Preproc
+    .cp // Comment.Preproc
     , .cs // Comment.Special
     , .gh // Generic.Heading
     { color: #CC7832 }
@@ -95,16 +93,25 @@
     { color: #9876AA }
 
     .nb // Name.Builtin
-    { color: #9696D0 }
+    { color: #8888C6 }
+
+    .nd // Name.Decorator
+    { color: #BBB529 }
 
     .ne // Name.Exception
     { color: #990000; font-weight: bold }
 
     .nf // Name.Function
-    { color: #FFF; }
+    { color: #FFC66D; }
 
     .nt // Name.Tag
     { color: #FFC66D }
+
+    .bp // Name.Builtin.Pseudo
+    { color: #94558D }
+
+    .fm // Name.Function.Magic
+    { color: #B200B2 }
 
     .w // Text.Whitespace
     { color: #bbbbbb }
