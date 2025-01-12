@@ -9,7 +9,7 @@ C41811.Config 旨在通过提供一套简洁的 API 和灵活的配置处理机�
 文档：https://C41811Config.readthedocs.io
 """
 
-__author__ = "C418____11 <553515788@qq.com>"
+__author__ = "C418____11 <C418-11@qq.com>"
 
 try:
     from ._version import __version__, __version_tuple__

@@ -9,7 +9,7 @@ description = "Simplifies config management with flexible API and formats."
 readme = "README.md"
 requires-python = ">=3.12"
 authors = [
-    { name = "C418____11", email = "553515788@qq.com" }
+    { name = "C418____11", email = "C418-11@qq.com" }
 ]
 license = { file = "LICENSE" }
 keywords = ["config", "yaml", "toml", "json"]
