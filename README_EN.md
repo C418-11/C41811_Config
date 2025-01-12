@@ -13,7 +13,6 @@ English | [中文](README.md)
 |  Repository   |                                                             [![Github](https://img.shields.io/badge/Github-C41811.Config-green?logo=github)](https://github.com/C418-11/C41811_Config/) [![Publish](https://img.shields.io/github/actions/workflow/status/C418-11/C41811_Config/python-publish.yml?logo=github&label=Publish)](https://github.com/C418-11/C41811_Config/actions/workflows/python-publish.yml)                                                              |
 | Code Quality  | [![pytest](https://img.shields.io/github/actions/workflow/status/C418-11/C41811_Config/python-pytest.yml?logo=github&label=pytest)](https://github.com/C418-11/C41811_Config/actions/workflows/python-pytest.yml) [![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/C418-11/C41811_Config/python-flake8.yml?branch=develop&logo=github&label=flake8)](https://github.com/C418-11/C41811_Config/actions/workflows/python-flake8.yml) |
 
-
 ## Description
 
 C41811.Config aims to simplify the management of configuration files by providing a concise API and flexible
@@ -32,14 +31,21 @@ verification functions to ensure the accuracy and consistency of configuration d
 * Easy to use: Provides a concise API that allows developers to easily load, modify, and save configuration files.
 
 ## Characteristics
+
 C41811.Config is suitable for a variety of configuration management scenarios, especially in the following situations:
 
-* Large projects: Allows isolation of configuration for different parts of the project through namespaces or configuration pools, making configuration management clearer and more organized.
-* Scattered configuration files: By providing a unified interface and flexible processing mechanisms, scattered configuration files can be centrally managed and accessed, improving the efficiency and consistency of configurations.
-* Complex data models: Automatically fills in missing key default values and verifies the type of configuration data to ensure the integrity and accuracy of configuration data.
-* Need for complex configuration operations: Provides methods such as get, set_default, unset, etc., to simplify complex operations on configuration data.
-* Mixing multiple configuration formats: Supports inferring the appropriate configuration format from registered processors based on file extensions, allowing seamless use of configuration files in different formats.
-* Dynamic configuration updates: Supports dynamic updates to configurations at runtime without restarting the application to apply new configurations.
+* Large projects: Allows isolation of configuration for different parts of the project through namespaces or
+  configuration pools, making configuration management clearer and more organized.
+* Scattered configuration files: By providing a unified interface and flexible processing mechanisms, scattered
+  configuration files can be centrally managed and accessed, improving the efficiency and consistency of configurations.
+* Complex data models: Automatically fills in missing key default values and verifies the type of configuration data to
+  ensure the integrity and accuracy of configuration data.
+* Need for complex configuration operations: Provides methods such as get, set_default, unset, etc., to simplify complex
+  operations on configuration data.
+* Mixing multiple configuration formats: Supports inferring the appropriate configuration format from registered
+  processors based on file extensions, allowing seamless use of configuration files in different formats.
+* Dynamic configuration updates: Supports dynamic updates to configurations at runtime without restarting the
+  application to apply new configurations.
 
 ## Installation
 

@@ -13,7 +13,6 @@
 |  仓库  |                                                             [![Github](https://img.shields.io/badge/Github-C41811.Config-green?logo=github)](https://github.com/C418-11/C41811_Config/) [![Publish](https://img.shields.io/github/actions/workflow/status/C418-11/C41811_Config/python-publish.yml?logo=github&label=Pubilsh)](https://github.com/C418-11/C41811_Config/actions/workflows/python-publish.yml)                                                              |
 | 代码质量 | [![pytest](https://img.shields.io/github/actions/workflow/status/C418-11/C41811_Config/python-pytest.yml?logo=github&label=pytest)](https://github.com/C418-11/C41811_Config/actions/workflows/python-pytest.yml) [![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/C418-11/C41811_Config/python-flake8.yml?branch=develop&logo=github&label=flake8)](https://github.com/C418-11/C41811_Config/actions/workflows/python-flake8.yml) |
 
-
 ## 简介
 
 C41811.Config 旨在通过提供一套简洁的 API
@@ -27,6 +26,7 @@ C41811.Config 旨在通过提供一套简洁的 API
 * 易于使用：提供了一套简洁的 API，开发者可以轻松地加载、修改和保存配置文件。
 
 ## 适用场景
+
 C41811.Config 适用于多种配置管理场景，特别是以下几种情况：
 
 * 大型项目：允许通过命名空间或配置池隔离项目各部分的配置，使得配置管理更加清晰和有序。
