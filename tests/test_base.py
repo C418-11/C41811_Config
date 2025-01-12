@@ -73,19 +73,19 @@ class TestConfigData:
         assert readonly_data.data == readonly_odict
 
     RetrieveTests = (
-        "path,          value,                    ignore_excs,                  kwargs", (  # @formatter:off # noqa: E122
-        ("foo",         ConfigData({"bar": 123}), (),                           {}),
-        ("foo",         {"bar": 123},             (),                           {"get_raw": True}),
-        ("foo\\.bar",   123,                      (),                           {}),
-        ("foo1",        114,                      (),                           {}),
-        ("foo2",        ["bar"],                  (),                           {}),
-        ("foo2\\[0\\]", "bar",                    (),                           {}),
-        ("foo2\\.bar",  None,                     (ConfigDataTypeError, ),      {}),
-        ("foo3",        None,                     (RequiredPathNotFoundError,), {}),
-        ("foo2\\[1\\]", None,                     (RequiredPathNotFoundError,), {}),
-        ("foo\\[0\\]",  None,                     (ConfigDataTypeError,),       {}),
-        ("\\[0\\]",     None,                     (ConfigDataTypeError,),       {}),
-    ))  # @formatter:on
+        "path,          value,                    ignore_excs,                  kwargs", (  # @formatter:off # noqa: E122, E501
+        ("foo",         ConfigData({"bar": 123}), (),                           {}),  # noqa: E122
+        ("foo",         {"bar": 123},             (),                           {"get_raw": True}),  # noqa: E122
+        ("foo\\.bar",   123,                      (),                           {}),  # noqa: E122
+        ("foo1",        114,                      (),                           {}),  # noqa: E122
+        ("foo2",        ["bar"],                  (),                           {}),  # noqa: E122
+        ("foo2\\[0\\]", "bar",                    (),                           {}),  # noqa: E122
+        ("foo2\\.bar",  None,                     (ConfigDataTypeError, ),      {}),  # noqa: E122
+        ("foo3",        None,                     (RequiredPathNotFoundError,), {}),  # noqa: E122
+        ("foo2\\[1\\]", None,                     (RequiredPathNotFoundError,), {}),  # noqa: E122
+        ("foo\\[0\\]",  None,                     (ConfigDataTypeError,),       {}),  # noqa: E122
+        ("\\[0\\]",     None,                     (ConfigDataTypeError,),       {}),  # noqa: E122
+    ))  # @formatter:on # noqa: E122
 
     @staticmethod
     @mark.parametrize(*RetrieveTests)
@@ -100,14 +100,14 @@ class TestConfigData:
 
     ModifyTests = (
         "path,         value,        ignore_excs,                  kwargs", (  # @formatter:off # noqa: E122
-        ("foo",        {"bar": 456}, (),                           {}),
-        ("foo\\.bar",  123,          (),                           {}),
-        ("foo1",       114,          (),                           {}),
-        ("foo2",       ["bar"],      (),                           {}),
-        ("foo2\\.bar", None,         (ConfigDataTypeError,),       {}),
-        ("foo3",       None,         (),                           {}),
-        ("foo3",       None,         (RequiredPathNotFoundError,), {"allow_create": False}, ),
-    ))  # @formatter:on
+        ("foo",        {"bar": 456}, (),                           {}),  # noqa: E122
+        ("foo\\.bar",  123,          (),                           {}),  # noqa: E122
+        ("foo1",       114,          (),                           {}),  # noqa: E122
+        ("foo2",       ["bar"],      (),                           {}),  # noqa: E122
+        ("foo2\\.bar", None,         (ConfigDataTypeError,),       {}),  # noqa: E122
+        ("foo3",       None,         (),                           {}),  # noqa: E122
+        ("foo3",       None,         (RequiredPathNotFoundError,), {"allow_create": False}, ),  # noqa: E122
+    ))  # @formatter:on # noqa: E122
 
     @staticmethod
     @mark.parametrize(*ModifyTests)
@@ -123,18 +123,18 @@ class TestConfigData:
 
     DeleteTests = (
         "path,           ignore_excs", (  # @formatter:off # noqa: E122
-        ("foo\\.bar",    ()),
-        ("foo1",         ()),
-        ("foo2",         ()),
-        ("foo2\\[0\\]",  ()),
-        ("foo2\\[-1\\]", ()),
-        ("\\[0\\]",      (ConfigDataTypeError,)),
-        ("foo\\[0\\]",   (ConfigDataTypeError,)),
-        ("foo2\\.bar",   (ConfigDataTypeError, )),
-        ("foo2\\[1\\]",  (RequiredPathNotFoundError,)),
-        ("foo2\\[-2\\]", (RequiredPathNotFoundError,)),
-        ("foo3",         (RequiredPathNotFoundError,)),
-    ))  # @formatter:on
+        ("foo\\.bar",    ()),  # noqa: E122
+        ("foo1",         ()),  # noqa: E122
+        ("foo2",         ()),  # noqa: E122
+        ("foo2\\[0\\]",  ()),  # noqa: E122
+        ("foo2\\[-1\\]", ()),  # noqa: E122
+        ("\\[0\\]",      (ConfigDataTypeError,)),  # noqa: E122
+        ("foo\\[0\\]",   (ConfigDataTypeError,)),  # noqa: E122
+        ("foo2\\.bar",   (ConfigDataTypeError, )),  # noqa: E122
+        ("foo2\\[1\\]",  (RequiredPathNotFoundError,)),  # noqa: E122
+        ("foo2\\[-2\\]", (RequiredPathNotFoundError,)),  # noqa: E122
+        ("foo3",         (RequiredPathNotFoundError,)),  # noqa: E122
+    ))  # @formatter:on # noqa: E122
 
     @staticmethod
     @mark.parametrize(*DeleteTests)
@@ -153,21 +153,21 @@ class TestConfigData:
 
     ExistsTests = (
         "path,              is_exist, ignore_excs,            kwargs", (  # @formatter:off # noqa: E122
-        ("foo",             True,     (),                     {}),
-        ("foo\\.bar",       True,     (),                     {}),
-        ("foo\\.not exist", False,    (),                     {}),
-        ("foo1",            True,     (),                     {}),
-        ("foo2",            True,     (),                     {}),
-        ("foo3",            False,    (),                     {}),
-        ("foo2\\[0\\]",     True,     (),                     {}),
-        ("foo2\\[1\\]",     False,    (),                     {}),
-        ("foo2\\[-1\\]",    True,     (),                     {}),
-        ("foo2\\.bar",      False,    (),                     {"ignore_wrong_type": True}),
-        ("\\[0\\]",         False,    (),                     {"ignore_wrong_type": True}),
-        ("foo2\\.bar",      None,     (ConfigDataTypeError,), {}),
-        ("foo\\[0\\]",      False,    (ConfigDataTypeError,), {}),
-        ("\\[0\\]",         False,    (ConfigDataTypeError,), {}),
-    ))  # @formatter:on
+        ("foo",             True,     (),                     {}),  # noqa: E122
+        ("foo\\.bar",       True,     (),                     {}),  # noqa: E122
+        ("foo\\.not exist", False,    (),                     {}),  # noqa: E122
+        ("foo1",            True,     (),                     {}),  # noqa: E122
+        ("foo2",            True,     (),                     {}),  # noqa: E122
+        ("foo3",            False,    (),                     {}),  # noqa: E122
+        ("foo2\\[0\\]",     True,     (),                     {}),  # noqa: E122
+        ("foo2\\[1\\]",     False,    (),                     {}),  # noqa: E122
+        ("foo2\\[-1\\]",    True,     (),                     {}),  # noqa: E122
+        ("foo2\\.bar",      False,    (),                     {"ignore_wrong_type": True}),  # noqa: E122
+        ("\\[0\\]",         False,    (),                     {"ignore_wrong_type": True}),  # noqa: E122
+        ("foo2\\.bar",      None,     (ConfigDataTypeError,), {}),  # noqa: E122
+        ("foo\\[0\\]",      False,    (ConfigDataTypeError,), {}),  # noqa: E122
+        ("\\[0\\]",         False,    (ConfigDataTypeError,), {}),  # noqa: E122
+    ))  # @formatter:on  # noqa: E122
 
     @staticmethod
     @mark.parametrize(*ExistsTests)

@@ -278,7 +278,7 @@ requireConfig = DefaultConfigPool.require
 """
 :py:attr:`DefaultConfigPool` ``.require()``
 
-.. seealso::   
+.. seealso::
    :py:func:`ConfigPool.require`
 """
 saveAll = DefaultConfigPool.save_all
@@ -292,7 +292,7 @@ get = DefaultConfigPool.get
 """
 :py:attr:`DefaultConfigPool` ``.get()``
 
-.. seealso::   
+.. seealso::
    :py:func:`ConfigPool.get`
 """
 set_ = DefaultConfigPool.set
@@ -306,14 +306,14 @@ save = DefaultConfigPool.save
 """
 :py:attr:`DefaultConfigPool` ``.save()``
 
-.. seealso::   
+.. seealso::
    :py:func:`ConfigPool.save`
 """
 load = DefaultConfigPool.load
 """
 :py:attr:`DefaultConfigPool` ``.load()``
 
-.. seealso::   
+.. seealso::
    :py:func:`ConfigPool.load`
 """
 

@@ -199,7 +199,7 @@ class FieldDefinition[T: type | types.UnionType | types.EllipsisType | types.Gen
     allow_recursive: bool
     """
     是否允许递归处理字段值
-    
+
     .. versionadded:: 0.1.4
     """
 
@@ -263,7 +263,7 @@ class DefaultValidatorFactory:
         self.validator_config = validator_config
 
         self.typehint_types = (type, types.GenericAlias, types.UnionType, types.EllipsisType)
-        self.model_config_key = validator_config.extra.get("model_config_key", f".__model_config__")
+        self.model_config_key = validator_config.extra.get("model_config_key", ".__model_config__")
         self._compile()
         self.model: BaseModel
 
