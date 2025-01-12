@@ -39,18 +39,26 @@ C41811.Config 的文档
        .. image:: https://img.shields.io/pypi/dm/c41811.config.svg
           :target: https://pypi.python.org/pypi/C41811.Config/
           :alt: PyPI download month
-   * - 源码
+   * - 仓库
      -
        .. image:: https://img.shields.io/badge/Github-C41811.Config-green?logo=github
           :target: https://github.com/C418-11/C41811_Config/
           :alt: Github
-       .. image:: https://github.com/C418-11/C41811_Config/actions/workflows/python-ci.yml/badge.svg?branch=develop
-          :target: https://github.com/C418-11/C41811_Config/actions/workflows/python-ci.yml
-          :alt: Python CI
 
-       .. image:: https://img.shields.io/github/actions/workflow/status/C418-11/C41811_Config/python-publish.yml
+       .. image:: https://img.shields.io/github/actions/workflow/status/C418-11/C41811_Config/python-publish.yml?logo=github&label=Pubilsh
           :target: https://github.com/C418-11/C41811_Config/actions/workflows/python-publish.yml
-          :alt: GitHub Actions Workflow Status
+          :alt: Publish
+
+   * - 代码质量
+     -
+       .. image:: https://img.shields.io/github/actions/workflow/status/C418-11/C41811_Config/python-pytest.yml?logo=github&label=pytest
+          :target: https://github.com/C418-11/C41811_Config/actions/workflows/python-pytest.yml
+          :alt: pytest
+
+       .. image:: https://img.shields.io/github/actions/workflow/status/C418-11/C41811_Config/python-flake8.yml?logo=github&label=flake8
+          :target: https://github.com/C418-11/C41811_Config/actions/workflows/python-flake8.yml
+          :alt: flake8
+
 
 .. toctree::
    :maxdepth: 2

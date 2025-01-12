@@ -7,10 +7,12 @@
 [![PyPI pyversions](https://img.shields.io/pypi/pyversions/c41811.config.svg)](https://pypi.python.org/pypi/C41811.Config/)
 [![PyPI - License](https://img.shields.io/pypi/l/C41811.Config?color=blue)](https://github.com/C418-11/C41811_Config/blob/main/LICENSE)
 
-|  文档  |                                           [![Documentation Status](https://readthedocs.org/projects/c41811config/badge/?version=latest)](https://C41811Config.readthedocs.io) [![Common Usage](https://img.shields.io/badge/%E5%B8%B8%E8%A7%81-%E7%94%A8%E6%B3%95-green?logo=googledocs&logoColor=white)](https://c41811config.readthedocs.io/zh-cn/latest/CommonUsage.html)  [![made-with-sphinx-doc](https://img.shields.io/badge/Made%20with-Sphinx-1f425f.svg)](https://www.sphinx-doc.org/)                                           |
-|:----:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
-| PyPI |                                                                                           [![PyPI - Version](https://img.shields.io/pypi/v/C41811.Config)](https://pypi.python.org/pypi/C41811.Config/) [![PyPI - Wheel](https://img.shields.io/pypi/wheel/C41811.Config)](https://pypi.python.org/pypi/C41811.Config/) [![PyPI download month](https://img.shields.io/pypi/dm/c41811.config.svg)](https://pypi.python.org/pypi/C41811.Config/)                                                                                            |
-|  源码  | [![Github](https://img.shields.io/badge/Github-C41811.Config-green?logo=github)](https://github.com/C418-11/C41811_Config/) [![Python CI](https://github.com/C418-11/C41811_Config/actions/workflows/python-ci.yml/badge.svg?branch=develop)](https://github.com/C418-11/C41811_Config/actions/workflows/python-ci.yml) [![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/C418-11/C41811_Config/python-publish.yml)](https://github.com/C418-11/C41811_Config/actions/workflows/python-publish.yml) |
+|  文档  |           [![Documentation Status](https://readthedocs.org/projects/c41811config/badge/?version=latest)](https://C41811Config.readthedocs.io) [![Common Usage](https://img.shields.io/badge/%E5%B8%B8%E8%A7%81-%E7%94%A8%E6%B3%95-green?logo=googledocs&logoColor=white)](https://c41811config.readthedocs.io/zh-cn/latest/CommonUsage.html)  [![made-with-sphinx-doc](https://img.shields.io/badge/Made%20with-Sphinx-1f425f.svg)](https://www.sphinx-doc.org/)           |
+|:----:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+| PyPI |                                                           [![PyPI - Version](https://img.shields.io/pypi/v/C41811.Config)](https://pypi.python.org/pypi/C41811.Config/) [![PyPI - Wheel](https://img.shields.io/pypi/wheel/C41811.Config)](https://pypi.python.org/pypi/C41811.Config/) [![PyPI download month](https://img.shields.io/pypi/dm/c41811.config.svg)](https://pypi.python.org/pypi/C41811.Config/)                                                            |
+|  仓库  |                                                             [![Github](https://img.shields.io/badge/Github-C41811.Config-green?logo=github)](https://github.com/C418-11/C41811_Config/) [![Publish](https://img.shields.io/github/actions/workflow/status/C418-11/C41811_Config/python-publish.yml?logo=github&label=Pubilsh)](https://github.com/C418-11/C41811_Config/actions/workflows/python-publish.yml)                                                              |
+| 代码质量 | [![pytest](https://img.shields.io/github/actions/workflow/status/C418-11/C41811_Config/python-pytest.yml?logo=github&label=pytest)](https://github.com/C418-11/C41811_Config/actions/workflows/python-pytest.yml) [![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/C418-11/C41811_Config/python-flake8.yml?branch=develop&logo=github&label=flake8)](https://github.com/C418-11/C41811_Config/actions/workflows/python-flake8.yml) |
+
 
 ## 简介
 
@@ -23,6 +25,16 @@ C41811.Config 旨在通过提供一套简洁的 API
 * 模块化设计：通过模块化的设计，提供了灵活地扩展机制，开发者可以根据需要添加自定义的配置处理器。
 * 验证功能：支持通过验证器来验证配置数据的合法性，确保配置数据的正确性。
 * 易于使用：提供了一套简洁的 API，开发者可以轻松地加载、修改和保存配置文件。
+
+## 适用场景
+C41811.Config 适用于多种配置管理场景，特别是以下几种情况：
+
+* 大型项目：允许通过命名空间或配置池隔离项目各部分的配置，使得配置管理更加清晰和有序。
+* 分散的配置文件：通过提供统一的接口和灵活的处理机制，使得分散的配置文件能够被集中管理和访问，提高了配置的效率和一致性。
+* 复杂的数据模型：会自动填充缺失的键默认值，并对配置数据进行类型验证，确保配置数据的完整性和准确性。
+* 需要对配置进行复杂操作：提供了 get、set_default、unset 等方法，简化了对配置数据的复杂操作。
+* 多种配置格式混搭：支持根据文件后缀自动从注册的处理器中推断合适的配置格式，使得不同格式的配置文件可以无缝混用。
+* 动态配置更新：支持在运行时动态更新配置，无需重启应用即可应用新的配置。
 
 ## 安装
 

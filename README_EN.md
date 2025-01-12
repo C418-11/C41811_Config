@@ -7,10 +7,12 @@ English | [中文](README.md)
 [![PyPI pyversions](https://img.shields.io/pypi/pyversions/c41811.config.svg)](https://pypi.python.org/pypi/C41811.Config/)
 [![PyPI - License](https://img.shields.io/pypi/l/C41811.Config?color=blue)](https://github.com/C418-11/C41811_Config/blob/main/LICENSE)
 
-|  Document   |                                                        [![Documentation Status](https://readthedocs.org/projects/c41811config/badge/?version=latest)](https://C41811Config.readthedocs.io) [![Common Usage](https://img.shields.io/badge/Common-Usage-green?logo=googledocs&logoColor=white)](https://c41811config.readthedocs.io/zh-cn/latest/CommonUsage.html) [![made-with-sphinx-doc](https://img.shields.io/badge/Made%20with-Sphinx-1f425f.svg)](https://www.sphinx-doc.org/)                                                        |
-|:-----------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
-|    PyPI     |                                                                                           [![PyPI - Version](https://img.shields.io/pypi/v/C41811.Config)](https://pypi.python.org/pypi/C41811.Config/) [![PyPI - Wheel](https://img.shields.io/pypi/wheel/C41811.Config)](https://pypi.python.org/pypi/C41811.Config/) [![PyPI download month](https://img.shields.io/pypi/dm/c41811.config.svg)](https://pypi.python.org/pypi/C41811.Config/)                                                                                            |
-| Source Code | [![Github](https://img.shields.io/badge/Github-C41811.Config-green?logo=github)](https://github.com/C418-11/C41811_Config/) [![Python CI](https://github.com/C418-11/C41811_Config/actions/workflows/python-ci.yml/badge.svg?branch=develop)](https://github.com/C418-11/C41811_Config/actions/workflows/python-ci.yml) [![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/C418-11/C41811_Config/python-publish.yml)](https://github.com/C418-11/C41811_Config/actions/workflows/python-publish.yml) |
+| Documentation |                       [![Documentation Status](https://readthedocs.org/projects/c41811config/badge/?version=latest)](https://C41811Config.readthedocs.io) [![Common Usage](https://img.shields.io/badge/Common-Usage-green?logo=googledocs&logoColor=white)](https://c41811config.readthedocs.io/zh-cn/latest/CommonUsage.html)  [![made-with-sphinx-doc](https://img.shields.io/badge/Made%20with-Sphinx-1f425f.svg)](https://www.sphinx-doc.org/)                        |
+|:-------------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+|     PyPI      |                                                           [![PyPI - Version](https://img.shields.io/pypi/v/C41811.Config)](https://pypi.python.org/pypi/C41811.Config/) [![PyPI - Wheel](https://img.shields.io/pypi/wheel/C41811.Config)](https://pypi.python.org/pypi/C41811.Config/) [![PyPI download month](https://img.shields.io/pypi/dm/c41811.config.svg)](https://pypi.python.org/pypi/C41811.Config/)                                                            |
+|  Repository   |                                                             [![Github](https://img.shields.io/badge/Github-C41811.Config-green?logo=github)](https://github.com/C418-11/C41811_Config/) [![Publish](https://img.shields.io/github/actions/workflow/status/C418-11/C41811_Config/python-publish.yml?logo=github&label=Publish)](https://github.com/C418-11/C41811_Config/actions/workflows/python-publish.yml)                                                              |
+| Code Quality  | [![pytest](https://img.shields.io/github/actions/workflow/status/C418-11/C41811_Config/python-pytest.yml?logo=github&label=pytest)](https://github.com/C418-11/C41811_Config/actions/workflows/python-pytest.yml) [![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/C418-11/C41811_Config/python-flake8.yml?branch=develop&logo=github&label=flake8)](https://github.com/C418-11/C41811_Config/actions/workflows/python-flake8.yml) |
+
 
 ## Description
 
@@ -28,6 +30,16 @@ verification functions to ensure the accuracy and consistency of configuration d
 * Verification function: Supports verifying the legitimacy of configuration data through validators to ensure the
   correctness of configuration data.
 * Easy to use: Provides a concise API that allows developers to easily load, modify, and save configuration files.
+
+## Characteristics
+C41811.Config is suitable for a variety of configuration management scenarios, especially in the following situations:
+
+* Large projects: Allows isolation of configuration for different parts of the project through namespaces or configuration pools, making configuration management clearer and more organized.
+* Scattered configuration files: By providing a unified interface and flexible processing mechanisms, scattered configuration files can be centrally managed and accessed, improving the efficiency and consistency of configurations.
+* Complex data models: Automatically fills in missing key default values and verifies the type of configuration data to ensure the integrity and accuracy of configuration data.
+* Need for complex configuration operations: Provides methods such as get, set_default, unset, etc., to simplify complex operations on configuration data.
+* Mixing multiple configuration formats: Supports inferring the appropriate configuration format from registered processors based on file extensions, allowing seamless use of configuration files in different formats.
+* Dynamic configuration updates: Supports dynamic updates to configurations at runtime without restarting the application to apply new configurations.
 
 ## Installation
 
