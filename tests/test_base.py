@@ -62,6 +62,7 @@ class TestConfigData:
     def readonly_data(readonly_odict):
         return ConfigData(readonly_odict)
 
+    # noinspection PyTestUnpassedFixture
     @staticmethod
     def test_init_deepcopy(odict, readonly_odict):
         data = ConfigData(odict)
@@ -89,7 +90,7 @@ class TestConfigData:
 
     @staticmethod
     @mark.parametrize(*RetrieveTests)
-    def test_retrieve(data, path, value, ignore_excs, kwargs):
+    def test_retrieve(data: ConfigData, path, value, ignore_excs, kwargs):
         if kwargs is None:
             kwargs = {}
 
@@ -111,7 +112,7 @@ class TestConfigData:
 
     @staticmethod
     @mark.parametrize(*ModifyTests)
-    def test_modify(data, path, value, ignore_excs, kwargs):
+    def test_modify(data: ConfigData, path, value, ignore_excs, kwargs):
         if kwargs is None:
             kwargs = {}
 
@@ -138,14 +139,14 @@ class TestConfigData:
 
     @staticmethod
     @mark.parametrize(*DeleteTests)
-    def test_delete(data, path, ignore_excs):
+    def test_delete(data: ConfigData, path, ignore_excs):
         with safe_raises(ignore_excs):
             data.delete(path)
         assert path not in data
 
     @staticmethod
     @mark.parametrize(*DeleteTests)
-    def test_unset(data, path, ignore_excs):
+    def test_unset(data: ConfigData, path, ignore_excs):
         ignore_excs = tuple(exc for exc in ignore_excs if not issubclass(exc, RequiredPathNotFoundError))
         with safe_raises(ignore_excs):
             data.unset(path)

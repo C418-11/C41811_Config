@@ -622,4 +622,5 @@ class TestRequiredPath:
         if info:
             return
 
+        # noinspection PyTestUnpassedFixture
         assert data.data == result

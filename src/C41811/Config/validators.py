@@ -409,6 +409,7 @@ class DefaultValidatorFactory:
         self.model = self._mapping2model(fmt_validator, model_config.data)
 
     def __call__[D: ABCConfigData](self, data: D) -> D:
+        data: ABCConfigData  # 不加这行下面那行**data.data类型检查器会抽风
         try:
             dict_obj = self.model(**data.data).model_dump()
         except ValidationError as err:
