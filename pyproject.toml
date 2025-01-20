@@ -110,7 +110,7 @@ commands_pre = [
     ["pip", "install", "-e", ".[dev,test]"],
 ]
 commands = [
-    ["pytest", "--doctest-modules", "--cov=src", "--ignore-glob=docs/conf.py"],
+    ["pytest", "--doctest-modules", "--ignore-glob=docs/conf.py",],
 ]
 
 [tool.tox.env.flake8]
