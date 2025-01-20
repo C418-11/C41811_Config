@@ -458,7 +458,7 @@ class TestMappingConfigData:
         assert repr({"a": 1, "b": 2}) in repr(ConfigData({"a": 1, "b": 2}))
 
 
-class TestSequenceConfigFile:
+class TestSequenceConfigData:
     @staticmethod
     @fixture
     def sequence() -> list:
