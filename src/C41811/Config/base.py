@@ -2,24 +2,40 @@
 # cython: language_level = 3
 
 
+import math
 import os.path
 from abc import ABC
+from collections import OrderedDict
 from collections.abc import Callable
+from collections.abc import Generator
+from collections.abc import ItemsView
 from collections.abc import Iterable
+from collections.abc import KeysView
 from collections.abc import Mapping
 from collections.abc import MutableMapping
+from collections.abc import MutableSequence
+from collections.abc import Sequence
+from collections.abc import ValuesView
 from copy import deepcopy
+from numbers import Number
+from textwrap import dedent
+from typing import ClassVar
 from typing import Any
 from typing import Optional
 from typing import Self
 from typing import override
 
+import wrapt
+
+from ._protocols import SupportsIndex
+from ._protocols import SupportsWriteIndex
 from .abc import ABCConfigData
 from .abc import ABCConfigFile
 from .abc import ABCConfigPool
 from .abc import ABCKey
 from .abc import ABCPath
 from .abc import ABCSLProcessorPool
+from .abc import ABCSupportsIndexConfigData
 from .errors import ConfigDataReadOnlyError
 from .errors import ConfigDataTypeError
 from .errors import ConfigOperate
@@ -36,28 +52,57 @@ def _fmt_path(path: str | ABCPath) -> ABCPath:
     return Path.from_str(path)
 
 
-class ConfigData(ABCConfigData):
+class BaseConfigData(ABCConfigData, ABC):
     """
-    配置数据类
+    配置数据基类
+
+    .. versionadded:: 0.1.5
     """
 
     @override
     @property
-    def read_only(self) -> bool:
+    def data_read_only(self) -> bool | None:
+        return False
+
+    @override
+    @property
+    def read_only(self) -> bool | None:
         return super().read_only
 
     @override
     @read_only.setter
     def read_only(self, value: Any):
-        if self._data_read_only:
+        if self.data_read_only:
             raise ConfigDataReadOnlyError
         self._read_only = bool(value)
+
+
+def _check_read_only(func):
+    @wrapt.decorator
+    def wrapper(wrapped, instance, args, kwargs):
+        if instance.read_only:
+            raise ConfigDataReadOnlyError
+        return wrapped(*args, **kwargs)
+
+    return wrapper(func)
+
+
+class BaseSupportsIndexConfigData[D: SupportsIndex | SupportsWriteIndex](
+    BaseConfigData,
+    ABCSupportsIndexConfigData,
+    ABC
+):
+    """
+    支持 ``索引`` 操作的配置数据基类
+
+    .. versionadded:: 0.1.5
+    """
 
     def _process_path(
             self,
             path: ABCPath,
-            process_check: Callable[[Mapping | MutableMapping, ABCKey, list[ABCKey], int], Any],
-            process_return: Callable[[Mapping | MutableMapping], Any]
+            process_check: Callable[[Any, ABCKey, list[ABCKey], int], Any],
+            process_return: Callable[[Any], Any]
     ) -> Any:
         """
         处理键路径的通用函数阿
@@ -100,7 +145,9 @@ class ConfigData(ABCConfigData):
         def process_return(now_data):
             if get_raw:
                 return deepcopy(now_data)
-            if isinstance(now_data, Mapping):
+
+            is_sequence = isinstance(now_data, Sequence) and not isinstance(now_data, (str, bytes))
+            if isinstance(now_data, Mapping) or is_sequence:
                 return ConfigData(now_data)
 
             return deepcopy(now_data)
@@ -108,9 +155,8 @@ class ConfigData(ABCConfigData):
         return self._process_path(path, checker, process_return)
 
     @override
+    @_check_read_only
     def modify(self, path: str | ABCPath, value: Any, *, allow_create: bool = True) -> Self:
-        if self.read_only:
-            raise ConfigDataReadOnlyError
         path = _fmt_path(path)
 
         def checker(now_data, now_key: ABCKey, last_key: list[ABCKey], key_index: int):
@@ -129,9 +175,8 @@ class ConfigData(ABCConfigData):
         return self
 
     @override
+    @_check_read_only
     def delete(self, path: str | ABCPath) -> Self:
-        if self.read_only:
-            raise ConfigDataReadOnlyError
         path = _fmt_path(path)
 
         def checker(now_data, now_key: ABCKey, last_key: list[ABCKey], key_index: int):
@@ -185,6 +230,449 @@ class ConfigData(ABCConfigData):
         except RequiredPathNotFoundError:
             self.modify(path, default)
             return default
+
+    @override
+    def __getitem__(self, key):
+        data = self._data[key]
+        is_sequence = isinstance(data, Sequence) and not isinstance(data, (str, bytes))
+        if isinstance(data, Mapping) or is_sequence:
+            return ConfigData(data)
+        return deepcopy(data)
+
+
+def _generate_magic_methods[T: type](cls: T) -> T:
+    for name, func in dict(vars(cls)).items():
+        if not hasattr(func, "__generate_magic_methods"):
+            continue
+        delattr(func, "__generate_magic_methods")
+
+        i_name = f"__i{name[2:-2]}__"
+        r_name = f"__r{name[2:-2]}__"
+
+        code = dedent(f"""
+        def {i_name}(self, other):
+            self._data = self.{name}(other)
+            return self
+        def {r_name}(self, other):
+            return self.{name}(other)
+        """)
+
+        funcs = {}
+        exec(code, funcs)
+
+        funcs[i_name].__qualname__ = f"{cls.__qualname__}.{i_name}"
+        funcs[r_name].__qualname__ = f"{cls.__qualname__}.{r_name}"
+
+        setattr(cls, i_name, _check_read_only(funcs[i_name]))
+        setattr(cls, r_name, funcs[r_name])
+
+    return cls
+
+
+def _generate[F: Callable](func: F) -> F:
+    func.__generate_magic_methods = True
+
+    @wrapt.decorator
+    def wrapper(wrapped, instance, args, kwargs):
+        if isinstance(args[0], type(instance)):
+            args[0] = instance.data
+
+        return wrapped(*args, **kwargs)
+
+    return wrapper(func)
+
+
+@_generate_magic_methods
+class MappingConfigData[D: Mapping | MutableMapping](BaseSupportsIndexConfigData, MutableMapping):
+    """
+    支持 Mapping 的 ConfigData
+    """
+    _data: D
+    data: D
+
+    def __init__(self, data: Optional[D] = None):
+        if data is None:
+            data = dict()
+        super().__init__(data)
+
+    @override
+    @property
+    def data_read_only(self) -> bool:
+        return not isinstance(self._data, MutableMapping)
+
+    def keys(self, *, recursive: bool = False, end_point_only: bool = False) -> KeysView[str]:
+        r"""
+        获取所有键
+
+        :param recursive: 是否递归获取
+        :type recursive: bool
+        :param end_point_only: 是否只获取叶子节点
+        :type end_point_only: bool
+
+        :return: 所有键
+        :rtype: KeysView[str]
+
+        例子
+        ----
+
+           >>> from C41811.Config import ConfigData
+           >>> data = ConfigData({
+           ...     "foo": {
+           ...         "bar": {
+           ...             "baz": "value"
+           ...         },
+           ...         "bar1": "value1"
+           ...     },
+           ...     "foo1": "value2"
+           ... })
+
+           不带参数行为与普通字典一样
+
+           >>> data.keys()
+           dict_keys(['foo', 'foo1'])
+
+           参数 ``end_point_only`` 会滤掉非 ``叶子节点`` 的键
+
+           >>> data.keys(end_point_only=True)
+           odict_keys(['foo1'])
+
+           参数 ``recursive`` 用于获取所有的 ``路径``
+
+           >>> data.keys(recursive=True)
+           odict_keys(['foo\\.bar\\.baz', 'foo\\.bar', 'foo\\.bar1', 'foo', 'foo1'])
+
+           同时提供 ``recursice`` 和 ``end_point_only`` 会产出所有 ``叶子节点`` 的路径
+
+           >>> data.keys(recursive=True, end_point_only=True)
+           odict_keys(['foo\\.bar\\.baz', 'foo\\.bar1', 'foo1'])
+
+        """
+
+        if not any((
+                recursive,
+                end_point_only,
+        )):
+            return self._data.keys()
+
+        def _recursive(data: Mapping) -> Generator[str, None, None]:
+            for k, v in data.items():
+                k: str = k.replace('\\', "\\\\")
+                if isinstance(v, Mapping):
+                    yield from (f"{k}\\.{x}" for x in _recursive(v))
+                    if end_point_only:
+                        continue
+                yield k
+
+        if recursive:
+            return OrderedDict.fromkeys(x for x in _recursive(self._data)).keys()
+
+        if end_point_only:
+            return OrderedDict.fromkeys(
+                k.replace('\\', "\\\\") for k, v in self._data.items() if not isinstance(v, Mapping)
+            ).keys()
+
+    def values(self, get_raw: bool = False) -> ValuesView[Any]:
+        """
+        获取所有值
+
+        :param get_raw: 是否获取原始数据
+        :type get_raw: bool
+
+        :return: 所有键值对
+        :rtype: ValuesView[Any]
+        """
+        if get_raw:
+            return self._data.values()
+
+        return OrderedDict(
+            (k, self.from_data(v) if isinstance(v, Mapping) else deepcopy(v)) for k, v in self._data.items()
+        ).values()
+
+    def items(self, *, get_raw: bool = False) -> ItemsView[str, Any]:
+        """
+        获取所有键值对
+
+        :param get_raw: 是否获取原始数据
+        :type get_raw: bool
+
+        :return: 所有键值对
+        :rtype: ItemsView[str, Any]
+        """
+        if get_raw:
+            return self._data.items()
+        return OrderedDict(
+            (deepcopy(k), self.from_data(v) if isinstance(v, Mapping) else deepcopy(v)) for k, v in self._data.items()
+        ).items()
+
+    def __getattr__(self, item) -> Self | Any:
+        try:
+            item_obj = self[item]
+        except KeyError:
+            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{item}'")
+        return item_obj
+
+    @_generate
+    def __or__(self, other):
+        return self.data | other
+
+
+@_generate_magic_methods
+class SequenceConfigData[D: Sequence | MutableSequence](BaseSupportsIndexConfigData):  # todo MutableSequence
+    """
+    支持 Sequence 的 ConfigData
+    """
+    _data: D
+    data: D
+
+    def __init__(self, data: Optional[D] = None):
+        if data is None:
+            data = list()
+        super().__init__(data)
+
+    @override
+    @property
+    def data_read_only(self) -> bool:
+        return not isinstance(self._data, MutableSequence)
+
+    @_generate
+    def __mul__(self, other):
+        return self._data * other
+
+    @_generate
+    def __add__(self, other):
+        return self._data + other
+
+    def __rmul__(self, other): ...
+
+    def __radd__(self, other): ...
+
+
+@_generate_magic_methods
+class NumberConfigData[D: Number](BaseConfigData):
+    _data: D
+    data: D
+
+    def __init__(self, data: Optional[D] = None):
+        if data is None:
+            self._data = int()
+        super().__init__(data)
+
+    def __int__(self) -> int:
+        return int(self._data)
+
+    def __float__(self) -> float:
+        return float(self._data)
+
+    def __bool__(self) -> bool:
+        return bool(self._data)
+
+    @_generate
+    def __add__(self, other):
+        return self._data + other
+
+    @_generate
+    def __sub__(self, other):
+        return self._data - other
+
+    @_generate
+    def __mul__(self, other):
+        return self._data * other
+
+    @_generate
+    def __truediv__(self, other):
+        return self._data / other
+
+    @_generate
+    def __floordiv__(self, other):
+        return self._data // other
+
+    @_generate
+    def __mod__(self, other):
+        return self._data % other
+
+    @_generate
+    def __pow__(self, other):
+        return self._data ** other
+
+    @_generate
+    def __and__(self, other):
+        return self._data & other
+
+    @_generate
+    def __or__(self, other):
+        return self._data | other
+
+    @_generate
+    def __xor__(self, other):
+        return self._data ^ other
+
+    @_generate
+    def __matmul__(self, other):
+        return self._data @ other
+
+    @_generate
+    def __lshift__(self, other):
+        return self._data << other
+
+    @_generate
+    def __rshift__(self, other):
+        return self._data >> other
+
+    def __radd__(self, other): ...
+
+    def __rsub__(self, other): ...
+
+    def __rmul__(self, other): ...
+
+    def __rtruediv__(self, other): ...
+
+    def __rfloordiv__(self, other): ...
+
+    def __rmod__(self, other): ...
+
+    def __rpow__(self, other): ...
+
+    def __rand__(self, other): ...
+
+    def __ror__(self, other): ...
+
+    def __rxor__(self, other): ...
+
+    def __rmatmul__(self, other): ...
+
+    def __rlshift__(self, other): ...
+
+    def __rrshift__(self, other): ...
+
+    def __invert__(self):
+        return ~self._data
+
+    def __neg__(self):
+        return -self._data
+
+    def __pos__(self):
+        return +self._data
+
+    def __abs__(self):
+        return abs(self._data)
+
+    # noinspection SpellCheckingInspection
+    def __round__(self, ndigits: int | None = None):
+        return round(self._data, ndigits)
+
+    def __trunc__(self):
+        return math.trunc(self._data)
+
+    def __floor__(self):
+        return math.floor(self._data)
+
+    def __ceil__(self):
+        return math.ceil(self._data)
+
+    def __index__(self) -> int:
+        return int(self._data)
+
+
+class BoolConfigData[D: bool](NumberConfigData):
+    _data: D
+    data: D
+
+    def __init__(self, data: Optional[D] = None):
+        if data is None:
+            self._data = bool()
+        super().__init__(data)
+
+
+@_generate_magic_methods
+class StringConfigData[D: str | bytes](BaseConfigData):
+    _data: D
+    data: D
+
+    def __init__(self, data: Optional[D] = None):
+        if data is None:
+            self._data = str()
+        super().__init__(data)
+
+    def __format__(self, format_spec: D) -> D:
+        return self._data.__format__(format_spec)
+
+    @_generate
+    def __add__(self, other):
+        return self._data + other
+
+    @_generate
+    def __mul__(self, other):
+        return self._data * other
+
+    def __getitem__(self, item):
+        return self._data[item]
+
+    @_check_read_only
+    def __setitem__(self, key, value):
+        self._data[key] = value
+
+    @_check_read_only
+    def __delitem__(self, key):
+        del self._data[key]
+
+    def __reversed__(self):
+        return reversed(self._data)
+
+
+class ObjectConfigData[D: object](BaseConfigData):
+    _data: D
+    data: D
+
+    @override
+    @property
+    def data(self) -> D:
+        """"""
+
+        return self._data
+
+
+type AnyConfigData = (
+        MappingConfigData
+        | StringConfigData
+        | SequenceConfigData
+        | BoolConfigData
+        | NumberConfigData
+        | ObjectConfigData
+)
+
+
+class ConfigData(ABC):
+    """
+    配置数据类
+
+    .. versionchanged:: 0.1.5
+       会自动根据传入的配置数据类型选择对应的子类
+    """
+    TYPES: ClassVar[dict[tuple[type, ...], type]] = {
+        (Mapping, MutableMapping, type(None)): MappingConfigData,
+        (str | bytes,): StringConfigData,
+        (Sequence, MutableSequence): SequenceConfigData,
+        (bool,): BoolConfigData,
+        (Number,): NumberConfigData,
+        (object,): ObjectConfigData,
+    }
+
+    def __new__(cls, *args, **kwargs) -> AnyConfigData:
+        if not args:
+            args = (None,)
+        for types, config_data_cls in cls.TYPES.items():
+            if not isinstance(args[0], types):
+                continue
+            return config_data_cls(*args, **kwargs)
+        raise TypeError(f"Unsupported type: {args[0]}")
+
+
+ConfigData.register(MappingConfigData)
+ConfigData.register(SequenceConfigData)
+ConfigData.register(NumberConfigData)
+ConfigData.register(BoolConfigData)
+ConfigData.register(StringConfigData)
+ConfigData.register(ObjectConfigData)
 
 
 class ConfigFile(ABCConfigFile):
@@ -427,6 +915,15 @@ class BaseConfigPool(ABCConfigPool, ABC):
 
 
 __all__ = (
+    "BaseConfigData",
+    "BaseSupportsIndexConfigData",
+    "MappingConfigData",
+    "SequenceConfigData",
+    "BoolConfigData",
+    "NumberConfigData",
+    "StringConfigData",
+    "ObjectConfigData",
+    "AnyConfigData",
     "ConfigData",
     "ConfigFile",
     "BaseConfigPool"

@@ -45,14 +45,14 @@ pip install C41811.Config
 ## 一个简单的示例
 
 ```python
-from C41811.Config import ConfigData
+from C41811.Config import MappingConfigData
 from C41811.Config import JsonSL
 from C41811.Config import requireConfig
 from C41811.Config import saveAll
 
 JsonSL().register_to()
 
-cfg: ConfigData = requireConfig(
+cfg: MappingConfigData = requireConfig(
     '', "Hello World.json",
     {  # 简单且强大的配置数据验证器
         "Hello": "World",

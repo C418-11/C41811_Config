@@ -27,6 +27,7 @@ from .abc import ABCConfigData
 from .abc import ABCKey
 from .abc import ABCPath
 from .base import ConfigData
+from .base import MappingConfigData
 from .errors import ConfigDataTypeError
 from .errors import ConfigOperate
 from .errors import KeyInfo
@@ -66,7 +67,7 @@ class ValidatorFactoryConfig:
     extra: dict = dataclasses.field(default_factory=dict)
 
 
-def _fill_not_exits(raw_obj: ABCConfigData, obj: ABCConfigData):
+def _fill_not_exits(raw_obj: MappingConfigData, obj: MappingConfigData):
     all_leaf = dict(recursive=True, end_point_only=True)
     diff_keys = obj.keys(**all_leaf) - raw_obj.keys(**all_leaf)
     for key in diff_keys:
@@ -408,14 +409,13 @@ class DefaultValidatorFactory:
 
         self.model = self._mapping2model(fmt_validator, model_config.data)
 
-    def __call__[D: ABCConfigData](self, data: D) -> D:
-        data: ABCConfigData  # 不加这行下面那行**data.data类型检查器会抽风
+    def __call__[D: MappingConfigData](self, data: D) -> D:
         try:
             dict_obj = self.model(**data.data).model_dump()
         except ValidationError as err:
             raise _process_pydantic_exceptions(err) from None
 
-        config_obj: ABCConfigData = data.from_data(dict_obj)
+        config_obj: MappingConfigData = data.from_data(dict_obj)
         if self.validator_config.ignore_missing:
             for key in config_obj.keys(recursive=True, end_point_only=True):
                 if config_obj.retrieve(key) is IgnoreMissing:

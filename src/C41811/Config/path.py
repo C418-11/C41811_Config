@@ -22,7 +22,13 @@ from .errors import TokenInfo
 from .errors import UnknownTokenTypeError
 
 
-class ItemMixin(ABCKey, ABC):
+class IndexMixin(ABCKey, ABC):
+    """
+    混入类，提供对Index操作的支持
+
+    .. versionchanged:: 0.1.5
+       从ItemMixin重命名为IndexMixin
+    """
 
     @override
     def __get_inner_element__[T: Any](self, data: T) -> T:
@@ -37,7 +43,10 @@ class ItemMixin(ABCKey, ABC):
         del data[self._key]
 
 
-class AttrKey(ItemMixin, ABCKey):
+class AttrKey(IndexMixin, ABCKey):
+    """
+    属性键
+    """
     _key: str
 
     def __init__(self, key: str):
@@ -79,7 +88,10 @@ class AttrKey(ItemMixin, ABCKey):
         return super().__hash__()
 
 
-class IndexKey(ItemMixin, ABCKey):
+class IndexKey(IndexMixin, ABCKey):
+    """
+    下标键
+    """
     _key: int
 
     def __init__(self, key: int):

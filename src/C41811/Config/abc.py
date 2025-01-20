@@ -4,24 +4,20 @@
 
 from abc import ABC
 from abc import abstractmethod
-from collections import OrderedDict
-from collections.abc import Generator
-from collections.abc import ItemsView
 from collections.abc import Iterable
-from collections.abc import KeysView
 from collections.abc import Mapping
-from collections.abc import MutableMapping
 from collections.abc import Sequence
-from collections.abc import ValuesView
 from copy import deepcopy
 from typing import Any
 from typing import Optional
 from typing import Self
-from typing import TypeAlias
 
 from pydantic_core import core_schema
 from pyrsistent import PMap
 from pyrsistent import pmap
+
+from ._protocols import SupportsIndex
+from ._protocols import SupportsWriteIndex
 
 
 class ABCKey(ABC):
@@ -188,34 +184,30 @@ class ABCPath(ABC):
         return f"<{type(self).__name__}{self._keys}>"
 
 
-class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
+class ABCConfigData[D: Any](ABC):
     """
     配置数据抽象基类
+
+    .. versionchanged:: 0.1.5
+       现在配置数据不再局限于Mapping
     """
 
-    def __init__(self, data: Optional[D] = None):
+    def __init__(self, data: D):
         """
-        data为None时，默认为空字典
-
-        如果data不继承自MutableMapping，则该配置数据被设为只读
-
         :param data: 配置的原始数据
-        :type data: Mapping | MutableMapping
+        :type data: Any
         """
 
-        if data is None:
-            data = {}
         self._data: D = deepcopy(data)
-        self._data_read_only: bool = not isinstance(data, MutableMapping)
-        self._read_only: bool = self._data_read_only
+        self._read_only: bool | None = False
 
     @classmethod
-    def from_data(cls, data: D) -> Self:
+    def from_data[S: Self](cls: type[S], data: D) -> S:
         """
         提供创建同类型配置数据的快捷方式
 
         :param data: 配置的原始数据
-        :type data: Mapping | MutableMapping
+        :type data: Any
         :return: 新的配置数据
         :rtype: Self
 
@@ -242,32 +234,34 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
         配置的原始数据*快照*
 
         :return: 配置的原始数据*快照*
-        :rtype: Mapping | MutableMapping
+        :rtype: Any
         """
         return deepcopy(self._data)
 
     @property
-    def data_read_only(self) -> bool:
+    @abstractmethod
+    def data_read_only(self) -> bool | None:
         """
         配置数据是否为只读
 
         :return: 配置数据是否为只读
-        :rtype: bool
+        :rtype: bool | None
 
         .. versionadded:: 0.1.3
+        .. versionchanged:: 0.1.5
+           改为抽象属性
         """
-        return self._data_read_only
 
     @property
     @abstractmethod
-    def read_only(self) -> bool:
+    def read_only(self) -> bool | None:
         """
         配置数据是否为 ``只读模式``
 
         :return: 配置数据是否为 ``只读模式``
-        :rtype: bool
+        :rtype: bool | None
         """
-        return self._data_read_only or self._read_only
+        return self.data_read_only or self._read_only
 
     @read_only.setter
     @abstractmethod
@@ -277,6 +271,42 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
 
         :raise ConfigDataReadOnlyError: 配置数据为只读
         """
+
+    def __contains__(self, key) -> bool:
+        return key in self._data
+
+    def __len__(self):
+        return len(self._data)
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return NotImplemented
+        return self._data == other._data
+
+    def __iter__(self):
+        return iter(self._data)
+
+    def __str__(self) -> str:
+        return str(self._data)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self._data!r})"
+
+    def __deepcopy__(self, memo) -> Self:
+        return self.from_data(self._data)
+
+
+class ABCSupportsIndexConfigData[D: SupportsIndex | SupportsWriteIndex](
+    ABCConfigData,
+    SupportsIndex,
+    SupportsWriteIndex,
+    ABC
+):
+    """
+    支持 ``索引`` 操作的配置数据
+
+    .. versionadded:: 0.1.5
+    """
 
     @abstractmethod
     def retrieve(self, path: str | ABCPath, *, get_raw: bool = False) -> Any:
@@ -399,17 +429,17 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
            路径存在时返回值
 
            >>> data.get("key")
-           "value"
+           'value'
 
            路径不存在时返回默认值None
 
-           >>> data.get("not exists")
+           >>> print(data.get("not exists"))
            None
 
            自定义默认值
 
            >>> data.get("with default", default="default value")
-           "default value"
+           'default value'
         """
 
     @abstractmethod
@@ -441,165 +471,31 @@ class ABCConfigData[D: Mapping | MutableMapping](ABC, Mapping):
            路径存在时返回值
 
            >>> data.set_default("key")
-           "value"
+           'value'
 
            路径不存在时返回默认值None并填充到原始数据
 
-           >>> data.set_default("not exists")
+           >>> print(data.set_default("not exists"))
            None
            >>> data
-           ConfigData({'key': 'value', 'not exists': None})
+           MappingConfigData({'key': 'value', 'not exists': None})
 
            自定义默认值
 
            >>> data.set_default("with default", default="default value")
-           "default value"
+           'default value'
            >>> data
-           ConfigData({'key': 'value', 'not exists': None, 'with default': 'default value'})
+           MappingConfigData({'key': 'value', 'not exists': None, 'with default': 'default value'})
         """
 
-    def keys(self, *, recursive: bool = False, end_point_only: bool = False) -> KeysView[str]:
-        """
-        获取所有键
-
-        :param recursive: 是否递归获取
-        :type recursive: bool
-        :param end_point_only: 是否只获取叶子节点
-        :type end_point_only: bool
-
-        :return: 所有键
-        :rtype: KeysView[str]
-
-        例子
-        ----
-
-           >>> from C41811.Config import ConfigData
-           >>> data = ConfigData({
-           ...     "foo": {
-           ...         "bar": {
-           ...             "baz": "value"
-           ...         },
-           ...         "bar1": "value1"
-           ...     },
-           ...     "foo1": "value2"
-           ... })
-
-           不带参数行为与普通字典一样
-
-           >>> data.keys()
-           dict_keys(['foo', 'foo1'])
-
-           参数 ``end_point_only`` 会滤掉非 ``叶子节点`` 的键
-
-           >>> data.keys(end_point_only=True)
-           odict_keys(['foo1'])
-
-           参数 ``recursive`` 用于获取所有的 ``路径``
-
-           >>> data.keys(recursive=True)
-           odict_keys(['foo\\.bar\\.baz', 'foo\\.bar', 'foo\\.bar1', 'foo', 'foo1'])
-
-           同时提供 ``recursice`` 和 ``end_point_only`` 会产出所有 ``叶子节点`` 的路径
-
-           >>> data.keys(recursive=True, end_point_only=True)
-           odict_keys(['foo\\.bar\\.baz', 'foo\\.bar1', 'foo1'])
-
-        """
-
-        if not any((
-                recursive,
-                end_point_only,
-        )):
-            return self._data.keys()
-
-        def _recursive(data: Mapping) -> Generator[str, None, None]:
-            for k, v in data.items():
-                k: str = k.replace('\\', "\\\\")
-                if isinstance(v, Mapping):
-                    yield from (f"{k}\\.{x}" for x in _recursive(v))
-                    if end_point_only:
-                        continue
-                yield k
-
-        if recursive:
-            return OrderedDict.fromkeys(x for x in _recursive(self._data)).keys()
-
-        if end_point_only:
-            return OrderedDict.fromkeys(
-                k.replace('\\', "\\\\") for k, v in self._data.items() if not isinstance(v, Mapping)
-            ).keys()
-
-    def values(self, get_raw: bool = False) -> ValuesView[Any]:
-        """
-        获取所有值
-
-        :param get_raw: 是否获取原始数据
-        :type get_raw: bool
-
-        :return: 所有键值对
-        :rtype: ValuesView[Any]
-        """
-        if get_raw:
-            return self._data.values()
-
-        return OrderedDict(
-            (k, self.from_data(v) if isinstance(v, Mapping) else deepcopy(v)) for k, v in self._data.items()
-        ).values()
-
-    def items(self, *, get_raw: bool = False) -> ItemsView[str, Any]:
-        """
-        获取所有键值对
-
-        :param get_raw: 是否获取原始数据
-        :type get_raw: bool
-
-        :return: 所有键值对
-        :rtype: ItemsView[str, Any]
-        """
-        if get_raw:
-            return self._data.items()
-        return OrderedDict(
-            (deepcopy(k), self.from_data(v) if isinstance(v, Mapping) else deepcopy(v)) for k, v in self._data.items()
-        ).items()
-
-    def __getitem__(self, key):
-        return self.from_data(self._data[key]) if isinstance(self._data[key], Mapping) else deepcopy(self._data[key])
+    @abstractmethod
+    def __getitem__(self, key): ...
 
     def __setitem__(self, key, value) -> None:
         self._data[key] = value
 
     def __delitem__(self, key) -> None:
         del self._data[key]
-
-    def __contains__(self, key) -> bool:
-        return key in self._data
-
-    def __len__(self):
-        return len(self._data)
-
-    def __eq__(self, other):
-        if not isinstance(other, type(self)):
-            return NotImplemented
-        return self._data == other._data
-
-    def __getattr__(self, item) -> Self | Any:
-        try:
-            item_obj = self._data[item]
-        except KeyError:
-            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{item}'")
-        return self.from_data(item_obj) if isinstance(item_obj, Mapping) else item_obj
-
-    def __iter__(self):
-        return iter(self._data)
-
-    def __str__(self) -> str:
-        return str(self._data)
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self._data!r})"
-
-    def __deepcopy__(self, memo) -> Self:
-        return self.from_data(self._data)
 
     @staticmethod
     def __get_pydantic_core_schema__() -> core_schema.DictSchema:  # pragma: no cover
@@ -892,7 +788,7 @@ class ABCConfigPool(ABCSLProcessorPool):
         """
 
 
-SLArgument: TypeAlias = Optional[Sequence | Mapping | tuple[Sequence, Mapping[str, Any]]]
+type SLArgument = Optional[Sequence | Mapping | tuple[Sequence, Mapping[str, Any]]]
 
 
 class ABCConfigSL(ABC):
@@ -1074,6 +970,7 @@ __all__ = (
     "ABCKey",
     "ABCPath",
     "ABCConfigData",
+    "ABCSupportsIndexConfigData",
     "ABCSLProcessorPool",
     "ABCConfigPool",
     "ABCConfigFile",

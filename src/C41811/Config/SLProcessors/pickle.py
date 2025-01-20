@@ -5,8 +5,8 @@
 import pickle
 from typing import override
 
-from .._io_protocol import SupportsReadAndReadline
-from .._io_protocol import SupportsWrite
+from .._protocols import SupportsReadAndReadline
+from .._protocols import SupportsWrite
 from ..abc import ABCConfigFile
 from ..base import ConfigData
 from ..main import BaseLocalFileConfigSL

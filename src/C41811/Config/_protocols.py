@@ -23,4 +23,21 @@ class SupportsReadAndReadline(Protocol[_T_co]):
     def readline(self, __length: int = ...) -> _T_co: ...
 
 
-__all__ = ("SupportsWrite", "SupportsReadAndReadline")
+class SupportsIndex(Protocol[_T_co]):
+    def __getitem__(self, __key: _T_contra) -> _T_co: ...
+
+
+class SupportsWriteIndex(Protocol[_T_contra]):
+    def __getitem__(self, __key: _T_contra) -> _T_contra: ...
+
+    def __setitem__(self, __key: _T_contra, __value: _T_contra) -> None: ...
+
+    def __delitem__(self, __key: _T_contra) -> None: ...
+
+
+__all__ = (
+    "SupportsWrite",
+    "SupportsReadAndReadline",
+    "SupportsIndex",
+    "SupportsWriteIndex",
+)

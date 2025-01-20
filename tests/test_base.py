@@ -16,7 +16,9 @@ from C41811.Config import ConfigData
 from C41811.Config import ConfigFile
 from C41811.Config import ConfigPool
 from C41811.Config import IndexKey
+from C41811.Config import MappingConfigData
 from C41811.Config import Path
+from C41811.Config import SequenceConfigData
 from C41811.Config.errors import ConfigDataReadOnlyError
 from C41811.Config.errors import ConfigDataTypeError
 from C41811.Config.errors import RequiredPathNotFoundError
@@ -24,7 +26,7 @@ from C41811.Config.errors import UnsupportedConfigFormatError
 from utils import safe_raises
 
 
-class TestConfigData:
+class TestMappingConfigData:
 
     @staticmethod
     @fixture
@@ -49,7 +51,7 @@ class TestConfigData:
 
     @staticmethod
     @fixture
-    def data(odict):
+    def data(odict) -> MappingConfigData:
         return ConfigData(odict)
 
     @staticmethod
@@ -59,7 +61,7 @@ class TestConfigData:
 
     @staticmethod
     @fixture
-    def readonly_data(readonly_odict):
+    def readonly_data(readonly_odict) -> MappingConfigData:
         return ConfigData(readonly_odict)
 
     # noinspection PyTestUnpassedFixture
@@ -79,7 +81,7 @@ class TestConfigData:
         ("foo",         {"bar": 123},             (),                           {"get_raw": True}),  # noqa: E122
         ("foo\\.bar",   123,                      (),                           {}),  # noqa: E122
         ("foo1",        114,                      (),                           {}),  # noqa: E122
-        ("foo2",        ["bar"],                  (),                           {}),  # noqa: E122
+        ("foo2",        ["bar"],                  (),                           {"get_raw": True}),  # noqa: E122
         ("foo2\\[0\\]", "bar",                    (),                           {}),  # noqa: E122
         ("foo2\\.bar",  None,                     (ConfigDataTypeError, ),      {}),  # noqa: E122
         ("foo3",        None,                     (RequiredPathNotFoundError,), {}),  # noqa: E122
@@ -90,7 +92,7 @@ class TestConfigData:
 
     @staticmethod
     @mark.parametrize(*RetrieveTests)
-    def test_retrieve(data: ConfigData, path, value, ignore_excs, kwargs):
+    def test_retrieve(data: MappingConfigData, path, value, ignore_excs, kwargs):
         if kwargs is None:
             kwargs = {}
 
@@ -112,7 +114,7 @@ class TestConfigData:
 
     @staticmethod
     @mark.parametrize(*ModifyTests)
-    def test_modify(data: ConfigData, path, value, ignore_excs, kwargs):
+    def test_modify(data: MappingConfigData, path, value, ignore_excs, kwargs):
         if kwargs is None:
             kwargs = {}
 
@@ -139,14 +141,14 @@ class TestConfigData:
 
     @staticmethod
     @mark.parametrize(*DeleteTests)
-    def test_delete(data: ConfigData, path, ignore_excs):
+    def test_delete(data: MappingConfigData, path, ignore_excs):
         with safe_raises(ignore_excs):
             data.delete(path)
         assert path not in data
 
     @staticmethod
     @mark.parametrize(*DeleteTests)
-    def test_unset(data: ConfigData, path, ignore_excs):
+    def test_unset(data: MappingConfigData, path, ignore_excs):
         ignore_excs = tuple(exc for exc in ignore_excs if not issubclass(exc, RequiredPathNotFoundError))
         with safe_raises(ignore_excs):
             data.unset(path)
@@ -243,7 +245,7 @@ class TestConfigData:
         "path, value", (
             ("foo", ConfigData({"bar": 123}),),
             ("foo1", 114,),
-            ("foo2", ["bar"],),
+            ("foo2", ConfigData(["bar"]),),
         ))
 
     @staticmethod
@@ -379,6 +381,10 @@ class TestConfigData:
 
     @staticmethod
     def test_eq(data, readonly_data):
+        assert data == data
+        assert data == deepcopy(data)
+        assert readonly_data == readonly_data
+        assert readonly_data == deepcopy(readonly_data)
         assert data == readonly_data
 
     @staticmethod
@@ -445,6 +451,383 @@ class TestConfigData:
     @mark.parametrize(*ItemsTests)
     def test_items(data, kwargs, items):
         assert list(data.items(**kwargs)) == items
+
+    @staticmethod
+    def test_repr(data):
+        assert repr(data.data) in repr(data)
+        assert repr({"a": 1, "b": 2}) in repr(ConfigData({"a": 1, "b": 2}))
+
+
+class TestSequenceConfigFile:
+    @staticmethod
+    @fixture
+    def sequence() -> list:
+        return [
+            1,
+            2,
+            {
+                "a": [3, 4],
+                "b": {
+                    "c": 5,
+                    "d": 6,
+                },
+            },
+            [7, 8]
+        ]
+
+    @staticmethod
+    @fixture
+    def readonly_sequence(sequence) -> tuple:
+        return tuple(sequence)
+
+    @staticmethod
+    @fixture
+    def data(sequence) -> SequenceConfigData[list]:
+        return ConfigData(sequence)
+
+    @staticmethod
+    @fixture
+    def readonly_data(readonly_sequence) -> SequenceConfigData[tuple]:
+        return ConfigData(readonly_sequence)
+
+    # noinspection PyTestUnpassedFixture
+    @staticmethod
+    def test_init_deepcopy(sequence, readonly_sequence):
+        data = ConfigData(sequence)
+        assert data.data is not sequence
+        assert data.data == sequence
+
+        readonly_data = ConfigData(readonly_sequence)
+        assert readonly_data.data is not readonly_sequence
+        assert readonly_data.data == readonly_sequence
+
+    RetrieveTests = (
+        "path,           value,                        ignore_excs,                  kwargs", (  # @formatter:off # noqa: E122, E501
+        (r"\[0\]",       1,                            (),                           {}),  # noqa: E122
+        (r"\[0\]",       1,                            (),                           {"get_raw": True}),  # noqa: E122
+        (r"\[1\]",       2,                            (),                           {}),  # noqa: E122
+        (r"\[2\]\.a",    ConfigData([3, 4]),           (),                           {}),  # noqa: E122
+        (r"\[2\]\.a",    [3, 4],                       (),                           {"get_raw": True}),  # noqa: E122
+        (r"\[2\]\.b",    ConfigData({"c": 5, "d": 6}), (),                           {}),  # noqa: E122
+        (r"\[2\]\.b",    pmap({"c": 5, "d": 6}),       (),                           {"get_raw": True}),  # noqa: E122
+        (r"\[2\]\.b\.c", 5,                            (),                           {}),  # noqa: E122
+        (r"\[2\]\.b\.c", 5,                            (),                           {}),  # noqa: E122
+        (r"\[3\]\[0\]",  7,                            (),                           {}),  # noqa: E122
+        (r"\[0\]\.bar",  None,                         (ConfigDataTypeError, ),      {}),  # noqa: E122
+        (r"\[4\]",       None,                         (RequiredPathNotFoundError,), {}),  # noqa: E122
+        (r"\[3\]\[2\]",  None,                         (RequiredPathNotFoundError,), {}),  # noqa: E122
+        (r"\[3\]\.0",    None,                         (ConfigDataTypeError,),       {}),  # noqa: E122
+        (r"bar",         None,                         (ConfigDataTypeError,),       {}),  # noqa: E122
+    ))  # @formatter:on # noqa: E122
+
+    @staticmethod
+    @mark.parametrize(*RetrieveTests)
+    def test_retrieve(data: SequenceConfigData, path, value, ignore_excs, kwargs):
+        if kwargs is None:
+            kwargs = {}
+
+        with safe_raises(ignore_excs) as info:
+            result = data.retrieve(path, **kwargs)
+        if not info:
+            assert result == value
+
+    ModifyTests = (
+        "path,         value,        ignore_excs,                  kwargs", (  # @formatter:off # noqa: E122
+        (r"\[0\]",      99,           (),                           {}),  # noqa: E122
+        (r"\[2\]",      {"z": 9},     (),                           {}),  # noqa: E122
+        (r"\[1\]",      88,           (),                           {}),  # noqa: E122
+        (r"\[2\]\.a",   [9, 0],       (),                           {}),  # noqa: E122
+        ("bar",         None,         (ConfigDataTypeError,),       {}),  # noqa: E122
+        (r"\[3\]",      None,         (),                           {}),  # noqa: E122
+        (r"\[4\]",      None,         (RequiredPathNotFoundError,), {"allow_create": False}, ),  # noqa: E122
+    ))  # @formatter:on # noqa: E122
+
+    @staticmethod
+    @mark.parametrize(*ModifyTests)
+    def test_modify(data: SequenceConfigData, path, value, ignore_excs, kwargs):
+        if kwargs is None:
+            kwargs = {}
+
+        with safe_raises(ignore_excs) as info:
+            data.modify(path, value, **kwargs)
+            result = data.retrieve(path, get_raw=True)
+        if not info:
+            assert result == value
+
+    DeleteTests = (
+        "path,             ignore_excs", (  # @formatter:off # noqa: E122
+        (r"\[0\]",         ()),  # noqa: E122
+        (r"\[1\]",         ()),  # noqa: E122
+        (r"\[2\]",         ()),  # noqa: E122
+        (r"\[2\]\.a",      ()),  # noqa: E122
+        (r"\[2\]\.a\[1\]", ()),  # noqa: E122
+        (r"\[2\]\.b\.c",   ()),  # noqa: E122
+        (r"\[3\]\[1\]",    ()),  # noqa: E122
+        ("abc",            (ConfigDataTypeError,)),  # noqa: E122
+        (r"\[0\]\.a",      (ConfigDataTypeError,)),  # noqa: E122
+        (r"\[2\]\[0\]",    (ConfigDataTypeError, )),  # noqa: E122
+        (r"\[9\]",         (RequiredPathNotFoundError,)),  # noqa: E122
+        (r"\[2\]\.z",      (RequiredPathNotFoundError,)),  # noqa: E122
+        (r"\[3\]\[-5\]",   (RequiredPathNotFoundError,)),  # noqa: E122
+    ))  # @formatter:on # noqa: E122
+
+    @staticmethod
+    @mark.parametrize(*DeleteTests)
+    def test_delete(data: SequenceConfigData, path, ignore_excs):
+        with safe_raises(ignore_excs):
+            data.delete(path)
+        assert path not in data
+
+    @staticmethod
+    @mark.parametrize(*DeleteTests)
+    def test_unset(data: SequenceConfigData, path, ignore_excs):
+        ignore_excs = tuple(exc for exc in ignore_excs if not issubclass(exc, RequiredPathNotFoundError))
+        with safe_raises(ignore_excs):
+            data.unset(path)
+        assert path not in data
+
+    ExistsTests = (
+        "path,              is_exist, ignore_excs,            kwargs", (  # @formatter:off # noqa: E122
+        (r"\[0\]",          True,     (),                     {}),  # noqa: E122
+        (r"\[2\]",          True,     (),                     {}),  # noqa: E122
+        (r"\[9\]",          False,    (),                     {}),  # noqa: E122
+        (r"\[3\]",          True,     (),                     {}),  # noqa: E122
+        (r"\[3\]",          True,     (),                     {}),  # noqa: E122
+        (r"\[-6\]",         False,    (),                     {}),  # noqa: E122
+        (r"\[3\]\[1\]",     True,     (),                     {}),  # noqa: E122
+        (r"\[3\]\[4\]",     False,    (),                     {}),  # noqa: E122
+        (r"\[2\]\.b\.c",    True,     (),                     {}),  # noqa: E122
+        ("abc",             False,    (),                     {"ignore_wrong_type": True}),  # noqa: E122
+        (r"\[3\]\.abc",     False,    (),                     {"ignore_wrong_type": True}),  # noqa: E122
+        (r"\[2\]\[1\]",     None,     (ConfigDataTypeError,), {}),  # noqa: E122
+        (r"\[3\]\.abc",     False,    (ConfigDataTypeError,), {}),  # noqa: E122
+        (r"abc",            False,    (ConfigDataTypeError,), {}),  # noqa: E122
+    ))  # @formatter:on  # noqa: E122
+
+    @staticmethod
+    @mark.parametrize(*ExistsTests)
+    def test_exists(data, path, is_exist, ignore_excs, kwargs):
+        with safe_raises(ignore_excs) as info:
+            exists = data.exists(path, **kwargs)
+        if not info:
+            assert exists == is_exist
+
+    GetTests = (
+        RetrieveTests[0],
+        (
+            *RetrieveTests[1],  # @formatter:off
+            # path               value            ignore_excs             kwargs
+            (r"\[10\]",           "default value", (),                     {"default": "default value"}),
+            (r"\[3\]\[20\]",      "default value", (),                     {"default": "default value"}),
+            (r"foo2\\.not exist", "default value", (ConfigDataTypeError,), {"default": "default value"}),
+        )  # @formatter:on
+    )
+
+    @staticmethod
+    @mark.parametrize(*GetTests)
+    def test_get(data, path, value, ignore_excs, kwargs):
+        if kwargs is None:
+            kwargs = {}
+
+        if any(issubclass(exc, LookupError) for exc in ignore_excs):
+            ignore_excs = tuple(exc for exc in ignore_excs if not issubclass(exc, LookupError))
+            value = None
+
+        with safe_raises(ignore_excs) as info:
+            result = data.get(path, **kwargs)
+        if not info:
+            assert result == value
+
+    SetDefaultTests = (
+        RetrieveTests[0],
+        (
+            *((*x[:3], x[3] | {"get_raw": True}) for x in RetrieveTests[1]),  # @formatter:off
+            # path               value            ignore_excs             kwargs
+            (r"\[10\]",           "default value", (),                     {"default": "default value"}),
+            (r"\[3\]\[20\]",      "default value", (),                     {"default": "default value"}),
+            (r"foo2\\.not exist", "default value", (ConfigDataTypeError,), {"default": "default value"}),
+        )  # @formatter:on
+    )
+
+    @staticmethod
+    @mark.parametrize(*GetTests)
+    def test_set_default(data, path, value, ignore_excs, kwargs):
+        has_index_key = any(isinstance(k, IndexKey) for k in Path.from_str(path))
+        ignore_config_data_type_error = any(issubclass(exc, ConfigDataTypeError) for exc in ignore_excs)
+
+        if has_index_key and (not data.exists(path, ignore_wrong_type=ignore_config_data_type_error)):
+            print(f"Skipping test because cannot set default value for non-existent index key: {path}")
+            return
+
+        ignore_excs = tuple(exc for exc in ignore_excs if not issubclass(exc, LookupError))
+        if "default" in kwargs:
+            value = [value, kwargs["default"]]
+        else:
+            value = value,
+
+        if data.exists(path, ignore_wrong_type=True):
+            value = *value, data.retrieve(path, get_raw=True)
+
+        with safe_raises(ignore_excs):
+            assert data.set_default(path, **kwargs) in value
+            assert data.exists(path)
+            assert data.retrieve(path, get_raw=True) in value
+
+    GetItemTests = (
+        "path, value", (
+            (1, 2),
+            (2, ConfigData({
+                "a": [3, 4],
+                "b": {
+                    "c": 5,
+                    "d": 6,
+                },
+            })),
+            (3, ConfigData([7, 8])),
+        ))
+
+    @staticmethod
+    @mark.parametrize(*GetItemTests)
+    def test_getitem(data, path, value):
+        assert data[path] == value
+
+    @staticmethod
+    @mark.parametrize("path, new_value", (
+            (0, 456),
+            (1, {"test": "value"}),
+            (2, 789),
+            (3, 101112),
+    ))
+    def test_setitem(data, path, new_value):
+        data[path] = new_value
+        assert data[path].data == new_value if isinstance(data[path], ConfigData) else data[path] == new_value
+
+    @staticmethod
+    @mark.parametrize("path, ignore_excs", (
+            (1, ()),
+            (2, ()),
+            (3, ()),
+            (4, (IndexError,)),
+            (5, (IndexError,)),
+    ))
+    def test_delitem(data: SequenceConfigData, path, ignore_excs):
+        with safe_raises(ignore_excs):
+            last = data[path]
+            del data[path]
+
+        try:
+            assert last != data[path]
+        except IndexError:
+            pass
+
+    @staticmethod
+    @mark.parametrize("path, is_exist", (
+            (1, True),
+            (888, False),
+            (2, True),
+            ([7, 8], True),
+            ([999], False),
+            (r"\[0\]", False),
+            ("bar", False),
+    ))
+    def test_contains(data, path, is_exist):
+        assert (path in data) == is_exist
+
+    IterTests = ("raw_sequence", (
+        [],
+        [1, 2, 3],
+        [1, {2: [3, 4]}, 5],
+        [1, 2, [3, [4, 5]], 6],
+        [{1: 2, 3: [4, 5, {6: 7}, 8]}, 9, {10: [11, 12]}, 13],
+    ))
+
+    @staticmethod
+    @mark.parametrize(*IterTests)
+    def test_iter(raw_sequence):
+        assert list(iter(ConfigData(raw_sequence))) == list(iter(raw_sequence))
+
+    @staticmethod
+    @mark.parametrize(*IterTests)
+    def test_str(raw_sequence):
+        assert str(ConfigData(raw_sequence)) == str(raw_sequence)
+
+    @staticmethod
+    def test_data_readonly_attr(data, readonly_data):
+        assert readonly_data.data_read_only
+        assert not data.data_read_only
+
+        with raises(AttributeError):
+            # noinspection PyPropertyAccess
+            data.data_read_only = None
+
+        with raises(AttributeError):
+            # noinspection PyPropertyAccess
+            readonly_data.data_read_only = None
+
+    @staticmethod
+    def test_readonly_attr(data, readonly_data):
+        assert readonly_data.read_only
+        with raises(ConfigDataReadOnlyError):
+            readonly_data.read_only = False
+
+        assert not data.read_only
+        data.read_only = True
+        assert data.read_only
+        with raises(ConfigDataReadOnlyError):
+            data.modify(r"\[0\]", 123)
+
+    @staticmethod
+    def test_data_attr(data):
+        last_data = data.data
+        data[0] = 456
+        assert last_data != data.data
+
+        with raises(AttributeError):
+            # noinspection PyPropertyAccess
+            data.data = {}
+
+    @classmethod
+    @mark.parametrize(*RetrieveTests)
+    def test_readonly_retrieve(cls, readonly_data, path, value, ignore_excs, kwargs):
+        cls.test_retrieve(readonly_data, path, value, ignore_excs, kwargs)
+
+    ReadOnlyModifyTests = (
+        ','.join(arg for arg in ModifyTests[0].split(',') if "ignore_excs" not in arg),
+        ((*x[:-2], x[-1]) for x in ModifyTests[1])
+    )
+
+    @classmethod
+    @mark.parametrize(*ReadOnlyModifyTests)
+    def test_readonly_modify(cls, readonly_data, path, value, kwargs):
+        cls.test_modify(readonly_data, path, value, ConfigDataReadOnlyError, kwargs)
+
+    ReadOnlyDeleteTests = (
+        ', '.join(arg for arg in DeleteTests[0].split(', ') if "ignore_excs" not in arg),
+        tuple(x[:-1] for x in DeleteTests[1])
+    )
+
+    @classmethod
+    @mark.parametrize(*ReadOnlyDeleteTests)
+    def test_readonly_delete(cls, readonly_data, path):
+        cls.test_delete(readonly_data, path, ConfigDataReadOnlyError)
+
+    @classmethod
+    @mark.parametrize(*ReadOnlyDeleteTests)
+    def test_readonly_unset(cls, readonly_data, path):
+        cls.test_unset(readonly_data, path, (ConfigDataReadOnlyError,))
+
+    @staticmethod
+    def test_eq(data, readonly_data):
+        assert data == data
+        assert data == deepcopy(data)
+        assert readonly_data == readonly_data
+        assert readonly_data == deepcopy(readonly_data)
+
+    @staticmethod
+    def test_deepcopy(data):
+        last_data = deepcopy(data)
+        data[0] = 456
+        assert last_data != data
 
     @staticmethod
     def test_repr(data):

@@ -19,8 +19,8 @@ import wrapt
 from pyrsistent import PMap
 from pyrsistent import pmap
 
-from ._io_protocol import SupportsReadAndReadline
-from ._io_protocol import SupportsWrite
+from ._protocols import SupportsReadAndReadline
+from ._protocols import SupportsWrite
 from .abc import ABCConfigData
 from .abc import ABCConfigFile
 from .abc import ABCConfigPool
