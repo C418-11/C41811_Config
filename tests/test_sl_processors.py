@@ -41,6 +41,26 @@ JsonSLTests = (
         (), ({"indent": 4, "sort_keys": False}, {})
     ),
     (
+        [1, 2, [3, [4, 5, [6], {'7': 8}]]],
+        (), ({"indent": 2}, {})
+    ),
+    (
+        "string",
+        (), ()
+    ),
+    (
+        True,
+        (), ()
+    ),
+    (
+        None,
+        (), ()
+    ),
+    (
+        11.45,
+        (), ()
+    ),
+    (
         NotImplemented,
         ((FailedProcessConfigFileError,), ()), ()
     ),
@@ -68,6 +88,26 @@ PickleSLTests = (
         (), ()
     ),
     (
+        [1, 2, [3, [4, 5, [6], {'7': 8}]]],
+        (), ()
+    ),
+    (
+        "string",
+        (), ()
+    ),
+    (
+        True,
+        (), ()
+    ),
+    (
+        None,
+        (), ()
+    ),
+    (
+        11.45,
+        (), ()
+    ),
+    (
         NotImplemented,
         (), ()
     ),
@@ -91,6 +131,26 @@ PyYamlTests = (
         (), ({"indent": 4}, {})
     ),
     (
+        [1, 2, [3, [4, 5, [6], {'7': 8}]]],
+        (), ({"indent": 2}, {})
+    ),
+    (
+        "string",
+        (), ()
+    ),
+    (
+        True,
+        (), ()
+    ),
+    (
+        None,
+        (), ()
+    ),
+    (
+        11.45,
+        (), ()
+    ),
+    (
         NotImplemented,
         ((FailedProcessConfigFileError,), ()), ()
     ),
@@ -106,6 +166,26 @@ RuamelYamlTests = (
         (), ()
     ),
     (
+        [1, 2, [3, [4, 5, [6], {'7': 8}]]],
+        (), ()
+    ),
+    (
+        "string",
+        (), ()
+    ),
+    (
+        True,
+        (), ()
+    ),
+    (
+        None,
+        (), ()
+    ),
+    (
+        11.45,
+        (), ()
+    ),
+    (
         OrderedDict((('b', 2), ('a', 1))),
         (), ()
     ),
@@ -115,7 +195,48 @@ RuamelYamlTests = (
     ),
 )
 
-TOMLTests = RuamelYamlTests
+TOMLTests = (
+    (
+        {"a": 1, "b": {"c": 2}},
+        (), ()
+    ),
+    (
+        {'1': [1, 2, 3]},
+        (), ()
+    ),
+    (
+        None,
+        (), ()
+    ),
+    (
+        OrderedDict((('b', 2), ('a', 1))),
+        (), ()
+    ),
+    (
+        {'1': [[1, 2], [3, 4], [5, 6]]},
+        (), ()
+    ),
+    (
+        [1, 2, 3],
+        (FailedProcessConfigFileError,), ()
+    ),
+    (
+        "string",
+        (FailedProcessConfigFileError,), ()
+    ),
+    (
+        True,
+        (FailedProcessConfigFileError,), ()
+    ),
+    (
+        11.45,
+        (FailedProcessConfigFileError,), ()
+    ),
+    (
+        NotImplemented,
+        ((FailedProcessConfigFileError,), ()), ()
+    ),
+)
 
 
 class ErrDuringRepr:
@@ -138,6 +259,26 @@ PythonLiteralTests = (
     ),
     (
         {"a": ["c", 2], "b": ("c", 2)},
+        (), ()
+    ),
+    (
+        [1, 2, [3, [4, 5, [6], {'7': 8}]]],
+        (), ()
+    ),
+    (
+        "string",
+        (), ()
+    ),
+    (
+        True,
+        (), ()
+    ),
+    (
+        None,
+        (), ()
+    ),
+    (
+        11.45,
         (), ()
     ),
     (
