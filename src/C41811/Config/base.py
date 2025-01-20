@@ -283,9 +283,11 @@ def _generate[F: Callable](func: F) -> F:
 
 
 @_generate_magic_methods
-class MappingConfigData[D: Mapping | MutableMapping](BaseSupportsIndexConfigData, MutableMapping):
+class MappingConfigData[D: Mapping | MutableMapping](BaseSupportsIndexConfigData):
     """
     支持 Mapping 的 ConfigData
+
+    .. versionadded:: 0.1.5
     """
     _data: D
     data: D
@@ -417,9 +419,11 @@ class MappingConfigData[D: Mapping | MutableMapping](BaseSupportsIndexConfigData
 
 
 @_generate_magic_methods
-class SequenceConfigData[D: Sequence | MutableSequence](BaseSupportsIndexConfigData):  # todo MutableSequence
+class SequenceConfigData[D: Sequence | MutableSequence](BaseSupportsIndexConfigData):
     """
     支持 Sequence 的 ConfigData
+
+    .. versionadded:: 0.1.5
     """
     _data: D
     data: D
@@ -434,6 +438,43 @@ class SequenceConfigData[D: Sequence | MutableSequence](BaseSupportsIndexConfigD
     def data_read_only(self) -> bool:
         return not isinstance(self._data, MutableSequence)
 
+    @_check_read_only
+    def append(self, value):
+        return self._data.append(value)
+
+    @_check_read_only
+    def insert(self, index, value):
+        return self._data.insert(index, value)
+
+    @_check_read_only
+    def extend(self, values):
+        return self._data.extend(values)
+
+    def index(self, value, start=0, stop=...):
+        return self._data.index(value, start, stop)
+
+    def count(self, value):
+        return self._data.count(value)
+
+    @_check_read_only
+    def pop(self, index=-1):
+        return self._data.pop(index)
+
+    @_check_read_only
+    def remove(self, value):
+        return self._data.remove(value)
+
+    @_check_read_only
+    def clear(self):
+        return self._data.clear()
+
+    @_check_read_only
+    def reverse(self):
+        return self._data.reverse()
+
+    def __reversed__(self):
+        return reversed(self._data)
+
     @_generate
     def __mul__(self, other):
         return self._data * other
@@ -442,13 +483,18 @@ class SequenceConfigData[D: Sequence | MutableSequence](BaseSupportsIndexConfigD
     def __add__(self, other):
         return self._data + other
 
-    def __rmul__(self, other): ...
+    def __rmul__(self, other) -> Any: ...
 
-    def __radd__(self, other): ...
+    def __radd__(self, other) -> Any: ...
 
 
 @_generate_magic_methods
 class NumberConfigData[D: Number](BaseConfigData):
+    """
+    支持 Number 的 ConfigData
+
+    .. versionadded:: 0.1.5
+    """
     _data: D
     data: D
 
@@ -518,31 +564,31 @@ class NumberConfigData[D: Number](BaseConfigData):
     def __rshift__(self, other):
         return self._data >> other
 
-    def __radd__(self, other): ...
+    def __radd__(self, other) -> Any: ...
 
-    def __rsub__(self, other): ...
+    def __rsub__(self, other) -> Any: ...
 
-    def __rmul__(self, other): ...
+    def __rmul__(self, other) -> Any: ...
 
-    def __rtruediv__(self, other): ...
+    def __rtruediv__(self, other) -> Any: ...
 
-    def __rfloordiv__(self, other): ...
+    def __rfloordiv__(self, other) -> Any: ...
 
-    def __rmod__(self, other): ...
+    def __rmod__(self, other) -> Any: ...
 
-    def __rpow__(self, other): ...
+    def __rpow__(self, other) -> Any: ...
 
-    def __rand__(self, other): ...
+    def __rand__(self, other) -> Any: ...
 
-    def __ror__(self, other): ...
+    def __ror__(self, other) -> Any: ...
 
-    def __rxor__(self, other): ...
+    def __rxor__(self, other) -> Any: ...
 
-    def __rmatmul__(self, other): ...
+    def __rmatmul__(self, other) -> Any: ...
 
-    def __rlshift__(self, other): ...
+    def __rlshift__(self, other) -> Any: ...
 
-    def __rrshift__(self, other): ...
+    def __rrshift__(self, other) -> Any: ...
 
     def __invert__(self):
         return ~self._data
@@ -574,6 +620,12 @@ class NumberConfigData[D: Number](BaseConfigData):
 
 
 class BoolConfigData[D: bool](NumberConfigData):
+    # noinspection GrazieInspection
+    """
+    支持 bool 的 ConfigData
+
+    .. versionadded:: 0.1.5
+    """
     _data: D
     data: D
 
@@ -585,6 +637,9 @@ class BoolConfigData[D: bool](NumberConfigData):
 
 @_generate_magic_methods
 class StringConfigData[D: str | bytes](BaseConfigData):
+    """
+    支持 str 和 bytes 的 ConfigData
+    """
     _data: D
     data: D
 
