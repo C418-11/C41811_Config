@@ -2,7 +2,7 @@
 
 prune *
 exclude *
-include src/C41811/Config/*.py
-include src/C41811/Config/SLProcessors/*.py
+recursive-include src *.py
+recursive-include src py.typed
 
 include pyproject.toml
