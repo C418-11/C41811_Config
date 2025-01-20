@@ -283,7 +283,7 @@ def _generate[F: Callable](func: F) -> F:
 
 
 @_generate_magic_methods
-class MappingConfigData[D: Mapping | MutableMapping](BaseSupportsIndexConfigData):
+class MappingConfigData[D: Mapping | MutableMapping](BaseSupportsIndexConfigData, MutableMapping):
     """
     支持 Mapping 的 ConfigData
 
@@ -419,7 +419,7 @@ class MappingConfigData[D: Mapping | MutableMapping](BaseSupportsIndexConfigData
 
 
 @_generate_magic_methods
-class SequenceConfigData[D: Sequence | MutableSequence](BaseSupportsIndexConfigData):
+class SequenceConfigData[D: Sequence | MutableSequence](BaseSupportsIndexConfigData, MutableSequence):
     """
     支持 Sequence 的 ConfigData
 
