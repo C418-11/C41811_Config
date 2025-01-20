@@ -58,10 +58,7 @@ tox = [
 ]
 test = [
     "pytest~=8.3.4",
-    "pytest-html~=4.1.1"
-]
-cov = [
-    "pytest~=8.3.4",
+    "pytest-html~=4.1.1",
     "pytest-cov~=6.0.0",
 ]
 flake8 = [
@@ -105,21 +102,15 @@ omit = [
 #]
 
 [tool.tox]
-envlist = ["py312", "py313", "cov", "flake8"]
+envlist = ["py312", "py313", "flake8"]
 
 [tool.tox.env_run_base]
 skip_install = true
 commands_pre = [
     ["pip", "install", "-e", ".[dev,test]"],
 ]
-commands = [["pytest", "--html=./docs/_static/_pytest/{env_name}.html"]]
-
-[tool.tox.env.cov]
-commands_pre = [
-    ["pip", "install", "-e", ".[dev,cov]"],
-]
 commands = [
-    ["pytest", "--cov=src", "--cov-report=term-missing", "--cov-report=html:docs/_static/_coverage"]
+    ["pytest", "--doctest-modules", "--cov=src", "--ignore-glob=docs/conf.py"],
 ]
 
 [tool.tox.env.flake8]
@@ -130,21 +121,31 @@ commands = [
     ["flake8",
         "--doctests", "--max-line-length=120", "--max-complexity=15",
         "--show-source", "--count", "--statistics",
-        "--exit-zero", "--format=html", "--htmldir=./docs/_static/_flake8", "--tee",
         "tests", "src"
     ],
 ]
 
 [tool.tox.env.prepare-doc]
+base_python = ["py313"]
 allowlist_externals = ["npm", "lessc"]
 commands_pre = [
-    ["pip", "install", "-e", ".[tox]"],
-    ["pip", "uninstall", "-y", "C41811.Config"],
+    ["pip", "install", "-e", ".[dev,test,flake8]"],
     ["npm", "install", "-g", "less"],
 ]
 commands = [
-    ["tox"],
     ["lessc", "./docs/_static/pygments_darcula.less", "./docs/_static/pygments_darcula.css"],
+    ["-",
+        "pytest", "--doctest-modules", "--ignore-glob=docs/conf.py",
+        "--html=./docs/_static/_pytest/index.html",
+        "--cov=src", "--cov-report=term-missing", "--cov-report=html:docs/_static/_coverage"
+    ],
+    [
+        "flake8",
+        "--doctests", "--max-line-length=120", "--max-complexity=15",
+        "--show-source", "--count", "--statistics",
+        "--exit-zero", "--format=html", "--htmldir=./docs/_static/_flake8", "--tee",
+        "tests", "src"
+    ],
 ]
 
 [tool.tox.env.doc]
