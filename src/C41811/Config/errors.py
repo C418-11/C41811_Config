@@ -114,9 +114,12 @@ class KeyInfo:
         return self.path[:self.index]
 
 
-class RequiredPathNotFoundError(KeyError):
+class RequiredPathNotFoundError(LookupError):
     """
     需求的键未找到错误
+
+    .. versionchanged:: 0.1.5
+       现在继承自LookupError
     """
 
     def __init__(

@@ -195,8 +195,8 @@ class TestConfigData:
         if kwargs is None:
             kwargs = {}
 
-        if any(issubclass(exc, KeyError) for exc in ignore_excs):
-            ignore_excs = tuple(exc for exc in ignore_excs if not issubclass(exc, KeyError))
+        if any(issubclass(exc, LookupError) for exc in ignore_excs):
+            ignore_excs = tuple(exc for exc in ignore_excs if not issubclass(exc, LookupError))
             value = None
 
         with safe_raises(ignore_excs) as info:
@@ -225,7 +225,7 @@ class TestConfigData:
             print(f"Skipping test because cannot set default value for non-existent index key: {path}")
             return
 
-        ignore_excs = tuple(exc for exc in ignore_excs if not issubclass(exc, KeyError))
+        ignore_excs = tuple(exc for exc in ignore_excs if not issubclass(exc, LookupError))
         if "default" in kwargs:
             value = [value, kwargs["default"]]
         else:
