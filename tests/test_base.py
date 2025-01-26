@@ -452,6 +452,17 @@ class TestMappingConfigData:
     def test_items(data, kwargs, items):
         assert list(data.items(**kwargs)) == items
 
+    TestsMerge = ("a, b, result", (
+        ({"a": 1, "b": 2}, {"a": 1, "b": 2}, {"a": 1, "b": 2}),
+        ({"a": 1, "b": 2}, {"b": 3, "c": 4}, {"a": 1, "b": 3, "c": 4}),
+        ({"a": 1, "b": 2}, {"b": 3}, {"a": 1, "b": 3}),
+    ))
+
+    @staticmethod
+    @mark.parametrize(*TestsMerge)
+    def test_merge(a, b, result):
+        assert (ConfigData(a) | ConfigData(b)) == ConfigData(result)
+
     @staticmethod
     def test_repr(data):
         assert repr(data.data) in repr(data)

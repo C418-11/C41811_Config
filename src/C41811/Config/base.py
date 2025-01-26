@@ -275,14 +275,13 @@ def _generate[F: Callable](func: F) -> F:
     @wrapt.decorator
     def wrapper(wrapped, instance, args, kwargs):
         if isinstance(args[0], type(instance)):
-            args[0] = instance.data
+            args = instance.data, *args[1:]
 
         return wrapped(*args, **kwargs)
 
     return wrapper(func)
 
 
-@_generate_magic_methods
 class MappingConfigData[D: Mapping | MutableMapping](BaseSupportsIndexConfigData, MutableMapping):
     """
     支持 Mapping 的 ConfigData
@@ -413,9 +412,15 @@ class MappingConfigData[D: Mapping | MutableMapping](BaseSupportsIndexConfigData
             raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{item}'")
         return item_obj
 
-    @_generate
     def __or__(self, other):
-        return self.data | other
+        return self._data | other
+
+    def __ror__(self, other):
+        return other | self._data
+
+    def __ior__(self, other):
+        self._data |= other
+        return self
 
 
 @_generate_magic_methods
