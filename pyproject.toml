@@ -110,7 +110,7 @@ commands_pre = [
     ["pip", "install", "-e", ".[dev,test]"],
 ]
 commands = [
-    ["pytest", "--doctest-modules", "--ignore-glob=docs/conf.py",],
+    ["pytest", "-v", "--doctest-modules", "--ignore-glob=docs/conf.py",],
 ]
 
 [tool.tox.env.flake8]
@@ -135,7 +135,8 @@ commands_pre = [
 commands = [
     ["lessc", "./docs/_static/pygments_darcula.less", "./docs/_static/pygments_darcula.css"],
     ["-",
-        "pytest", "--doctest-modules", "--ignore-glob=docs/conf.py",
+        "pytest", "-v",
+        "--doctest-modules", "--ignore-glob=docs/conf.py",
         "--html=./docs/_static/_pytest/index.html",
         "--cov=src", "--cov-report=term-missing", "--cov-report=html:docs/_static/_coverage"
     ],
