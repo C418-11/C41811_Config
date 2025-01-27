@@ -272,6 +272,23 @@ class ABCConfigData[D: Any](ABC):
         :raise ConfigDataReadOnlyError: 配置数据为只读
         """
 
+    def freeze(self, freeze: Optional[bool] = None) -> Self:
+        """
+        冻结配置数据 (切换只读模式)
+
+        :param freeze: 是否冻结配置数据, 为 ``None`` 时进行切换
+        :type freeze: Optional[bool]
+        :return: 返回当前实例便于链式调用
+        :rtype: Self
+
+        .. versionadded:: 0.1.5
+        """
+        if freeze is None:
+            self.read_only = not self.read_only
+            return self
+        self.read_only = freeze
+        return self
+
     def __contains__(self, key) -> bool:
         return key in self._data
 
@@ -291,6 +308,11 @@ class ABCConfigData[D: Any](ABC):
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self._data!r})"
+
+    def __format__(self, format_spec):
+        if format_spec == 'r':
+            return repr(self)
+        return super().__format__(format_spec)
 
     def __deepcopy__(self, memo) -> Self:
         return self.from_data(self._data)

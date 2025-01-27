@@ -241,6 +241,25 @@ class BaseSupportsIndexConfigData[D: SupportsIndex | SupportsWriteIndex](
         return deepcopy(data)
 
 
+class ConfigData(ABC):
+    """
+    配置数据类
+
+    .. versionchanged:: 0.1.5
+       会自动根据传入的配置数据类型选择对应的子类
+    """
+    TYPES: ClassVar[dict[tuple[type, ...], type]]
+
+    def __new__(cls, *args, **kwargs) -> Any:
+        if not args:
+            args = (None,)
+        for types, config_data_cls in cls.TYPES.items():
+            if not isinstance(args[0], types):
+                continue
+            return config_data_cls(*args, **kwargs)
+        raise TypeError(f"Unsupported type: {args[0]}")
+
+
 def _generate_operators[T: type](cls: T) -> T:
     for name, func in dict(vars(cls)).items():
         if not hasattr(func, "__generate_operators__"):
@@ -253,24 +272,24 @@ def _generate_operators[T: type](cls: T) -> T:
 
         code = dedent(f"""
         def {name}(self, other):
-            return self.from_data(operate_func(self._data, other))
+            return ConfigData(operate_func(self._data, other))
         def {r_name}(self, other):
-            return self.from_data(operate_func(other, self._data))
+            return ConfigData(operate_func(other, self._data))
         def {i_name}(self, other):
             self._data = inplace_func(self._data, other)
             return self
         """)
 
         funcs = {}
-        exec(code, operator_funcs, funcs)
+        exec(code, {**operator_funcs, "ConfigData": ConfigData}, funcs)
 
         funcs[name].__qualname__ = func.__qualname__
         funcs[r_name].__qualname__ = f"{cls.__qualname__}.{r_name}"
         funcs[i_name].__qualname__ = f"{cls.__qualname__}.{i_name}"
 
         @wrapt.decorator
-        def wrapper(wrapped, instance, args, kwargs):
-            if isinstance(args[0], type(instance)):
+        def wrapper(wrapped, _instance, args, kwargs):
+            if isinstance(args[0], ABCConfigData):
                 args = args[0].data, *args[1:]
             return wrapped(*args, **kwargs)
 
@@ -460,8 +479,8 @@ class SequenceConfigData[D: Sequence | MutableSequence](BaseSupportsIndexConfigD
     def extend(self, values):
         return self._data.extend(values)
 
-    def index(self, value, start=0, stop=...):
-        return self._data.index(value, start, stop)
+    def index(self, *args):
+        return self._data.index(*args)
 
     def count(self, value):
         return self._data.count(value)
@@ -508,7 +527,7 @@ class NumberConfigData[D: Number](BaseConfigData):
 
     def __init__(self, data: Optional[D] = None):
         if data is None:
-            self._data = int()
+            data = int()
         super().__init__(data)
 
     def __int__(self) -> int:
@@ -626,7 +645,7 @@ class BoolConfigData[D: bool](NumberConfigData):
 
     def __init__(self, data: Optional[D] = None):
         if data is None:
-            self._data = bool()
+            data = bool()
         super().__init__(data)
 
 
@@ -640,7 +659,7 @@ class StringConfigData[D: str | bytes](BaseConfigData):
 
     def __init__(self, data: Optional[D] = None):
         if data is None:
-            self._data = str()
+            data = str()
         super().__init__(data)
 
     def __format__(self, format_spec: D) -> D:
@@ -690,32 +709,15 @@ type AnyConfigData = (
         | ObjectConfigData
 )
 
-
-class ConfigData(ABC):
-    """
-    配置数据类
-
-    .. versionchanged:: 0.1.5
-       会自动根据传入的配置数据类型选择对应的子类
-    """
-    TYPES: ClassVar[dict[tuple[type, ...], type]] = {
-        (Mapping, MutableMapping, type(None)): MappingConfigData,
-        (str | bytes,): StringConfigData,
-        (Sequence, MutableSequence): SequenceConfigData,
-        (bool,): BoolConfigData,
-        (Number,): NumberConfigData,
-        (object,): ObjectConfigData,
-    }
-
-    def __new__(cls, *args, **kwargs) -> AnyConfigData:
-        if not args:
-            args = (None,)
-        for types, config_data_cls in cls.TYPES.items():
-            if not isinstance(args[0], types):
-                continue
-            return config_data_cls(*args, **kwargs)
-        raise TypeError(f"Unsupported type: {args[0]}")
-
+ConfigData.TYPES = {
+    (ABCConfigData,): lambda _: _,
+    (Mapping, MutableMapping, type(None)): MappingConfigData,
+    (str | bytes,): StringConfigData,
+    (Sequence, MutableSequence): SequenceConfigData,
+    (bool,): BoolConfigData,
+    (Number,): NumberConfigData,
+    (object,): ObjectConfigData,
+}
 
 ConfigData.register(MappingConfigData)
 ConfigData.register(SequenceConfigData)
