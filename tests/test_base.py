@@ -452,21 +452,16 @@ class TestMappingConfigData:
     def test_items(data, kwargs, items):
         assert list(data.items(**kwargs)) == items
 
-    TestsMerge = ("a, b, result", (
-        ({"a": 1, "b": 2}, {"a": 1, "b": 2}, {"a": 1, "b": 2}),
-        ({"a": 1, "b": 2}, {"b": 3, "c": 4}, {"a": 1, "b": 3, "c": 4}),
-        ({"a": 1, "b": 2}, {"b": 3}, {"a": 1, "b": 3}),
-    ))
-
-    @staticmethod
-    @mark.parametrize(*TestsMerge)
-    def test_merge(a, b, result):
-        assert (ConfigData(a) | ConfigData(b)) == ConfigData(result)
-
     @staticmethod
     def test_repr(data):
         assert repr(data.data) in repr(data)
         assert repr({"a": 1, "b": 2}) in repr(ConfigData({"a": 1, "b": 2}))
+
+    MergeTests = (
+        ({"a": 1, "b": 2}, {"a": -1, "b": 3}),
+        ({"a": 1, "b": 2}, {"b": 3, "c": 4}),
+        ({"a": 1, "b": 2}, {"b": 3}),
+    )
 
 
 class TestSequenceConfigData:
@@ -844,6 +839,41 @@ class TestSequenceConfigData:
     def test_repr(data):
         assert repr(data.data) in repr(data)
         assert repr({"a": 1, "b": 2}) in repr(ConfigData({"a": 1, "b": 2}))
+
+
+def _insert_operator(tests, op, iop):
+    yield from ((*test, op, iop) for test in tests)
+
+
+OperatorTests = (
+    "a, b, op, iop", (
+        *_insert_operator(TestMappingConfigData.MergeTests, operator.or_, operator.ior),
+    ),
+)
+
+
+@mark.parametrize(*OperatorTests)
+def test_operator(a, b, op, iop):
+    assert (op(ConfigData(a), ConfigData(b)) == ConfigData(op(a, b))
+            ), f"op({ConfigData(a):r}, {ConfigData(b):r}) != {ConfigData(op(a, b)):r}"
+    assert (op(a, ConfigData(b)) == ConfigData(op(a, b))
+            ), f"op({a}, {ConfigData(b):r}) != {ConfigData(op(a, b)):r}"
+    assert (op(ConfigData(a), b) == ConfigData(op(a, b))
+            ), f"op({ConfigData(a):r}, {b}) != {ConfigData(op(a, b)):r}"
+
+    assert (op(ConfigData(b), ConfigData(a)) == ConfigData(op(b, a))
+            ), f"op({ConfigData(b):r}, {ConfigData(a):r}) != {ConfigData(op(b, a)):r}"
+    assert (op(b, ConfigData(a)) == ConfigData(op(b, a))
+            ), f"op({b}, {ConfigData(a):r}) != {ConfigData(op(b, a)):r}"
+    assert (op(ConfigData(b), a) == ConfigData(op(b, a))
+            ), f"op({ConfigData(b):r}, {a}) != {ConfigData(op(b, a)):r}"
+
+    assert (iop(ConfigData(deepcopy(a)), ConfigData(b)) == ConfigData(iop(deepcopy(a), b))
+            ), f"iop({ConfigData(deepcopy(a)):r}, {ConfigData(b):r}) != {ConfigData(iop(deepcopy(a), b)):r}"
+    assert (iop(deepcopy(a), ConfigData(b)) == iop(deepcopy(a), b)
+            ), f"iop({deepcopy(a)}, {ConfigData(b):r}) != {ConfigData(iop(deepcopy(a), b)):r}"
+    assert (iop(ConfigData(deepcopy(a)), b) == ConfigData(iop(deepcopy(a), b))
+            ), f"iop({ConfigData(deepcopy(a)):r}, {b}) != {ConfigData(iop(deepcopy(a), b)):r}"
 
 
 class TestConfigFile:

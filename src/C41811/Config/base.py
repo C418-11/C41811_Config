@@ -3,6 +3,7 @@
 
 
 import math
+import operator
 import os.path
 from abc import ABC
 from collections import OrderedDict
@@ -19,8 +20,8 @@ from collections.abc import ValuesView
 from copy import deepcopy
 from numbers import Number
 from textwrap import dedent
-from typing import ClassVar
 from typing import Any
+from typing import ClassVar
 from typing import Optional
 from typing import Self
 from typing import override
@@ -240,48 +241,55 @@ class BaseSupportsIndexConfigData[D: SupportsIndex | SupportsWriteIndex](
         return deepcopy(data)
 
 
-def _generate_magic_methods[T: type](cls: T) -> T:
+def _generate_operators[T: type](cls: T) -> T:
     for name, func in dict(vars(cls)).items():
-        if not hasattr(func, "__generate_magic_methods"):
+        if not hasattr(func, "__generate_operators__"):
             continue
-        delattr(func, "__generate_magic_methods")
+        operator_funcs = getattr(func, "__generate_operators__")
+        delattr(func, "__generate_operators__")
 
         i_name = f"__i{name[2:-2]}__"
         r_name = f"__r{name[2:-2]}__"
 
         code = dedent(f"""
-        def {i_name}(self, other):
-            self._data = self.{name}(other)
-            return self
+        def {name}(self, other):
+            return self.from_data(operate_func(self._data, other))
         def {r_name}(self, other):
-            return self.{name}(other)
+            return self.from_data(operate_func(other, self._data))
+        def {i_name}(self, other):
+            self._data = inplace_func(self._data, other)
+            return self
         """)
 
         funcs = {}
-        exec(code, funcs)
+        exec(code, operator_funcs, funcs)
 
-        funcs[i_name].__qualname__ = f"{cls.__qualname__}.{i_name}"
+        funcs[name].__qualname__ = func.__qualname__
         funcs[r_name].__qualname__ = f"{cls.__qualname__}.{r_name}"
+        funcs[i_name].__qualname__ = f"{cls.__qualname__}.{i_name}"
 
-        setattr(cls, i_name, _check_read_only(funcs[i_name]))
+        @wrapt.decorator
+        def wrapper(wrapped, instance, args, kwargs):
+            if isinstance(args[0], type(instance)):
+                args = args[0].data, *args[1:]
+            return wrapped(*args, **kwargs)
+
+        setattr(cls, name, wrapper(funcs[name]))
         setattr(cls, r_name, funcs[r_name])
+        setattr(cls, i_name, wrapper(_check_read_only(funcs[i_name])))
 
     return cls
 
 
-def _generate[F: Callable](func: F) -> F:
-    func.__generate_magic_methods = True
+def _operate(operate_func, inplace_func):
+    def decorator[F: Callable](func) -> F:
+        func.__generate_operators__ = {"operate_func": operate_func, "inplace_func": inplace_func}
+        return func
 
-    @wrapt.decorator
-    def wrapper(wrapped, instance, args, kwargs):
-        if isinstance(args[0], type(instance)):
-            args = instance.data, *args[1:]
-
-        return wrapped(*args, **kwargs)
-
-    return wrapper(func)
+    return decorator
 
 
+@_generate_operators
 class MappingConfigData[D: Mapping | MutableMapping](BaseSupportsIndexConfigData, MutableMapping):
     """
     支持 Mapping 的 ConfigData
@@ -412,18 +420,15 @@ class MappingConfigData[D: Mapping | MutableMapping](BaseSupportsIndexConfigData
             raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{item}'")
         return item_obj
 
-    def __or__(self, other):
-        return self._data | other
+    @_operate(operator.or_, operator.ior)
+    def __or__(self, other) -> Any:
+        ...
 
-    def __ror__(self, other):
-        return other | self._data
-
-    def __ior__(self, other):
-        self._data |= other
-        return self
+    def __ror__(self, other) -> Any:
+        ...
 
 
-@_generate_magic_methods
+@_generate_operators
 class SequenceConfigData[D: Sequence | MutableSequence](BaseSupportsIndexConfigData, MutableSequence):
     """
     支持 Sequence 的 ConfigData
@@ -480,20 +485,18 @@ class SequenceConfigData[D: Sequence | MutableSequence](BaseSupportsIndexConfigD
     def __reversed__(self):
         return reversed(self._data)
 
-    @_generate
-    def __mul__(self, other):
-        return self._data * other
+    @_operate(operator.mul, operator.imul)
+    def __mul__(self, other) -> Any: ...
 
-    @_generate
-    def __add__(self, other):
-        return self._data + other
+    @_operate(operator.add, operator.iadd)
+    def __add__(self, other) -> Any: ...
 
     def __rmul__(self, other) -> Any: ...
 
     def __radd__(self, other) -> Any: ...
 
 
-@_generate_magic_methods
+@_generate_operators
 class NumberConfigData[D: Number](BaseConfigData):
     """
     支持 Number 的 ConfigData
@@ -517,57 +520,44 @@ class NumberConfigData[D: Number](BaseConfigData):
     def __bool__(self) -> bool:
         return bool(self._data)
 
-    @_generate
-    def __add__(self, other):
-        return self._data + other
+    @_operate(operator.add, operator.iadd)
+    def __add__(self, other) -> Any: ...
 
-    @_generate
-    def __sub__(self, other):
-        return self._data - other
+    @_operate(operator.sub, operator.isub)
+    def __sub__(self, other) -> Any: ...
 
-    @_generate
-    def __mul__(self, other):
-        return self._data * other
+    @_operate(operator.mul, operator.imul)
+    def __mul__(self, other) -> Any: ...
 
-    @_generate
-    def __truediv__(self, other):
-        return self._data / other
+    @_operate(operator.truediv, operator.itruediv)
+    def __truediv__(self, other) -> Any: ...
 
-    @_generate
-    def __floordiv__(self, other):
-        return self._data // other
+    @_operate(operator.floordiv, operator.ifloordiv)
+    def __floordiv__(self, other) -> Any: ...
 
-    @_generate
-    def __mod__(self, other):
-        return self._data % other
+    @_operate(operator.mod, operator.imod)
+    def __mod__(self, other) -> Any: ...
 
-    @_generate
-    def __pow__(self, other):
-        return self._data ** other
+    @_operate(operator.pow, operator.ipow)
+    def __pow__(self, other) -> Any: ...
 
-    @_generate
-    def __and__(self, other):
-        return self._data & other
+    @_operate(operator.and_, operator.iand)
+    def __and__(self, other) -> Any: ...
 
-    @_generate
-    def __or__(self, other):
-        return self._data | other
+    @_operate(operator.or_, operator.ior)
+    def __or__(self, other) -> Any: ...
 
-    @_generate
-    def __xor__(self, other):
-        return self._data ^ other
+    @_operate(operator.xor, operator.ixor)
+    def __xor__(self, other) -> Any: ...
 
-    @_generate
-    def __matmul__(self, other):
-        return self._data @ other
+    @_operate(operator.matmul, operator.imatmul)
+    def __matmul__(self, other) -> Any: ...
 
-    @_generate
-    def __lshift__(self, other):
-        return self._data << other
+    @_operate(operator.lshift, operator.ilshift)
+    def __lshift__(self, other) -> Any: ...
 
-    @_generate
-    def __rshift__(self, other):
-        return self._data >> other
+    @_operate(operator.rshift, operator.irshift)
+    def __rshift__(self, other) -> Any: ...
 
     def __radd__(self, other) -> Any: ...
 
@@ -640,7 +630,7 @@ class BoolConfigData[D: bool](NumberConfigData):
         super().__init__(data)
 
 
-@_generate_magic_methods
+@_generate_operators
 class StringConfigData[D: str | bytes](BaseConfigData):
     """
     支持 str 和 bytes 的 ConfigData
@@ -656,13 +646,11 @@ class StringConfigData[D: str | bytes](BaseConfigData):
     def __format__(self, format_spec: D) -> D:
         return self._data.__format__(format_spec)
 
-    @_generate
-    def __add__(self, other):
-        return self._data + other
+    @_operate(operator.add, operator.iadd)
+    def __add__(self, other) -> Any: ...
 
-    @_generate
-    def __mul__(self, other):
-        return self._data * other
+    @_operate(operator.mul, operator.imul)
+    def __mul__(self, other) -> Any: ...
 
     def __getitem__(self, item):
         return self._data[item]
@@ -692,7 +680,9 @@ class ObjectConfigData[D: object](BaseConfigData):
 
 
 type AnyConfigData = (
-        MappingConfigData
+        ABCConfigData
+        | ABCSupportsIndexConfigData
+        | MappingConfigData
         | StringConfigData
         | SequenceConfigData
         | BoolConfigData
