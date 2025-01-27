@@ -440,11 +440,9 @@ class MappingConfigData[D: Mapping | MutableMapping](BaseSupportsIndexConfigData
         return item_obj
 
     @_operate(operator.or_, operator.ior)
-    def __or__(self, other) -> Any:
-        ...
+    def __or__(self, other) -> Any: ...
 
-    def __ror__(self, other) -> Any:
-        ...
+    def __ror__(self, other) -> Any: ...
 
 
 @_generate_operators
