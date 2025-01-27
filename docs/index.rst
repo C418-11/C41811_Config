@@ -59,6 +59,14 @@ C41811.Config 的文档
           :target: https://github.com/C418-11/C41811_Config/actions/workflows/python-flake8.yml
           :alt: flake8
 
+       .. image:: https://img.shields.io/github/actions/workflow/status/C418-11/C41811_Config/python-pytest.yml?branch=develop&logo=github&label=pytest-dev
+          :target: https://github.com/C418-11/C41811_Config/actions/workflows/python-pytest.yml
+          :alt: pytest-dev
+
+       .. image:: https://img.shields.io/github/actions/workflow/status/C418-11/C41811_Config/python-flake8.yml?branch=develop&logo=github&label=flake8-dev
+          :target: https://github.com/C418-11/C41811_Config/actions/workflows/python-flake8.yml
+          :alt: flake8-dev
+
 
 .. toctree::
    :maxdepth: 2
