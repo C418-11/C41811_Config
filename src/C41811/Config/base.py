@@ -375,13 +375,6 @@ class MappingConfigData[D: Mapping | MutableMapping](BaseSupportsIndexConfigData
            odict_keys(['foo\\.bar\\.baz', 'foo\\.bar1', 'foo1'])
 
         """
-
-        if not any((
-                recursive,
-                end_point_only,
-        )):
-            return self._data.keys()
-
         def _recursive(data: Mapping) -> Generator[str, None, None]:
             for k, v in data.items():
                 k: str = k.replace('\\', "\\\\")
@@ -398,6 +391,8 @@ class MappingConfigData[D: Mapping | MutableMapping](BaseSupportsIndexConfigData
             return OrderedDict.fromkeys(
                 k.replace('\\', "\\\\") for k, v in self._data.items() if not isinstance(v, Mapping)
             ).keys()
+
+        return self._data.keys()
 
     def values(self, get_raw: bool = False) -> ValuesView[Any]:
         """

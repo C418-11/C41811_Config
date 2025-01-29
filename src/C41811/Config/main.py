@@ -395,7 +395,7 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
         return tuple(merged_args), pmap(merged_kwargs)
 
     @contextmanager
-    def raises(self, excs: Exception | tuple[Exception, ...] = Exception) -> None:
+    def raises(self, excs: Exception | tuple[Exception, ...] = Exception):
         """
         包装意料内的异常
 
