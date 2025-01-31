@@ -7,6 +7,7 @@ import math
 import operator
 from collections import OrderedDict
 from collections.abc import Callable
+from contextlib import suppress
 from copy import deepcopy
 from typing import Optional
 
@@ -737,10 +738,8 @@ class TestSequenceConfigData:
             last = data[path]
             del data[path]
 
-        try:
+        with suppress(IndexError):
             assert last != data[path]
-        except IndexError:
-            pass
 
     @staticmethod
     @mark.parametrize("path, is_exist", (

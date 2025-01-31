@@ -17,6 +17,7 @@ from collections.abc import MutableMapping
 from collections.abc import MutableSequence
 from collections.abc import Sequence
 from collections.abc import ValuesView
+from contextlib import suppress
 from copy import deepcopy
 from numbers import Number
 from textwrap import dedent
@@ -196,10 +197,8 @@ class BaseSupportsIndexConfigData[D: SupportsIndex | SupportsWriteIndex](
 
     @override
     def unset(self, path: str | ABCPath) -> Self:
-        try:
+        with suppress(RequiredPathNotFoundError):
             self.delete(path)
-        except RequiredPathNotFoundError:
-            pass
         return self
 
     @override
@@ -375,6 +374,7 @@ class MappingConfigData[D: Mapping | MutableMapping](BaseSupportsIndexConfigData
            odict_keys(['foo\\.bar\\.baz', 'foo\\.bar1', 'foo1'])
 
         """
+
         def _recursive(data: Mapping) -> Generator[str, None, None]:
             for k, v in data.items():
                 k: str = k.replace('\\', "\\\\")
@@ -435,9 +435,11 @@ class MappingConfigData[D: Mapping | MutableMapping](BaseSupportsIndexConfigData
         return item_obj
 
     @_operate(operator.or_, operator.ior)
-    def __or__(self, other) -> Any: ...
+    def __or__(self, other) -> Any:
+        ...
 
-    def __ror__(self, other) -> Any: ...
+    def __ror__(self, other) -> Any:
+        ...
 
 
 @_generate_operators
