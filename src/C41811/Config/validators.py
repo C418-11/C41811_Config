@@ -132,7 +132,7 @@ def _process_pydantic_exceptions(err: ValidationError) -> Exception:
         ),
     }
 
-    err_type_processor = types_kwarg.get(e["type"], None)
+    err_type_processor = types_kwarg.get(e["type"])
     if err_type_processor is None:  # pragma: no cover
         raise UnknownErrorDuringValidateError(**kwargs, error=e) from err
     err_info = err_type_processor()
