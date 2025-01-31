@@ -18,6 +18,7 @@ from typing import override
 import wrapt
 from pyrsistent import PMap
 from pyrsistent import pmap
+from atomicwrites import atomic_write
 
 from ._protocols import SupportsReadAndReadline
 from ._protocols import SupportsWrite
@@ -424,7 +425,11 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
     ) -> None:
         merged_args, merged_kwargs = self._merge_args(self._saver_args, args, kwargs)
 
-        with open(self._process_file_path(root_path, namespace, file_name), **self._s_open_kwargs) as f:
+        with atomic_write(
+                self._process_file_path(root_path, namespace, file_name),
+                **self._s_open_kwargs,
+                overwrite=True
+        ) as f:
             self.save_file(config_file, f, *merged_args, **merged_kwargs)
 
     @override

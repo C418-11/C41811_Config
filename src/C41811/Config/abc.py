@@ -915,7 +915,7 @@ class ABCConfigSL(ABC):
             **kwargs
     ) -> None:
         """
-        保存处理器
+        保存处理器 (原子操作)
 
         :param config_file: 待保存配置
         :type config_file: ABCConfigFile
@@ -930,6 +930,9 @@ class ABCConfigSL(ABC):
         :rtype: NoneType
 
         :raise FailedProcessConfigFileError: 处理配置文件失败
+
+        .. versionchanged:: 0.1.6
+           现在操作是原子的(操作过程发生异常会回滚操作)
         """
 
     @abstractmethod

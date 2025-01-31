@@ -32,7 +32,8 @@ classifiers = [
 dependencies = [
     "pydantic~=2.10.3",
     "wrapt~=1.17.0",
-    "pyrsistent~=0.20.0"
+    "pyrsistent~=0.20.0",
+    "atomicwrites~=1.4.1",
 ]
 
 [project.urls]

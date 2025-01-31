@@ -1,6 +1,7 @@
 pydantic~=2.10.3
 wrapt~=1.17.0
 pyrsistent~=0.20.0
+atomicwrites~=1.4.1
 
 tox~=4.23.2
 # 测试对应SL处理器的依赖
