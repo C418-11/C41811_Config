@@ -18,7 +18,6 @@ from typing import override
 import wrapt
 from pyrsistent import PMap
 from pyrsistent import pmap
-from atomicwrites import atomic_write
 
 from ._protocols import SupportsReadAndReadline
 from ._protocols import SupportsWrite
@@ -32,6 +31,7 @@ from .base import BaseConfigPool
 from .base import ConfigData
 from .base import ConfigFile
 from .errors import FailedProcessConfigFileError
+from .safe_writer import safe_open
 from .validators import DefaultValidatorFactory
 from .validators import ValidatorFactoryConfig
 from .validators import ValidatorTypes
@@ -423,13 +423,31 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
             file_name: str,
             *args, **kwargs
     ) -> None:
+        """
+        保存处理器 (原子操作 多线/进程安全)
+
+        :param config_file: 待保存配置
+        :type config_file: ABCConfigFile
+        :param root_path: 保存的根目录
+        :type root_path: str
+        :param namespace: 配置的命名空间
+        :type namespace: str
+        :param file_name: 配置文件名
+        :type file_name: str
+
+        :return: None
+        :rtype: NoneType
+
+        :raise FailedProcessConfigFileError: 处理配置文件失败
+
+        .. versionchanged:: 0.1.6
+           现在操作是原子的(操作过程发生异常会回滚操作)
+
+           现在操作是理论上是多线/进程安全的
+        """
         merged_args, merged_kwargs = self._merge_args(self._saver_args, args, kwargs)
 
-        with atomic_write(
-                self._process_file_path(root_path, namespace, file_name),
-                **self._s_open_kwargs,
-                overwrite=True
-        ) as f:
+        with safe_open(self._process_file_path(root_path, namespace, file_name), **self._s_open_kwargs) as f:
             self.save_file(config_file, f, *merged_args, **merged_kwargs)
 
     @override
@@ -443,7 +461,7 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
     ) -> C:
         merged_args, merged_kwargs = self._merge_args(self._loader_args, args, kwargs)
 
-        with open(self._process_file_path(root_path, namespace, file_name), **self._l_open_kwargs) as f:
+        with safe_open(self._process_file_path(root_path, namespace, file_name), **self._l_open_kwargs) as f:
             return self.load_file(config_file_cls, f, *merged_args, **merged_kwargs)
 
     @abstractmethod
