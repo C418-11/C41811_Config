@@ -128,7 +128,7 @@ def test_config_data_type_error(key_info, required_type, now_type):
         raise ConfigDataTypeError(key_info, required_type, now_type)
 
 
-def test_unknown_error_during_validate_error(key_info):
+def test_unknown_error_during_validate_error():
     with raises(UnknownErrorDuringValidateError, match="Args:.*Kwargs:.*"):
         raise UnknownErrorDuringValidateError
 
