@@ -73,14 +73,14 @@ _proper_fsync = os.fsync
 if sys.platform != "win32":
     # noinspection SpellCheckingInspection
     if hasattr(fcntl, "F_FULLFSYNC"):
-        def _proper_fsync(fd):  # noqa: F811
+        def _proper_fsync(fd):  # noqa: F811, E303
             # https://lists.apple.com/archives/darwin-dev/2005/Feb/msg00072.html
             # https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man2/fsync.2.html
             # https://github.com/untitaker/python-atomicwrites/issues/6
             fcntl.fcntl(fd, fcntl.F_FULLFSYNC)
 
 
-    def _sync_directory(directory):
+    def _sync_directory(directory):  # noqa: E303
         # Ensure that filenames are written to disk
         fd = os.open(directory, 0)
         try:
@@ -89,12 +89,12 @@ if sys.platform != "win32":
             os.close(fd)
 
 
-    def _replace_atomic(src, dst):
+    def _replace_atomic(src, dst):  # noqa: E303
         os.rename(src, dst)
         _sync_directory(os.path.normpath(os.path.dirname(dst)))
 
 
-    def _move_atomic(src, dst):
+    def _move_atomic(src, dst):  # noqa: E303
         os.link(src, dst)
         os.unlink(src)
 
@@ -111,19 +111,19 @@ else:
     _windows_default_flags = _MOVEFILE_WRITE_THROUGH
 
 
-    def _handle_errors(rv):
+    def _handle_errors(rv):  # noqa: E303
         if not rv:
             raise WinError()
 
 
-    def _replace_atomic(src, dst):
+    def _replace_atomic(src, dst):  # noqa: E303
         _handle_errors(windll.kernel32.MoveFileExW(
             _path2str(src), _path2str(dst),
             _windows_default_flags | _MOVEFILE_REPLACE_EXISTING
         ))
 
 
-    def _move_atomic(src, dst):
+    def _move_atomic(src, dst):  # noqa: E303
         _handle_errors(windll.kernel32.MoveFileExW(
             _path2str(src), _path2str(dst),
             _windows_default_flags
