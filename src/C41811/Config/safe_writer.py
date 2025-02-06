@@ -53,17 +53,17 @@ import portalocker
 
 try:
     import fcntl
-except ImportError:
+except ImportError:  # pragma: no cover
     # noinspection SpellCheckingInspection
     fcntl = None
 
 try:
     from os import fspath
-except ImportError:
+except ImportError:  # pragma: no cover
     fspath = None
 
 
-def _path2str(x: str | bytes):
+def _path2str(x: str | bytes):  # pragma: no cover
     if isinstance(x, str):
         return x
     return x.decode(sys.getfilesystemencoding())
@@ -71,7 +71,7 @@ def _path2str(x: str | bytes):
 
 _proper_fsync = os.fsync
 
-if sys.platform != "win32":
+if sys.platform != "win32":  # pragma: no cover
     # noinspection SpellCheckingInspection
     if hasattr(fcntl, "F_FULLFSYNC"):
         def _proper_fsync(fd):  # noqa: F811, E303
@@ -104,7 +104,7 @@ if sys.platform != "win32":
         _sync_directory(dst_dir)
         if src_dir != dst_dir:
             _sync_directory(src_dir)
-else:
+else:  # pragma: no cover
     from ctypes import windll, WinError
 
     _MOVEFILE_REPLACE_EXISTING = 0x1
@@ -255,7 +255,7 @@ class TempTextIOManager[F: TextIO](ABCTempIOManager):
 
     @classmethod
     @override
-    def commit(cls, temp_file: F, file: IO):
+    def commit(cls, temp_file: F, file: IO):  # pragma: no cover # 用不上 暂不维护
         if not file.writable():
             return
         temp_file: TextIO  # 防止类型检查器抽风
@@ -366,7 +366,7 @@ class SafeOpen[F: IO]:
                 release_lock(f)
 
     @contextmanager
-    def open_file(self, file: F):
+    def open_file(self, file: F):  # pragma: no cover # 用不上 暂不维护
         """
         打开文件 (上下文管理器)
 
@@ -420,7 +420,7 @@ def _timeout_checker(timeout: Optional[float] = None, interval_increase_speed: R
 
     def _timeout_loop():
         nonlocal timeout
-        start = time.time()
+        start = time.time() + float(interval_increase_speed)
         interval = 0
         while (time.time() - start) < timeout:
             yield
