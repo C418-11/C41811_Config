@@ -250,7 +250,7 @@ class ConfigData(ABC):
     TYPES: ClassVar[OrderedDict[tuple[type, ...], type]]
     """
     存储配置数据类型对应的子类
-    
+
     .. versionchanged:: 0.1.6
        现在使用 ``OrderedDict`` 来保证顺序
     """

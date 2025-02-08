@@ -28,7 +28,7 @@ def test_acquire_lock(tmp_path):
     with cleanup(open(tmp_path / "test.txt", mode="w")) as file:
         acquire_lock(file, LockFlags.EXCLUSIVE)
         with raises(TimeoutError):
-            acquire_lock(file, LockFlags.EXCLUSIVE, timeout=0)
+            acquire_lock(file, LockFlags.EXCLUSIVE, timeout=.1)
     with cleanup(open(tmp_path / "test.txt", mode="w")) as file:
         acquire_lock(file, LockFlags.SHARED)
-        acquire_lock(file, LockFlags.SHARED, timeout=0)
+        acquire_lock(file, LockFlags.SHARED, timeout=.1)
