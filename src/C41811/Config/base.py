@@ -732,6 +732,27 @@ class ConfigFile(ABCConfigFile):
     配置文件类
     """
 
+    def __init__(
+            self,
+            config_data: Any,
+            *,
+            config_format: Optional[str] = None
+    ) -> None:
+        """
+        .. caution::
+           本身并未对config_data参数进行深拷贝，但是ConfigData可能会将其深拷贝
+
+        :param config_data: 配置数据
+        :type config_data: ABCConfigData
+        :param config_format: 配置文件的格式
+        :type config_format: Optional[str]
+
+        .. versionchanged:: 0.1.6
+           现在会自动尝试转换 ``config_data`` 参数为 :py:class:`ConfigData`
+        """
+
+        super().__init__(ConfigData(config_data), config_format=config_format)
+
     @override
     def save(
             self,
