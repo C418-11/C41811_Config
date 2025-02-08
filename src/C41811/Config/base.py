@@ -247,7 +247,13 @@ class ConfigData(ABC):
     .. versionchanged:: 0.1.5
        会自动根据传入的配置数据类型选择对应的子类
     """
-    TYPES: ClassVar[dict[tuple[type, ...], type]]
+    TYPES: ClassVar[OrderedDict[tuple[type, ...], type]]
+    """
+    存储配置数据类型对应的子类
+    
+    .. versionchanged:: 0.1.6
+       现在使用 ``OrderedDict`` 来保证顺序
+    """
 
     def __new__(cls, *args, **kwargs) -> Any:
         if not args:
@@ -703,15 +709,15 @@ type AnyConfigData = (
         | ObjectConfigData
 )
 
-ConfigData.TYPES = {
-    (ABCConfigData,): lambda _: _,
-    (Mapping, MutableMapping, type(None)): MappingConfigData,
-    (str | bytes,): StringConfigData,
-    (Sequence, MutableSequence): SequenceConfigData,
-    (bool,): BoolConfigData,
-    (Number,): NumberConfigData,
-    (object,): ObjectConfigData,
-}
+ConfigData.TYPES = OrderedDict((
+    ((ABCConfigData,), lambda _: _),
+    ((Mapping, MutableMapping, type(None)), MappingConfigData),
+    ((str, bytes), StringConfigData),
+    ((Sequence, MutableSequence), SequenceConfigData),
+    ((bool,), BoolConfigData),
+    ((Number,), NumberConfigData),
+    ((object,), ObjectConfigData),
+))
 
 ConfigData.register(MappingConfigData)
 ConfigData.register(SequenceConfigData)
