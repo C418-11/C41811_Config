@@ -42,6 +42,7 @@ from contextlib import contextmanager
 from contextlib import suppress
 from enum import IntEnum
 from numbers import Real
+from pathlib import Path
 from threading import Lock
 from typing import IO, ContextManager
 from typing import Optional
@@ -63,10 +64,12 @@ except ImportError:  # pragma: no cover
     fspath = None
 
 
-def _path2str(x: str | bytes):  # pragma: no cover
-    if isinstance(x, str):
-        return x
-    return x.decode(sys.getfilesystemencoding())
+def _path2str(x: str | bytes | Path):  # pragma: no cover
+    if hasattr(x, "decode"):
+        return x.decode(sys.getfilesystemencoding())
+    if isinstance(x, Path):
+        return str(x)
+    return x
 
 
 _proper_fsync = os.fsync
@@ -145,7 +148,7 @@ def replace_atomic(src, dst):
     _replace_atomic(src, dst)
 
 
-def move_atomic(src, dst):
+def move_atomic(src, dst):  # pragma: no cover
     """
     移动 ``src`` 到 ``dst`` 。可能存在两个文件系统条目同时存在的时间窗口。如果 ``dst`` 已经存在，将引发：py:exc: ‘ FileExistsError ’。
 
@@ -225,7 +228,7 @@ class TempTextIOManager[F: TextIO](ABCTempIOManager):
         self._open_kwargs = open_kwargs
 
     @override
-    def from_file(self, file: F) -> F:
+    def from_file(self, file: F) -> F:  # pragma: no cover # 用不上 暂不维护
         file: TextIO  # 防止类型检查器抽风
         path, name = os.path.split(file.name)
         f = open(os.path.join(path, f"{self._prefix}{name}{self._suffix}"), mode=file.mode, **self._open_kwargs)
@@ -272,14 +275,14 @@ class TempTextIOManager[F: TextIO](ABCTempIOManager):
             return
 
         overwrite = True
-        if 'x' in mode:
+        if 'x' in mode:  # pragma: no cover
             overwrite = False
-        if ('r' in mode) and ('+' not in mode):
+        if ('r' in mode) and ('+' not in mode):  # pragma: no cover
             overwrite = False
 
         if overwrite:
             replace_atomic(temp_file.name, path)
-        else:
+        else:  # pragma: no cover
             move_atomic(temp_file.name, path)
 
 
@@ -308,32 +311,30 @@ class SafeOpen[F: IO]:
 
     def __init__(
             self,
-            io_manager: Optional[ABCTempIOManager] = None,
+            io_manager: ABCTempIOManager,
             timeout: Optional[float] = 1,
             flag: LockFlags = LockFlags.EXCLUSIVE
     ):
         """
         :param io_manager: IO管理器
-        :type io_manager: Optional[ABCTempIOManager]
+        :type io_manager: ABCTempIOManager
         :param timeout: 超时时间
         :type timeout: Optional[float]
         :param flag: 锁标志
         :type flag: LockFlags
         """
-        if io_manager is None:
-            io_manager = TempTextIOManager()
 
         self._manager = io_manager
         self._timeout = timeout
         self._flag = flag
 
     @contextmanager
-    def open_path(self, path: str, mode: str):
+    def open_path(self, path: str | Path, mode: str):
         """
         打开路径 (上下文管理器)
 
         :param path: 文件路径
-        :type path: str
+        :type path: str | Path
         :param mode: 打开模式
         :type mode: str
         :return: 返回值为IO对象的上下文管理器
@@ -341,7 +342,7 @@ class SafeOpen[F: IO]:
         with GlobalModifyLock:
             lock = FileLocks.setdefault(path, Lock())
 
-        if not lock.acquire(timeout=-1 if self._timeout is None else self._timeout):
+        if not lock.acquire(timeout=-1 if self._timeout is None else self._timeout):  # pragma: no cover
             raise TimeoutError("Timeout waiting for file lock")
 
         f: Optional[F] = None
@@ -357,7 +358,7 @@ class SafeOpen[F: IO]:
             if f is not None:
                 try:
                     self._manager.rollback(f)
-                except Exception:
+                except Exception:  # pragma: no cover
                     raise err from None
             raise
         finally:
@@ -404,7 +405,11 @@ class SafeOpen[F: IO]:
                 release_lock(file)
 
 
-def _timeout_checker(timeout: Optional[float] = None, interval_increase_speed: Real = .03, max_interval: Real = .5):
+def _timeout_checker(
+        timeout: Optional[float] = None,
+        interval_increase_speed: Real = .03,
+        max_interval: Real = .5,
+):  # pragma: no cover # 除了windows其他平台压根不会触发timeout
     def _calc_interval(interval):
         nonlocal max_interval, interval_increase_speed
 
@@ -464,7 +469,7 @@ def release_lock(file: IO):
 
 
 def safe_open(
-        path,
+        path: str | Path,
         mode: str,
         *,
         timeout: Optional[float] = 1,
@@ -476,7 +481,7 @@ def safe_open(
     安全打开文件
 
     :param path: 文件路径
-    :type path: str
+    :type path: str | Path
     :param mode: 打开模式
     :type mode: str
     :param timeout: 超时时间
