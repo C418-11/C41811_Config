@@ -8,6 +8,7 @@ from abc import abstractmethod
 from collections.abc import Callable
 from collections.abc import Iterable
 from collections.abc import Mapping
+from collections.abc import Sequence
 from contextlib import contextmanager
 from copy import deepcopy
 from typing import Any
@@ -356,18 +357,50 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
     ):
         # noinspection GrazieInspection
         """
-        :param s_arg: 详见 :py:class:`BaseConfigSL`
-        :param l_arg: 详见 :py:class:`BaseConfigSL`
+        :param s_arg: 保存器默认参数
+        :type s_arg: Optional[Sequence | Mapping | tuple[Sequence, Mapping[str, Any]]]
+        :param l_arg: 加载器默认参数
+        :type l_arg: Optional[Sequence | Mapping | tuple[Sequence, Mapping[str, Any]]]
         :param reg_alias: 详见 :py:class:`BaseConfigSL`
         :param create_dir: 是否允许创建目录
         :type create_dir: bool
 
         .. seealso::
            :py:class:`BaseConfigSL`
+
+        .. versionchanged:: 0.1.6
+           将 ``保存加载器参数`` 相关从 :py:class:`BaseConfigSL` 移动到此类
         """
-        super().__init__(s_arg, l_arg, reg_alias=reg_alias)
+
+        def _build_arg(value: SLArgument) -> tuple[tuple, PMap[str, Any]]:
+            if value is None:
+                return (), pmap()
+            if isinstance(value, Sequence):
+                return tuple(value), pmap()
+            if isinstance(value, Mapping):
+                return (), pmap(value)
+            raise TypeError(f"Invalid argument type, must be '{SLArgument}'")
+
+        self._saver_args: tuple[tuple, PMap[str, Any]] = _build_arg(s_arg)
+        self._loader_args: tuple[tuple, PMap[str, Any]] = _build_arg(l_arg)
+
+        super().__init__(reg_alias=reg_alias)
 
         self.create_dir = create_dir
+
+    @property
+    def saver_args(self) -> tuple[tuple, PMap[str, Any]]:
+        """
+        :return: 保存器默认参数
+        """
+        return self._saver_args
+
+    @property
+    def loader_args(self) -> tuple[tuple, PMap[str, Any]]:
+        """
+        :return: 加载器默认参数
+        """
+        return self._loader_args
 
     @staticmethod
     def _merge_args(
@@ -533,6 +566,25 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
             os.makedirs(os.path.dirname(full_path), exist_ok=True)
 
         return full_path
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return NotImplemented
+        saver_args_eq = self._saver_args == other._saver_args
+        loader_args_eq = self._loader_args == other._loader_args
+
+        return all((
+            super().__eq__(other),
+            saver_args_eq,
+            loader_args_eq
+        ))
+
+    def __hash__(self):
+        return hash((
+            super().__hash__(),
+            self._saver_args,
+            self._loader_args
+        ))
 
 
 __all__ = (

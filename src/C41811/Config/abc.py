@@ -13,8 +13,6 @@ from typing import Optional
 from typing import Self
 
 from pydantic_core import core_schema
-from pyrsistent import PMap
-from pyrsistent import pmap
 
 from ._protocols import SupportsIndex
 from ._protocols import SupportsWriteIndex
@@ -816,50 +814,21 @@ type SLArgument = Optional[Sequence | Mapping | tuple[Sequence, Mapping[str, Any
 class ABCConfigSL(ABC):
     """
     配置SaveLoad处理器抽象类
+
+    .. versionchanged:: 0.1.6
+       移动 ``保存加载器参数`` 相关至 :py:class:`BaseLocalFileConfigSL`
     """
 
     def __init__(
             self,
-            s_arg: SLArgument = None,
-            l_arg: SLArgument = None,
             *,
             reg_alias: Optional[str] = None,
     ):
         """
-        :param s_arg: 保存器默认参数
-        :type s_arg: Optional[Sequence | Mapping | tuple[Sequence, Mapping[str, Any]]]
-        :param l_arg: 加载器默认参数
-        :type l_arg: Optional[Sequence | Mapping | tuple[Sequence, Mapping[str, Any]]]
         :param reg_alias: sl处理器注册别名
         :type reg_alias: Optional[str]
         """
-
-        def _build_arg(value: SLArgument) -> tuple[tuple, PMap[str, Any]]:
-            if value is None:
-                return (), pmap()
-            if isinstance(value, Sequence):
-                return tuple(value), pmap()
-            if isinstance(value, Mapping):
-                return (), pmap(value)
-            raise TypeError(f"Invalid argument type, must be '{SLArgument}'")
-
-        self._saver_args: tuple[tuple, PMap[str, Any]] = _build_arg(s_arg)
-        self._loader_args: tuple[tuple, PMap[str, Any]] = _build_arg(l_arg)
         self._reg_alias: Optional[str] = reg_alias
-
-    @property
-    def saver_args(self) -> tuple[tuple, PMap[str, Any]]:
-        """
-        :return: 保存器默认参数
-        """
-        return self._saver_args
-
-    @property
-    def loader_args(self) -> tuple[tuple, PMap[str, Any]]:
-        """
-        :return: 加载器默认参数
-        """
-        return self._loader_args
 
     @property
     @abstractmethod
@@ -967,15 +936,11 @@ class ABCConfigSL(ABC):
         processor_reg_name = self.processor_reg_name == other.processor_reg_name
         reg_alias = self.reg_alias == other.reg_alias
         file_ext_eq = self.file_ext == other.file_ext
-        saver_args_eq = self._saver_args == other._saver_args
-        loader_args_eq = self._loader_args == other._loader_args
 
         return all((
             processor_reg_name,
             reg_alias,
             file_ext_eq,
-            saver_args_eq,
-            loader_args_eq
         ))
 
     def __hash__(self):
@@ -983,8 +948,6 @@ class ABCConfigSL(ABC):
             self.processor_reg_name,
             self.reg_alias,
             self.file_ext,
-            self._saver_args,
-            self._loader_args
         ))
 
 
