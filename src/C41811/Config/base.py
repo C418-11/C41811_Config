@@ -434,10 +434,11 @@ class MappingConfigData[D: Mapping | MutableMapping](BaseSupportsIndexConfigData
             raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{item}'")
         return item_obj
 
-    @_operate(operator.or_, operator.ior)
+    @_operate(operator.or_, operator.ior)  # @formatter:off
     def __or__(self, other) -> Any: ...
 
     def __ror__(self, other) -> Any: ...
+    # @formatter:on
 
 
 @_generate_operators
