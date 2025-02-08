@@ -215,16 +215,16 @@ class RequireConfigDecorator:
         """
         :param config_pool: 所在的配置池
         :type config_pool: ConfigPool
-        :param namespace: 详见 :py:func:`ConfigPool.load`
-        :param file_name: 详见 :py:func:`ConfigPool.load`
+        :param namespace: 详见 :py:meth:`ConfigPool.load`
+        :param file_name: 详见 :py:meth:`ConfigPool.load`
         :param required: 需求的键
         :type required: RequiredPath
-        :param config_file_cls: 详见 :py:func:`ConfigPool.load`
-        :param config_formats: 详见 :py:func:`ConfigPool.load`
-        :param allow_create: 详见 :py:func:`ConfigPool.load`
+        :param config_file_cls: 详见 :py:meth:`ConfigPool.load`
+        :param config_formats: 详见 :py:meth:`ConfigPool.load`
+        :param allow_create: 详见 :py:meth:`ConfigPool.load`
         :param cache_config: 缓存配置的装饰器，默认为None，即不缓存
         :type cache_config: Optional[Callable[[Callable], Callable]]
-        :param filter_kwargs: :py:func:`RequiredPath.filter` 要绑定的默认参数，默认为allow_modify=True
+        :param filter_kwargs: :py:meth:`RequiredPath.filter` 要绑定的默认参数，默认为allow_modify=True
         :type filter_kwargs: dict[str, Any]
 
         :raise UnsupportedConfigFormatError: 不支持的配置格式
@@ -280,42 +280,42 @@ requireConfig = DefaultConfigPool.require
 :py:attr:`DefaultConfigPool` ``.require()``
 
 .. seealso::
-   :py:func:`ConfigPool.require`
+   :py:meth:`ConfigPool.require`
 """
 saveAll = DefaultConfigPool.save_all
 """
 :py:attr:`DefaultConfigPool` ``.save_all()``
 
 .. seealso::
-   :py:func:`ConfigPool.save_all`
+   :py:meth:`ConfigPool.save_all`
 """
 get = DefaultConfigPool.get
 """
 :py:attr:`DefaultConfigPool` ``.get()``
 
 .. seealso::
-   :py:func:`ConfigPool.get`
+   :py:meth:`ConfigPool.get`
 """
 set_ = DefaultConfigPool.set
 """
 :py:attr:`DefaultConfigPool` ``.set()``
 
 .. seealso::
-   :py:func:`ConfigPool.set`
+   :py:meth:`ConfigPool.set`
 """
 save = DefaultConfigPool.save
 """
 :py:attr:`DefaultConfigPool` ``.save()``
 
 .. seealso::
-   :py:func:`ConfigPool.save`
+   :py:meth:`ConfigPool.save`
 """
 load = DefaultConfigPool.load
 """
 :py:attr:`DefaultConfigPool` ``.load()``
 
 .. seealso::
-   :py:func:`ConfigPool.load`
+   :py:meth:`ConfigPool.load`
 """
 
 
