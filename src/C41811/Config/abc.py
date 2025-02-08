@@ -926,7 +926,7 @@ class ABCConfigSL(ABC):
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
-            return NotImplemented
+            return NotImplemented  # pragma: no cover
 
         processor_reg_name = self.processor_reg_name == other.processor_reg_name
         reg_alias = self.reg_alias == other.reg_alias
