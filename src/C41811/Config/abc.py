@@ -12,8 +12,6 @@ from typing import Any
 from typing import Optional
 from typing import Self
 
-from pydantic_core import core_schema
-
 from ._protocols import SupportsIndex
 from ._protocols import SupportsWriteIndex
 
@@ -516,13 +514,6 @@ class ABCSupportsIndexConfigData[D: SupportsIndex | SupportsWriteIndex](
 
     def __delitem__(self, key) -> None:
         del self._data[key]
-
-    @staticmethod
-    def __get_pydantic_core_schema__() -> core_schema.DictSchema:  # pragma: no cover
-        return core_schema.dict_schema(
-            keys_schema=core_schema.any_schema(),
-            values_schema=core_schema.any_schema()
-        )
 
 
 class ABCSLProcessorPool(ABC):
