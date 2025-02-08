@@ -152,17 +152,18 @@ class ConfigPool(BaseConfigPool):
             self,
             namespace: str,
             file_name: str,
-            *,
+            *args,
             config_file_cls: type[F] = ConfigFile,
             config_formats: Optional[str | Iterable[str]] = None,
-            allow_create: bool = False
+            allow_create: bool = False,
+            **kwargs
     ) -> F:
         if (namespace, file_name) in self:
             return self.get(namespace, file_name)
 
         def processor(pool, ns, fn, cf):
             try:
-                result = config_file_cls.load(pool, ns, fn, cf)
+                result = config_file_cls.load(pool, ns, fn, cf, *args, **kwargs)
             except FileNotFoundError:
                 if not allow_create:
                     raise
@@ -484,18 +485,18 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
             self.save_file(config_file, f, *merged_args, **merged_kwargs)
 
     @override
-    def load[C: ABCConfigFile](
+    def load(
             self,
-            config_file_cls: type[C],
             root_path: str,
             namespace: str,
             file_name: str,
-            *args, **kwargs
-    ) -> C:
+            *args,
+            **kwargs,
+    ) -> ABCConfigFile:
         merged_args, merged_kwargs = self._merge_args(self._loader_args, args, kwargs)
 
         with safe_open(self._process_file_path(root_path, namespace, file_name), **self._l_open_kwargs) as f:
-            return self.load_file(config_file_cls, f, *merged_args, **merged_kwargs)
+            return self.load_file(f, *merged_args, **merged_kwargs)
 
     @abstractmethod
     def save_file(
@@ -519,24 +520,24 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
         """
 
     @abstractmethod
-    def load_file[C: ABCConfigFile](
+    def load_file(
             self,
-            config_file_cls: type[C],
             source_file: SupportsReadAndReadline,
             *merged_args,
             **merged_kwargs,
-    ) -> C:
+    ) -> ABCConfigFile:
         """
         从文件加载配置
 
-        :param config_file_cls: 配置文件类
-        :type config_file_cls: type[ABCConfigFile]
         :param source_file: 源文件对象
         :type source_file: _SupportsReadAndReadline
         :param merged_args: 合并后的位置参数
         :param merged_kwargs: 合并后的关键字参数
 
         :raise FailedProcessConfigFileError: 处理配置文件失败
+
+        .. versionchanged:: 0.1.6
+           移除 ``config_file_cls`` 参数
         """
 
     def _process_file_path(

@@ -743,10 +743,11 @@ class ABCConfigPool(ABCSLProcessorPool):
             self,
             namespace: str,
             file_name: str,
-            *,
+            *args,
             config_file_cls: type[F],
             config_formats: Optional[str | Iterable[str]] = None,
             allow_create: bool = False,
+            **kwargs
     ) -> F:
         """
         加载配置
@@ -764,6 +765,9 @@ class ABCConfigPool(ABCSLProcessorPool):
 
         :return: 配置对象
         :rtype: ABCConfigFile
+
+        .. versionchanged:: 0.1.6
+           现在会像 :py:meth:`save` 一样接收并传递额外参数
         """
 
     @abstractmethod
@@ -902,20 +906,17 @@ class ABCConfigSL(ABC):
         """
 
     @abstractmethod
-    def load[C: ABCConfigFile](
+    def load(
             self,
-            config_file_cls: type[C],
             root_path: str,
             namespace: str,
             file_name: str,
             *args,
             **kwargs
-    ) -> C:
+    ) -> ABCConfigFile:
         """
         加载处理器
 
-        :param config_file_cls: 配置文件类
-        :type config_file_cls: type[ABCConfigFile]
         :param root_path: 保存的根目录
         :type root_path: str
         :param namespace: 配置的命名空间
@@ -927,6 +928,9 @@ class ABCConfigSL(ABC):
         :rtype: ABCConfigFile
 
         :raise FailedProcessConfigFileError: 处理配置文件失败
+
+        .. versionchanged:: 0.1.6
+           移除 ``config_file_cls`` 参数
         """
 
     def __eq__(self, other):

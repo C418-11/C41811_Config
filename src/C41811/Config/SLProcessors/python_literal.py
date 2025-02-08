@@ -9,7 +9,7 @@ from typing import override
 from .._protocols import SupportsReadAndReadline
 from .._protocols import SupportsWrite
 from ..abc import ABCConfigFile
-from ..base import ConfigData
+from ..base import ConfigFile
 from ..main import BaseLocalFileConfigSL
 
 
@@ -40,16 +40,16 @@ class PythonLiteralSL(BaseLocalFileConfigSL):
             target_file.write(pprint.pformat(config_file.data.data, *merged_args, **merged_kwargs))
 
     @override
-    def load_file[C: ABCConfigFile](
-            self, config_file_cls: type[C],
+    def load_file(
+            self,
             source_file: SupportsReadAndReadline[str],
             *merged_args,
             **merged_kwargs
-    ) -> C:
+    ) -> ConfigFile:
         with self.raises():
             data = literal_eval(source_file.read())
 
-        return config_file_cls(ConfigData(data), config_format=self.processor_reg_name)
+        return ConfigFile(data, config_format=self.processor_reg_name)
 
 
 __all__ = (

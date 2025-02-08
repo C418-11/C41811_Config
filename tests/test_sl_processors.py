@@ -19,7 +19,6 @@ from C41811.Config.SLProcessors.python_literal import PythonLiteralSL
 from C41811.Config.SLProcessors.pyyaml import PyYamlSL
 from C41811.Config.SLProcessors.ruamel_yaml import RuamelYamlSL
 from C41811.Config.SLProcessors.toml import TomlSL
-from C41811.Config.abc import ABCConfigSL
 from C41811.Config.errors import FailedProcessConfigFileError
 from utils import safe_raises
 
@@ -315,7 +314,7 @@ def pool(tmpdir):
 
 
 @mark.parametrize(*Tests)
-def test_sl_processors(pool, sl_cls: type[ABCConfigSL], raw_data, ignore_excs, sl_args):
+def test_sl_processors(pool, sl_cls: type[BaseLocalFileConfigSL], raw_data, ignore_excs, sl_args):
     sl_obj = sl_cls(*sl_args)
     sl_obj.register_to(pool)
 

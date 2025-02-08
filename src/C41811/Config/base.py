@@ -792,7 +792,7 @@ class ConfigFile(ABCConfigFile):
 
         return config_pool.SLProcessor[
             config_format
-        ].load(cls, config_pool.root_path, namespace, file_name, *processor_args, **processor_kwargs)
+        ].load(config_pool.root_path, namespace, file_name)
 
 
 class BaseConfigPool(ABCConfigPool, ABC):
