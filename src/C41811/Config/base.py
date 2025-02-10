@@ -847,15 +847,13 @@ class BaseConfigPool(ABCConfigPool, ABC):
            用于在没手动指定配置格式且没文件后缀时使用该值进行尝试
 
            .. seealso::
-              :py:attr:`ABCConfigData.config_format`
+              :py:attr:`ABCConfigFile.config_format`
 
         :return: 配置格式
         :rtype: set[str]
 
         :raise UnsupportedConfigFormatError: 不支持的配置格式
         :raise FailedProcessConfigFileError: 处理配置文件失败
-
-        .. versionadded:: 0.1.6
 
         格式计算优先级
         --------------
@@ -865,6 +863,8 @@ class BaseConfigPool(ABCConfigPool, ABC):
         2.如果文件名注册了对应的SL处理器则直接使用
 
         3.如果传入了file_config_format且非None则直接使用
+
+        .. versionadded:: 0.1.6
         """
         # 先尝试从传入的参数中获取配置文件格式
         if config_formats is None:
