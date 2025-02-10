@@ -45,7 +45,7 @@ dependencies = [
 docs = [
     "setuptools-scm==8.1.0",
     "sphinx~=8.1.3",
-    "sphinx-autoapi~=3.4.0",
+    "sphinx-autoapi~=3.5.0",
     "sphinx-copybutton~=0.5.2",
     "furo==2024.8.6",
 ]

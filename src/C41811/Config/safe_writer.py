@@ -334,7 +334,7 @@ class SafeOpen[F: IO]:
         打开路径 (上下文管理器)
 
         :param path: 文件路径
-        :type path: str | Path
+        :type path: str | pathlib.Path
         :param mode: 打开模式
         :type mode: str
         :return: 返回值为IO对象的上下文管理器
@@ -481,7 +481,7 @@ def safe_open(
     安全打开文件
 
     :param path: 文件路径
-    :type path: str | Path
+    :type path: str | pathlib.Path
     :param mode: 打开模式
     :type mode: str
     :param timeout: 超时时间
