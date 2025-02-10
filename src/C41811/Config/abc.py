@@ -8,6 +8,7 @@ from collections.abc import Iterable
 from collections.abc import Mapping
 from collections.abc import Sequence
 from copy import deepcopy
+from re import Pattern
 from typing import Any
 from typing import Optional
 from typing import Self
@@ -522,8 +523,27 @@ class ABCSLProcessorPool(ABC):
     """
 
     def __init__(self, root_path: str = "./.config"):
-        self.SLProcessor: dict[str, ABCConfigSL] = {}  # SaveLoadProcessor {RegName: Processor}
-        self.FileExtProcessor: dict[str, set[str]] = {}  # {FileExt: {RegName}}
+        self.SLProcessors: dict[str, ABCConfigSL] = {}  # SaveLoadProcessor {RegName: Processor}
+        """
+        处理器注册表
+
+        .. versionchanged:: 0.1.6
+           从 ``SLProcessor`` 重命名为 ``SLProcessors``
+        """
+        self.FileNameProcessors: dict[str | Pattern, set[str]] = {}  # {FileNameMatch: {RegName}}
+        # noinspection SpellCheckingInspection
+        """
+        文件名处理器注册表
+
+        数据结构: ``{文件名匹配: {处理器注册名}}``
+
+        文件名匹配:
+            - 为字符串时会使用 ``endswith`` 进行匹配
+            - 为 ``re.Pattern`` 时会使用 ``Pattern.fullmatch`` 进行匹配
+
+        .. versionchanged:: 0.1.6
+           从 ``FileExtProcessor`` 重命名为 ``FileNameProcessors``
+        """
         self._root_path = root_path
 
     @property
@@ -861,12 +881,12 @@ class ABCConfigSL(ABC):
         :type config_pool: ABCSLProcessorPool
         """
 
-        config_pool.SLProcessor[self.reg_name] = self
+        config_pool.SLProcessors[self.reg_name] = self
         for ext in self.file_ext:
-            if ext not in config_pool.FileExtProcessor:
-                config_pool.FileExtProcessor[ext] = {self.reg_name}
+            if ext not in config_pool.FileNameProcessors:
+                config_pool.FileNameProcessors[ext] = {self.reg_name}
                 continue
-            config_pool.FileExtProcessor[ext].add(self.reg_name)
+            config_pool.FileNameProcessors[ext].add(self.reg_name)
 
     @abstractmethod
     def save(

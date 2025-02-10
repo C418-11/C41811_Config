@@ -352,9 +352,9 @@ def test_multi_register(pool, sl_cls):
     sl_cls().register_to(pool)
     sl_obj = sl_cls()
     sl_obj.register_to(pool)
-    assert len(pool.SLProcessor) == 1
+    assert len(pool.SLProcessors) == 1
     sl_cls(reg_alias=f"{sl_obj.reg_name}$test").register_to(pool)
-    assert len(pool.SLProcessor) == 2
+    assert len(pool.SLProcessors) == 2
 
 
 @mark.parametrize("sl_cls", SLProcessors)

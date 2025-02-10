@@ -4,7 +4,6 @@
 
 import math
 import operator
-import os.path
 from abc import ABC
 from collections import OrderedDict
 from collections.abc import Callable
@@ -20,6 +19,7 @@ from collections.abc import ValuesView
 from contextlib import suppress
 from copy import deepcopy
 from numbers import Number
+from re import Pattern
 from textwrap import dedent
 from typing import Any
 from typing import ClassVar
@@ -769,11 +769,11 @@ class ConfigFile(ABCConfigFile):
 
         if config_format is None:
             raise UnsupportedConfigFormatError("Unknown")
-        if config_format not in config_pool.SLProcessor:
+        if config_format not in config_pool.SLProcessors:
             raise UnsupportedConfigFormatError(config_format)
 
-        return config_pool.SLProcessor[config_format].save(self, config_pool.root_path, namespace, file_name,
-                                                           *processor_args, **processor_kwargs)
+        return config_pool.SLProcessors[config_format].save(self, config_pool.root_path, namespace, file_name,
+                                                            *processor_args, **processor_kwargs)
 
     @classmethod
     @override
@@ -787,10 +787,10 @@ class ConfigFile(ABCConfigFile):
             **processor_kwargs
     ) -> Self:
 
-        if config_format not in config_pool.SLProcessor:
+        if config_format not in config_pool.SLProcessors:
             raise UnsupportedConfigFormatError(config_format)
 
-        return config_pool.SLProcessor[
+        return config_pool.SLProcessors[
             config_format
         ].load(config_pool.root_path, namespace, file_name)
 
@@ -849,9 +849,12 @@ class BaseConfigPool(ABCConfigPool, ABC):
            出现意料内的SL处理器无法处理需抛出FailedProcessConfigFileError以允许继续尝试别的SL处理器
         :type processor: Callable[[Self, str, str, str], Any]
         :param file_config_format:
+           该配置文件对象本身配置格式属性的值
            可选项，一般在保存时填入
-           :py:attr:`ABCConfigData.config_format`
            用于在没手动指定配置格式且没文件后缀时使用该值进行尝试
+
+           .. seealso::
+              :py:attr:`ABCConfigData.config_format`
 
         :raise UnsupportedConfigFormatError: 不支持的配置格式
         :raise FailedProcessConfigFileError: 处理配置文件失败
@@ -863,7 +866,7 @@ class BaseConfigPool(ABCConfigPool, ABC):
 
         1.如果传入了config_formats且非None非空集则直接使用
 
-        2.如果有文件后缀则查找文件后缀是否注册了对应的SL处理器，如果有就直接使用
+        2.如果文件名注册了对应的SL处理器则直接使用
 
         3.如果传入了file_config_format且非None则直接使用
         """
@@ -874,13 +877,18 @@ class BaseConfigPool(ABCConfigPool, ABC):
         else:
             config_formats = set(config_formats)
 
-        format_set: set[str]
-        # 配置文件格式未提供时尝试从文件后缀推断
-        _, file_ext = os.path.splitext(file_name)
-        if not config_formats and file_ext:
-            if file_ext not in self.FileExtProcessor:
-                raise UnsupportedConfigFormatError(file_ext)
-            format_set = self.FileExtProcessor[file_ext]
+        def _check_file_name(match: str | Pattern) -> bool:
+            if isinstance(match, str):
+                return file_name.endswith(match)
+            return bool(match.fullmatch(file_name))
+
+        format_set: set[str] = set()
+        # 配置文件格式未提供时尝试从文件名推断
+        if not config_formats:
+            for m in self.FileNameProcessors:
+                if _check_file_name(m):
+                    format_set = self.FileNameProcessors[m]
+                    break
         else:
             format_set = config_formats
 
@@ -896,7 +904,7 @@ class BaseConfigPool(ABCConfigPool, ABC):
         # 尝试从多个SL加载器中找到能正确加载的那一个
         errors = {}
         for fmt in format_set:
-            if fmt not in self.SLProcessor:
+            if fmt not in self.SLProcessors:
                 errors[fmt] = UnsupportedConfigFormatError(fmt)
                 continue
             try:
