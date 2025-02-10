@@ -2,6 +2,7 @@
 # cython: language_level = 3
 
 
+import builtins
 import math
 import operator
 from abc import ABC
@@ -827,16 +828,80 @@ class BaseConfigPool(ABCConfigPool, ABC):
 
         self._configs[namespace][file_name] = config
 
+    def _calc_formats(
+            self,
+            file_name: str,
+            config_formats: Optional[str | Iterable[str]],
+            file_config_format: Optional[str] = None,
+    ) -> builtins.set[str]:
+        """
+        从给定参数计算所有可能的配置格式
+
+        :param file_name: 文件名
+        :type file_name: str
+        :param config_formats: 配置格式
+        :type config_formats: Optional[str | Iterable[str]]
+        :param file_config_format:
+           该配置文件对象本身配置格式属性的值
+           可选项，一般在保存时填入
+           用于在没手动指定配置格式且没文件后缀时使用该值进行尝试
+
+           .. seealso::
+              :py:attr:`ABCConfigData.config_format`
+
+        :return: 配置格式
+        :rtype: set[str]
+
+        :raise UnsupportedConfigFormatError: 不支持的配置格式
+        :raise FailedProcessConfigFileError: 处理配置文件失败
+
+        .. versionadded:: 0.1.6
+
+        格式计算优先级
+        --------------
+
+        1.如果传入了config_formats且非None非空集则直接使用
+
+        2.如果文件名注册了对应的SL处理器则直接使用
+
+        3.如果传入了file_config_format且非None则直接使用
+        """
+        # 先尝试从传入的参数中获取配置文件格式
+        if config_formats is None:
+            config_formats = set()
+        elif isinstance(config_formats, str):
+            return {config_formats}
+        else:
+            config_formats = set(config_formats)
+
+        if config_formats:
+            return config_formats
+
+        def _check_file_name(match: str | Pattern) -> bool:
+            if isinstance(match, str):
+                return file_name.endswith(match)
+            return bool(match.fullmatch(file_name))
+
+        # 再尝试从文件名匹配配置文件格式
+        for m in self.FileNameProcessors:
+            if _check_file_name(m):
+                return self.FileNameProcessors[m]
+
+        # 最后尝试从配置文件对象本身获取配置文件格式
+        if file_config_format is None:
+            raise UnsupportedConfigFormatError("Unknown")
+        return {file_config_format}
+
     def _test_all_sl[R: Any](
             self,
             namespace: str,
             file_name: str,
             config_formats: Optional[str | Iterable[str]],
             processor: Callable[[Self, str, str, str], R],
-            file_config_format: Optional[str] = None
+            file_config_format: Optional[str] = None,
     ) -> R:
         """
-        尝试自动推断ABCConfigFile所支持的config_format
+        自动尝试推断ABCConfigFile所支持的config_format
 
         :param namespace: 命名空间
         :type namespace: str
@@ -854,56 +919,28 @@ class BaseConfigPool(ABCConfigPool, ABC):
            用于在没手动指定配置格式且没文件后缀时使用该值进行尝试
 
            .. seealso::
-              :py:attr:`ABCConfigData.config_format`
+              :py:attr:`ABCConfigFile.config_format`
 
         :raise UnsupportedConfigFormatError: 不支持的配置格式
         :raise FailedProcessConfigFileError: 处理配置文件失败
 
+        .. seealso::
+           格式计算优先级
+
+           :py:meth:`_calc_formats`
+
         .. versionadded:: 0.1.2
 
-        格式推断优先级
-        --------------
-
-        1.如果传入了config_formats且非None非空集则直接使用
-
-        2.如果文件名注册了对应的SL处理器则直接使用
-
-        3.如果传入了file_config_format且非None则直接使用
+        .. versionchanged:: 0.1.6
+           将格式计算部分提取到单独的函数 :py:meth:`_calc_formats`
         """
-        if config_formats is None:
-            config_formats = set()
-        elif isinstance(config_formats, str):
-            config_formats = {config_formats}
-        else:
-            config_formats = set(config_formats)
-
-        def _check_file_name(match: str | Pattern) -> bool:
-            if isinstance(match, str):
-                return file_name.endswith(match)
-            return bool(match.fullmatch(file_name))
-
-        format_set: set[str] = set()
-        # 配置文件格式未提供时尝试从文件名推断
-        if not config_formats:
-            for m in self.FileNameProcessors:
-                if _check_file_name(m):
-                    format_set = self.FileNameProcessors[m]
-                    break
-        else:
-            format_set = config_formats
-
-        if (not format_set) and (file_config_format is not None):
-            format_set.add(file_config_format)
-
-        if not format_set:
-            raise UnsupportedConfigFormatError("Unknown")
 
         def callback_wrapper(cfg_fmt: str):
             return processor(self, namespace, file_name, cfg_fmt)
 
         # 尝试从多个SL加载器中找到能正确加载的那一个
         errors = {}
-        for fmt in format_set:
+        for fmt in self._calc_formats(file_name, config_formats, file_config_format):
             if fmt not in self.SLProcessors:
                 errors[fmt] = UnsupportedConfigFormatError(fmt)
                 continue
