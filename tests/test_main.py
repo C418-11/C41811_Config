@@ -19,6 +19,7 @@ from C41811.Config import ConfigFile
 from C41811.Config import ConfigPool
 from C41811.Config import FieldDefinition
 from C41811.Config import JsonSL
+from C41811.Config import LocalConfigFile
 from C41811.Config import Path
 from C41811.Config import RequiredPath
 from C41811.Config import ValidatorFactoryConfig
@@ -55,6 +56,11 @@ class TestConfigPool:
         return ConfigFile(data)
 
     @staticmethod
+    @fixture
+    def local_file(data):
+        return LocalConfigFile(data)
+
+    @staticmethod
     def test_set_get_delete(pool, file):
         pool.set('', "test", deepcopy(file))
         assert pool.get("not", "exists") is None
@@ -65,22 +71,22 @@ class TestConfigPool:
         assert pool.get('', "test") is None, "File should be deleted"
 
     @staticmethod
-    def test_save_load(pool, file):
-        pool.set('', "test", deepcopy(file))
+    def test_save_load(pool, local_file):
+        pool.set('', "test", deepcopy(local_file))
 
         pool.save('', "test", config_formats="json")
-        assert pool.load('', "test", config_formats="json") == file
+        assert pool.load('', "test", config_formats="json") == local_file
 
         pool.save('', "test", config_formats={"pickle", "json"})
-        assert pool.load('', "test", config_formats={"pickle", "json"}) == file
-        assert pool.load('', "test", config_formats={"pickle", "json"}) == file
+        assert pool.load('', "test", config_formats={"pickle", "json"}) == local_file
+        assert pool.load('', "test", config_formats={"pickle", "json"}) == local_file
 
-        json_file = ConfigFile(file.data, config_format="json")
+        json_file = LocalConfigFile(local_file.data, config_format="json")
         pool.save('', "test", config=deepcopy(json_file))
         assert pool.load('', "test", config_formats="json") == json_file
 
-        pool.save('', "test1", config_formats="json", config=deepcopy(file))
-        assert pool.load('', "test1", config_formats="json") == file
+        pool.save('', "test1", config_formats="json", config=deepcopy(local_file))
+        assert pool.load('', "test1", config_formats="json") == local_file
 
     @staticmethod
     def test_file_not_found_load(pool):
@@ -95,11 +101,11 @@ class TestConfigPool:
 
     @staticmethod
     def test_wrong_save(pool, data):
-        pool.set('', "test", ConfigFile(data))
+        pool.set('', "test", LocalConfigFile(data))
         with raises(UnsupportedConfigFormatError, match="Unsupported config format: Unknown"):
             pool.save('', "test")
 
-        pool.set('', "test.wrong", ConfigFile(data))
+        pool.set('', "test.wrong", LocalConfigFile(data))
         with raises(UnsupportedConfigFormatError, match="Unsupported config format: Unknown"):
             pool.save('', "test.wrong")
 
@@ -124,16 +130,16 @@ class TestConfigPool:
             pool.load('', "test", config_formats={''})
 
     @staticmethod
-    def test_save_all(pool, file, data):
-        pool.set('', "test", ConfigFile(data, config_format="json"))
-        pool.set('', "test1", ConfigFile(data, config_format="json"))
+    def test_save_all(pool, data):
+        pool.set('', "test", LocalConfigFile(data, config_format="json"))
+        pool.set('', "test1", LocalConfigFile(data, config_format="json"))
         pool.save_all()
         assert pool.load('', "test", config_formats="json").data == data
         assert pool.load('', "test1", config_formats="json").data == data
 
     @staticmethod
     def test_save_all_with_error(pool, data):
-        file = ConfigFile(data, config_format="pickle")
+        file = LocalConfigFile(data, config_format="pickle")
         pool.set('', "test", file)
         with raises(UnsupportedConfigFormatError, match="Unsupported config format: pickle"):
             pool.save_all()

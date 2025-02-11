@@ -14,12 +14,13 @@ from C41811.Config import ConfigData
 from C41811.Config import ConfigFile
 from C41811.Config import ConfigPool
 from C41811.Config import JsonSL
+from C41811.Config import LocalConfigFile
 from C41811.Config import PickleSL
 from C41811.Config import PythonLiteralSL
+from C41811.Config.errors import FailedProcessConfigFileError
 from C41811.Config.processors.PyYaml import PyYamlSL
 from C41811.Config.processors.RuamelYaml import RuamelYamlSL
 from C41811.Config.processors.Toml import TomlSL
-from C41811.Config.errors import FailedProcessConfigFileError
 from utils import safe_raises
 
 JsonSLTests = (
@@ -318,11 +319,11 @@ def test_sl_processors(pool, sl_cls: type[BaseLocalFileConfigSL], raw_data, igno
     sl_obj = sl_cls(*sl_args)
     sl_obj.register_to(pool)
 
-    file = ConfigFile(
+    file = LocalConfigFile(
         ConfigData(raw_data),
         config_format=sl_obj.reg_name
     )
-    file_name = f"TestConfigFile{sl_obj.file_ext[0]}"
+    file_name = f"TestConfigFile{sl_obj.file_match[0]}"
 
     if not ignore_excs:
         ignore_excs = ((), ())
@@ -365,7 +366,7 @@ def test_base(sl_cls: type[BaseConfigSL]):
         "processor_reg_name",
         "reg_alias",
         "reg_name",
-        "file_ext",
+        "file_match",
     )
     for attr in attr_tests:
         with raises(AttributeError, match=re.compile(rf"property '{attr}' of '.+' object has no setter")):

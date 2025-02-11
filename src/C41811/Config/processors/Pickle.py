@@ -8,7 +8,7 @@ from typing import override
 from .._protocols import SupportsReadAndReadline
 from .._protocols import SupportsWrite
 from ..abc import ABCConfigFile
-from ..base import ConfigFile
+from ..base import LocalConfigFile
 from ..main import BaseLocalFileConfigSL
 
 
@@ -24,8 +24,10 @@ class PickleSL(BaseLocalFileConfigSL):
 
     @property
     @override
-    def file_ext(self) -> tuple[str, ...]:
+    def file_match(self) -> tuple[str, ...]:
         return ".pickle",
+
+    supported_file_classes = [LocalConfigFile]
 
     _s_open_kwargs = dict(mode="wb")
 
@@ -48,11 +50,11 @@ class PickleSL(BaseLocalFileConfigSL):
             source_file: SupportsReadAndReadline[bytes],
             *merged_args,
             **merged_kwargs
-    ) -> ConfigFile:
+    ) -> LocalConfigFile:
         with self.raises():
             data = pickle.load(source_file, *merged_args, **merged_kwargs)
 
-        return ConfigFile(data, config_format=self.processor_reg_name)
+        return LocalConfigFile(data, config_format=self.processor_reg_name)
 
 
 __all__ = (

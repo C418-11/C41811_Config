@@ -59,7 +59,6 @@ class ABCKey(ABC):
         :type data: Any
         :param value: 值
         :type value: Any
-        :rtype: None
 
         .. versionadded:: 0.1.4
         """
@@ -71,7 +70,6 @@ class ABCKey(ABC):
 
         :param data: 配置数据
         :type data: Any
-        :rtype: None
 
         .. versionadded:: 0.1.4
         """
@@ -523,9 +521,11 @@ class ABCSLProcessorPool(ABC):
     """
 
     def __init__(self, root_path: str = "./.config"):
-        self.SLProcessors: dict[str, ABCConfigSL] = {}  # SaveLoadProcessor {RegName: Processor}
+        self.SLProcessors: dict[str, ABCConfigSL] = {}
         """
         处理器注册表
+
+        数据结构: ``{处理器注册名: 处理器实例}}``
 
         .. versionchanged:: 0.1.6
            从 ``SLProcessor`` 重命名为 ``SLProcessors``
@@ -704,9 +704,6 @@ class ABCConfigPool(ABCSLProcessorPool):
         :type file_name: str
         :param config: 配置
         :type config: ABCConfigFile
-
-        :return: None
-        :rtype: NoneType
         """
 
     @abstractmethod
@@ -730,9 +727,6 @@ class ABCConfigPool(ABCSLProcessorPool):
         :param config: 配置文件，可选，提供此参数相当于自动调用了一遍pool.set
         :type config: Optional[ABCConfigFile]
 
-        :return: None
-        :rtype: NoneType
-
         .. versionchanged:: 0.1.2
            添加 ``config_formats`` 和 ``config`` 参数
         """
@@ -750,16 +744,15 @@ class ABCConfigPool(ABCSLProcessorPool):
         """
 
     @abstractmethod
-    def load[F: ABCConfigFile](
+    def load(
             self,
             namespace: str,
             file_name: str,
             *args,
-            config_file_cls: type[F],
             config_formats: Optional[str | Iterable[str]] = None,
             allow_create: bool = False,
             **kwargs
-    ) -> F:
+    ) -> ABCConfigFile:
         """
         加载配置
 
@@ -767,8 +760,6 @@ class ABCConfigPool(ABCSLProcessorPool):
         :type namespace: str
         :param file_name: 文件名
         :type file_name: str
-        :param config_file_cls: 配置文件类
-        :type config_file_cls: type[ABCConfigFile]
         :param config_formats: 配置格式
         :type config_formats: Optional[str | Iterable[str]]
         :param allow_create: 是否允许创建配置文件
@@ -779,6 +770,8 @@ class ABCConfigPool(ABCSLProcessorPool):
 
         .. versionchanged:: 0.1.6
            现在会像 :py:meth:`save` 一样接收并传递额外参数
+           移除 ``config_file_cls`` 参数
+
         """
 
     @abstractmethod
@@ -790,9 +783,6 @@ class ABCConfigPool(ABCSLProcessorPool):
         :type namespace: str
         :param file_name: 文件名
         :type file_name: str
-
-        :return: None
-        :rtype: NoneType
         """
 
     @abstractmethod
@@ -853,6 +843,15 @@ class ABCConfigSL(ABC):
         """
 
     @property
+    @abstractmethod
+    def supported_file_classes(self) -> list[type[ABCConfigFile]]:
+        """
+        :return: 支持的配置文件类
+
+        .. versionadded:: 0.1.6
+        """
+
+    @property
     def reg_alias(self) -> Optional[str]:
         """
         :return: 处理器的别名
@@ -868,9 +867,12 @@ class ABCConfigSL(ABC):
 
     @property
     @abstractmethod
-    def file_ext(self) -> tuple[str | Pattern, ...]:
+    def file_match(self) -> tuple[str | Pattern, ...]:
         """
-        :return: 支持的文件扩展名
+        :return: 支持的文件名匹配
+
+        .. versionchanged:: 0.1.6
+           从 ``file_ext`` 重命名为 ``file_match``
         """
 
     def register_to(self, config_pool: ABCSLProcessorPool) -> None:
@@ -882,11 +884,11 @@ class ABCConfigSL(ABC):
         """
 
         config_pool.SLProcessors[self.reg_name] = self
-        for ext in self.file_ext:
-            if ext not in config_pool.FileNameProcessors:
-                config_pool.FileNameProcessors[ext] = {self.reg_name}
+        for match in self.file_match:
+            if match not in config_pool.FileNameProcessors:
+                config_pool.FileNameProcessors[match] = {self.reg_name}
                 continue
-            config_pool.FileNameProcessors[ext].add(self.reg_name)
+            config_pool.FileNameProcessors[match].add(self.reg_name)
 
     @abstractmethod
     def save(
@@ -909,9 +911,6 @@ class ABCConfigSL(ABC):
         :type namespace: str
         :param file_name: 配置文件名
         :type file_name: str
-
-        :return: None
-        :rtype: NoneType
 
         :raise FailedProcessConfigFileError: 处理配置文件失败
         """
@@ -950,19 +949,19 @@ class ABCConfigSL(ABC):
 
         processor_reg_name = self.processor_reg_name == other.processor_reg_name
         reg_alias = self.reg_alias == other.reg_alias
-        file_ext_eq = self.file_ext == other.file_ext
+        file_match_eq = self.file_match == other.file_match
 
         return all((
             processor_reg_name,
             reg_alias,
-            file_ext_eq,
+            file_match_eq,
         ))
 
     def __hash__(self):
         return hash((
             self.processor_reg_name,
             self.reg_alias,
-            self.file_ext,
+            self.file_match,
         ))
 
 
