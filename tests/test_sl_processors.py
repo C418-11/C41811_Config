@@ -15,10 +15,10 @@ from C41811.Config import ConfigFile
 from C41811.Config import ConfigPool
 from C41811.Config import JsonSL
 from C41811.Config import PickleSL
-from C41811.Config.SLProcessors.python_literal import PythonLiteralSL
-from C41811.Config.SLProcessors.pyyaml import PyYamlSL
-from C41811.Config.SLProcessors.ruamel_yaml import RuamelYamlSL
-from C41811.Config.SLProcessors.toml import TomlSL
+from C41811.Config import PythonLiteralSL
+from C41811.Config.processors.PyYaml import PyYamlSL
+from C41811.Config.processors.RuamelYaml import RuamelYamlSL
+from C41811.Config.processors.Toml import TomlSL
 from C41811.Config.errors import FailedProcessConfigFileError
 from utils import safe_raises
 

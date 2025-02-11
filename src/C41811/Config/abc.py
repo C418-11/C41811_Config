@@ -868,7 +868,7 @@ class ABCConfigSL(ABC):
 
     @property
     @abstractmethod
-    def file_ext(self) -> tuple[str, ...]:
+    def file_ext(self) -> tuple[str | Pattern, ...]:
         """
         :return: 支持的文件扩展名
         """
