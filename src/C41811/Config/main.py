@@ -402,9 +402,9 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
 
     @property
     @override
-    @abstractmethod
-    def supported_file_classes(self) -> list[type[LocalConfigFile]]:
-        ...
+    @abstractmethod  # @formatter:off
+    def supported_file_classes(self) -> list[type[LocalConfigFile]]: ...
+    # @formatter:on
 
     @staticmethod
     def _merge_args(
