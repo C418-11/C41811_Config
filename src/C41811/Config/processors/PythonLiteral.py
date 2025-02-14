@@ -9,7 +9,7 @@ from typing import override
 from .._protocols import SupportsReadAndReadline
 from .._protocols import SupportsWrite
 from ..abc import ABCConfigFile
-from ..base import LocalConfigFile
+from ..base import ConfigFile
 from ..main import BaseLocalFileConfigSL
 
 
@@ -28,7 +28,7 @@ class PythonLiteralSL(BaseLocalFileConfigSL):
     def file_match(self) -> tuple[str, ...]:
         return ".python_literal", ".pyl", ".py"
 
-    supported_file_classes = [LocalConfigFile]
+    supported_file_classes = [ConfigFile]
 
     @override
     def save_file(
@@ -47,11 +47,11 @@ class PythonLiteralSL(BaseLocalFileConfigSL):
             source_file: SupportsReadAndReadline[str],
             *merged_args,
             **merged_kwargs
-    ) -> LocalConfigFile:
+    ) -> ConfigFile:
         with self.raises():
             data = literal_eval(source_file.read())
 
-        return LocalConfigFile(data, config_format=self.processor_reg_name)
+        return ConfigFile(data, config_format=self.processor_reg_name)
 
 
 __all__ = (

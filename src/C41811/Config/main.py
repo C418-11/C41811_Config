@@ -30,7 +30,6 @@ from .abc import ABCSLProcessorPool
 from .abc import SLArgument
 from .base import BaseConfigPool
 from .base import ConfigData
-from .base import LocalConfigFile
 from .errors import FailedProcessConfigFileError
 from .safe_writer import safe_open
 from .validators import DefaultValidatorFactory
@@ -403,7 +402,7 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
     @property
     @override
     @abstractmethod  # @formatter:off
-    def supported_file_classes(self) -> list[type[LocalConfigFile]]: ...
+    def supported_file_classes(self) -> list[type[ABCConfigFile]]: ...
     # @formatter:on
 
     @staticmethod
@@ -454,7 +453,7 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
     @override
     def save(
             self,
-            config_file: LocalConfigFile,
+            config_file: ABCConfigFile,
             root_path: str,
             namespace: str,
             file_name: str,
@@ -464,7 +463,7 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
         保存处理器 (原子操作 多线/进程安全)
 
         :param config_file: 待保存配置
-        :type config_file: LocalConfigFile
+        :type config_file: ABCConfigFile
         :param root_path: 保存的根目录
         :type root_path: str
         :param namespace: 配置的命名空间
@@ -481,7 +480,7 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
         """
         merged_args, merged_kwargs = self._merge_args(self._saver_args, args, kwargs)
 
-        file_path = config_file.__local_path__(root_path, namespace, file_name)
+        file_path = self.__local_path__(root_path, namespace, file_name)
         if self.create_dir:
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
         with safe_open(file_path, **self._s_open_kwargs) as f:
@@ -495,7 +494,7 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
             file_name: str,
             *args,
             **kwargs,
-    ) -> LocalConfigFile:
+    ) -> ABCConfigFile:
         """
         加载处理器
 
@@ -507,7 +506,7 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
         :type file_name: str
 
         :return: 本地配置文件对象
-        :rtype: LocalConfigFile
+        :rtype: ABCConfigFile
 
         :raise FailedProcessConfigFileError: 处理配置文件失败
 
@@ -516,7 +515,7 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
         """
         merged_args, merged_kwargs = self._merge_args(self._loader_args, args, kwargs)
 
-        file_path = LocalConfigFile.__local_path__(root_path, namespace, file_name)
+        file_path = self.__local_path__(root_path, namespace, file_name)
         if self.create_dir:
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
         with safe_open(file_path, **self._l_open_kwargs) as f:
@@ -549,7 +548,7 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
             source_file: SupportsReadAndReadline,
             *merged_args,
             **merged_kwargs,
-    ) -> LocalConfigFile:
+    ) -> ABCConfigFile:
         """
         从文件加载配置
 
@@ -559,13 +558,37 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
         :param merged_kwargs: 合并后的关键字参数
 
         :return: 本地配置文件对象
-        :rtype: LocalConfigFile
+        :rtype: ABCConfigFile
 
         :raise FailedProcessConfigFileError: 处理配置文件失败
 
         .. versionchanged:: 0.1.6
            移除 ``config_file_cls`` 参数
         """
+
+    @staticmethod
+    def __local_path__(
+            root_path: str,
+            namespace: str,
+            file_name: str,
+    ) -> str:
+        """
+        处理配置文件对应的文件路径
+
+        :param root_path: 保存的根目录
+        :type root_path: str
+        :param namespace: 配置的命名空间
+        :type namespace: Optional[str]
+        :param file_name: 配置文件名
+        :type file_name: Optional[str]
+
+        :return: 配置文件路径
+        :rtype: str
+
+        .. versionadded:: 0.1.6
+        """
+
+        return os.path.normpath(os.path.join(root_path, namespace, file_name))
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):

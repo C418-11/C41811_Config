@@ -5,7 +5,6 @@
 import builtins
 import math
 import operator
-import os.path
 from abc import ABC
 from collections import OrderedDict
 from collections.abc import Callable
@@ -797,36 +796,6 @@ class ConfigFile(ABCConfigFile):
         ].load(config_pool.root_path, namespace, file_name)
 
 
-class LocalConfigFile(ConfigFile):
-    """
-    本地配置文件类
-
-    .. versionadded:: 0.1.6
-    """
-
-    @staticmethod
-    def __local_path__(
-            root_path: str,
-            namespace: str,
-            file_name: str,
-    ) -> str:
-        """
-        处理配置文件对应的文件路径
-
-        :param root_path: 保存的根目录
-        :type root_path: str
-        :param namespace: 配置的命名空间
-        :type namespace: Optional[str]
-        :param file_name: 配置文件名
-        :type file_name: Optional[str]
-
-        :return: 配置文件路径
-        :rtype: str
-        """
-
-        return os.path.normpath(os.path.join(root_path, namespace, file_name))
-
-
 class BaseConfigPool(ABCConfigPool, ABC):
     """
     基础配置池类
@@ -1075,6 +1044,5 @@ __all__ = (
     "AnyConfigData",
     "ConfigData",
     "ConfigFile",
-    "LocalConfigFile",
     "BaseConfigPool"
 )

@@ -14,7 +14,6 @@ from C41811.Config import ConfigData
 from C41811.Config import ConfigFile
 from C41811.Config import ConfigPool
 from C41811.Config import JsonSL
-from C41811.Config import LocalConfigFile
 from C41811.Config import PickleSL
 from C41811.Config import PythonLiteralSL
 from C41811.Config.errors import FailedProcessConfigFileError
@@ -319,7 +318,7 @@ def test_sl_processors(pool, sl_cls: type[BaseLocalFileConfigSL], raw_data, igno
     sl_obj = sl_cls(*sl_args)
     sl_obj.register_to(pool)
 
-    file = LocalConfigFile(
+    file = ConfigFile(
         ConfigData(raw_data),
         config_format=sl_obj.reg_name
     )
