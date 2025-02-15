@@ -376,7 +376,7 @@ class DefaultValidatorFactory:
             )):
                 model_cls = self._mapping2model(
                     mapping=definition.value.default,
-                    model_config=model_config[key] if key in model_config else {}
+                    model_config=model_config.get(key, {})
                 )
                 definition = FieldDefinition(
                     model_cls,
@@ -394,7 +394,7 @@ class DefaultValidatorFactory:
 
         return create_model(
             f"{type(self).__name__}.RuntimeTemplate",
-            __config__=model_config[self.model_config_key] if self.model_config_key in model_config else {},
+            __config__=model_config.get(self.model_config_key, {}),
             **fmt_data
         )
 
@@ -403,6 +403,7 @@ class DefaultValidatorFactory:
         编译模板
         """
         fmt_validator, father_set = self._fmt_mapping_key(self.validator)
+        # 所有重复存在的父路径都将允许其下存在多余的键
         model_config = ConfigData()
         for path in father_set:
             model_config.modify(path, {self.model_config_key: {"extra": "allow"}})
