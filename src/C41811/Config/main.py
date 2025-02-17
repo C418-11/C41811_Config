@@ -399,12 +399,6 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
         """
         return self._loader_args
 
-    @property
-    @override
-    @abstractmethod  # @formatter:off
-    def supported_file_classes(self) -> list[type[ABCConfigFile]]: ...
-    # @formatter:on
-
     @staticmethod
     def _merge_args(
             base_arguments: tuple[tuple, PMap[str, Any]],
