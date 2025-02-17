@@ -773,8 +773,9 @@ class ConfigFile(ABCConfigFile):
         if config_format not in processor_pool.SLProcessors:
             raise UnsupportedConfigFormatError(config_format)
 
-        return processor_pool.SLProcessors[config_format].save(self, processor_pool.root_path, namespace, file_name,
-                                                            *processor_args, **processor_kwargs)
+        return processor_pool.SLProcessors[config_format].save(processor_pool, self, processor_pool.root_path,
+                                                               namespace, file_name, *processor_args,
+                                                               **processor_kwargs)
 
     @classmethod
     @override
@@ -793,7 +794,7 @@ class ConfigFile(ABCConfigFile):
 
         return processor_pool.SLProcessors[
             config_format
-        ].load(processor_pool.root_path, namespace, file_name)
+        ].load(processor_pool, processor_pool.root_path, namespace, file_name)
 
 
 class BaseConfigPool(ABCConfigPool, ABC):

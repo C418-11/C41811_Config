@@ -450,15 +450,19 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
     @override
     def save(
             self,
+            processor_pool: ABCSLProcessorPool,
             config_file: ABCConfigFile,
             root_path: str,
             namespace: str,
             file_name: str,
-            *args, **kwargs
+            *args,
+            **kwargs,
     ) -> None:
         """
         保存处理器 (原子操作 多线/进程安全)
 
+        :param processor_pool: 配置池
+        :type processor_pool: ABCSLProcessorPool
         :param config_file: 待保存配置
         :type config_file: ABCConfigFile
         :param root_path: 保存的根目录
@@ -474,6 +478,8 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
            现在操作是原子的(操作过程发生异常会回滚操作)
 
            现在操作是理论上是多线/进程安全的
+
+           添加参数 ``processor_pool``
         """
         merged_args, merged_kwargs = _merge_args(self._saver_args, args, kwargs)
 
@@ -486,6 +492,7 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
     @override
     def load(
             self,
+            processor_pool,
             root_path: str,
             namespace: str,
             file_name: str,
@@ -495,6 +502,8 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
         """
         加载处理器
 
+        :param processor_pool: 配置池
+        :type processor_pool: ABCSLProcessorPool
         :param root_path: 保存的根目录
         :type root_path: str
         :param namespace: 配置的命名空间
@@ -502,13 +511,19 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
         :param file_name: 配置文件名
         :type file_name: str
 
-        :return: 本地配置文件对象
+        :return: 配置对象
         :rtype: ABCConfigFile
 
         :raise FailedProcessConfigFileError: 处理配置文件失败
 
         .. versionchanged:: 0.1.6
+           现在操作是原子的(操作过程发生异常会回滚操作)
+
+           现在操作是理论上是多线/进程安全的
+
            移除 ``config_file_cls`` 参数
+
+           添加参数 ``processor_pool``
         """
         merged_args, merged_kwargs = _merge_args(self._loader_args, args, kwargs)
 

@@ -899,16 +899,19 @@ class ABCConfigSL(ABC):
     @abstractmethod
     def save(
             self,
+            processor_pool: ABCSLProcessorPool,
             config_file: ABCConfigFile,
             root_path: str,
             namespace: str,
             file_name: str,
             *args,
-            **kwargs
+            **kwargs,
     ) -> None:
         """
         保存处理器
 
+        :param processor_pool: 配置池
+        :type processor_pool: ABCSLProcessorPool
         :param config_file: 待保存配置
         :type config_file: ABCConfigFile
         :param root_path: 保存的根目录
@@ -919,11 +922,15 @@ class ABCConfigSL(ABC):
         :type file_name: str
 
         :raise FailedProcessConfigFileError: 处理配置文件失败
+
+        .. versionchanged:: 0.1.6
+           添加参数 ``processor_pool``
         """
 
     @abstractmethod
     def load(
             self,
+            processor_pool: ABCSLProcessorPool,
             root_path: str,
             namespace: str,
             file_name: str,
@@ -933,6 +940,8 @@ class ABCConfigSL(ABC):
         """
         加载处理器
 
+        :param processor_pool: 配置池
+        :type processor_pool: ABCSLProcessorPool
         :param root_path: 保存的根目录
         :type root_path: str
         :param namespace: 配置的命名空间
@@ -947,6 +956,8 @@ class ABCConfigSL(ABC):
 
         .. versionchanged:: 0.1.6
            移除 ``config_file_cls`` 参数
+
+           添加参数 ``processor_pool``
         """
 
     def __eq__(self, other):
