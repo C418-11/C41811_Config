@@ -757,7 +757,7 @@ class ConfigFile(ABCConfigFile):
     @override
     def save(
             self,
-            config_pool: ABCSLProcessorPool,
+            processor_pool: ABCSLProcessorPool,
             namespace: str,
             file_name: str,
             config_format: str | None = None,
@@ -770,17 +770,17 @@ class ConfigFile(ABCConfigFile):
 
         if config_format is None:
             raise UnsupportedConfigFormatError("Unknown")
-        if config_format not in config_pool.SLProcessors:
+        if config_format not in processor_pool.SLProcessors:
             raise UnsupportedConfigFormatError(config_format)
 
-        return config_pool.SLProcessors[config_format].save(self, config_pool.root_path, namespace, file_name,
+        return processor_pool.SLProcessors[config_format].save(self, processor_pool.root_path, namespace, file_name,
                                                             *processor_args, **processor_kwargs)
 
     @classmethod
     @override
     def load(
             cls,
-            config_pool: ABCSLProcessorPool,
+            processor_pool: ABCSLProcessorPool,
             namespace: str,
             file_name: str,
             config_format: str,
@@ -788,12 +788,12 @@ class ConfigFile(ABCConfigFile):
             **processor_kwargs
     ) -> Self:
 
-        if config_format not in config_pool.SLProcessors:
+        if config_format not in processor_pool.SLProcessors:
             raise UnsupportedConfigFormatError(config_format)
 
-        return config_pool.SLProcessors[
+        return processor_pool.SLProcessors[
             config_format
-        ].load(config_pool.root_path, namespace, file_name)
+        ].load(processor_pool.root_path, namespace, file_name)
 
 
 class BaseConfigPool(ABCConfigPool, ABC):

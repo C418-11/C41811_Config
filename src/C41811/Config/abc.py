@@ -596,7 +596,7 @@ class ABCConfigFile(ABC):
     @abstractmethod
     def save(
             self,
-            config_pool: ABCSLProcessorPool,
+            processor_pool: ABCSLProcessorPool,
             namespace: str,
             file_name: str,
             config_format: Optional[str] = None,
@@ -606,8 +606,8 @@ class ABCConfigFile(ABC):
         """
         使用SL处理保存配置
 
-        :param config_pool: 配置池
-        :type config_pool: ABCSLProcessorPool
+        :param processor_pool: 配置池
+        :type processor_pool: ABCSLProcessorPool
         :param namespace: 文件命名空间
         :type namespace: str
         :param file_name: 文件名
@@ -616,13 +616,16 @@ class ABCConfigFile(ABC):
         :type config_format: Optional[str]
 
         :raise UnsupportedConfigFormatError: 不支持的配置格式
+
+        .. versionchanged:: 0.1.6
+           重命名 ``config_pool`` 为 ``processor_pool``
         """
 
     @classmethod
     @abstractmethod
     def load(
             cls,
-            config_pool: ABCSLProcessorPool,
+            processor_pool: ABCSLProcessorPool,
             namespace: str,
             file_name: str,
             config_format: str,
@@ -632,8 +635,8 @@ class ABCConfigFile(ABC):
         """
         从SL处理器加载配置
 
-        :param config_pool: 配置池
-        :type config_pool: ABCSLProcessorPool
+        :param processor_pool: 配置池
+        :type processor_pool: ABCSLProcessorPool
         :param namespace: 文件命名空间
         :type namespace: str
         :param file_name: 文件名
@@ -645,6 +648,9 @@ class ABCConfigFile(ABC):
         :rtype: Self
 
         :raise UnsupportedConfigFormatError: 不支持的配置格式
+
+        .. versionchanged:: 0.1.6
+           重命名 ``config_pool`` 为 ``processor_pool``
         """
 
     def __bool__(self):
