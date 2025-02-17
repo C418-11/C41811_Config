@@ -336,6 +336,35 @@ class BaseConfigSL(ABCConfigSL, ABC):
         super().register_to(config_pool)
 
 
+def _merge_args(
+        base_arguments: tuple[tuple, PMap[str, Any]],
+        args: tuple,
+        kwargs: dict
+) -> tuple[tuple, PMap[str, Any]]:
+    """
+    合并参数
+
+    :param base_arguments: 基础参数
+    :type base_arguments: tuple[tuple, PMap[str, Any]]
+    :param args: 新参数
+    :type args: tuple
+    :param kwargs: 新参数
+    :type kwargs: dict
+
+    :return: 合并后的参数
+    :rtype: tuple[tuple, PMap[str, Any]]
+
+    .. versionchanged:: 0.1.6
+       提取为函数
+    """
+    base_arguments = list(base_arguments[0]), dict(base_arguments[1])
+
+    merged_args = deepcopy(base_arguments[0])[:len(args)] = args
+    merged_kwargs = deepcopy(base_arguments[1]) | kwargs
+
+    return tuple(merged_args), pmap(merged_kwargs)
+
+
 class BaseLocalFileConfigSL(BaseConfigSL, ABC):
     """
     基础本地配置文件SL管理器
@@ -399,32 +428,6 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
         """
         return self._loader_args
 
-    @staticmethod
-    def _merge_args(
-            base_arguments: tuple[tuple, PMap[str, Any]],
-            args: tuple,
-            kwargs: dict
-    ) -> tuple[tuple, PMap[str, Any]]:
-        """
-        合并参数
-
-        :param base_arguments: 基础参数
-        :type base_arguments: tuple[tuple, PMap[str, Any]]
-        :param args: 新参数
-        :type args: tuple
-        :param kwargs: 新参数
-        :type kwargs: dict
-
-        :return: 合并后的参数
-        :rtype: tuple[tuple, PMap[str, Any]]
-        """
-        base_arguments = list(base_arguments[0]), dict(base_arguments[1])
-
-        merged_args = deepcopy(base_arguments[0])[:len(args)] = args
-        merged_kwargs = deepcopy(base_arguments[1]) | kwargs
-
-        return tuple(merged_args), pmap(merged_kwargs)
-
     @contextmanager
     def raises(self, excs: Exception | tuple[Exception, ...] = Exception):
         """
@@ -472,7 +475,7 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
 
            现在操作是理论上是多线/进程安全的
         """
-        merged_args, merged_kwargs = self._merge_args(self._saver_args, args, kwargs)
+        merged_args, merged_kwargs = _merge_args(self._saver_args, args, kwargs)
 
         file_path = self.__local_path__(root_path, namespace, file_name)
         if self.create_dir:
@@ -507,7 +510,7 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
         .. versionchanged:: 0.1.6
            移除 ``config_file_cls`` 参数
         """
-        merged_args, merged_kwargs = self._merge_args(self._loader_args, args, kwargs)
+        merged_args, merged_kwargs = _merge_args(self._loader_args, args, kwargs)
 
         file_path = self.__local_path__(root_path, namespace, file_name)
         if self.create_dir:
