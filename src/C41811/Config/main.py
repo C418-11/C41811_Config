@@ -48,7 +48,9 @@ class RequiredPath:
             self,
             validator: V,
             validator_factory: Optional[
-                Callable[[V, ValidatorFactoryConfig], Callable[[D], D]] | ValidatorTypes | Literal["no-validation", "pydantic"]
+                Callable[[V, ValidatorFactoryConfig], Callable[[D], D]]
+                | ValidatorTypes
+                | Literal["no-validation", "pydantic"]
                 ] = ValidatorTypes.DEFAULT,
             static_config: Optional[ValidatorFactoryConfig] = None
     ):

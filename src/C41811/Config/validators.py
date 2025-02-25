@@ -66,7 +66,7 @@ class ValidatorFactoryConfig:
     skip_missing: bool = False
     """
     是否忽略不存在的路径
-    
+
     .. versionchanged:: 0.1.6
        从 ``ignore_missing`` 重命名为 ``skip_missing``
     """

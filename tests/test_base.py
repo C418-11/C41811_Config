@@ -87,10 +87,10 @@ class TestMappingConfigData:
     RetrieveTests = (
         "path,          value,                    ignore_excs,                  kwargs", (  # @formatter:off # noqa: E122, E501
         ("foo",         ConfigData({"bar": 123}), (),                           {}),  # noqa: E122
-        ("foo",         {"bar": 123},             (),                           {"return_raw_value": True}),  # noqa: E122
+        ("foo",         {"bar": 123},             (),                           {"return_raw_value": True}),  # noqa: E122, E501
         ("foo\\.bar",   123,                      (),                           {}),  # noqa: E122
         ("foo1",        114,                      (),                           {}),  # noqa: E122
-        ("foo2",        ["bar"],                  (),                           {"return_raw_value": True}),  # noqa: E122
+        ("foo2",        ["bar"],                  (),                           {"return_raw_value": True}),  # noqa: E122, E501
         ("foo2\\[0\\]", "bar",                    (),                           {}),  # noqa: E122
         ("foo2\\.bar",  None,                     (ConfigDataTypeError, ),      {}),  # noqa: E122
         ("foo3",        None,                     (RequiredPathNotFoundError,), {}),  # noqa: E122
@@ -527,12 +527,12 @@ class TestSequenceConfigData:
     RetrieveTests = (
         "path,           value,                        ignore_excs,                  kwargs", (  # @formatter:off # noqa: E122, E501
         (r"\[0\]",       1,                            (),                           {}),  # noqa: E122
-        (r"\[0\]",       1,                            (),                           {"return_raw_value": True}),  # noqa: E122
+        (r"\[0\]",       1,                            (),                           {"return_raw_value": True}),  # noqa: E122, E501
         (r"\[1\]",       2,                            (),                           {}),  # noqa: E122
         (r"\[2\]\.a",    ConfigData([3, 4]),           (),                           {}),  # noqa: E122
-        (r"\[2\]\.a",    [3, 4],                       (),                           {"return_raw_value": True}),  # noqa: E122
+        (r"\[2\]\.a",    [3, 4],                       (),                           {"return_raw_value": True}),  # noqa: E122, E501
         (r"\[2\]\.b",    ConfigData({"c": 5, "d": 6}), (),                           {}),  # noqa: E122
-        (r"\[2\]\.b",    pmap({"c": 5, "d": 6}),       (),                           {"return_raw_value": True}),  # noqa: E122
+        (r"\[2\]\.b",    pmap({"c": 5, "d": 6}),       (),                           {"return_raw_value": True}),  # noqa: E122, E501
         (r"\[2\]\.b\.c", 5,                            (),                           {}),  # noqa: E122
         (r"\[2\]\.b\.c", 5,                            (),                           {}),  # noqa: E122
         (r"\[3\]\[0\]",  7,                            (),                           {}),  # noqa: E122
