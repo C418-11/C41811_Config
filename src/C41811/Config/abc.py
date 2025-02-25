@@ -614,21 +614,24 @@ class ABCConfigFile(ABC):
 
     def __init__(
             self,
-            config_data: ABCConfigData,
+            initial_config: ABCConfigData,
             *,
             config_format: Optional[str] = None
     ) -> None:
         """
         .. caution::
-           config_data参数未默认做深拷贝，可能导致非预期的行为
+           ``initial_config`` 参数未默认做深拷贝，可能导致非预期的行为
 
-        :param config_data: 配置数据
-        :type config_data: ABCConfigData
+        :param initial_config: 配置数据
+        :type initial_config: ABCConfigData
         :param config_format: 配置文件的格式
         :type config_format: Optional[str]
+
+        .. versionchanged:: 0.1.6
+           重命名参数 ``config_data`` 为 ``initial_config``
         """
 
-        self._data: ABCConfigData = config_data
+        self._data: ABCConfigData = initial_config
 
         self._config_format: str | None = config_format
 
@@ -899,10 +902,10 @@ class ABCConfigPool(ABCSLProcessorPool):
         :param validator_factory: 详见 :py:class:`RequiredPath`
         :param static_config: 详见 :py:class:`RequiredPath`
 
-        :param kwargs: 详见 :py:class:`RequireConfigDecorator`
+        :param kwargs: 详见 :py:class:`ConfigRequirementDecorator`
 
-        :return: 详见 :py:class:`RequireConfigDecorator`
-        :rtype: :py:class:`RequireConfigDecorator`
+        :return: 详见 :py:class:`ConfigRequirementDecorator`
+        :rtype: :py:class:`ConfigRequirementDecorator`
         """
 
 
@@ -960,12 +963,12 @@ class ABCConfigSL(ABC):
 
     @property
     @abstractmethod
-    def file_match(self) -> tuple[str | Pattern, ...]:
+    def supported_file_patterns(self) -> tuple[str | Pattern, ...]:
         """
         :return: 支持的文件名匹配
 
         .. versionchanged:: 0.1.6
-           从 ``file_ext`` 重命名为 ``file_match``
+           从 ``file_ext`` 重命名为 ``supported_file_patterns``
         """
 
     def register_to(self, config_pool: ABCSLProcessorPool) -> None:
@@ -977,7 +980,7 @@ class ABCConfigSL(ABC):
         """
 
         config_pool.SLProcessors[self.reg_name] = self
-        for match in self.file_match:
+        for match in self.supported_file_patterns:
             if match not in config_pool.FileNameProcessors:
                 config_pool.FileNameProcessors[match] = {self.reg_name}
                 continue
@@ -1053,7 +1056,7 @@ class ABCConfigSL(ABC):
 
         processor_reg_name = self.processor_reg_name == other.processor_reg_name
         reg_alias = self.reg_alias == other.reg_alias
-        file_match_eq = self.file_match == other.file_match
+        file_match_eq = self.supported_file_patterns == other.supported_file_patterns
 
         return all((
             processor_reg_name,
@@ -1065,7 +1068,7 @@ class ABCConfigSL(ABC):
         return hash((
             self.processor_reg_name,
             self.reg_alias,
-            self.file_match,
+            self.supported_file_patterns,
         ))
 
 

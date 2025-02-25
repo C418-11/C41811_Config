@@ -29,7 +29,7 @@ class TomlSL(BasicLocalFileConfigSL):
 
     @property
     @override
-    def file_match(self) -> tuple[str, ...]:
+    def supported_file_patterns(self) -> tuple[str, ...]:
         return ".toml",
 
     supported_file_classes = [ConfigFile]

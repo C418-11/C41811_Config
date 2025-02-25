@@ -59,9 +59,12 @@ class ValidatorFactoryConfig:
     .. versionchanged:: 0.1.2
        从 ``allow_create`` 重命名为 ``allow_modify``
     """
-    ignore_missing: bool = False
+    skip_missing: bool = False
     """
     是否忽略不存在的路径
+    
+    .. versionchanged:: 0.1.6
+       从 ``ignore_missing`` 重命名为 ``skip_missing``
     """
 
     extra: dict = dataclasses.field(default_factory=dict)
@@ -139,9 +142,12 @@ def _process_pydantic_exceptions(err: ValidationError) -> Exception:
     return err_info.err_type(**(kwargs | err_info.kwargs))
 
 
-class IgnoreMissingType:
+class SkipMissingType:
     """
     用于表明值可以缺失特殊值
+
+    .. versionchanged:: 0.1.6
+       从 ``IgnoreMissingType`` 重命名为 ``SkipMissingType``
     """
     _instance = None
 
@@ -151,17 +157,17 @@ class IgnoreMissingType:
         return cls._instance
 
     def __str__(self):  # pragma: no cover
-        return "<IgnoreMissing>"
+        return "<SkipMissing>"
 
     @staticmethod
     def __get_pydantic_core_schema__(*_):
-        # 构造一个永远无法匹配的schema, 使 IgnoreMissing | int 可以正常工作
+        # 构造一个永远无法匹配的schema, 使 SkipMissing | int 可以正常工作
         return core_schema.chain_schema(
             [core_schema.none_schema(), core_schema.is_subclass_schema(type)]
         )
 
 
-IgnoreMissing = IgnoreMissingType()
+SkipMissing = SkipMissingType()
 
 
 @dataclass(init=False)
@@ -385,10 +391,10 @@ class DefaultValidatorFactory:
 
             # 如果忽略不存在的键就填充特殊值
             if all((
-                    self.validator_config.ignore_missing,
+                    self.validator_config.skip_missing,
                     definition.value.is_required()
             )):
-                definition = FieldDefinition(definition.type | IgnoreMissingType, FieldInfo(default=IgnoreMissing))
+                definition = FieldDefinition(definition.type | SkipMissingType, FieldInfo(default=SkipMissing))
 
             fmt_data[key] = (definition.type, definition.value)
 
@@ -417,9 +423,9 @@ class DefaultValidatorFactory:
             raise _process_pydantic_exceptions(err) from None
 
         config_obj: MappingConfigData = data.from_data(dict_obj)
-        if self.validator_config.ignore_missing:
+        if self.validator_config.skip_missing:
             for key in config_obj.keys(recursive=True, end_point_only=True):
-                if config_obj.retrieve(key) is IgnoreMissing:
+                if config_obj.retrieve(key) is SkipMissing:
                     config_obj.delete(key)
 
         if self.validator_config.allow_modify:
@@ -429,7 +435,7 @@ class DefaultValidatorFactory:
 
 def pydantic_validator[D: ABCConfigData](validator: type[BaseModel], cfg: ValidatorFactoryConfig) -> Callable[[D], D]:
     """
-    验证器工厂配置 ``ignore_missing`` 与 ``allow_create`` 无效
+    验证器工厂配置 ``skip_missing`` 与 ``allow_create`` 无效
 
     :param validator: pydantic.BaseModel的子类
     :type validator: type[BaseModel]
@@ -438,8 +444,8 @@ def pydantic_validator[D: ABCConfigData](validator: type[BaseModel], cfg: Valida
     """
     if not issubclass(validator, BaseModel):
         raise TypeError(f"Expected a subclass of BaseModel for parameter 'validator', but got '{validator.__name__}'")
-    if cfg.ignore_missing:
-        warnings.warn("ignore_missing is not supported in pydantic validator")
+    if cfg.skip_missing:
+        warnings.warn("skip_missing is not supported in pydantic validator")
 
     def _builder(data: D) -> D:
         try:

@@ -35,11 +35,11 @@ from ._protocols import MutableIndexed
 from .abc import ABCConfigData
 from .abc import ABCConfigFile
 from .abc import ABCConfigPool
+from .abc import ABCIndexedConfigData
 from .abc import ABCKey
 from .abc import ABCPath
 from .abc import ABCProcessorHelper
 from .abc import ABCSLProcessorPool
-from .abc import ABCIndexedConfigData
 from .errors import ConfigDataReadOnlyError
 from .errors import ConfigDataTypeError
 from .errors import ConfigOperate
@@ -750,24 +750,26 @@ class ConfigFile(ABCConfigFile):
 
     def __init__(
             self,
-            config_data: Any,
+            initial_config: Any,
             *,
             config_format: Optional[str] = None
     ) -> None:
         """
         .. caution::
-           本身并未对config_data参数进行深拷贝，但是ConfigData可能会将其深拷贝
+           本身并未对 ``initial_config`` 参数进行深拷贝，但是 :py:class:`ConfigData` 可能会将其深拷贝
 
-        :param config_data: 配置数据
-        :type config_data: ABCConfigData
+        :param initial_config: 配置数据
+        :type initial_config: ABCConfigData
         :param config_format: 配置文件的格式
         :type config_format: Optional[str]
 
         .. versionchanged:: 0.1.6
-           现在会自动尝试转换 ``config_data`` 参数为 :py:class:`ConfigData`
+           现在会自动尝试转换 ``initial_config`` 参数为 :py:class:`ConfigData`
+
+           重命名参数 ``config_data`` 为 ``initial_config``
         """
 
-        super().__init__(ConfigData(config_data), config_format=config_format)
+        super().__init__(ConfigData(initial_config), config_format=config_format)
 
     @override
     def save(
@@ -968,15 +970,15 @@ class BasicConfigPool(ABCConfigPool, ABC):
 
         # 尝试从多个SL加载器中找到能正确加载的那一个
         errors = {}
-        for fmt in self._calc_formats(file_name, config_formats, file_config_format):
-            if fmt not in self.SLProcessors:
-                errors[fmt] = UnsupportedConfigFormatError(fmt)
+        for config_format in self._calc_formats(file_name, config_formats, file_config_format):
+            if config_format not in self.SLProcessors:
+                errors[config_format] = UnsupportedConfigFormatError(config_format)
                 continue
             try:
                 # 能正常运行直接返回结果，不再进行尝试
-                return callback_wrapper(fmt)
+                return callback_wrapper(config_format)
             except FailedProcessConfigFileError as err:
-                errors[fmt] = err
+                errors[config_format] = err
 
         for err in errors.values():
             if isinstance(err, UnsupportedConfigFormatError):

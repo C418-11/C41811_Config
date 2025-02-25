@@ -75,7 +75,7 @@ class TarFileSL(BasicCompressedConfigSL):
 
     @property
     @override
-    def file_match(self) -> tuple[str, ...]:
+    def supported_file_patterns(self) -> tuple[str, ...]:
         if self._compression.short_name is None:
             return ".tar",
         return f".tar.{self._compression.short_name}", f".tar.{self._compression.full_name}"

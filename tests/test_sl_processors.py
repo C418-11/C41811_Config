@@ -321,11 +321,8 @@ def test_local_file_sl_processors(pool, sl_cls: type[BasicLocalFileConfigSL], ra
     sl_obj = sl_cls(*sl_args)
     sl_obj.register_to(pool)
 
-    file = ConfigFile(
-        ConfigData(raw_data),
-        config_format=sl_obj.reg_name
-    )
-    file_name = f"TestConfigFile{sl_obj.file_match[0]}"
+    file = ConfigFile(ConfigData(raw_data), config_format=sl_obj.reg_name)
+    file_name = f"TestConfigFile{sl_obj.supported_file_patterns[0]}"
 
     if not ignore_excs:
         ignore_excs = ((), ())
@@ -431,11 +428,8 @@ def test_compressed_file_sl_processors(
     local_sl = JsonSL(s_arg=dict(indent=2))
     local_sl.register_to(pool)
 
-    file = ConfigFile(
-        ConfigData(raw_data),
-        config_format=local_sl.reg_name
-    )
-    file_name = f"TestConfigFile{local_sl.file_match[0]}{compressed_sl.file_match[0]}"
+    file = ConfigFile(ConfigData(raw_data), config_format=local_sl.reg_name)
+    file_name = f"TestConfigFile{local_sl.supported_file_patterns[0]}{compressed_sl.supported_file_patterns[0]}"
 
     if not ignore_excs:
         ignore_excs = ((), ())
@@ -476,7 +470,7 @@ def test_base(sl_cls: type[BasicConfigSL]):
         "processor_reg_name",
         "reg_alias",
         "reg_name",
-        "file_match",
+        "supported_file_patterns",
     )
     if issubclass(sl_cls, BasicLocalFileConfigSL):
         attr_tests = (

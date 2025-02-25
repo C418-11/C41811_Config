@@ -95,7 +95,7 @@ class RequiredPath:
             data: D,
             *,
             allow_modify: Optional[bool] = None,
-            ignore_missing: Optional[bool] = None,
+            skip_missing: Optional[bool] = None,
             **extra
     ) -> D:
         """
@@ -105,7 +105,7 @@ class RequiredPath:
            返回的配置数据是*快照*
 
         .. caution::
-           提供了任意配置参数(``allow_modify``, ``ignore_missing``, ...)时,这次调用将完全舍弃static_config使用当前提供的配置参数
+           提供了任意配置参数(``allow_modify``, ``skip_missing``, ...)时,这次调用将完全舍弃static_config使用当前提供的配置参数
 
            这会导致调用validator_factory产生额外开销(如果你提供static_config参数是为了避免反复调用validator_factory的话)
 
@@ -113,8 +113,8 @@ class RequiredPath:
         :type data: ABCConfigData
         :param allow_modify: 是否允许值不存在时修改data参数对象填充默认值(即使为False仍然会在结果中填充默认值,但不会修改data参数对象)
         :type allow_modify: bool
-        :param ignore_missing: 忽略丢失的键
-        :type ignore_missing: bool
+        :param skip_missing: 忽略丢失的键
+        :type skip_missing: bool
         :param extra: 额外参数
         :type extra: Any
 
@@ -124,12 +124,15 @@ class RequiredPath:
         :raise ConfigDataTypeError: 配置数据类型错误
         :raise RequiredPathNotFoundError: 必要的键未找到
         :raise UnknownErrorDuringValidateError: 验证过程中发生未知错误
+
+        .. versionchanged:: 0.1.6
+           参数 ``ignore_missing`` 重命名为 ``skip_missing``
         """
         config_kwargs = {}
         if allow_modify is not None:
             config_kwargs["allow_modify"] = allow_modify
-        if ignore_missing is not None:
-            config_kwargs["ignore_missing"] = ignore_missing
+        if skip_missing is not None:
+            config_kwargs["skip_missing"] = skip_missing
         if extra:
             config_kwargs["extra"] = extra
 
@@ -187,13 +190,16 @@ class ConfigPool(BasicConfigPool):
             static_config: Optional[Any] = None,
             **kwargs
     ):
-        return RequireConfigDecorator(self, namespace, file_name,
-                                      RequiredPath(validator, validator_factory, static_config), **kwargs)
+        return ConfigRequirementDecorator(self, namespace, file_name,
+                                          RequiredPath(validator, validator_factory, static_config), **kwargs)
 
 
-class RequireConfigDecorator:
+class ConfigRequirementDecorator:
     """
     配置获取器，可作装饰器使用
+
+    .. versionchanged:: 0.1.6
+       从 ``RequireConfigDecorator`` 重命名为 ``ConfigRequirementDecorator``
     """
 
     def __init__(
@@ -669,7 +675,7 @@ class BasicCompressedConfigSL(BasicConfigSL, ABC):
             - 如果为 ``re.Pattern`` 且 ``Pattern.fullmatch(file_name)`` 成立则返回 ``Pattern.sub(file_name, '')``
             - 直接返回
         """
-        for match in self.file_match:
+        for match in self.supported_file_patterns:
             if isinstance(match, str) and file_name.endswith(match):
                 return file_name[:-len(match)]
             if isinstance(match, re.Pattern) and match.fullmatch(file_name):  # 目前没SL处理器用得上 # pragma: no cover
@@ -775,7 +781,7 @@ class BasicCompressedConfigSL(BasicConfigSL, ABC):
 __all__ = (
     "RequiredPath",
     "ConfigPool",
-    "RequireConfigDecorator",
+    "ConfigRequirementDecorator",
     "BasicConfigSL",
     "BasicLocalFileConfigSL",
     "BasicCompressedConfigSL",

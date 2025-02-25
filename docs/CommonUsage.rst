@@ -83,7 +83,7 @@ Pydantic验证器工厂
 ^^^^^^^^^^^^^^^^^^
 
 .. important::
-   pydantic 验证器工厂不支持 ``ignore_missing`` 配置选项
+   pydantic 验证器工厂不支持 ``skip_missing`` 配置选项
    这是因为pydantic自带该功能
    如果提供了该参数会产生一个警告 不会起到任何实际作用
 
@@ -407,7 +407,7 @@ Mapping[str | ABCPath, Any]
     # 未提供allow_modify参数时不会影响源数据
     print(raw_data.exists("not\\.exists"))  # 打印：False
 
-    # RequireConfigDecorator.__init__将allow_modify默认值设为True
+    # ConfigRequirementDecorator.__init__将allow_modify默认值设为True
     requireConfig('', "test.json", {
         "not\\.exists": 987
     }).check()
@@ -415,7 +415,7 @@ Mapping[str | ABCPath, Any]
     print(raw_data.exists("not\\.exists"))  # 打印：True
     raw_data.delete("not\\.exists")
 
-    # ignore_missing, 在没提供默认值且键不存在时忽略
+    # skip_missing, 在没提供默认值且键不存在时忽略
     try:
         requireConfig('', "test.json", {
             "not\\.exists": int
@@ -425,7 +425,7 @@ Mapping[str | ABCPath, Any]
 
     data: ConfigData = requireConfig('', "test.json", {
         "not\\.exists": int
-    }).check(ignore_missing=True)
+    }).check(skip_missing=True)
 
     print(data.exists("not\\.exists"))  # 打印：False
 

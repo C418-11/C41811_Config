@@ -1211,8 +1211,8 @@ class TestConfigFile:
 
     CombEQKwargs = tuple(d[0] | k for d, k in itertools.product(
         itertools.product((
-            {"config_data": {"foo": {"bar": 123}}},
-            {"config_data": {"foo": {"bar": 456}}},
+            {"initial_config": {"foo": {"bar": 123}}},
+            {"initial_config": {"foo": {"bar": 456}}},
         )),
         CombExtraKwargs
     ))

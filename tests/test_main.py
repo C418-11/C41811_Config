@@ -235,8 +235,8 @@ class TestRequiredPath:
     @mark.parametrize("kwargs", (
             {},
             {"allow_modify": True},
-            {"ignore_missing": True},
-            {"allow_modify": True, "ignore_missing": True},
+            {"skip_missing": True},
+            {"allow_modify": True, "skip_missing": True},
     ))
     def test_ignore(data, kwargs):
         assert RequiredPath(lambda _: _, "ignore").filter(deepcopy(data), **kwargs) == data
@@ -248,7 +248,7 @@ class TestRequiredPath:
         ("foo1", 114, {}, (), ()),
         ("foo2", ["bar"], {}, (), ()),
         ("foo2", ["bar"], {"allow_modify": True}, (), ()),
-        ("foo.bar", None, {"ignore_missing": True}, (RequiredPathNotFoundError,), (UserWarning,)),
+        ("foo.bar", None, {"skip_missing": True}, (RequiredPathNotFoundError,), (UserWarning,)),
     ))
 
     @staticmethod
@@ -323,12 +323,12 @@ class TestRequiredPath:
         (
             ["foo\\.bar2", "foo1"],
             [float("-inf"), 114],  # -inf是占位符,表示该值可以不存在
-            {"ignore_missing": True}, ()
+            {"skip_missing": True}, ()
         ),
         (
             ["foo2\\.bar", "foo1"],  # foo2为list 所以foo2.bar会报错
             [float("-inf"), 114],
-            {"ignore_missing": True, "allow_modify": True}, (ConfigDataTypeError,)
+            {"skip_missing": True, "allow_modify": True}, (ConfigDataTypeError,)
         ),
         (
             None, [], {}, (TypeError,)
@@ -450,7 +450,7 @@ class TestRequiredPath:
                      "value": 101112,
                  }
              }
-         }, {"ignore_missing": True}, ()),
+         }, {"skip_missing": True}, ()),
         ({
              "foo\\.bar": FieldInfo(annotation=int),
              "foo\\.qux": FieldInfo(annotation=int, default=7),
@@ -474,7 +474,7 @@ class TestRequiredPath:
          }, {}, ()),
         ({"foo\\.bar\\.baz": int},
          None,
-         {"ignore_missing": True}, (ConfigDataTypeError,)),
+         {"skip_missing": True}, (ConfigDataTypeError,)),
         (None, None, {}, (TypeError,))
     ))
 
