@@ -43,7 +43,11 @@ class ValidatorTypes(Enum):
     验证器类型
     """
     DEFAULT = None
-    IGNORE = "ignore"
+    NO_VALIDATION = "no-validation"
+    """
+    .. versionchanged:: 0.1.6
+       从 ``IGNORE`` 重命名为 ``NO_VALIDATION``
+    """
     PYDANTIC = "pydantic"
 
 

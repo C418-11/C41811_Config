@@ -48,7 +48,7 @@ class RequiredPath:
             self,
             validator: V,
             validator_factory: Optional[
-                Callable[[V, ValidatorFactoryConfig], Callable[[D], D]] | ValidatorTypes | Literal["ignore", "pydantic"]
+                Callable[[V, ValidatorFactoryConfig], Callable[[D], D]] | ValidatorTypes | Literal["no-validation", "pydantic"]
                 ] = ValidatorTypes.DEFAULT,
             static_config: Optional[ValidatorFactoryConfig] = None
     ):
@@ -86,7 +86,7 @@ class RequiredPath:
         Callable[[Any, ValidatorFactoryConfig], Callable[[ABCConfigData], ABCConfigData]]
     ] = {
         ValidatorTypes.DEFAULT: DefaultValidatorFactory,
-        ValidatorTypes.IGNORE: lambda v, *_: v,
+        ValidatorTypes.NO_VALIDATION: lambda v, *_: v,
         ValidatorTypes.PYDANTIC: pydantic_validator,
     }
 

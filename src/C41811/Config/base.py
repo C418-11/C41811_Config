@@ -862,7 +862,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
             self,
             file_name: str,
             config_formats: Optional[str | Iterable[str]],
-            file_config_format: Optional[str] = None,
+            configfile_format: Optional[str] = None,
     ) -> builtins.set[str]:
         """
         从给定参数计算所有可能的配置格式
@@ -871,7 +871,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
         :type file_name: str
         :param config_formats: 配置格式
         :type config_formats: Optional[str | Iterable[str]]
-        :param file_config_format:
+        :param configfile_format:
            该配置文件对象本身配置格式属性的值
            可选项，一般在保存时填入
            用于在没手动指定配置格式且没文件后缀时使用该值进行尝试
@@ -918,9 +918,9 @@ class BasicConfigPool(ABCConfigPool, ABC):
                 return self.FileNameProcessors[m]
 
         # 最后尝试从配置文件对象本身获取配置文件格式
-        if file_config_format is None:
+        if configfile_format is None:
             raise UnsupportedConfigFormatError("Unknown")
-        return {file_config_format}
+        return {configfile_format}
 
     def _test_all_sl[R: Any](
             self,
