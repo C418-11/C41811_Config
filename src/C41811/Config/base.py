@@ -30,8 +30,8 @@ from typing import override
 
 import wrapt
 
-from ._protocols import SupportsIndex
-from ._protocols import SupportsWriteIndex
+from ._protocols import Indexed
+from ._protocols import MutableIndexed
 from .abc import ABCConfigData
 from .abc import ABCConfigFile
 from .abc import ABCConfigPool
@@ -39,7 +39,7 @@ from .abc import ABCKey
 from .abc import ABCPath
 from .abc import ABCProcessorHelper
 from .abc import ABCSLProcessorPool
-from .abc import ABCSupportsIndexConfigData
+from .abc import ABCIndexedConfigData
 from .errors import ConfigDataReadOnlyError
 from .errors import ConfigDataTypeError
 from .errors import ConfigOperate
@@ -95,9 +95,9 @@ def _check_read_only(func):
     return wrapper(func)
 
 
-class BasicSupportsIndexConfigData[D: SupportsIndex | SupportsWriteIndex](
+class BasicIndexedConfigData[D: Indexed | MutableIndexed](
     BasicConfigData,
-    ABCSupportsIndexConfigData,
+    ABCIndexedConfigData,
     ABC
 ):
     # noinspection GrazieInspection
@@ -107,7 +107,7 @@ class BasicSupportsIndexConfigData[D: SupportsIndex | SupportsWriteIndex](
     .. versionadded:: 0.1.5
 
     .. versionchanged:: 0.1.6
-       从 ``BaseSupportsIndexConfigData`` 重命名为 ``BasicSupportsIndexConfigData``
+       从 ``BaseSupportsIndexConfigData`` 重命名为 ``BasicIndexedConfigData``
     """
 
     def _process_path(
@@ -324,7 +324,7 @@ def _operate(operate_func, inplace_func):
 
 
 @_generate_operators
-class MappingConfigData[D: Mapping | MutableMapping](BasicSupportsIndexConfigData, MutableMapping):
+class MappingConfigData[D: Mapping | MutableMapping](BasicIndexedConfigData, MutableMapping):
     """
     支持 Mapping 的 ConfigData
 
@@ -464,7 +464,7 @@ class MappingConfigData[D: Mapping | MutableMapping](BasicSupportsIndexConfigDat
 
 
 @_generate_operators
-class SequenceConfigData[D: Sequence | MutableSequence](BasicSupportsIndexConfigData, MutableSequence):
+class SequenceConfigData[D: Sequence | MutableSequence](BasicIndexedConfigData, MutableSequence):
     """
     支持 Sequence 的 ConfigData
 
@@ -716,7 +716,7 @@ class ObjectConfigData[D: object](BasicConfigData):
 
 type AnyConfigData = (
         ABCConfigData
-        | ABCSupportsIndexConfigData
+        | ABCIndexedConfigData
         | MappingConfigData
         | StringConfigData
         | SequenceConfigData
@@ -1071,7 +1071,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
 
 __all__ = (
     "BasicConfigData",
-    "BasicSupportsIndexConfigData",
+    "BasicIndexedConfigData",
     "MappingConfigData",
     "SequenceConfigData",
     "BoolConfigData",

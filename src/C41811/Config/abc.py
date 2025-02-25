@@ -14,8 +14,8 @@ from typing import Any
 from typing import Optional
 from typing import Self
 
-from ._protocols import SupportsIndex
-from ._protocols import SupportsWriteIndex
+from ._protocols import Indexed
+from ._protocols import MutableIndexed
 
 
 class ABCKey(ABC):
@@ -314,16 +314,20 @@ class ABCConfigData[D: Any](ABC):
         return self.from_data(self._data)
 
 
-class ABCSupportsIndexConfigData[D: SupportsIndex | SupportsWriteIndex](
+class ABCIndexedConfigData[D: Indexed | MutableIndexed](
     ABCConfigData,
-    SupportsIndex,
-    SupportsWriteIndex,
+    Indexed,
+    MutableIndexed,
     ABC
 ):
+    # noinspection GrazieInspection
     """
     支持 ``索引`` 操作的配置数据
 
     .. versionadded:: 0.1.5
+
+    .. versionchanged:: 0.1.6
+       从 ``ABCSupportsIndexConfigData`` 重命名为 ``ABCIndexedConfigData``
     """
 
     @abstractmethod
@@ -1069,7 +1073,7 @@ __all__ = (
     "ABCKey",
     "ABCPath",
     "ABCConfigData",
-    "ABCSupportsIndexConfigData",
+    "ABCIndexedConfigData",
     "ABCProcessorHelper",
     "ABCSLProcessorPool",
     "ABCConfigPool",
