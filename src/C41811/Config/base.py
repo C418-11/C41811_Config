@@ -37,6 +37,7 @@ from .abc import ABCConfigFile
 from .abc import ABCConfigPool
 from .abc import ABCKey
 from .abc import ABCPath
+from .abc import ABCProcessorHelper
 from .abc import ABCSLProcessorPool
 from .abc import ABCSupportsIndexConfigData
 from .errors import ConfigDataReadOnlyError
@@ -794,7 +795,10 @@ class ConfigFile(ABCConfigFile):
 
         return processor_pool.SLProcessors[
             config_format
-        ].load(processor_pool, processor_pool.root_path, namespace, file_name)
+        ].load(processor_pool, processor_pool.root_path, namespace, file_name, *processor_args, **processor_kwargs)
+
+
+class PHelper(ABCProcessorHelper): ...  # noqa: E701
 
 
 class BaseConfigPool(ABCConfigPool, ABC):
@@ -807,6 +811,11 @@ class BaseConfigPool(ABCConfigPool, ABC):
     def __init__(self, root_path="./.config"):
         super().__init__(root_path)
         self._configs: dict[str, dict[str, ABCConfigFile]] = {}
+        self._helper = PHelper()
+
+    @property
+    def helper(self) -> ABCProcessorHelper:
+        return self._helper
 
     @override
     def get(self, namespace: str, file_name: Optional[str] = None) -> dict[str, ABCConfigFile] | ABCConfigFile | None:
@@ -823,11 +832,12 @@ class BaseConfigPool(ABCConfigPool, ABC):
         return None
 
     @override
-    def set(self, namespace: str, file_name: str, config: ABCConfigFile) -> None:
+    def set(self, namespace: str, file_name: str, config: ABCConfigFile) -> Self:
         if namespace not in self._configs:
             self._configs[namespace] = {}
 
         self._configs[namespace][file_name] = config
+        return self
 
     def _calc_formats(
             self,
@@ -881,7 +891,7 @@ class BaseConfigPool(ABCConfigPool, ABC):
         def _check_file_name(match: str | Pattern) -> bool:
             if isinstance(match, str):
                 return file_name.endswith(match)
-            return bool(match.fullmatch(file_name))
+            return bool(match.fullmatch(file_name))  # 目前没SL处理器用得上 # pragma: no cover
 
         # 再尝试从文件名匹配配置文件格式
         for m in self.FileNameProcessors:
@@ -966,7 +976,7 @@ class BaseConfigPool(ABCConfigPool, ABC):
             config_formats: Optional[str | Iterable[str]] = None,
             config: Optional[ABCConfigFile] = None,
             *args, **kwargs
-    ) -> None:
+    ) -> Self:
         if config is not None:
             self.set(namespace, file_name, config)
 
@@ -976,15 +986,16 @@ class BaseConfigPool(ABCConfigPool, ABC):
             file.save(pool, ns, fn, cf, *args, **kwargs)
 
         self._test_all_sl(namespace, file_name, config_formats, processor, file_config_format=file.config_format)
+        return self
 
     @override
     def save_all(self, ignore_err: bool = False) -> None | dict[str, dict[str, tuple[ABCConfigFile, Exception]]]:
         errors = {}
-        for namespace, configs in self._configs.items():
+        for namespace, configs in deepcopy(self._configs).items():
             errors[namespace] = {}
             for file_name, config in configs.items():
                 try:
-                    config.save(self, namespace=namespace, file_name=file_name)
+                    self.save(namespace, file_name)
                 except Exception as e:
                     if not ignore_err:
                         raise
@@ -995,8 +1006,16 @@ class BaseConfigPool(ABCConfigPool, ABC):
 
         return {k: v for k, v in errors.items() if v}
 
-    def delete(self, namespace: str, file_name: str) -> None:
+    def delete(self, namespace: str, file_name: str) -> Self:
         del self._configs[namespace][file_name]
+        if not self._configs[namespace]:
+            del self._configs[namespace]
+        return self
+
+    def unset(self, namespace: str, file_name: Optional[str] = None) -> Self:
+        with suppress(KeyError):
+            self.delete(namespace, file_name)
+        return self
 
     def __getitem__(self, item):
         if isinstance(item, tuple):
@@ -1045,5 +1064,6 @@ __all__ = (
     "AnyConfigData",
     "ConfigData",
     "ConfigFile",
-    "BaseConfigPool"
+    "PHelper",
+    "BaseConfigPool",
 )

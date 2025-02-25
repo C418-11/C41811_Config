@@ -3,6 +3,7 @@
 
 
 import os.path
+import re
 from abc import ABC
 from abc import abstractmethod
 from collections.abc import Callable
@@ -365,9 +366,32 @@ def _merge_args(
     return tuple(merged_args), pmap(merged_kwargs)
 
 
+@contextmanager
+def raises(excs: Exception | tuple[Exception, ...] = Exception):
+    """
+    包装意料内的异常
+
+    提供给子类的便捷方法
+
+    :param excs: 意料内的异常
+    :type excs: Exception | tuple[Exception, ...]
+
+    :raise FailedProcessConfigFileError: 当触发了对应的异常时
+
+    .. versionadded:: 0.1.4
+
+    .. versionchanged:: 0.1.6
+       提取为函数
+    """
+    try:
+        yield
+    except excs as err:
+        raise FailedProcessConfigFileError(err) from err
+
+
 class BaseLocalFileConfigSL(BaseConfigSL, ABC):
     """
-    基础本地配置文件SL管理器
+    基础本地配置文件SL处理器
     """
 
     _s_open_kwargs: dict[str, Any] = dict(mode='w', encoding="utf-8")
@@ -428,24 +452,7 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
         """
         return self._loader_args
 
-    @contextmanager
-    def raises(self, excs: Exception | tuple[Exception, ...] = Exception):
-        """
-        包装意料内的异常
-
-        提供给子类的便捷方法
-
-        :param excs: 意料内的异常
-        :type excs: Exception | tuple[Exception, ...]
-
-        :raise FailedProcessConfigFileError: 当触发了对应的异常时
-
-        .. versionadded:: 0.1.4
-        """
-        try:
-            yield
-        except excs as err:
-            raise FailedProcessConfigFileError(err) from err
+    raises = staticmethod(raises)
 
     @override
     def save(
@@ -483,7 +490,7 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
         """
         merged_args, merged_kwargs = _merge_args(self._saver_args, args, kwargs)
 
-        file_path = self.__local_path__(root_path, namespace, file_name)
+        file_path = processor_pool.helper.calc_path(root_path, namespace, file_name)
         if self.create_dir:
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
         with safe_open(file_path, **self._s_open_kwargs) as f:
@@ -492,7 +499,7 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
     @override
     def load(
             self,
-            processor_pool,
+            processor_pool: ABCSLProcessorPool,
             root_path: str,
             namespace: str,
             file_name: str,
@@ -527,7 +534,7 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
         """
         merged_args, merged_kwargs = _merge_args(self._loader_args, args, kwargs)
 
-        file_path = self.__local_path__(root_path, namespace, file_name)
+        file_path = processor_pool.helper.calc_path(root_path, namespace, file_name)
         if self.create_dir:
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
         with safe_open(file_path, **self._l_open_kwargs) as f:
@@ -578,30 +585,6 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
            移除 ``config_file_cls`` 参数
         """
 
-    @staticmethod
-    def __local_path__(
-            root_path: str,
-            namespace: str,
-            file_name: str,
-    ) -> str:
-        """
-        处理配置文件对应的文件路径
-
-        :param root_path: 保存的根目录
-        :type root_path: str
-        :param namespace: 配置的命名空间
-        :type namespace: Optional[str]
-        :param file_name: 配置文件名
-        :type file_name: Optional[str]
-
-        :return: 配置文件路径
-        :rtype: str
-
-        .. versionadded:: 0.1.6
-        """
-
-        return os.path.normpath(os.path.join(root_path, namespace, file_name))
-
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return NotImplemented
@@ -622,13 +605,175 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
         ))
 
 
+class BaseCompressedConfigSL(BaseConfigSL, ABC):
+    """
+    基础压缩配置文件SL处理器
+
+    .. caution::
+       会临时在配置文件池中添加文件以传递SL操作
+
+    .. versionadded:: 0.1.6
+    """
+
+    def __init__(self, *, reg_alias: Optional[str] = None, create_dir: bool = True):
+        """
+        :param reg_alias: sl处理器注册别名
+        :type reg_alias: Optional[str]
+        :param create_dir: 是否创建目录
+        :type create_dir: bool
+        """
+        super().__init__(reg_alias=reg_alias)
+
+        self.create_dir = create_dir
+        self.cleanup_registry: bool = True
+        """
+        自动清理为了传递SL处理所加入配置池的配置文件
+        """
+
+    @property
+    def extract_prefix(self) -> str:
+        """
+        解压文件前缀
+        """
+        return "$compressed~"
+
+    def calc_extract_namespace(self, namespace: str, file_name: str) -> str:
+        """
+        处理配置文件对应解压的命名空间
+
+        :param namespace: 配置的命名空间
+        :type namespace: Optional[str]
+        :param file_name: 配置文件名
+        :type file_name: Optional[str]
+
+        :return: 解压命名空间
+        :rtype: str
+        """
+        return os.path.normpath(os.path.join(namespace, self.extract_prefix, file_name))
+
+    raises = staticmethod(raises)
+
+    def filename_formatter(self, file_name: str) -> str:
+        # noinspection SpellCheckingInspection
+        """
+        格式化文件名以传递给其他SL处理器
+
+        默认实现:
+            - 遍历 :py:attr:`BaseCompressedConfigSL`
+            - 如果为 ``str`` 且 ``file_name.endswith`` 成立则返回移除后缀后的结果
+            - 如果为 ``re.Pattern`` 且 ``Pattern.fullmatch(file_name)`` 成立则返回 ``Pattern.sub(file_name, '')``
+            - 直接返回
+        """
+        for match in self.file_match:
+            if isinstance(match, str) and file_name.endswith(match):
+                return file_name[:-len(match)]
+            if isinstance(match, re.Pattern) and match.fullmatch(file_name):  # 目前没SL处理器用得上 # pragma: no cover
+                return match.sub(file_name, '')
+        return file_name  # 不好测试 # pragma: no cover
+
+    def save(
+            self,
+            config_pool: ABCConfigPool,
+            config_file: ABCConfigFile,
+            root_path: str,
+            namespace: str,
+            file_name: str,
+            *_, **__,
+    ) -> None:
+        file_path = config_pool.helper.calc_path(root_path, namespace, file_name)
+        if self.create_dir:
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+        extract_filename = self.filename_formatter(file_name)
+        extract_namespace = self.calc_extract_namespace(namespace, file_name)
+        extract_dir = config_pool.helper.calc_path(root_path, extract_namespace)
+
+        self.save_file(config_pool, config_file, extract_namespace, extract_filename)
+        self.compress_file(file_path, extract_dir)
+
+    def load(
+            self,
+            config_pool: ABCConfigPool,
+            root_path: str,
+            namespace: str,
+            file_name: str,
+            *_, **__,
+    ) -> ABCConfigFile:
+        file_path = config_pool.helper.calc_path(root_path, namespace, file_name)
+        if self.create_dir:
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+        extract_filename = self.filename_formatter(file_name)
+        extract_namespace = self.calc_extract_namespace(namespace, file_name)
+        extract_dir = config_pool.helper.calc_path(root_path, extract_namespace)
+
+        self.extract_file(file_path, extract_dir)
+        return self.load_file(config_pool, extract_namespace, extract_filename)
+
+    def save_file(
+            self,
+            config_pool: ABCConfigPool,
+            config_file: ABCConfigFile,
+            namespace: str,
+            file_name: str
+    ) -> None:
+        """
+        保存指定命名空间的配置
+
+        :param config_pool: 配置池
+        :type config_pool: ABCConfigPool
+        :param config_file: 配置文件
+        :type config_file: ABCConfigFile
+        :param namespace: 命名空间
+        :type namespace: str
+        :param file_name: 文件名
+        :type file_name: str
+        """
+
+        config_pool.save(namespace, file_name, config=config_file)
+        if self.cleanup_registry:
+            config_pool.unset(namespace, file_name)
+
+    def load_file(
+            self,
+            config_pool: ABCConfigPool,
+            namespace: str,
+            file_name: str
+    ) -> ABCConfigFile:
+        """
+        加载指定命名空间的配置
+
+        .. caution::
+           传递SL处理前没有清理已经缓存在配置池里的配置文件，返回的可能不是最新数据
+
+        :param config_pool: 配置池
+        :type config_pool: ABCConfigPool
+        :param namespace: 命名空间
+        :type namespace: str
+        :param file_name: 文件名
+        :type file_name: str
+        """
+
+        cfg_file = config_pool.load(namespace, file_name)
+        if self.cleanup_registry:
+            config_pool.unset(namespace, file_name)
+        return cfg_file
+
+    @abstractmethod  # @formatter:off
+    def compress_file(self, file_path: str, extract_dir: str): ...
+
+    @abstractmethod
+    def extract_file(self, file_path: str, extract_dir: str):
+        ...  # @formatter:on
+
+
 __all__ = (
     "RequiredPath",
     "ConfigPool",
     "RequireConfigDecorator",
     "BaseConfigSL",
     "BaseLocalFileConfigSL",
-
+    "BaseCompressedConfigSL",
     "DefaultConfigPool",
     "requireConfig",
     "saveAll",

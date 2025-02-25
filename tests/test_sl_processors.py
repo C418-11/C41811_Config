@@ -17,8 +17,11 @@ from C41811.Config import JsonSL
 from C41811.Config import PickleSL
 from C41811.Config import PythonLiteralSL
 from C41811.Config.errors import FailedProcessConfigFileError
+from C41811.Config.main import BaseCompressedConfigSL
 from C41811.Config.processors.PyYaml import PyYamlSL
 from C41811.Config.processors.RuamelYaml import RuamelYamlSL
+from C41811.Config.processors.TarFile import CompressionTypes as TarFileCompressionTypes
+from C41811.Config.processors.TarFile import TarFileSL
 from C41811.Config.processors.Toml import TomlSL
 from utils import safe_raises
 
@@ -295,7 +298,7 @@ def _insert_sl_cls(sl_cls, tests: tuple):
     yield from ((sl_cls, *test) for test in tests)
 
 
-Tests = (
+LocalFileTests = (
     "sl_cls, raw_data, ignore_excs, sl_args",
     (
         *_insert_sl_cls(JsonSL, JsonSLTests),
@@ -313,8 +316,8 @@ def pool(tmpdir):
     return ConfigPool(root_path=tmpdir)
 
 
-@mark.parametrize(*Tests)
-def test_sl_processors(pool, sl_cls: type[BaseLocalFileConfigSL], raw_data, ignore_excs, sl_args):
+@mark.parametrize(*LocalFileTests)
+def test_local_file_sl_processors(pool, sl_cls: type[BaseLocalFileConfigSL], raw_data, ignore_excs, sl_args):
     sl_obj = sl_cls(*sl_args)
     sl_obj.register_to(pool)
 
@@ -339,12 +342,122 @@ def test_sl_processors(pool, sl_cls: type[BaseLocalFileConfigSL], raw_data, igno
     assert loaded_file == file
 
 
+TarFileTests = (
+    (
+        {"a": 1, "b": {"c": 2}},
+        (), {}
+    ),
+    (
+        OrderedDict((('b', 2), ('a', 1))),
+        (), {}
+    ),
+    (
+        OrderedDict((('b', 2), ('a', 1))),
+        (), {}
+    ),
+    (
+        [1, 2, [3, [4, 5, [6], {'7': 8}]]],
+        (), {}
+    ),
+    (
+        "string",
+        (), {}
+    ),
+    (
+        True,
+        (), {}
+    ),
+    (
+        None,
+        (), {}
+    ),
+    (
+        11.45,
+        (), {}
+    ),
+    (
+        NotImplemented,
+        ((FailedProcessConfigFileError,), ()), {}
+    ),
+    (
+        {"Now": {"supports": {"compression": "!"}}},
+        (), dict(compression=TarFileCompressionTypes.GZIP)
+    ),
+    (
+        {"foo": "bar"},
+        (), dict(compression=TarFileCompressionTypes.BZIP2)
+    ),
+    (
+        {"foo": "bar"},
+        (), dict(compression=TarFileCompressionTypes.LZMA)
+    ),
+    (
+        {"foo": "bar"},
+        (), dict(compression=TarFileCompressionTypes.ONLY_STORAGE)
+    ),
+    (
+        {"foo": "bar"},
+        (), dict(compression=None)
+    ),
+    (
+        {"foo": "bar"},
+        (), dict(compression="lzma")
+    ),
+    (
+        {"foo": "bar"},
+        (), dict(compression="xz")
+    ),
+)
+
+CompressedFileTests = (
+    "sl_cls, raw_data, ignore_excs, init_arguments",
+    (
+        *_insert_sl_cls(TarFileSL, TarFileTests),
+    )
+)
+
+
+@mark.parametrize(*CompressedFileTests)
+def test_compressed_file_sl_processors(
+        pool,
+        sl_cls: type[BaseCompressedConfigSL],
+        raw_data,
+        ignore_excs,
+        init_arguments: dict
+):
+    # noinspection PyArgumentList
+    compressed_sl = sl_cls(**init_arguments)
+    compressed_sl.register_to(pool)
+    local_sl = JsonSL(s_arg=dict(indent=2))
+    local_sl.register_to(pool)
+
+    file = ConfigFile(
+        ConfigData(raw_data),
+        config_format=local_sl.reg_name
+    )
+    file_name = f"TestConfigFile{local_sl.file_match[0]}{compressed_sl.file_match[0]}"
+
+    if not ignore_excs:
+        ignore_excs = ((), ())
+
+    with safe_raises(ignore_excs[0]) as info:
+        pool.save('', file_name, config=file)
+    if info:
+        return
+    pool.delete('', file_name)
+    with safe_raises(ignore_excs[1]) as info:
+        loaded_file = pool.load('', file_name)
+    if info:
+        return
+    assert loaded_file == file
+
+
 def test_wrong_sl_arguments():
     with raises(TypeError):
         JsonSL(NotImplemented)
 
 
-SLProcessors = (JsonSL, PickleSL, PythonLiteralSL, PyYamlSL, RuamelYamlSL, TomlSL)
+SLProcessors = (JsonSL, PickleSL, PythonLiteralSL, PyYamlSL, RuamelYamlSL, TomlSL, TarFileSL)
 
 
 @mark.parametrize("sl_cls", SLProcessors)
@@ -360,13 +473,17 @@ def test_multi_register(pool, sl_cls):
 @mark.parametrize("sl_cls", SLProcessors)
 def test_base(sl_cls: type[BaseConfigSL]):
     attr_tests = (
-        "saver_args",
-        "loader_args",
         "processor_reg_name",
         "reg_alias",
         "reg_name",
         "file_match",
     )
+    if issubclass(sl_cls, BaseLocalFileConfigSL):
+        attr_tests = (
+            "saver_args",
+            "loader_args",
+            *attr_tests
+        )
     for attr in attr_tests:
         with raises(AttributeError, match=re.compile(rf"property '{attr}' of '.+' object has no setter")):
             setattr(sl_cls(), attr, None)

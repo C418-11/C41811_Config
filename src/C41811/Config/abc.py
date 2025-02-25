@@ -2,6 +2,7 @@
 # cython: language_level = 3
 
 
+import os
 from abc import ABC
 from abc import abstractmethod
 from collections.abc import Iterable
@@ -515,6 +516,41 @@ class ABCSupportsIndexConfigData[D: SupportsIndex | SupportsWriteIndex](
         del self._data[key]
 
 
+class ABCProcessorHelper(ABC):
+    """
+    辅助SL处理器
+
+    .. versionadded:: 0.1.6
+    """
+
+    @staticmethod
+    def calc_path(
+            root_path: str,
+            namespace: str,
+            file_name: Optional[str] = None,
+    ) -> str:
+        """
+        处理配置文件对应的文件路径
+
+        file_name为None时，返回文件所在的目录
+
+        :param root_path: 保存的根目录
+        :type root_path: str
+        :param namespace: 配置的命名空间
+        :type namespace: Optional[str]
+        :param file_name: 配置文件名
+        :type file_name: Optional[str]
+
+        :return: 配置文件路径
+        :rtype: str
+        """
+
+        if file_name is None:
+            file_name = ''
+
+        return os.path.normpath(os.path.join(root_path, namespace, file_name))
+
+
 class ABCSLProcessorPool(ABC):
     """
     SL处理器池
@@ -545,6 +581,10 @@ class ABCSLProcessorPool(ABC):
            从 ``FileExtProcessor`` 重命名为 ``FileNameProcessors``
         """
         self._root_path = root_path
+
+    @property
+    @abstractmethod
+    def helper(self) -> ABCProcessorHelper: ...
 
     @property
     def root_path(self) -> str:
@@ -700,7 +740,7 @@ class ABCConfigPool(ABCSLProcessorPool):
         """
 
     @abstractmethod
-    def set(self, namespace: str, file_name: str, config: ABCConfigFile) -> None:
+    def set(self, namespace: str, file_name: str, config: ABCConfigFile) -> Self:
         """
         设置配置
 
@@ -710,6 +750,12 @@ class ABCConfigPool(ABCSLProcessorPool):
         :type file_name: str
         :param config: 配置
         :type config: ABCConfigFile
+
+        :return: 返回当前实例便于链式调用
+        :rtype: Self
+
+        .. versionchanged:: 0.1.6
+           返回当前实例便于链式调用
         """
 
     @abstractmethod
@@ -720,7 +766,7 @@ class ABCConfigPool(ABCSLProcessorPool):
             config_formats: Optional[str | Iterable[str]] = None,
             config: Optional[ABCConfigFile] = None,
             *args, **kwargs
-    ) -> None:
+    ) -> Self:
         """
         保存配置
 
@@ -733,8 +779,14 @@ class ABCConfigPool(ABCSLProcessorPool):
         :param config: 配置文件，可选，提供此参数相当于自动调用了一遍pool.set
         :type config: Optional[ABCConfigFile]
 
+        :return: 返回当前实例便于链式调用
+        :rtype: Self
+
         .. versionchanged:: 0.1.2
            添加 ``config_formats`` 和 ``config`` 参数
+
+        .. versionchanged:: 0.1.6
+           返回当前实例便于链式调用
         """
 
     @abstractmethod
@@ -776,12 +828,12 @@ class ABCConfigPool(ABCSLProcessorPool):
 
         .. versionchanged:: 0.1.6
            现在会像 :py:meth:`save` 一样接收并传递额外参数
-           移除 ``config_file_cls`` 参数
 
+           移除 ``config_file_cls`` 参数
         """
 
     @abstractmethod
-    def delete(self, namespace: str, file_name: str) -> None:
+    def delete(self, namespace: str, file_name: str) -> Self:
         """
         删除配置文件
 
@@ -789,6 +841,28 @@ class ABCConfigPool(ABCSLProcessorPool):
         :type namespace: str
         :param file_name: 文件名
         :type file_name: str
+
+        :return: 返回当前实例便于链式调用
+        :rtype: Self
+
+        .. versionchanged:: 0.1.6
+           返回当前实例便于链式调用
+        """
+
+    @abstractmethod
+    def unset(self, namespace: str, file_name: Optional[str] = None) -> Self:
+        """
+        确保配置文件不存在
+
+        :param namespace: 命名空间
+        :type namespace: str
+        :param file_name: 文件名
+        :type file_name: Optional[str]
+
+        :return: 返回当前实例便于链式调用
+        :rtype: Self
+
+        .. versionadded:: 0.1.6
         """
 
     @abstractmethod
@@ -987,6 +1061,7 @@ __all__ = (
     "ABCPath",
     "ABCConfigData",
     "ABCSupportsIndexConfigData",
+    "ABCProcessorHelper",
     "ABCSLProcessorPool",
     "ABCConfigPool",
     "ABCConfigFile",
