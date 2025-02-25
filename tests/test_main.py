@@ -238,7 +238,7 @@ class TestRequiredPath:
             {"skip_missing": True},
             {"allow_modify": True, "skip_missing": True},
     ))
-    def test_ignore(data, kwargs):
+    def test_no_validation(data, kwargs):
         assert RequiredPath(lambda _: _, "no-validation").filter(deepcopy(data), **kwargs) == data
 
     PydanticTests = ("path, value, kwargs, ignore_excs, ignore_warns", (
