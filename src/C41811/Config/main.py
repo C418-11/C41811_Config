@@ -774,8 +774,8 @@ class BasicCompressedConfigSL(BasicConfigSL, ABC):
     def compress_file(self, file_path: str, extract_dir: str): ...
 
     @abstractmethod
-    def extract_file(self, file_path: str, extract_dir: str):
-        ...  # @formatter:on
+    def extract_file(self, file_path: str, extract_dir: str): ...
+    # @formatter:on
 
 
 __all__ = (
