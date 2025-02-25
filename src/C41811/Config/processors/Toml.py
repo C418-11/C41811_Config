@@ -8,7 +8,7 @@ from .._protocols import SupportsReadAndReadline
 from .._protocols import SupportsWrite
 from ..abc import ABCConfigFile
 from ..base import ConfigFile
-from ..main import BaseLocalFileConfigSL
+from ..main import BasicLocalFileConfigSL
 
 try:
     # noinspection PyPackageRequirements, PyUnresolvedReferences
@@ -17,7 +17,7 @@ except ImportError:  # pragma: no cover
     raise ImportError("toml is not installed. Please install it with `pip install toml`") from None
 
 
-class TomlSL(BaseLocalFileConfigSL):
+class TomlSL(BasicLocalFileConfigSL):
     """
     Toml格式处理器
     """

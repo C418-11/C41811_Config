@@ -10,7 +10,7 @@ from enum import ReprEnum
 from typing import override, Optional
 
 from ..base import ConfigFile
-from ..main import BaseCompressedConfigSL
+from ..main import BasicCompressedConfigSL
 from ..safe_writer import safe_open
 
 
@@ -32,7 +32,7 @@ class CompressionTypes(CompressionType, ReprEnum):
     LZMA = ("lzma", "xz")
 
 
-class TarFileSL(BaseCompressedConfigSL):
+class TarFileSL(BasicCompressedConfigSL):
     """
     tar格式处理器
     """

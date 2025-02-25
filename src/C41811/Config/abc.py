@@ -327,20 +327,23 @@ class ABCSupportsIndexConfigData[D: SupportsIndex | SupportsWriteIndex](
     """
 
     @abstractmethod
-    def retrieve(self, path: str | ABCPath, *, get_raw: bool = False) -> Any:
+    def retrieve(self, path: str | ABCPath, *, return_raw_value: bool = False) -> Any:
         """
         获取路径的值的*快照*
 
         :param path: 路径
         :type path: str | ABCPath
-        :param get_raw: 是否获取原始值，为False时，会将Mapping转换为当前类
-        :type get_raw: bool
+        :param return_raw_value: 是否获取原始值，为False时，会将Mapping转换为当前类
+        :type return_raw_value: bool
 
         :return: 路径的值
         :rtype: Any
 
         :raise ConfigDataTypeError: 配置数据类型错误
         :raise RequiredPathNotFoundError: 需求的键不存在
+
+        .. versionchanged:: 0.1.6
+           重命名 ``get_raw`` 参数为 ``return_raw_value``
         """
 
     @abstractmethod
@@ -419,7 +422,7 @@ class ABCSupportsIndexConfigData[D: SupportsIndex | SupportsWriteIndex](
         """
 
     @abstractmethod
-    def get(self, path: str | ABCPath, default=None, *, get_raw: bool = False) -> Any:
+    def get(self, path: str | ABCPath, default=None, *, return_raw_value: bool = False) -> Any:
         """
         获取路径的值的*快照*，路径不存在时填充默认值
 
@@ -428,8 +431,8 @@ class ABCSupportsIndexConfigData[D: SupportsIndex | SupportsWriteIndex](
 
         :param default: 默认值
         :type default: Any
-        :param get_raw: 是否获取原始值
-        :type get_raw: bool
+        :param return_raw_value: 是否获取原始值
+        :type return_raw_value: bool
 
         :return: 路径的值
         :rtype: Any
@@ -456,12 +459,15 @@ class ABCSupportsIndexConfigData[D: SupportsIndex | SupportsWriteIndex](
 
            自定义默认值
 
-           >>> data.get("with default", default="default value")
+           >>> data.get("with default",default="default value")
            'default value'
+
+        .. versionchanged:: 0.1.6
+           重命名 ``get_raw`` 参数为 ``return_raw_value``
         """
 
     @abstractmethod
-    def set_default(self, path: str | ABCPath, default=None, *, get_raw: bool = False) -> Any:
+    def set_default(self, path: str | ABCPath, default=None, *, return_raw_value: bool = False) -> Any:
         """
         如果路径不在配置数据中则填充默认值到配置数据并返回
 
@@ -469,8 +475,8 @@ class ABCSupportsIndexConfigData[D: SupportsIndex | SupportsWriteIndex](
         :type path: str | ABCPath
         :param default: 默认值
         :type default: Any
-        :param get_raw: 是否获取原始值
-        :type get_raw: bool
+        :param return_raw_value: 是否获取原始值
+        :type return_raw_value: bool
 
         :return: 路径的值
         :rtype: Any
@@ -500,10 +506,13 @@ class ABCSupportsIndexConfigData[D: SupportsIndex | SupportsWriteIndex](
 
            自定义默认值
 
-           >>> data.set_default("with default", default="default value")
+           >>> data.set_default("with default",default="default value")
            'default value'
            >>> data
            MappingConfigData({'key': 'value', 'not exists': None, 'with default': 'default value'})
+
+        .. versionchanged:: 0.1.6
+           重命名 ``get_raw`` 参数为 ``return_raw_value``
         """
 
     @abstractmethod
@@ -706,15 +715,15 @@ class ABCConfigFile(ABC):
         return True
 
     def __repr__(self):
-        fmt_ls: list[str] = []
+        repr_parts: list[str] = []
         for field in ["_config_format", "_data"]:
             field_value = getattr(self, field)
             if field_value is None:
                 continue
 
-            fmt_ls.append(f"{field[1:]}={field_value!r}")
+            repr_parts.append(f"{field[1:]}={field_value!r}")
 
-        fmt_str = ", ".join(fmt_ls)
+        fmt_str = ", ".join(repr_parts)
         return f"{self.__class__.__name__}({fmt_str})"
 
 
@@ -901,7 +910,7 @@ class ABCConfigSL(ABC):
     配置SaveLoad处理器抽象类
 
     .. versionchanged:: 0.1.6
-       移动 ``保存加载器参数`` 相关至 :py:class:`BaseLocalFileConfigSL`
+       移动 ``保存加载器参数`` 相关至 :py:class:`BasicLocalFileConfigSL`
     """
 
     def __init__(

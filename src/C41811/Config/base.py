@@ -56,11 +56,15 @@ def _fmt_path(path: str | ABCPath) -> ABCPath:
     return Path.from_str(path)
 
 
-class BaseConfigData(ABCConfigData, ABC):
+class BasicConfigData(ABCConfigData, ABC):
+    # noinspection GrazieInspection
     """
     配置数据基类
 
     .. versionadded:: 0.1.5
+
+    .. versionchanged:: 0.1.6
+       从 ``BaseConfigData`` 重命名为 ``BasicConfigData``
     """
 
     @override
@@ -91,15 +95,19 @@ def _check_read_only(func):
     return wrapper(func)
 
 
-class BaseSupportsIndexConfigData[D: SupportsIndex | SupportsWriteIndex](
-    BaseConfigData,
+class BasicSupportsIndexConfigData[D: SupportsIndex | SupportsWriteIndex](
+    BasicConfigData,
     ABCSupportsIndexConfigData,
     ABC
 ):
+    # noinspection GrazieInspection
     """
     支持 ``索引`` 操作的配置数据基类
 
     .. versionadded:: 0.1.5
+
+    .. versionchanged:: 0.1.6
+       从 ``BaseSupportsIndexConfigData`` 重命名为 ``BasicSupportsIndexConfigData``
     """
 
     def _process_path(
@@ -136,7 +144,7 @@ class BaseSupportsIndexConfigData[D: SupportsIndex | SupportsWriteIndex](
         return process_return(now_data)
 
     @override
-    def retrieve(self, path: str | ABCPath, *, get_raw: bool = False) -> Any:
+    def retrieve(self, path: str | ABCPath, *, return_raw_value: bool = False) -> Any:
         path = _fmt_path(path)
 
         def checker(now_data, now_key: ABCKey, _last_key: list[ABCKey], key_index: int):
@@ -147,7 +155,7 @@ class BaseSupportsIndexConfigData[D: SupportsIndex | SupportsWriteIndex](
                 raise RequiredPathNotFoundError(KeyInfo(path, now_key, key_index), ConfigOperate.Read)
 
         def process_return(now_data):
-            if get_raw:
+            if return_raw_value:
                 return deepcopy(now_data)
 
             is_sequence = isinstance(now_data, Sequence) and not isinstance(now_data, (str, bytes))
@@ -219,16 +227,16 @@ class BaseSupportsIndexConfigData[D: SupportsIndex | SupportsWriteIndex](
         return self._process_path(path, checker, lambda *_: True)
 
     @override
-    def get(self, path: str | ABCPath, default=None, *, get_raw: bool = False) -> Any:
+    def get(self, path: str | ABCPath, default=None, *, return_raw_value: bool = False) -> Any:
         try:
-            return self.retrieve(path, get_raw=get_raw)
+            return self.retrieve(path, return_raw_value=return_raw_value)
         except RequiredPathNotFoundError:
             return default
 
     @override
-    def set_default(self, path: str | ABCPath, default=None, *, get_raw: bool = False) -> Any:
+    def set_default(self, path: str | ABCPath, default=None, *, return_raw_value: bool = False) -> Any:
         try:
-            return self.retrieve(path, get_raw=get_raw)
+            return self.retrieve(path)
         except RequiredPathNotFoundError:
             self.modify(path, default)
             return default
@@ -316,7 +324,7 @@ def _operate(operate_func, inplace_func):
 
 
 @_generate_operators
-class MappingConfigData[D: Mapping | MutableMapping](BaseSupportsIndexConfigData, MutableMapping):
+class MappingConfigData[D: Mapping | MutableMapping](BasicSupportsIndexConfigData, MutableMapping):
     """
     支持 Mapping 的 ConfigData
 
@@ -402,34 +410,40 @@ class MappingConfigData[D: Mapping | MutableMapping](BaseSupportsIndexConfigData
 
         return self._data.keys()
 
-    def values(self, get_raw: bool = False) -> ValuesView[Any]:
+    def values(self, return_raw_value: bool = False) -> ValuesView[Any]:
         """
         获取所有值
 
-        :param get_raw: 是否获取原始数据
-        :type get_raw: bool
+        :param return_raw_value: 是否获取原始数据
+        :type return_raw_value: bool
 
         :return: 所有键值对
         :rtype: ValuesView[Any]
+
+        .. versionchanged:: 0.1.6
+           重命名 ``get_raw`` 参数为 ``return_raw_value``
         """
-        if get_raw:
+        if return_raw_value:
             return self._data.values()
 
         return OrderedDict(
             (k, self.from_data(v) if isinstance(v, Mapping) else deepcopy(v)) for k, v in self._data.items()
         ).values()
 
-    def items(self, *, get_raw: bool = False) -> ItemsView[str, Any]:
+    def items(self, *, return_raw_value: bool = False) -> ItemsView[str, Any]:
         """
         获取所有键值对
 
-        :param get_raw: 是否获取原始数据
-        :type get_raw: bool
+        :param return_raw_value: 是否获取原始数据
+        :type return_raw_value: bool
 
         :return: 所有键值对
         :rtype: ItemsView[str, Any]
+
+        .. versionchanged:: 0.1.6
+           重命名 ``get_raw`` 参数为 ``return_raw_value``
         """
-        if get_raw:
+        if return_raw_value:
             return self._data.items()
         return OrderedDict(
             (deepcopy(k), self.from_data(v) if isinstance(v, Mapping) else deepcopy(v)) for k, v in self._data.items()
@@ -450,7 +464,7 @@ class MappingConfigData[D: Mapping | MutableMapping](BaseSupportsIndexConfigData
 
 
 @_generate_operators
-class SequenceConfigData[D: Sequence | MutableSequence](BaseSupportsIndexConfigData, MutableSequence):
+class SequenceConfigData[D: Sequence | MutableSequence](BasicSupportsIndexConfigData, MutableSequence):
     """
     支持 Sequence 的 ConfigData
 
@@ -518,7 +532,7 @@ class SequenceConfigData[D: Sequence | MutableSequence](BaseSupportsIndexConfigD
 
 
 @_generate_operators
-class NumberConfigData[D: Number](BaseConfigData):
+class NumberConfigData[D: Number](BasicConfigData):
     """
     支持 Number 的 ConfigData
 
@@ -652,7 +666,7 @@ class BoolConfigData[D: bool](NumberConfigData):
 
 
 @_generate_operators
-class StringConfigData[D: str | bytes](BaseConfigData):
+class StringConfigData[D: str | bytes](BasicConfigData):
     """
     支持 str 和 bytes 的 ConfigData
     """
@@ -688,7 +702,7 @@ class StringConfigData[D: str | bytes](BaseConfigData):
         return reversed(self._data)
 
 
-class ObjectConfigData[D: object](BaseConfigData):
+class ObjectConfigData[D: object](BasicConfigData):
     _data: D
     data: D
 
@@ -801,11 +815,14 @@ class ConfigFile(ABCConfigFile):
 class PHelper(ABCProcessorHelper): ...  # noqa: E701
 
 
-class BaseConfigPool(ABCConfigPool, ABC):
+class BasicConfigPool(ABCConfigPool, ABC):
     """
     基础配置池类
 
     实现了一些通用方法
+
+    .. versionchanged:: 0.1.6
+       从 ``BaseConfigPool`` 重命名为 ``BasicConfigPool``
     """
 
     def __init__(self, root_path="./.config"):
@@ -1053,8 +1070,8 @@ class BaseConfigPool(ABCConfigPool, ABC):
 
 
 __all__ = (
-    "BaseConfigData",
-    "BaseSupportsIndexConfigData",
+    "BasicConfigData",
+    "BasicSupportsIndexConfigData",
     "MappingConfigData",
     "SequenceConfigData",
     "BoolConfigData",
@@ -1065,5 +1082,5 @@ __all__ = (
     "ConfigData",
     "ConfigFile",
     "PHelper",
-    "BaseConfigPool",
+    "BasicConfigPool",
 )

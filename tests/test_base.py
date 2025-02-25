@@ -87,10 +87,10 @@ class TestMappingConfigData:
     RetrieveTests = (
         "path,          value,                    ignore_excs,                  kwargs", (  # @formatter:off # noqa: E122, E501
         ("foo",         ConfigData({"bar": 123}), (),                           {}),  # noqa: E122
-        ("foo",         {"bar": 123},             (),                           {"get_raw": True}),  # noqa: E122
+        ("foo",         {"bar": 123},             (),                           {"return_raw_value": True}),  # noqa: E122
         ("foo\\.bar",   123,                      (),                           {}),  # noqa: E122
         ("foo1",        114,                      (),                           {}),  # noqa: E122
-        ("foo2",        ["bar"],                  (),                           {"get_raw": True}),  # noqa: E122
+        ("foo2",        ["bar"],                  (),                           {"return_raw_value": True}),  # noqa: E122
         ("foo2\\[0\\]", "bar",                    (),                           {}),  # noqa: E122
         ("foo2\\.bar",  None,                     (ConfigDataTypeError, ),      {}),  # noqa: E122
         ("foo3",        None,                     (RequiredPathNotFoundError,), {}),  # noqa: E122
@@ -129,7 +129,7 @@ class TestMappingConfigData:
 
         with safe_raises(ignore_excs) as info:
             data.modify(path, value, **kwargs)
-            result = data.retrieve(path, get_raw=True)
+            result = data.retrieve(path, return_raw_value=True)
         if not info:
             assert result == value
 
@@ -218,7 +218,7 @@ class TestMappingConfigData:
     SetDefaultTests = (
         RetrieveTests[0],
         (
-            *((*x[:3], x[3] | {"get_raw": True}) for x in RetrieveTests[1]),  # @formatter:off
+            *((*x[:3], x[3] | {"return_raw_value": True}) for x in RetrieveTests[1]),  # @formatter:off
             # path               value            ignore_excs             kwargs
             ("not exist",        "default value", (),                     {"default": "default value"}),
             ("foo\\.not exist",  "default value", (),                     {"default": "default value"}),
@@ -243,12 +243,12 @@ class TestMappingConfigData:
             value = value,
 
         if data.exists(path, ignore_wrong_type=True):
-            value = *value, data.retrieve(path, get_raw=True)
+            value = *value, data.retrieve(path)
 
         with safe_raises(ignore_excs):
             assert data.set_default(path, **kwargs) in value
             assert data.exists(path)
-            assert data.retrieve(path, get_raw=True) in value
+            assert data.retrieve(path) in value
 
     GetItemTests = (
         "path, value", (
@@ -430,7 +430,7 @@ class TestMappingConfigData:
                  ConfigData({'b': 1, 'c': {'d': 2, 'e': {'f': 3}}}),
                  None,
              ]),
-            ({"get_raw": True}, [{"bar": 123}, 114, ["bar"], {'b': 1, 'c': {'d': 2, 'e': {'f': 3}}}, None]),
+            ({"return_raw_value": True}, [{"bar": 123}, 114, ["bar"], {'b': 1, 'c': {'d': 2, 'e': {'f': 3}}}, None]),
         )
     )
 
@@ -447,7 +447,7 @@ class TestMappingConfigData:
             ("a", ConfigData({'b': 1, 'c': {'d': 2, 'e': {'f': 3}}})),
             (r"\\.\[\]", None),
         ]),
-        ({"get_raw": True}, [
+        ({"return_raw_value": True}, [
             ("foo", {"bar": 123}),
             ("foo1", 114),
             ("foo2", ["bar"]),
@@ -527,12 +527,12 @@ class TestSequenceConfigData:
     RetrieveTests = (
         "path,           value,                        ignore_excs,                  kwargs", (  # @formatter:off # noqa: E122, E501
         (r"\[0\]",       1,                            (),                           {}),  # noqa: E122
-        (r"\[0\]",       1,                            (),                           {"get_raw": True}),  # noqa: E122
+        (r"\[0\]",       1,                            (),                           {"return_raw_value": True}),  # noqa: E122
         (r"\[1\]",       2,                            (),                           {}),  # noqa: E122
         (r"\[2\]\.a",    ConfigData([3, 4]),           (),                           {}),  # noqa: E122
-        (r"\[2\]\.a",    [3, 4],                       (),                           {"get_raw": True}),  # noqa: E122
+        (r"\[2\]\.a",    [3, 4],                       (),                           {"return_raw_value": True}),  # noqa: E122
         (r"\[2\]\.b",    ConfigData({"c": 5, "d": 6}), (),                           {}),  # noqa: E122
-        (r"\[2\]\.b",    pmap({"c": 5, "d": 6}),       (),                           {"get_raw": True}),  # noqa: E122
+        (r"\[2\]\.b",    pmap({"c": 5, "d": 6}),       (),                           {"return_raw_value": True}),  # noqa: E122
         (r"\[2\]\.b\.c", 5,                            (),                           {}),  # noqa: E122
         (r"\[2\]\.b\.c", 5,                            (),                           {}),  # noqa: E122
         (r"\[3\]\[0\]",  7,                            (),                           {}),  # noqa: E122
@@ -573,7 +573,7 @@ class TestSequenceConfigData:
 
         with safe_raises(ignore_excs) as info:
             data.modify(path, value, **kwargs)
-            result = data.retrieve(path, get_raw=True)
+            result = data.retrieve(path, return_raw_value=True)
         if not info:
             assert result == value
 
@@ -664,7 +664,7 @@ class TestSequenceConfigData:
     SetDefaultTests = (
         RetrieveTests[0],
         (
-            *((*x[:3], x[3] | {"get_raw": True}) for x in RetrieveTests[1]),  # @formatter:off
+            *((*x[:3], x[3] | {"return_raw_value": True}) for x in RetrieveTests[1]),  # @formatter:off
             # path               value            ignore_excs             kwargs
             (r"\[10\]",           "default value", (),                     {"default": "default value"}),
             (r"\[3\]\[20\]",      "default value", (),                     {"default": "default value"}),
@@ -689,12 +689,12 @@ class TestSequenceConfigData:
             value = value,
 
         if data.exists(path, ignore_wrong_type=True):
-            value = *value, data.retrieve(path, get_raw=True)
+            value = *value, data.retrieve(path)
 
         with safe_raises(ignore_excs):
             assert data.set_default(path, **kwargs) in value
             assert data.exists(path)
-            assert data.retrieve(path, get_raw=True) in value
+            assert data.retrieve(path) in value
 
     GetItemTests = (
         "path, value", (

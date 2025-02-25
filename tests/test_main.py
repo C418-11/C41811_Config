@@ -256,7 +256,7 @@ class TestRequiredPath:
     def test_pydantic(data, pydantic_model, path, value, kwargs, ignore_excs, ignore_warns):
         with safe_raises(ignore_excs), safe_warns(ignore_warns):
             data = RequiredPath(pydantic_model, "pydantic").filter(data, **kwargs)
-            assert data.retrieve(path, get_raw=True) == value
+            assert data.retrieve(path, return_raw_value=True) == value
 
     @staticmethod
     def test_pydantic_with_error(data):
@@ -347,7 +347,7 @@ class TestRequiredPath:
             if isinstance(value, float) and value == float("-inf"):
                 assert path not in data
                 continue
-            assert data.retrieve(path, get_raw=True) == value
+            assert data.retrieve(path, return_raw_value=True) == value
 
     MappingTests = ("mapping, result, kwargs, ignores", (
         (

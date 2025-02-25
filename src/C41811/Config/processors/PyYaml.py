@@ -8,7 +8,7 @@ from .._protocols import SupportsReadAndReadline
 from .._protocols import SupportsWrite
 from ..abc import ABCConfigFile
 from ..base import ConfigFile
-from ..main import BaseLocalFileConfigSL
+from ..main import BasicLocalFileConfigSL
 
 try:
     # noinspection PyPackageRequirements, PyUnresolvedReferences
@@ -17,7 +17,7 @@ except ImportError:  # pragma: no cover
     raise ImportError("PyYaml is not installed. Please install it with `pip install PyYaml`") from None
 
 
-class PyYamlSL(BaseLocalFileConfigSL):
+class PyYamlSL(BasicLocalFileConfigSL):
     """
     基于PyYaml的yaml处理器
     """

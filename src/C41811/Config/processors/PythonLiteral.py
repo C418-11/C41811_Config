@@ -10,10 +10,10 @@ from .._protocols import SupportsReadAndReadline
 from .._protocols import SupportsWrite
 from ..abc import ABCConfigFile
 from ..base import ConfigFile
-from ..main import BaseLocalFileConfigSL
+from ..main import BasicLocalFileConfigSL
 
 
-class PythonLiteralSL(BaseLocalFileConfigSL):
+class PythonLiteralSL(BasicLocalFileConfigSL):
     """
     Python 字面量序列化处理器
     """

@@ -9,10 +9,10 @@ from .._protocols import SupportsReadAndReadline
 from .._protocols import SupportsWrite
 from ..abc import ABCConfigFile
 from ..base import ConfigFile
-from ..main import BaseLocalFileConfigSL
+from ..main import BasicLocalFileConfigSL
 
 
-class JsonSL(BaseLocalFileConfigSL):
+class JsonSL(BasicLocalFileConfigSL):
     """
     json格式处理器
     """

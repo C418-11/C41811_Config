@@ -29,7 +29,7 @@ from .abc import ABCConfigPool
 from .abc import ABCConfigSL
 from .abc import ABCSLProcessorPool
 from .abc import SLArgument
-from .base import BaseConfigPool
+from .base import BasicConfigPool
 from .base import ConfigData
 from .errors import FailedProcessConfigFileError
 from .safe_writer import safe_open
@@ -142,7 +142,7 @@ class RequiredPath:
         return validator(data)
 
 
-class ConfigPool(BaseConfigPool):
+class ConfigPool(BasicConfigPool):
     """
     配置池
     """
@@ -187,13 +187,8 @@ class ConfigPool(BaseConfigPool):
             static_config: Optional[Any] = None,
             **kwargs
     ):
-        return RequireConfigDecorator(
-            self,
-            namespace,
-            file_name,
-            RequiredPath(validator, validator_factory, static_config),
-            **kwargs
-        )
+        return RequireConfigDecorator(self, namespace, file_name,
+                                      RequiredPath(validator, validator_factory, static_config), **kwargs)
 
 
 class RequireConfigDecorator:
@@ -210,9 +205,10 @@ class RequireConfigDecorator:
             *,
             config_formats: Optional[str | Iterable[str]] = None,
             allow_create: bool = True,
-            cache_config: Optional[Callable[[Callable], Callable]] = None,
+            config_cacher: Optional[Callable[[Callable], Callable]] = None,
             filter_kwargs: Optional[dict[str, Any]] = None
     ):
+        # noinspection GrazieInspection
         """
         :param config_pool: 所在的配置池
         :type config_pool: ConfigPool
@@ -222,12 +218,15 @@ class RequireConfigDecorator:
         :type required: RequiredPath
         :param config_formats: 详见 :py:meth:`ConfigPool.load`
         :param allow_create: 详见 :py:meth:`ConfigPool.load`
-        :param cache_config: 缓存配置的装饰器，默认为None，即不缓存
-        :type cache_config: Optional[Callable[[Callable], Callable]]
+        :param config_cacher: 缓存配置的装饰器，默认为None，即不缓存
+        :type config_cacher: Optional[Callable[[Callable], Callable]]
         :param filter_kwargs: :py:meth:`RequiredPath.filter` 要绑定的默认参数，默认为allow_modify=True
         :type filter_kwargs: dict[str, Any]
 
         :raise UnsupportedConfigFormatError: 不支持的配置格式
+
+        .. versionchanged:: 0.1.6
+           重命名参数 ``cache_config`` 为 ``config_cacher``
         """
         config = config_pool.load(namespace, file_name, config_formats=config_formats, allow_create=allow_create)
 
@@ -237,7 +236,7 @@ class RequireConfigDecorator:
         self._config: ABCConfigFile = config
         self._required = required
         self._filter_kwargs = {"allow_modify": True} | filter_kwargs
-        self._cache_config: Callable = cache_config if cache_config is not None else lambda x: x
+        self._cache_config: Callable = config_cacher if config_cacher is not None else lambda x: x
 
     def check(self, *, ignore_cache: bool = False, **filter_kwargs) -> Any:
         """
@@ -318,9 +317,12 @@ load = DefaultConfigPool.load
 """
 
 
-class BaseConfigSL(ABCConfigSL, ABC):
+class BasicConfigSL(ABCConfigSL, ABC):
     """
     基础配置SL管理器 提供了一些实用功能
+
+    .. versionchanged:: 0.1.6
+       从 ``BaseConfigSL`` 重命名为 ``BasicConfigSL``
     """
 
     @override
@@ -389,9 +391,12 @@ def raises(excs: Exception | tuple[Exception, ...] = Exception):
         raise FailedProcessConfigFileError(err) from err
 
 
-class BaseLocalFileConfigSL(BaseConfigSL, ABC):
+class BasicLocalFileConfigSL(BasicConfigSL, ABC):
     """
     基础本地配置文件SL处理器
+
+    .. versionchanged:: 0.1.6
+       从 ``BaseLocalFileConfigSL`` 重命名为 ``BasicLocalFileConfigSL``
     """
 
     _s_open_kwargs: dict[str, Any] = dict(mode='w', encoding="utf-8")
@@ -411,15 +416,15 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
         :type s_arg: Optional[Sequence | Mapping | tuple[Sequence, Mapping[str, Any]]]
         :param l_arg: 加载器默认参数
         :type l_arg: Optional[Sequence | Mapping | tuple[Sequence, Mapping[str, Any]]]
-        :param reg_alias: 详见 :py:class:`BaseConfigSL`
+        :param reg_alias: 详见 :py:class:`BasicConfigSL`
         :param create_dir: 是否允许创建目录
         :type create_dir: bool
 
         .. seealso::
-           :py:class:`BaseConfigSL`
+           :py:class:`BasicConfigSL`
 
         .. versionchanged:: 0.1.6
-           将 ``保存加载器参数`` 相关从 :py:class:`BaseConfigSL` 移动到此类
+           将 ``保存加载器参数`` 相关从 :py:class:`BasicConfigSL` 移动到此类
         """
 
         def _build_arg(value: SLArgument) -> tuple[tuple, PMap[str, Any]]:
@@ -605,7 +610,7 @@ class BaseLocalFileConfigSL(BaseConfigSL, ABC):
         ))
 
 
-class BaseCompressedConfigSL(BaseConfigSL, ABC):
+class BasicCompressedConfigSL(BasicConfigSL, ABC):
     """
     基础压缩配置文件SL处理器
 
@@ -659,7 +664,7 @@ class BaseCompressedConfigSL(BaseConfigSL, ABC):
         格式化文件名以传递给其他SL处理器
 
         默认实现:
-            - 遍历 :py:attr:`BaseCompressedConfigSL`
+            - 遍历 :py:attr:`BasicCompressedConfigSL`
             - 如果为 ``str`` 且 ``file_name.endswith`` 成立则返回移除后缀后的结果
             - 如果为 ``re.Pattern`` 且 ``Pattern.fullmatch(file_name)`` 成立则返回 ``Pattern.sub(file_name, '')``
             - 直接返回
@@ -771,9 +776,9 @@ __all__ = (
     "RequiredPath",
     "ConfigPool",
     "RequireConfigDecorator",
-    "BaseConfigSL",
-    "BaseLocalFileConfigSL",
-    "BaseCompressedConfigSL",
+    "BasicConfigSL",
+    "BasicLocalFileConfigSL",
+    "BasicCompressedConfigSL",
     "DefaultConfigPool",
     "requireConfig",
     "saveAll",
