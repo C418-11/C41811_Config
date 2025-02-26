@@ -23,6 +23,8 @@ from C41811.Config.processors.RuamelYaml import RuamelYamlSL
 from C41811.Config.processors.TarFile import CompressionTypes as TarFileCompressionTypes
 from C41811.Config.processors.TarFile import TarFileSL
 from C41811.Config.processors.Toml import TomlSL
+from C41811.Config.processors.ZipFile import CompressionTypes as ZipFileCompressionTypes
+from C41811.Config.processors.ZipFile import ZipFileSL
 from utils import safe_raises
 
 JsonSLTests = (
@@ -341,68 +343,71 @@ def test_local_file_sl_processors(pool, sl_cls: type[BasicLocalFileConfigSL], ra
 
 TarFileTests = (
     (
-        {"a": 1, "b": {"c": 2}},
-        (), {}
-    ),
-    (
-        OrderedDict((('b', 2), ('a', 1))),
-        (), {}
-    ),
-    (
-        OrderedDict((('b', 2), ('a', 1))),
-        (), {}
-    ),
-    (
-        [1, 2, [3, [4, 5, [6], {'7': 8}]]],
-        (), {}
-    ),
-    (
-        "string",
-        (), {}
-    ),
-    (
-        True,
-        (), {}
-    ),
-    (
-        None,
-        (), {}
-    ),
-    (
-        11.45,
-        (), {}
-    ),
-    (
-        NotImplemented,
-        ((FailedProcessConfigFileError,), ()), {}
-    ),
-    (
         {"Now": {"supports": {"compression": "!"}}},
         (), dict(compression=TarFileCompressionTypes.GZIP)
     ),
     (
-        {"foo": "bar"},
+        {"a": True, "b": {"c": [.5, None]}},
         (), dict(compression=TarFileCompressionTypes.BZIP2)
     ),
     (
-        {"foo": "bar"},
+        {"a": True, "b": {"c": [.5, None]}},
         (), dict(compression=TarFileCompressionTypes.LZMA)
     ),
     (
-        {"foo": "bar"},
+        {"a": True, "b": {"c": [.5, None]}},
         (), dict(compression=TarFileCompressionTypes.ONLY_STORAGE)
     ),
     (
-        {"foo": "bar"},
+        {"a": True, "b": {"c": [.5, None]}},
         (), dict(compression=None)
     ),
     (
-        {"foo": "bar"},
+        {"a": True, "b": {"c": [.5, None]}},
         (), dict(compression="lzma")
     ),
     (
-        {"foo": "bar"},
+        {"a": True, "b": {"c": [.5, None]}},
         (), dict(compression="xz")
+    ),
+)
+
+ZipFileTests = (
+    (
+        {"a": True, "b": {"c": [.5, None]}},
+        (), {}
+    ),
+    (
+        {"a": True, "b": {"c": [.5, None]}},
+        (), dict(compression=ZipFileCompressionTypes.ZIP)
+    ),
+    (
+        {"a": True, "b": {"c": [.5, None]}},
+        (), dict(compression=ZipFileCompressionTypes.BZIP2)
+    ),
+    (
+        {"a": True, "b": {"c": [.5, None]}},
+        (), dict(compression=ZipFileCompressionTypes.LZMA)
+    ),
+    (
+        {"a": True, "b": {"c": [.5, None]}},
+        (), dict(compression=ZipFileCompressionTypes.ONLY_STORAGE)
+    ),
+    (
+        {"a": True, "b": {"c": [.5, None]}},
+        (), dict(compression=None)
+    ),
+    (
+        {"a": True, "b": {"c": [.5, None]}},
+        (), dict(compression="lzma")
+    ),
+    (
+        {"a": True, "b": {"c": [.5, None]}},
+        (), dict(compression="xz", compress_level=9)
+    ),
+    (
+        {"a": True, "b": {"c": [.5, None]}},
+        (), dict(compression=ZipFileCompressionTypes.ZIP, compress_level=9)
     ),
 )
 
@@ -410,6 +415,7 @@ CompressedFileTests = (
     "sl_cls, raw_data, ignore_excs, init_arguments",
     (
         *_insert_sl_cls(TarFileSL, TarFileTests),
+        *_insert_sl_cls(ZipFileSL, ZipFileTests),
     )
 )
 
@@ -451,7 +457,7 @@ def test_wrong_sl_arguments():
         JsonSL(NotImplemented)
 
 
-SLProcessors = (JsonSL, PickleSL, PythonLiteralSL, PyYamlSL, RuamelYamlSL, TomlSL, TarFileSL)
+SLProcessors = (JsonSL, PickleSL, PythonLiteralSL, PyYamlSL, RuamelYamlSL, TomlSL, TarFileSL, ZipFileSL)
 
 
 @mark.parametrize("sl_cls", SLProcessors)
