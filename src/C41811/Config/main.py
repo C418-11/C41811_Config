@@ -618,9 +618,9 @@ class BasicLocalFileConfigSL(BasicConfigSL, ABC):
         ))
 
 
-class BasicCompressedConfigSL(BasicConfigSL, ABC):
+class BasicChainConfigSL(BasicConfigSL, ABC):
     """
-    基础压缩配置文件SL处理器
+    基础连锁配置文件SL处理器
 
     .. caution::
        会临时在配置文件池中添加文件以传递SL操作
@@ -643,33 +643,39 @@ class BasicCompressedConfigSL(BasicConfigSL, ABC):
         自动清理为了传递SL处理所加入配置池的配置文件
         """
 
-    @property
-    def extract_prefix(self) -> str:
-        """
-        解压文件前缀
-        """
-        return "$compressed~"
+    raises = staticmethod(raises)
 
-    def calc_extract_namespace(self, namespace: str, file_name: str) -> str:
+    @property
+    def namespace_suffix(self) -> str:
         """
-        处理配置文件对应解压的命名空间
+        命名空间后缀
+        """
+        return "$temporary~"
+
+    def namespace_formatter(self, namespace: str, file_name: str) -> str:
+        """
+        格式化命名空间以传递给其他SL处理器
 
         :param namespace: 配置的命名空间
         :type namespace: Optional[str]
         :param file_name: 配置文件名
         :type file_name: Optional[str]
 
-        :return: 解压命名空间
+        :return: 格式化后的命名空间
         :rtype: str
         """
-        return os.path.normpath(os.path.join(namespace, self.extract_prefix, file_name))
-
-    raises = staticmethod(raises)
+        return os.path.normpath(os.path.join(namespace, self.namespace_suffix, file_name))
 
     def filename_formatter(self, file_name: str) -> str:
         # noinspection SpellCheckingInspection
         """
         格式化文件名以传递给其他SL处理器
+
+        :param file_name: 配置文件名
+        :type file_name: str
+
+        :return: 格式化后的文件名
+        :rtype: str
 
         默认实现:
             - 遍历 :py:attr:`BasicCompressedConfigSL`
@@ -697,12 +703,11 @@ class BasicCompressedConfigSL(BasicConfigSL, ABC):
         if self.create_dir:
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
 
-        extract_filename = self.filename_formatter(file_name)
-        extract_namespace = self.calc_extract_namespace(namespace, file_name)
-        extract_dir = config_pool.helper.calc_path(root_path, extract_namespace)
+        formatted_filename = self.filename_formatter(file_name)
+        formatted_namespace = self.namespace_formatter(namespace, file_name)
 
-        self.save_file(config_pool, config_file, extract_namespace, extract_filename)
-        self.compress_file(file_path, extract_dir)
+        self.save_file(config_pool, config_file, formatted_namespace, formatted_filename)
+        self.after_save(config_pool, config_file, file_path, root_path, formatted_namespace, formatted_filename)
 
     def load(
             self,
@@ -716,12 +721,11 @@ class BasicCompressedConfigSL(BasicConfigSL, ABC):
         if self.create_dir:
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
 
-        extract_filename = self.filename_formatter(file_name)
-        extract_namespace = self.calc_extract_namespace(namespace, file_name)
-        extract_dir = config_pool.helper.calc_path(root_path, extract_namespace)
+        formatted_filename = self.filename_formatter(file_name)
+        formatted_namespace = self.namespace_formatter(namespace, file_name)
 
-        self.extract_file(file_path, extract_dir)
-        return self.load_file(config_pool, extract_namespace, extract_filename)
+        self.before_load(config_pool, file_path, root_path, formatted_namespace, formatted_filename)
+        return self.load_file(config_pool, formatted_namespace, formatted_filename)
 
     def save_file(
             self,
@@ -773,6 +777,65 @@ class BasicCompressedConfigSL(BasicConfigSL, ABC):
         return cfg_file
 
     @abstractmethod  # @formatter:off
+    def before_load(
+            self,
+            config_pool: ABCConfigPool,
+            file_path: str,
+            root_path: str,
+            namespace: str,
+            file_name: str,
+    ): ...
+
+    @abstractmethod
+    def after_save(
+            self,
+            config_pool: ABCConfigPool,
+            config_file: ABCConfigFile,
+            file_path: str,
+            root_path: str,
+            namespace: str,
+            file_name: str,
+    ): ...
+    # @formatter:on
+
+
+class BasicCompressedConfigSL(BasicChainConfigSL, ABC):
+    """
+    基础压缩配置文件SL处理器
+
+    .. versionadded:: 0.1.6
+    """
+
+    @property
+    def namespace_suffix(self) -> str:
+        return super().namespace_suffix
+
+    @override
+    def after_save(
+            self,
+            config_pool: ABCConfigPool,
+            config_file: ABCConfigFile,
+            file_path: str,
+            root_path: str,
+            namespace: str,
+            file_name: str,
+    ):
+        extract_dir = config_pool.helper.calc_path(root_path, namespace)
+        self.compress_file(file_path, extract_dir)
+
+    @override
+    def before_load(
+            self,
+            config_pool: ABCConfigPool,
+            file_path: str,
+            root_path: str,
+            namespace: str,
+            file_name: str,
+    ):
+        extract_dir = config_pool.helper.calc_path(root_path, namespace)
+        self.extract_file(file_path, extract_dir)
+
+    @abstractmethod  # @formatter:off
     def compress_file(self, file_path: str, extract_dir: str): ...
 
     @abstractmethod
@@ -786,6 +849,7 @@ __all__ = (
     "ConfigRequirementDecorator",
     "BasicConfigSL",
     "BasicLocalFileConfigSL",
+    "BasicChainConfigSL",
     "BasicCompressedConfigSL",
     "DefaultConfigPool",
     "requireConfig",
