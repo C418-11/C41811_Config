@@ -44,7 +44,8 @@ from enum import IntEnum
 from numbers import Real
 from pathlib import Path
 from threading import Lock
-from typing import IO, ContextManager
+from typing import ContextManager
+from typing import IO
 from typing import Optional
 from typing import TextIO
 from typing import override
@@ -108,7 +109,8 @@ if sys.platform != "win32":  # pragma: no cover
         if src_dir != dst_dir:
             _sync_directory(src_dir)
 else:  # pragma: no cover
-    from ctypes import windll, WinError
+    from ctypes import WinError
+    from ctypes import windll
 
     _MOVEFILE_REPLACE_EXISTING = 0x1
     _MOVEFILE_WRITE_THROUGH = 0x8

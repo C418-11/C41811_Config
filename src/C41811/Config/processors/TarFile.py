@@ -7,7 +7,8 @@ import os
 import tarfile
 from dataclasses import dataclass
 from enum import ReprEnum
-from typing import override, Optional
+from typing import Optional
+from typing import override
 
 from ..base import ConfigFile
 from ..main import BasicCompressedConfigSL
@@ -42,13 +43,15 @@ class TarFileSL(BasicCompressedConfigSL):
             *,
             reg_alias: Optional[str] = None,
             create_dir: bool = True,
-            compression: CompressionTypes | str | None | tuple[str, str | None] = CompressionTypes.ONLY_STORAGE
+            compression: CompressionTypes | str | None | tuple[str, str | None] = CompressionTypes.ONLY_STORAGE,
     ):
         """
         :param reg_alias: sl处理器注册别名
         :type reg_alias: Optional[str]
         :param create_dir: 是否创建目录
         :type create_dir: bool
+        :param compression: 压缩类型
+        :type compression: CompressionTypes | str | None | tuple[str, str | None]
         """
         super().__init__(reg_alias=reg_alias, create_dir=create_dir)
 
