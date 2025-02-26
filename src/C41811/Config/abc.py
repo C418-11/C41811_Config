@@ -5,6 +5,7 @@
 import os
 from abc import ABC
 from abc import abstractmethod
+from collections import OrderedDict
 from collections.abc import Iterable
 from collections.abc import Mapping
 from collections.abc import Sequence
@@ -579,10 +580,13 @@ class ABCSLProcessorPool(ABC):
         .. versionchanged:: 0.1.6
            从 ``SLProcessor`` 重命名为 ``SLProcessors``
         """
-        self.FileNameProcessors: dict[str | Pattern, set[str]] = {}  # {FileNameMatch: {RegName}}
+        self.FileNameProcessors: OrderedDict[str | Pattern, set[str]] = OrderedDict()  # {FileNameMatch: {RegName}}
         # noinspection SpellCheckingInspection
         """
         文件名处理器注册表
+
+        .. caution::
+           此字典是顺序敏感的，越靠前越优先被检查
 
         数据结构: ``{文件名匹配: {处理器注册名}}``
 
@@ -592,6 +596,8 @@ class ABCSLProcessorPool(ABC):
 
         .. versionchanged:: 0.1.6
            从 ``FileExtProcessor`` 重命名为 ``FileNameProcessors``
+
+           现在是顺序敏感的
         """
         self._root_path = root_path
 
