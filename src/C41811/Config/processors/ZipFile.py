@@ -45,8 +45,7 @@ class ZipFileSL(BasicCompressedConfigSL):
             *,
             reg_alias: Optional[str] = None,
             create_dir: bool = True,
-            compression: CompressionTypes | str | int | None | tuple[
-                str, str | None, int] = CompressionTypes.ONLY_STORAGE,
+            compression: CompressionTypes | str | int | None = CompressionTypes.ONLY_STORAGE,
             compress_level: Optional[Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9] | int] = None,
     ):
         """
@@ -55,7 +54,7 @@ class ZipFileSL(BasicCompressedConfigSL):
         :param create_dir: 是否创建目录
         :type create_dir: bool
         :param compression: 压缩类型
-        :type compression: CompressionTypes | str | int | None | tuple[str, str | None]
+        :type compression: CompressionTypes | str | int | None
         :param compress_level: 压缩等级
         :type compress_level: Optional[Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9] | int]
         """
@@ -63,8 +62,6 @@ class ZipFileSL(BasicCompressedConfigSL):
 
         if compression is None:
             compression = CompressionTypes.ONLY_STORAGE
-        elif isinstance(compression, tuple):
-            compression = CompressionTypes(*compression)
         elif isinstance(compression, (str, int)):
             for compression_type in CompressionTypes:
                 if compression in (
