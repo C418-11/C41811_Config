@@ -18,13 +18,13 @@ from C41811.Config import PickleSL
 from C41811.Config import PythonLiteralSL
 from C41811.Config.errors import FailedProcessConfigFileError
 from C41811.Config.main import BasicCompressedConfigSL
+from C41811.Config.processors import TarFileSL
+from C41811.Config.processors import ZipFileSL
 from C41811.Config.processors.PyYaml import PyYamlSL
 from C41811.Config.processors.RuamelYaml import RuamelYamlSL
 from C41811.Config.processors.TarFile import CompressionTypes as TarFileCompressionTypes
-from C41811.Config.processors.TarFile import TarFileSL
 from C41811.Config.processors.Toml import TomlSL
 from C41811.Config.processors.ZipFile import CompressionTypes as ZipFileCompressionTypes
-from C41811.Config.processors.ZipFile import ZipFileSL
 from utils import safe_raises
 
 JsonSLTests = (

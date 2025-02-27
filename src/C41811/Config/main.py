@@ -776,14 +776,14 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
             config_pool.unset(namespace, file_name)
         return cfg_file
 
-    @abstractmethod  # @formatter:off
+    @abstractmethod
     def before_load(
             self,
             config_pool: ABCConfigPool,
             file_path: str,
             root_path: str,
             namespace: str,
-            file_name: str,
+            file_name: str,  # @formatter:off
     ): ...
 
     @abstractmethod
