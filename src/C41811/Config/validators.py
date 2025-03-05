@@ -241,7 +241,7 @@ def _allow_recursive(type_):
         return False
 
 
-class DefaultValidatorFactory:
+class DefaultValidatorFactory[D: MappingConfigData]:
     """
     默认的验证器工厂
     """
@@ -420,13 +420,13 @@ class DefaultValidatorFactory:
 
         self.model = self._mapping2model(fmt_validator, model_config.data)
 
-    def __call__[D: MappingConfigData](self, data: D) -> D:
+    def __call__(self, data: D) -> D:
         try:
             dict_obj = self.model(**data.data).model_dump()
         except ValidationError as err:
             raise _process_pydantic_exceptions(err) from None
 
-        config_obj: MappingConfigData = data.from_data(dict_obj)
+        config_obj: D = data.from_data(dict_obj)
         if self.validator_config.skip_missing:
             for key in config_obj.keys(recursive=True, end_point_only=True):
                 if config_obj.retrieve(key) is SkipMissing:

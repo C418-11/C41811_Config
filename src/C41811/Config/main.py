@@ -645,13 +645,6 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
 
     raises = staticmethod(raises)
 
-    @property
-    def namespace_suffix(self) -> str:
-        """
-        命名空间后缀
-        """
-        return "$temporary~"
-
     def namespace_formatter(self, namespace: str, file_name: str) -> str:
         """
         格式化命名空间以传递给其他SL处理器
@@ -664,7 +657,7 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
         :return: 格式化后的命名空间
         :rtype: str
         """
-        return os.path.normpath(os.path.join(namespace, self.namespace_suffix, file_name))
+        return namespace
 
     def filename_formatter(self, file_name: str) -> str:
         # noinspection SpellCheckingInspection
@@ -798,8 +791,23 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
     ): ...
     # @formatter:on
 
+class BasicCachedConfigSL(BasicChainConfigSL, ABC):
+    """
+    基础缓存配置处理器
+    """
 
-class BasicCompressedConfigSL(BasicChainConfigSL, ABC):
+    @property
+    def namespace_suffix(self) -> str:
+        """
+        命名空间后缀
+        """
+        return "$temporary~"
+
+    def namespace_formatter(self, namespace: str, file_name: str) -> str:
+        return os.path.normpath(os.path.join(namespace, self.namespace_suffix, file_name))
+
+
+class BasicCompressedConfigSL(BasicCachedConfigSL, ABC):
     """
     基础压缩配置文件SL处理器
 

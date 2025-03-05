@@ -613,14 +613,14 @@ class ABCSLProcessorPool(ABC):
         return self._root_path
 
 
-class ABCConfigFile(ABC):
+class ABCConfigFile[D: ABCConfigData](ABC):
     """
     配置文件类
     """
 
     def __init__(
             self,
-            initial_config: ABCConfigData,
+            initial_config: D,
             *,
             config_format: Optional[str] = None
     ) -> None:
@@ -637,12 +637,12 @@ class ABCConfigFile(ABC):
            重命名参数 ``config_data`` 为 ``initial_config``
         """
 
-        self._data: ABCConfigData = initial_config
+        self._data: D = initial_config
 
         self._config_format: str | None = config_format
 
     @property
-    def data(self) -> ABCConfigData:
+    def data(self) -> D:
         """
         :return: 配置数据
         """

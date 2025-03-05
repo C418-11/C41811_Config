@@ -709,8 +709,15 @@ class ObjectConfigData[D: object](BasicConfigData):
     @override
     @property
     def data(self) -> D:
-        """"""
+        """
+        配置的原始数据
 
+        .. caution::
+           直接返回了原始对象，未默认进行深拷贝
+
+        :return: 配置的原始数据
+        :rtype: Any
+        """
         return self._data
 
 
