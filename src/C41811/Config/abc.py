@@ -286,19 +286,10 @@ class ABCConfigData[D: Any](ABC):
         self.read_only = freeze
         return self
 
-    def __contains__(self, key) -> bool:
-        return key in self._data
-
-    def __len__(self):
-        return len(self._data)
-
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return NotImplemented
         return self._data == other._data
-
-    def __iter__(self):
-        return iter(self._data)
 
     def __str__(self) -> str:
         return str(self._data)
@@ -519,6 +510,15 @@ class ABCIndexedConfigData[D: Indexed | MutableIndexed](
         .. versionchanged:: 0.1.6
            重命名 ``get_raw`` 参数为 ``return_raw_value``
         """
+
+    def __contains__(self, key) -> bool:
+        return key in self._data
+
+    def __iter__(self):
+        return iter(self._data)
+
+    def __len__(self):
+        return len(self._data)
 
     @abstractmethod
     def __getitem__(self, key): ...

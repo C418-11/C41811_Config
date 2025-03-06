@@ -687,6 +687,15 @@ class StringConfigData[D: str | bytes](BasicConfigData):
     @_operate(operator.mul, operator.imul)
     def __mul__(self, other) -> Any: ...
 
+    def __contains__(self, key) -> bool:
+        return key in self._data
+
+    def __iter__(self):
+        return iter(self._data)
+
+    def __len__(self):
+        return len(self._data)
+
     def __getitem__(self, item):
         return self._data[item]
 
