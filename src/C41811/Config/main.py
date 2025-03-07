@@ -769,7 +769,6 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
             config_pool.unset(namespace, file_name)
         return cfg_file
 
-    @abstractmethod
     def before_load(
             self,
             config_pool: ABCConfigPool,
@@ -779,7 +778,6 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
             file_name: str,  # @formatter:off
     ): ...
 
-    @abstractmethod
     def after_save(
             self,
             config_pool: ABCConfigPool,
@@ -790,6 +788,7 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
             file_name: str,
     ): ...
     # @formatter:on
+
 
 class BasicCachedConfigSL(BasicChainConfigSL, ABC):
     """
