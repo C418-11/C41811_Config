@@ -21,8 +21,6 @@ import wrapt
 from pyrsistent import PMap
 from pyrsistent import pmap
 
-from ._protocols import SupportsReadAndReadline
-from ._protocols import SupportsWrite
 from .abc import ABCConfigData
 from .abc import ABCConfigFile
 from .abc import ABCConfigPool
@@ -557,7 +555,7 @@ class BasicLocalFileConfigSL(BasicConfigSL, ABC):
     def save_file(
             self,
             config_file: ABCConfigFile,
-            target_file: SupportsWrite,
+            target_file: Any,
             *merged_args,
             **merged_kwargs,
     ) -> None:
@@ -567,17 +565,20 @@ class BasicLocalFileConfigSL(BasicConfigSL, ABC):
         :param config_file: 配置文件
         :type config_file: ABCConfigFile
         :param target_file: 目标文件对象
-        :type target_file: SupportsWrite
+        :type target_file: Any
         :param merged_args: 合并后的位置参数
         :param merged_kwargs: 合并后的关键字参数
 
         :raise FailedProcessConfigFileError: 处理配置文件失败
+
+        .. versionchanged:: 0.1.6
+           更改 ``target_file`` 参数类型为 ``Any``
         """
 
     @abstractmethod
     def load_file(
             self,
-            source_file: SupportsReadAndReadline,
+            source_file: Any,
             *merged_args,
             **merged_kwargs,
     ) -> ABCConfigFile:
@@ -585,7 +586,7 @@ class BasicLocalFileConfigSL(BasicConfigSL, ABC):
         从文件加载配置
 
         :param source_file: 源文件对象
-        :type source_file: _SupportsReadAndReadline
+        :type source_file: Any
         :param merged_args: 合并后的位置参数
         :param merged_kwargs: 合并后的关键字参数
 
@@ -596,6 +597,8 @@ class BasicLocalFileConfigSL(BasicConfigSL, ABC):
 
         .. versionchanged:: 0.1.6
            移除 ``config_file_cls`` 参数
+
+           更改 ``source_file`` 参数类型为 ``Any``
         """
 
     def __eq__(self, other):
