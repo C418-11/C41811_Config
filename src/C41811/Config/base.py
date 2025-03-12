@@ -234,7 +234,7 @@ class BasicIndexedConfigData[D: Indexed | MutableIndexed](
             return default
 
     @override
-    def set_default(self, path: str | ABCPath, default=None, *, return_raw_value: bool = False) -> Any:
+    def setdefault(self, path: str | ABCPath, default=None, *, return_raw_value: bool = False) -> Any:
         try:
             return self.retrieve(path)
         except RequiredPathNotFoundError:
@@ -321,6 +321,18 @@ def _operate(operate_func, inplace_func):
         return func
 
     return decorator
+
+
+class _UnsetArgType:
+    _instance: ClassVar[Self] = None
+
+    def __new__(cls) -> Self:
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+
+_UnsetArg = _UnsetArgType()
 
 
 @_generate_operators
@@ -449,6 +461,28 @@ class MappingConfigData[D: Mapping | MutableMapping](BasicIndexedConfigData, Mut
             (deepcopy(k), self.from_data(v) if isinstance(v, Mapping) else deepcopy(v)) for k, v in self._data.items()
         ).items()
 
+    @override
+    @_check_read_only
+    def clear(self):
+        self._data.clear()
+
+    @override
+    @_check_read_only
+    def pop(self, key, /, default: Any = _UnsetArg):
+        if default is _UnsetArg:
+            return self._data.pop(key)
+        return self._data.pop(key, default)
+
+    @override
+    @_check_read_only
+    def popitem(self):
+        self._data.popitem()
+
+    @override
+    @_check_read_only
+    def update(self, m, /, **kwargs):
+        self._data.update(m, **kwargs)
+
     def __getattr__(self, item) -> Self | Any:
         try:
             item_obj = self[item]
@@ -483,36 +517,45 @@ class SequenceConfigData[D: Sequence | MutableSequence](BasicIndexedConfigData, 
     def data_read_only(self) -> bool:
         return not isinstance(self._data, MutableSequence)
 
+    @override
     @_check_read_only
     def append(self, value):
         return self._data.append(value)
 
+    @override
     @_check_read_only
     def insert(self, index, value):
         return self._data.insert(index, value)
 
+    @override
     @_check_read_only
     def extend(self, values):
         return self._data.extend(values)
 
+    @override
     def index(self, *args):
         return self._data.index(*args)
 
+    @override
     def count(self, value):
         return self._data.count(value)
 
+    @override
     @_check_read_only
     def pop(self, index=-1):
         return self._data.pop(index)
 
+    @override
     @_check_read_only
     def remove(self, value):
         return self._data.remove(value)
 
+    @override
     @_check_read_only
     def clear(self):
         return self._data.clear()
 
+    @override
     @_check_read_only
     def reverse(self):
         return self._data.reverse()
@@ -759,14 +802,14 @@ ConfigData.register(StringConfigData)
 ConfigData.register(ObjectConfigData)
 
 
-class ConfigFile(ABCConfigFile):
+class ConfigFile[D: ABCConfigData](ABCConfigFile):
     """
     配置文件类
     """
 
     def __init__(
             self,
-            initial_config: Any,
+            initial_config: D,
             *,
             config_format: Optional[str] = None
     ) -> None:

@@ -463,7 +463,7 @@ class ABCIndexedConfigData[D: Indexed | MutableIndexed](
         """
 
     @abstractmethod
-    def set_default(self, path: str | ABCPath, default=None, *, return_raw_value: bool = False) -> Any:
+    def setdefault(self, path: str | ABCPath, default=None, *, return_raw_value: bool = False) -> Any:
         """
         如果路径不在配置数据中则填充默认值到配置数据并返回
 
@@ -490,25 +490,27 @@ class ABCIndexedConfigData[D: Indexed | MutableIndexed](
 
            路径存在时返回值
 
-           >>> data.set_default("key")
+           >>> data.setdefault("key")
            'value'
 
            路径不存在时返回默认值None并填充到原始数据
 
-           >>> print(data.set_default("not exists"))
+           >>> print(data.setdefault("not exists"))
            None
            >>> data
            MappingConfigData({'key': 'value', 'not exists': None})
 
            自定义默认值
 
-           >>> data.set_default("with default",default="default value")
+           >>> data.setdefault("with default",default="default value")
            'default value'
            >>> data
            MappingConfigData({'key': 'value', 'not exists': None, 'with default': 'default value'})
 
         .. versionchanged:: 0.1.6
            重命名 ``get_raw`` 参数为 ``return_raw_value``
+
+           从 ``set_default`` 重命名为 ``setdefault``
         """
 
     def __contains__(self, key) -> bool:

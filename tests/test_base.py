@@ -246,7 +246,7 @@ class TestMappingConfigData:
             value = *value, data.retrieve(path)
 
         with safe_raises(ignore_excs):
-            assert data.set_default(path, **kwargs) in value
+            assert data.setdefault(path, **kwargs) in value
             assert data.exists(path)
             assert data.retrieve(path) in value
 
@@ -692,7 +692,7 @@ class TestSequenceConfigData:
             value = *value, data.retrieve(path)
 
         with safe_raises(ignore_excs):
-            assert data.set_default(path, **kwargs) in value
+            assert data.setdefault(path, **kwargs) in value
             assert data.exists(path)
             assert data.retrieve(path) in value
 
