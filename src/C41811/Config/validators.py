@@ -276,7 +276,7 @@ class DefaultValidatorFactory[D: MappingConfigData]:
         self.typehint_types = (type, types.GenericAlias, types.UnionType, types.EllipsisType)
         self.model_config_key = validator_config.extra.get("model_config_key", ".__model_config__")
         self._compile()
-        self.model: BaseModel
+        self.model: type[BaseModel]
 
     def _fmt_mapping_key(self, validator: Mapping) -> tuple[Mapping[str, Any], set[str]]:
         """
