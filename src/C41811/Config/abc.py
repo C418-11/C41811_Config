@@ -199,14 +199,15 @@ class ABCConfigData[D: Any](ABC):
         self._read_only: bool | None = False
 
     @classmethod
-    def from_data[S: Self](cls: type[S], data: D) -> S:
+    def from_data[S: Self](cls: type[S], *args, **kwargs) -> S:
         """
         提供创建同类型配置数据的快捷方式
 
-        :param data: 配置的原始数据
-        :type data: Any
         :return: 新的配置数据
         :rtype: Self
+
+        .. versionchanged:: 0.1.6
+           现在会自适应参数数量
 
         .. note::
            套壳__init__，主要是为了方便内部快速创建与传入的ABCConfigData同类型的对象
@@ -223,7 +224,7 @@ class ABCConfigData[D: Any](ABC):
 
               instance.from_data(data)
         """
-        return cls(data)
+        return cls(*args, **kwargs)
 
     @property
     def data(self) -> D:
