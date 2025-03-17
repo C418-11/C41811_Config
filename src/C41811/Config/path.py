@@ -175,6 +175,14 @@ class Path(ABCPath):
         return ''.join(key.unparse() for key in self._keys)
 
 
+def _count_backslash(s: str) -> int:
+    count = 1
+    while s and (s[-1] == '\\'):
+        count += 1
+        s = s[:-1]
+    return count
+
+
 class PathSyntaxParser:
     """
     路径语法解析器
@@ -224,13 +232,6 @@ class PathSyntaxParser:
 
             # 对不存在的转义进行警告
             elif sep and (token[0] not in {'.', '\\', '[', ']'}):
-                def _count_backslash(s: str) -> int:
-                    count = 1
-                    while s and (s[-1] == '\\'):
-                        count += 1
-                        s = s[:-1]
-                    return count
-
                 # 检查这个转义符号是否已经被转义
                 if _count_backslash(string) % 2:
                     warnings.warn(
@@ -276,7 +277,7 @@ class PathSyntaxParser:
                 raise UnknownTokenTypeError(TokenInfo(tokenized_path, token, i))
 
             token_type = token[1]
-            context = token[2:].replace("\\\\", '\\')
+            content = token[2:].replace("\\\\", '\\')
 
             if token_type == ']':
                 if not item:
@@ -293,10 +294,10 @@ class PathSyntaxParser:
             if item:
                 raise ConfigDataPathSyntaxException(TokenInfo(tokenized_path, token, i), "'[' was never closed: ")
             if token_type == '[':
-                item = context
+                item = content
                 continue
             if token_type == '.':
-                path.append(AttrKey(context))
+                path.append(AttrKey(content))
                 continue
 
             raise UnknownTokenTypeError(TokenInfo(tokenized_path, token, i))
