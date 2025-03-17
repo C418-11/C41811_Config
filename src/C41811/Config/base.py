@@ -67,15 +67,17 @@ class BasicConfigData(ABCConfigData, ABC):
        从 ``BaseConfigData`` 重命名为 ``BasicConfigData``
     """
 
+    _read_only: bool | None = False
+
     @override
     @property
     def data_read_only(self) -> bool | None:
-        return False
+        return True
 
     @override
     @property
     def read_only(self) -> bool | None:
-        return super().read_only
+        return super().read_only or self._read_only
 
     @override
     @read_only.setter
@@ -83,6 +85,46 @@ class BasicConfigData(ABCConfigData, ABC):
         if self.data_read_only:
             raise ConfigDataReadOnlyError
         self._read_only = bool(value)
+
+
+class BasicSingleConfigData[D: Any](BasicConfigData, ABC):
+    """
+    单文件配置数据基类
+
+    .. versionadded:: 0.1.6
+    """
+
+    def __init__(self, data: D):
+        """
+        :param data: 配置的原始数据
+        :type data: Any
+        """
+
+        self._data: D = deepcopy(data)
+
+    @property
+    def data(self) -> D:
+        """
+        配置的原始数据*快照*
+
+        :return: 配置的原始数据*快照*
+        :rtype: Any
+        """
+        return deepcopy(self._data)
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return NotImplemented
+        return self._data == other._data
+
+    def __str__(self) -> str:
+        return str(self._data)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self._data!r})"
+
+    def __deepcopy__(self, memo) -> Self:
+        return self.from_data(self._data)
 
 
 def _check_read_only(func):
@@ -96,7 +138,7 @@ def _check_read_only(func):
 
 
 class BasicIndexedConfigData[D: Indexed | MutableIndexed](
-    BasicConfigData,
+    BasicSingleConfigData,
     ABCIndexedConfigData,
     ABC
 ):
@@ -575,7 +617,7 @@ class SequenceConfigData[D: Sequence | MutableSequence](BasicIndexedConfigData, 
 
 
 @_generate_operators
-class NumberConfigData[D: Number](BasicConfigData):
+class NumberConfigData[D: Number](BasicSingleConfigData):
     """
     支持 Number 的 ConfigData
 
@@ -588,6 +630,11 @@ class NumberConfigData[D: Number](BasicConfigData):
         if data is None:
             data = int()
         super().__init__(data)
+
+    @override
+    @property
+    def data_read_only(self) -> False:
+        return False
 
     def __int__(self) -> int:
         return int(self._data)
@@ -709,7 +756,7 @@ class BoolConfigData[D: bool](NumberConfigData):
 
 
 @_generate_operators
-class StringConfigData[D: str | bytes](BasicConfigData):
+class StringConfigData[D: str | bytes](BasicSingleConfigData):
     """
     支持 str 和 bytes 的 ConfigData
     """
@@ -720,6 +767,11 @@ class StringConfigData[D: str | bytes](BasicConfigData):
         if data is None:
             data = str()
         super().__init__(data)
+
+    @override
+    @property
+    def data_read_only(self) -> False:
+        return False
 
     def __format__(self, format_spec: D) -> D:
         return self._data.__format__(format_spec)
@@ -754,9 +806,14 @@ class StringConfigData[D: str | bytes](BasicConfigData):
         return reversed(self._data)
 
 
-class ObjectConfigData[D: object](BasicConfigData):
+class ObjectConfigData[D: object](BasicSingleConfigData):
     _data: D
     data: D
+
+    @override
+    @property
+    def data_read_only(self) -> False:
+        return False
 
     @override
     @property
@@ -1132,6 +1189,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
 
 __all__ = (
     "BasicConfigData",
+    "BasicSingleConfigData",
     "BasicIndexedConfigData",
     "MappingConfigData",
     "SequenceConfigData",

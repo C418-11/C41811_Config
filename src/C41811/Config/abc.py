@@ -189,15 +189,6 @@ class ABCConfigData[D: Any](ABC):
        现在配置数据不再局限于Mapping
     """
 
-    def __init__(self, data: D):
-        """
-        :param data: 配置的原始数据
-        :type data: Any
-        """
-
-        self._data: D = deepcopy(data)
-        self._read_only: bool | None = False
-
     @classmethod
     def from_data[S: Self](cls: type[S], *args, **kwargs) -> S:
         """
@@ -227,16 +218,6 @@ class ABCConfigData[D: Any](ABC):
         return cls(*args, **kwargs)
 
     @property
-    def data(self) -> D:
-        """
-        配置的原始数据*快照*
-
-        :return: 配置的原始数据*快照*
-        :rtype: Any
-        """
-        return deepcopy(self._data)
-
-    @property
     @abstractmethod
     def data_read_only(self) -> bool | None:
         """
@@ -259,7 +240,7 @@ class ABCConfigData[D: Any](ABC):
         :return: 配置数据是否为 ``只读模式``
         :rtype: bool | None
         """
-        return self.data_read_only or self._read_only
+        return self.data_read_only
 
     @read_only.setter
     @abstractmethod
@@ -287,24 +268,10 @@ class ABCConfigData[D: Any](ABC):
         self.read_only = freeze
         return self
 
-    def __eq__(self, other):
-        if not isinstance(other, type(self)):
-            return NotImplemented
-        return self._data == other._data
-
-    def __str__(self) -> str:
-        return str(self._data)
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self._data!r})"
-
     def __format__(self, format_spec):
         if format_spec == 'r':
             return repr(self)
         return super().__format__(format_spec)
-
-    def __deepcopy__(self, memo) -> Self:
-        return self.from_data(self._data)
 
 
 class ABCIndexedConfigData[D: Indexed | MutableIndexed](
