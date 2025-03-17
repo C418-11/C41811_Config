@@ -43,7 +43,7 @@ class PyYamlSL(BasicLocalFileConfigSL):
             **merged_kwargs
     ) -> None:
         with self.raises():
-            yaml.safe_dump(config_file.data.data, target_file, *merged_args, **merged_kwargs)
+            yaml.safe_dump(config_file.config.data, target_file, *merged_args, **merged_kwargs)
 
     @override
     def load_file(

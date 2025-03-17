@@ -43,7 +43,7 @@ class TomlSL(BasicLocalFileConfigSL):
             **merged_kwargs
     ) -> None:
         with self.raises():
-            toml.dump(config_file.data.data, target_file)
+            toml.dump(config_file.config.data, target_file)
 
     @override
     def load_file(

@@ -75,7 +75,7 @@ class TestConfigPool:
         assert pool.load('', "test", config_formats={"pickle", "json"}) == file
         assert pool.load('', "test", config_formats={"pickle", "json"}) == file
 
-        json_file = ConfigFile(file.data, config_format="json")
+        json_file = ConfigFile(file.config, config_format="json")
         pool.save('', "test", config=deepcopy(json_file))
         assert pool.load('', "test", config_formats="json") == json_file
 
@@ -128,8 +128,8 @@ class TestConfigPool:
         pool.set('', "test", ConfigFile(data, config_format="json"))
         pool.set('', "test1", ConfigFile(data, config_format="json"))
         pool.save_all()
-        assert pool.load('', "test", config_formats="json").data == data
-        assert pool.load('', "test1", config_formats="json").data == data
+        assert pool.load('', "test", config_formats="json").config == data
+        assert pool.load('', "test1", config_formats="json").config == data
 
     @staticmethod
     def test_save_all_with_error(pool, data):

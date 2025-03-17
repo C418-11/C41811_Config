@@ -239,7 +239,7 @@ class ConfigRequirementDecorator:
         if filter_kwargs is None:
             filter_kwargs = {}
 
-        self._config: ABCConfigFile = config
+        self._config_file: ABCConfigFile = config
         self._required = required
         self._filter_kwargs = {"allow_modify": True} | filter_kwargs
         self._cache_config: Callable = config_cacher if config_cacher is not None else lambda x: x
@@ -256,7 +256,7 @@ class ConfigRequirementDecorator:
         """
         kwargs = self._filter_kwargs | filter_kwargs
         if ignore_cache:
-            return self._required.filter(self._config.data, **kwargs)
+            return self._required.filter(self._config_file.config, **kwargs)
         return self._wrapped_filter(**kwargs)
 
     def __call__(self, func):
@@ -272,7 +272,7 @@ class ConfigRequirementDecorator:
         return wrapper(func)
 
     def _wrapped_filter(self, **kwargs):
-        return self._cache_config(self._required.filter(self._config.data, **kwargs))
+        return self._cache_config(self._required.filter(self._config_file.config, **kwargs))
 
 
 DefaultConfigPool = ConfigPool()

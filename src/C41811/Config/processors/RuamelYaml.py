@@ -45,7 +45,7 @@ class RuamelYamlSL(BasicLocalFileConfigSL):
             **merged_kwargs
     ) -> None:
         with self.raises():
-            self.yaml.dump(config_file.data.data, target_file)
+            self.yaml.dump(config_file.config.data, target_file)
 
     @override
     def load_file(

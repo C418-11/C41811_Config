@@ -607,16 +607,18 @@ class ABCConfigFile[D: ABCConfigData](ABC):
            重命名参数 ``config_data`` 为 ``initial_config``
         """
 
-        self._data: D = initial_config
+        self._config: D = initial_config
 
         self._config_format: str | None = config_format
 
     @property
-    def data(self) -> D:
+    def config(self) -> D:
         """
         :return: 配置数据
+
+        .. versionchanged::
         """
-        return self._data
+        return self._config
 
     @property
     def config_format(self) -> str | None:
@@ -686,20 +688,20 @@ class ABCConfigFile[D: ABCConfigData](ABC):
         """
 
     def __bool__(self):
-        return bool(self._data)
+        return bool(self._config)
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return NotImplemented
 
-        for field in ["_config_format", "_data"]:
+        for field in ["_config_format", "_config"]:
             if getattr(self, field) != getattr(other, field):
                 return False
         return True
 
     def __repr__(self):
         repr_parts: list[str] = []
-        for field in ["_config_format", "_data"]:
+        for field in ["_config_format", "_config"]:
             field_value = getattr(self, field)
             if field_value is None:
                 continue

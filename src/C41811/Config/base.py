@@ -859,14 +859,14 @@ ConfigData.register(StringConfigData)
 ConfigData.register(ObjectConfigData)
 
 
-class ConfigFile[D: ABCConfigData](ABCConfigFile):
+class ConfigFile(ABCConfigFile):
     """
     配置文件类
     """
 
     def __init__(
             self,
-            initial_config: D,
+            initial_config: Any,
             *,
             config_format: Optional[str] = None
     ) -> None:
@@ -875,7 +875,7 @@ class ConfigFile[D: ABCConfigData](ABCConfigFile):
            本身并未对 ``initial_config`` 参数进行深拷贝，但是 :py:class:`ConfigData` 可能会将其深拷贝
 
         :param initial_config: 配置数据
-        :type initial_config: ABCConfigData
+        :type initial_config: Any
         :param config_format: 配置文件的格式
         :type config_format: Optional[str]
 

@@ -40,7 +40,7 @@ class PickleSL(BasicLocalFileConfigSL):
             **merged_kwargs
     ) -> None:
         with self.raises():
-            pickle.dump(config_file.data.data, target_file, *merged_args, **merged_kwargs)
+            pickle.dump(config_file.config.data, target_file, *merged_args, **merged_kwargs)
 
     _l_open_kwargs = dict(mode="rb")
 

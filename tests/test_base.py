@@ -1172,10 +1172,10 @@ class TestConfigFile:
 
     @staticmethod
     def test_attr_readonly(file, data):
-        assert file.data == data
+        assert file.config == data
         with raises(AttributeError):
             # noinspection PyPropertyAccess
-            file.data = None
+            file.config = None
 
         assert file.config_format == "json"
         with raises(AttributeError):
@@ -1240,5 +1240,5 @@ class TestConfigFile:
 
     @staticmethod
     def test_repr(file, data):
-        assert repr(file.data) in repr(file)
+        assert repr(file.config) in repr(file)
         assert repr(data) in repr(ConfigFile(data))

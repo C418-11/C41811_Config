@@ -38,7 +38,7 @@ class JsonSL(BasicLocalFileConfigSL):
             **merged_kwargs
     ) -> None:
         with self.raises():
-            json.dump(config_file.data.data, target_file, *merged_args, **merged_kwargs)
+            json.dump(config_file.config.data, target_file, *merged_args, **merged_kwargs)
 
     @override
     def load_file(

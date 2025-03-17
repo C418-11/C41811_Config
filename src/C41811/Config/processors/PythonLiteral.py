@@ -39,7 +39,7 @@ class PythonLiteralSL(BasicLocalFileConfigSL):
             **merged_kwargs
     ) -> None:
         with self.raises():
-            target_file.write(pprint.pformat(config_file.data.data, *merged_args, **merged_kwargs))
+            target_file.write(pprint.pformat(config_file.config.data, *merged_args, **merged_kwargs))
 
     @override
     def load_file(
