@@ -48,6 +48,7 @@ from .errors import KeyInfo
 from .errors import RequiredPathNotFoundError
 from .errors import UnsupportedConfigFormatError
 from .path import Path
+from .utils import singleton
 
 
 def _fmt_path(path: str | ABCPath) -> ABCPath:
@@ -365,13 +366,13 @@ def _operate(operate_func, inplace_func):
     return decorator
 
 
+@singleton
 class _UnsetArgType:
-    _instance: ClassVar[Self] = None
+    def __str__(self):
+        return "<Unset Argument>"
 
-    def __new__(cls) -> Self:
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
+    def __bool__(self):
+        return False
 
 
 _UnsetArg = _UnsetArgType()

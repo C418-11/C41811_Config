@@ -36,6 +36,7 @@ from .errors import UnknownErrorDuringValidateError
 from .path import AttrKey
 from .path import IndexKey
 from .path import Path
+from .utils import singleton
 
 
 class ValidatorTypes(Enum):
@@ -146,6 +147,7 @@ def _process_pydantic_exceptions(err: ValidationError) -> Exception:
     return err_info.err_type(**(kwargs | err_info.kwargs))
 
 
+@singleton
 class SkipMissingType:
     """
     用于表明值可以缺失特殊值
@@ -153,12 +155,6 @@ class SkipMissingType:
     .. versionchanged:: 0.1.6
        从 ``IgnoreMissingType`` 重命名为 ``SkipMissingType``
     """
-    _instance = None
-
-    def __new__(cls, *args, **kwargs):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
 
     def __str__(self):  # pragma: no cover
         return "<SkipMissing>"
