@@ -97,7 +97,7 @@ class RequiredPath:
     """
     验证器工厂注册表
 
-    .. versionchanged:: 0.1.6
+    .. versionchanged:: 0.2.0
        现在待验证的配置数据必须由 :py:class:`CellType` 包装后传入
     """
 
@@ -136,7 +136,7 @@ class RequiredPath:
         :raise RequiredPathNotFoundError: 必要的键未找到
         :raise UnknownErrorDuringValidateError: 验证过程中发生未知错误
 
-        .. versionchanged:: 0.1.6
+        .. versionchanged:: 0.2.0
            参数 ``ignore_missing`` 重命名为 ``skip_missing``
 
            ``data`` 参数支持 :py:class:`CellType`
@@ -216,7 +216,7 @@ class ConfigRequirementDecorator:
     """
     配置获取器，可作装饰器使用
 
-    .. versionchanged:: 0.1.6
+    .. versionchanged:: 0.2.0
        从 ``RequireConfigDecorator`` 重命名为 ``ConfigRequirementDecorator``
     """
 
@@ -249,7 +249,7 @@ class ConfigRequirementDecorator:
 
         :raise UnsupportedConfigFormatError: 不支持的配置格式
 
-        .. versionchanged:: 0.1.6
+        .. versionchanged:: 0.2.0
            重命名参数 ``cache_config`` 为 ``config_cacher``
         """
         config = config_pool.load(namespace, file_name, config_formats=config_formats, allow_create=allow_create)
@@ -351,7 +351,7 @@ class BasicConfigSL(ABCConfigSL, ABC):
     """
     基础配置SL管理器 提供了一些实用功能
 
-    .. versionchanged:: 0.1.6
+    .. versionchanged:: 0.2.0
        从 ``BaseConfigSL`` 重命名为 ``BasicConfigSL``
     """
 
@@ -387,7 +387,7 @@ def _merge_args(
     :return: 合并后的参数
     :rtype: tuple[tuple, PMap[str, Any]]
 
-    .. versionchanged:: 0.1.6
+    .. versionchanged:: 0.2.0
        提取为函数
     """
     base_arguments = list(base_arguments[0]), dict(base_arguments[1])
@@ -412,7 +412,7 @@ def raises(excs: Exception | tuple[Exception, ...] = Exception):
 
     .. versionadded:: 0.1.4
 
-    .. versionchanged:: 0.1.6
+    .. versionchanged:: 0.2.0
        提取为函数
     """
     try:
@@ -425,7 +425,7 @@ class BasicLocalFileConfigSL(BasicConfigSL, ABC):
     """
     基础本地配置文件SL处理器
 
-    .. versionchanged:: 0.1.6
+    .. versionchanged:: 0.2.0
        从 ``BaseLocalFileConfigSL`` 重命名为 ``BasicLocalFileConfigSL``
     """
 
@@ -453,7 +453,7 @@ class BasicLocalFileConfigSL(BasicConfigSL, ABC):
         .. seealso::
            :py:class:`BasicConfigSL`
 
-        .. versionchanged:: 0.1.6
+        .. versionchanged:: 0.2.0
            将 ``保存加载器参数`` 相关从 :py:class:`BasicConfigSL` 移动到此类
         """
 
@@ -516,7 +516,7 @@ class BasicLocalFileConfigSL(BasicConfigSL, ABC):
 
         :raise FailedProcessConfigFileError: 处理配置文件失败
 
-        .. versionchanged:: 0.1.6
+        .. versionchanged:: 0.2.0
            现在操作是原子的(操作过程发生异常会回滚操作)
 
            现在操作是理论上是多线/进程安全的
@@ -558,7 +558,7 @@ class BasicLocalFileConfigSL(BasicConfigSL, ABC):
 
         :raise FailedProcessConfigFileError: 处理配置文件失败
 
-        .. versionchanged:: 0.1.6
+        .. versionchanged:: 0.2.0
            现在操作是原子的(操作过程发生异常会回滚操作)
 
            现在操作是理论上是多线/进程安全的
@@ -595,7 +595,7 @@ class BasicLocalFileConfigSL(BasicConfigSL, ABC):
 
         :raise FailedProcessConfigFileError: 处理配置文件失败
 
-        .. versionchanged:: 0.1.6
+        .. versionchanged:: 0.2.0
            更改 ``target_file`` 参数类型为 ``Any``
         """
 
@@ -619,7 +619,7 @@ class BasicLocalFileConfigSL(BasicConfigSL, ABC):
 
         :raise FailedProcessConfigFileError: 处理配置文件失败
 
-        .. versionchanged:: 0.1.6
+        .. versionchanged:: 0.2.0
            移除 ``config_file_cls`` 参数
 
            更改 ``source_file`` 参数类型为 ``Any``
@@ -652,7 +652,7 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
     .. caution::
        会临时在配置文件池中添加文件以传递SL操作
 
-    .. versionadded:: 0.1.6
+    .. versionadded:: 0.2.0
     """
 
     def __init__(self, *, reg_alias: Optional[str] = None, create_dir: bool = True):
@@ -841,7 +841,7 @@ class BasicCompressedConfigSL(BasicCachedConfigSL, ABC):
     """
     基础压缩配置文件SL处理器
 
-    .. versionadded:: 0.1.6
+    .. versionadded:: 0.2.0
     """
 
     @property

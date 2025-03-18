@@ -197,7 +197,7 @@ class ABCConfigData[D: Any](ABC):
         :return: 新的配置数据
         :rtype: Self
 
-        .. versionchanged:: 0.1.6
+        .. versionchanged:: 0.2.0
            现在会自适应参数数量
 
         .. note::
@@ -286,7 +286,7 @@ class ABCIndexedConfigData[D: Indexed | MutableIndexed](
 
     .. versionadded:: 0.1.5
 
-    .. versionchanged:: 0.1.6
+    .. versionchanged:: 0.2.0
        从 ``ABCSupportsIndexConfigData`` 重命名为 ``ABCIndexedConfigData``
     """
 
@@ -306,7 +306,7 @@ class ABCIndexedConfigData[D: Indexed | MutableIndexed](
         :raise ConfigDataTypeError: 配置数据类型错误
         :raise RequiredPathNotFoundError: 需求的键不存在
 
-        .. versionchanged:: 0.1.6
+        .. versionchanged:: 0.2.0
            重命名 ``get_raw`` 参数为 ``return_raw_value``
         """
 
@@ -426,7 +426,7 @@ class ABCIndexedConfigData[D: Indexed | MutableIndexed](
            >>> data.get("with default",default="default value")
            'default value'
 
-        .. versionchanged:: 0.1.6
+        .. versionchanged:: 0.2.0
            重命名 ``get_raw`` 参数为 ``return_raw_value``
         """
 
@@ -475,7 +475,7 @@ class ABCIndexedConfigData[D: Indexed | MutableIndexed](
            >>> data
            MappingConfigData({'key': 'value', 'not exists': None, 'with default': 'default value'})
 
-        .. versionchanged:: 0.1.6
+        .. versionchanged:: 0.2.0
            重命名 ``get_raw`` 参数为 ``return_raw_value``
 
            从 ``set_default`` 重命名为 ``setdefault``
@@ -504,7 +504,7 @@ class ABCProcessorHelper(ABC):
     """
     辅助SL处理器
 
-    .. versionadded:: 0.1.6
+    .. versionadded:: 0.2.0
     """
 
     @staticmethod
@@ -547,7 +547,7 @@ class ABCSLProcessorPool(ABC):
 
         数据结构: ``{处理器注册名: 处理器实例}}``
 
-        .. versionchanged:: 0.1.6
+        .. versionchanged:: 0.2.0
            从 ``SLProcessor`` 重命名为 ``SLProcessors``
         """
         self.FileNameProcessors: OrderedDict[str | Pattern, set[str]] = OrderedDict()  # {FileNameMatch: {RegName}}
@@ -564,7 +564,7 @@ class ABCSLProcessorPool(ABC):
             - 为字符串时会使用 ``endswith`` 进行匹配
             - 为 ``re.Pattern`` 时会使用 ``Pattern.fullmatch`` 进行匹配
 
-        .. versionchanged:: 0.1.6
+        .. versionchanged:: 0.2.0
            从 ``FileExtProcessor`` 重命名为 ``FileNameProcessors``
 
            现在是顺序敏感的
@@ -603,7 +603,7 @@ class ABCConfigFile[D: ABCConfigData](ABC):
         :param config_format: 配置文件的格式
         :type config_format: Optional[str]
 
-        .. versionchanged:: 0.1.6
+        .. versionchanged:: 0.2.0
            重命名参数 ``config_data`` 为 ``initial_config``
         """
 
@@ -616,7 +616,7 @@ class ABCConfigFile[D: ABCConfigData](ABC):
         """
         :return: 配置数据
 
-        .. versionchanged:: 0.1.6
+        .. versionchanged:: 0.2.0
            重命名属性 ``data`` 为 ``config``
         """
         return self._config
@@ -652,7 +652,7 @@ class ABCConfigFile[D: ABCConfigData](ABC):
 
         :raise UnsupportedConfigFormatError: 不支持的配置格式
 
-        .. versionchanged:: 0.1.6
+        .. versionchanged:: 0.2.0
            重命名 ``config_pool`` 为 ``processor_pool``
         """
 
@@ -684,7 +684,7 @@ class ABCConfigFile[D: ABCConfigData](ABC):
 
         :raise UnsupportedConfigFormatError: 不支持的配置格式
 
-        .. versionchanged:: 0.1.6
+        .. versionchanged:: 0.2.0
            重命名 ``config_pool`` 为 ``processor_pool``
         """
 
@@ -749,7 +749,7 @@ class ABCConfigPool(ABCSLProcessorPool):
         :return: 返回当前实例便于链式调用
         :rtype: Self
 
-        .. versionchanged:: 0.1.6
+        .. versionchanged:: 0.2.0
            返回当前实例便于链式调用
         """
 
@@ -780,7 +780,7 @@ class ABCConfigPool(ABCSLProcessorPool):
         .. versionchanged:: 0.1.2
            添加 ``config_formats`` 和 ``config`` 参数
 
-        .. versionchanged:: 0.1.6
+        .. versionchanged:: 0.2.0
            返回当前实例便于链式调用
         """
 
@@ -821,7 +821,7 @@ class ABCConfigPool(ABCSLProcessorPool):
         :return: 配置对象
         :rtype: ABCConfigFile
 
-        .. versionchanged:: 0.1.6
+        .. versionchanged:: 0.2.0
            现在会像 :py:meth:`save` 一样接收并传递额外参数
 
            移除 ``config_file_cls`` 参数
@@ -840,7 +840,7 @@ class ABCConfigPool(ABCSLProcessorPool):
         :return: 返回当前实例便于链式调用
         :rtype: Self
 
-        .. versionchanged:: 0.1.6
+        .. versionchanged:: 0.2.0
            返回当前实例便于链式调用
         """
 
@@ -857,7 +857,7 @@ class ABCConfigPool(ABCSLProcessorPool):
         :return: 返回当前实例便于链式调用
         :rtype: Self
 
-        .. versionadded:: 0.1.6
+        .. versionadded:: 0.2.0
         """
 
     @abstractmethod
@@ -895,7 +895,7 @@ class ABCConfigSL(ABC):
     """
     配置SaveLoad处理器抽象类
 
-    .. versionchanged:: 0.1.6
+    .. versionchanged:: 0.2.0
        移动 ``保存加载器参数`` 相关至 :py:class:`BasicLocalFileConfigSL`
     """
 
@@ -923,7 +923,7 @@ class ABCConfigSL(ABC):
         """
         :return: 支持的配置文件类
 
-        .. versionadded:: 0.1.6
+        .. versionadded:: 0.2.0
         """
 
     @property
@@ -946,7 +946,7 @@ class ABCConfigSL(ABC):
         """
         :return: 支持的文件名匹配
 
-        .. versionchanged:: 0.1.6
+        .. versionchanged:: 0.2.0
            从 ``file_ext`` 重命名为 ``supported_file_patterns``
         """
 
@@ -992,7 +992,7 @@ class ABCConfigSL(ABC):
 
         :raise FailedProcessConfigFileError: 处理配置文件失败
 
-        .. versionchanged:: 0.1.6
+        .. versionchanged:: 0.2.0
            添加参数 ``processor_pool``
         """
 
@@ -1023,7 +1023,7 @@ class ABCConfigSL(ABC):
 
         :raise FailedProcessConfigFileError: 处理配置文件失败
 
-        .. versionchanged:: 0.1.6
+        .. versionchanged:: 0.2.0
            移除 ``config_file_cls`` 参数
 
            添加参数 ``processor_pool``

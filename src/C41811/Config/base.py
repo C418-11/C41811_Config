@@ -66,7 +66,7 @@ class BasicConfigData(ABCConfigData, ABC):
 
     .. versionadded:: 0.1.5
 
-    .. versionchanged:: 0.1.6
+    .. versionchanged:: 0.2.0
        从 ``BaseConfigData`` 重命名为 ``BasicConfigData``
     """
 
@@ -94,7 +94,7 @@ class BasicSingleConfigData[D: Any](BasicConfigData, ABC):
     """
     单文件配置数据基类
 
-    .. versionadded:: 0.1.6
+    .. versionadded:: 0.2.0
     """
 
     def __init__(self, data: D):
@@ -151,7 +151,7 @@ class BasicIndexedConfigData[D: Indexed | MutableIndexed](
 
     .. versionadded:: 0.1.5
 
-    .. versionchanged:: 0.1.6
+    .. versionchanged:: 0.2.0
        从 ``BaseSupportsIndexConfigData`` 重命名为 ``BasicIndexedConfigData``
     """
 
@@ -326,7 +326,7 @@ class ConfigData(ABC):
     """
     存储配置数据类型对应的子类
 
-    .. versionchanged:: 0.1.6
+    .. versionchanged:: 0.2.0
        现在使用 ``OrderedDict`` 来保证顺序
     """
 
@@ -392,7 +392,7 @@ class NoneConfigData(BasicSingleConfigData):
     """
     空的配置数据
 
-    .. versionadded:: 0.1.6
+    .. versionadded:: 0.2.0
     """
 
     def __bool__(self):
@@ -496,7 +496,7 @@ class MappingConfigData[D: Mapping | MutableMapping](BasicIndexedConfigData, Mut
         :return: 所有键值对
         :rtype: ValuesView[Any]
 
-        .. versionchanged:: 0.1.6
+        .. versionchanged:: 0.2.0
            重命名 ``get_raw`` 参数为 ``return_raw_value``
         """
         if return_raw_value:
@@ -516,7 +516,7 @@ class MappingConfigData[D: Mapping | MutableMapping](BasicIndexedConfigData, Mut
         :return: 所有键值对
         :rtype: ItemsView[str, Any]
 
-        .. versionchanged:: 0.1.6
+        .. versionchanged:: 0.2.0
            重命名 ``get_raw`` 参数为 ``return_raw_value``
         """
         if return_raw_value:
@@ -892,7 +892,7 @@ class ComponentOrders:
     """
     组件顺序
 
-    .. versionadded:: 0.1.6
+    .. versionadded:: 0.2.0
     """
 
     create: list[str] = field(default_factory=list)
@@ -906,7 +906,7 @@ class ComponentMember:
     """
     组件成员
 
-    .. versionadded:: 0.1.6
+    .. versionadded:: 0.2.0
     """
 
     filename: str
@@ -919,7 +919,7 @@ class ComponentMeta:
     """
     组件元数据
 
-    .. versionadded:: 0.1.6
+    .. versionadded:: 0.2.0
     """
 
     config: MappingConfigData = field(default_factory=MappingConfigData)
@@ -931,7 +931,7 @@ class ComponentConfigData[D: MappingConfigData](BasicConfigData, ABCIndexedConfi
     """
     组件配置数据
 
-    .. versionadded:: 0.1.6
+    .. versionadded:: 0.2.0
     """
 
     def __init__(self, meta: ComponentMeta = None, members: MutableMapping[str, D] = None):
@@ -1093,7 +1093,7 @@ class ConfigFile[D: Any](ABCConfigFile):
         :param config_format: 配置文件的格式
         :type config_format: Optional[str]
 
-        .. versionchanged:: 0.1.6
+        .. versionchanged:: 0.2.0
            现在会自动尝试转换 ``initial_config`` 参数为 :py:class:`ConfigData`
 
            重命名参数 ``config_data`` 为 ``initial_config``
@@ -1153,7 +1153,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
 
     实现了一些通用方法
 
-    .. versionchanged:: 0.1.6
+    .. versionchanged:: 0.2.0
        从 ``BaseConfigPool`` 重命名为 ``BasicConfigPool``
     """
 
@@ -1224,7 +1224,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
 
         3.如果传入了file_config_format且非None则直接使用
 
-        .. versionadded:: 0.1.6
+        .. versionadded:: 0.2.0
         """
         # 先尝试从传入的参数中获取配置文件格式
         if config_formats is None:
@@ -1291,7 +1291,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
 
         .. versionadded:: 0.1.2
 
-        .. versionchanged:: 0.1.6
+        .. versionchanged:: 0.2.0
            将格式计算部分提取到单独的函数 :py:meth:`_calc_formats`
         """
 

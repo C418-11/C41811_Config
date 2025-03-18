@@ -29,7 +29,7 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-.. versionadded:: 0.1.6
+.. versionadded:: 0.2.0
 """
 
 import os

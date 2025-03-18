@@ -2,7 +2,7 @@
 # cython: language_level = 3
 
 """
-.. versionadded:: 0.1.6
+.. versionadded:: 0.2.0
 """
 
 from contextlib import suppress

@@ -5,7 +5,7 @@
 """
 SL处理器
 
-.. versionchanged:: 0.1.6
+.. versionchanged:: 0.2.0
    从 ``SLProcessors`` 重命名为 ``processors``
 """
 

@@ -26,7 +26,7 @@ class SupportsReadAndReadline(Protocol[_T_co]):
 class Indexed(Protocol[_T_co]):
     # noinspection GrazieInspection
     """
-    .. versionchanged:: 0.1.6
+    .. versionchanged:: 0.2.0
        从 ``SupportsIndex`` 重命名为 ``Indexed``
     """
 
@@ -36,7 +36,7 @@ class Indexed(Protocol[_T_co]):
 class MutableIndexed(Protocol[_T_contra]):
     # noinspection GrazieInspection
     """
-    .. versionchanged:: 0.1.6
+    .. versionchanged:: 0.2.0
        从 ``SupportsWriteIndex`` 重命名为 ``MutableIndexed``
     """
 
