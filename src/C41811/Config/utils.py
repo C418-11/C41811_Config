@@ -5,8 +5,8 @@
 .. versionadded:: 0.1.6
 """
 
-
 from contextlib import suppress
+from typing import Any
 
 
 def singleton(cls):
@@ -30,6 +30,33 @@ def singleton(cls):
     return cls
 
 
+@singleton
+class UnsetType:
+    def __str__(self):
+        return "<Unset Argument>"
+
+    def __bool__(self):
+        return False
+
+
+Unset = UnsetType()
+
+
+class CellType[C: Any]:
+    """
+    间接持有对象引用
+    """
+
+    def __init__(self, contents: C):
+        self.cell_contents = contents
+
+    def __repr__(self):
+        return f"<{type(self).__name__} ({self.cell_contents=})>"
+
+
 __all__ = (
     "singleton",
+    "UnsetType",
+    "Unset",
+    "CellType",
 )

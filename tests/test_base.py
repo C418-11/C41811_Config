@@ -78,7 +78,7 @@ class TestMappingConfigData:
         assert data.data is not odict
         assert data.data == odict
 
-        assert ConfigData().data == dict()
+        assert MappingConfigData().data == dict()
 
         readonly_data = ConfigData(readonly_odict)
         assert readonly_data.data is not readonly_odict

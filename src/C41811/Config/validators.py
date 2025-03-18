@@ -10,11 +10,13 @@ from collections import OrderedDict
 from collections.abc import Callable
 from collections.abc import Iterable
 from collections.abc import Mapping
+from collections.abc import MutableMapping
 from copy import deepcopy
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 from typing import NamedTuple
+from typing import overload
 
 from pydantic import BaseModel
 from pydantic import ValidationError
@@ -26,8 +28,10 @@ from pydantic_core import core_schema
 from .abc import ABCConfigData
 from .abc import ABCKey
 from .abc import ABCPath
+from .base import ComponentConfigData
 from .base import ConfigData
 from .base import MappingConfigData
+from .base import NoneConfigData
 from .errors import ConfigDataTypeError
 from .errors import ConfigOperate
 from .errors import KeyInfo
@@ -36,6 +40,8 @@ from .errors import UnknownErrorDuringValidateError
 from .path import AttrKey
 from .path import IndexKey
 from .path import Path
+from .utils import CellType
+from .utils import Unset as _Unset
 from .utils import singleton
 
 
@@ -50,6 +56,10 @@ class ValidatorTypes(Enum):
        从 ``IGNORE`` 重命名为 ``NO_VALIDATION``
     """
     PYDANTIC = "pydantic"
+    COMPONENT = "component"
+    """
+    .. versionadded:: 0.1.6
+    """
 
 
 @dataclass(kw_only=True)
@@ -57,12 +67,15 @@ class ValidatorFactoryConfig:
     """
     验证器配置
     """
-    allow_modify: bool = False
+    allow_modify: bool = True
     """
     是否允许在填充默认值时同步填充源数据
 
     .. versionchanged:: 0.1.2
        从 ``allow_create`` 重命名为 ``allow_modify``
+
+    .. versionchanged:: 0.1.6
+       现在默认为 ``True``
     """
     skip_missing: bool = False
     """
@@ -179,23 +192,54 @@ class FieldDefinition[T: type | types.UnionType | types.EllipsisType | types.Gen
        新增 ``allow_recursive`` 字段
     """
 
-    def __init__(self, type_: T, value, *, allow_recursive: bool = True):
+    @overload
+    def __init__(self, annotation: T, default: Any, *, allow_recursive: bool = True):
+        ...
+
+    @overload
+    def __init__(self, annotation: T, *, default_factory: Callable[[], Any], allow_recursive: bool = True):
+        ...
+
+    def __init__(
+            self,
+            annotation: T,
+            default: Any = _Unset,
+            *,
+            default_factory: Callable[[], Any] = _Unset,
+            allow_recursive: bool = True
+    ):
+        # noinspection GrazieInspection
         """
-        :param type_: 用于类型检查的类型
-        :type type_: type | types.UnionType | types.EllipsisType | types.GenericAlias
-        :param value: 字段值
-        :type value: Any
+        :param annotation: 用于类型检查的类型
+        :type annotation: type | types.UnionType | types.EllipsisType | types.GenericAlias
+        :param default: 字段默认值
+        :type default: Any
+        :param default_factory: 字段默认值工厂
+        :type default_factory: Callable[[], Any]
         :param allow_recursive: 是否允许递归处理字段值
         :type allow_recursive: bool
-        """
-        if not isinstance(value, FieldInfo):
-            value = FieldInfo(default=value)
 
-        self.type = type_
+        .. versionchanged:: 0.1.6
+           更改函数签名，重命名 ``type_`` 、 ``value`` 参数为 ``annotation`` 、 ``default`` 添加参数 ``default_factory``
+        """
+        kwargs = {}
+        if default is not _Unset:
+            kwargs["default"] = default
+        if default_factory is not _Unset:
+            kwargs["default_factory"] = default_factory
+
+        if len(kwargs) != 1:
+            raise ValueError("take one of arguments 'default' or 'default_factory'")
+
+        value = default
+        if not isinstance(default, FieldInfo):
+            value = FieldInfo(**kwargs)
+
+        self.annotation = annotation
         self.value = value
         self.allow_recursive = allow_recursive
 
-    type: T
+    annotation: T
     """
     用于类型检查的类型
     """
@@ -237,7 +281,7 @@ def _allow_recursive(type_):
         return False
 
 
-class DefaultValidatorFactory[D: MappingConfigData]:
+class DefaultValidatorFactory[D: MappingConfigData | NoneConfigData]:
     """
     默认的验证器工厂
     """
@@ -394,9 +438,9 @@ class DefaultValidatorFactory[D: MappingConfigData]:
                     self.validator_config.skip_missing,
                     definition.value.is_required()
             )):
-                definition = FieldDefinition(definition.type | SkipMissingType, FieldInfo(default=SkipMissing))
+                definition = FieldDefinition(definition.annotation | SkipMissingType, FieldInfo(default=SkipMissing))
 
-            fmt_data[key] = (definition.type, definition.value)
+            fmt_data[key] = (definition.annotation, definition.value)
 
         return create_model(
             f"{type(self).__name__}.RuntimeTemplate",
@@ -410,13 +454,17 @@ class DefaultValidatorFactory[D: MappingConfigData]:
         """
         fmt_validator, father_set = self._fmt_mapping_key(self.validator)
         # 所有重复存在的父路径都将允许其下存在多余的键
-        model_config = ConfigData()
+        model_config = MappingConfigData()
         for path in father_set:
             model_config.modify(path, {self.model_config_key: {"extra": "allow"}})
 
         self.model = self._mapping2model(fmt_validator, model_config.data)
 
-    def __call__(self, data: D) -> D:
+    def __call__(self, cell: CellType[D]) -> D:
+        data = cell.cell_contents
+        if isinstance(data, NoneConfigData):
+            data = MappingConfigData()
+            cell.cell_contents = data
         try:
             dict_obj = self.model(**data.data).model_dump()
         except ValidationError as err:
@@ -433,9 +481,11 @@ class DefaultValidatorFactory[D: MappingConfigData]:
         return config_obj
 
 
-def pydantic_validator[D: ABCConfigData](validator: type[BaseModel], cfg: ValidatorFactoryConfig) -> Callable[[D], D]:
+def pydantic_validator[D: ABCConfigData](
+        validator: type[BaseModel], cfg: ValidatorFactoryConfig
+) -> Callable[[CellType[D]], D]:
     """
-    验证器工厂配置 ``skip_missing`` 与 ``allow_create`` 无效
+    验证器工厂配置 ``skip_missing`` 无效
 
     :param validator: pydantic.BaseModel的子类
     :type validator: type[BaseModel]
@@ -447,7 +497,8 @@ def pydantic_validator[D: ABCConfigData](validator: type[BaseModel], cfg: Valida
     if cfg.skip_missing:
         warnings.warn("skip_missing is not supported in pydantic validator")
 
-    def _builder(data: D) -> D:
+    def _builder(cell: CellType[D]) -> D:
+        data = cell.cell_contents
         try:
             dict_obj = validator(**data).model_dump()
         except ValidationError as err:
@@ -460,10 +511,75 @@ def pydantic_validator[D: ABCConfigData](validator: type[BaseModel], cfg: Valida
     return _builder
 
 
+class ComponentValidatorFactory[D: ComponentConfigData | NoneConfigData]:
+    """
+    组件验证器工厂
+
+    .. versionadded:: 0.1.6
+    """
+
+    def __init__(self, validator: Mapping[str | None, Any], validator_config: ValidatorFactoryConfig):
+        """
+        :param validator: 组件验证器
+        :type validator: Mapping[str | None, Any]
+        :param validator_config: 验证器配置
+        :type validator_config: ValidatorFactoryConfig
+        """
+
+        self.validator = validator
+        self.validator_config = validator_config
+
+        self.validator_factory = validator_config.extra.get("validator_factory", DefaultValidatorFactory)
+        self.validators: MutableMapping[str | None, Callable[[CellType[MappingConfigData]], MappingConfigData]] = {}
+
+        self._compile()
+
+    def _compile(self) -> None:
+        for member, validator in self.validator.items():
+            self.validators[member] = self.validator_factory(validator, self.validator_config)
+
+    def __call__(self, cell: CellType[D]) -> D:
+        data: ComponentConfigData[MappingConfigData] = cell.cell_contents
+        if isinstance(data, NoneConfigData):
+            data = ComponentConfigData()
+            cell.cell_contents = data
+
+        validation_meta: bool = False
+        members: dict[str | None, MappingConfigData] = {}
+        for member, validator in self.validators.items():
+            if member is None:
+                validation_meta = True
+                continue
+
+            if (member not in data) and self.validator_config.extra.setdefault("allow_create", True):
+                data[member] = MappingConfigData()
+            data_cell = CellType(data[member])
+            members[member] = validator(data_cell)
+            cell.cell_contents[member] = data_cell.cell_contents
+
+        meta = data.meta
+        if validation_meta:
+            meta.config = self.validators[None](CellType(meta.config))
+
+            meta_validator = self.validator_config.extra.get("meta_validator")
+            if meta_validator is not None:
+                meta = meta_validator(meta, self.validator_config)
+
+        result = data.from_data(meta, members)
+        if self.validator_config.allow_modify:
+            cell.cell_contents._meta = meta
+            missing_member = members.keys() - cell.cell_contents.members.keys()
+            for member in missing_member:
+                cell.cell_contents[member] = members[member]
+
+        return result
+
+
 __all__ = (
     "ValidatorTypes",
     "ValidatorFactoryConfig",
     "FieldDefinition",
     "DefaultValidatorFactory",
     "pydantic_validator",
+    "ComponentValidatorFactory",
 )

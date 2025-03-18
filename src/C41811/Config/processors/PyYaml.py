@@ -30,7 +30,7 @@ class PyYamlSL(BasicLocalFileConfigSL):
     @property
     @override
     def supported_file_patterns(self) -> tuple[str, ...]:
-        return ".yaml",
+        return ".yaml", ".yml"
 
     supported_file_classes = [ConfigFile]
 

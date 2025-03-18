@@ -31,6 +31,8 @@ from .base import BasicConfigPool
 from .base import ConfigData
 from .errors import FailedProcessConfigFileError
 from .safe_writer import safe_open
+from .utils import CellType
+from .validators import ComponentValidatorFactory
 from .validators import DefaultValidatorFactory
 from .validators import ValidatorFactoryConfig
 from .validators import ValidatorTypes
@@ -46,15 +48,16 @@ class RequiredPath:
             self,
             validator: V,
             validator_factory: Optional[
-                Callable[[V, ValidatorFactoryConfig], Callable[[D], D]]
+                Callable[[V, ValidatorFactoryConfig], Callable[[CellType[D]], D]]
                 | ValidatorTypes
-                | Literal["no-validation", "pydantic"]
+                | Literal["no-validation", "pydantic", "component"]
                 ] = ValidatorTypes.DEFAULT,
             static_config: Optional[ValidatorFactoryConfig] = None
     ):
         """
         .. tip::
-           提供static_config参数，可以避免在filter中反复调用validator_factory以提高性能(filter配置一切都为默认值的前提下)
+           提供 ``static_config`` 参数，可以避免在 :py:meth:`RequiredPath.filter` 中反复调用 ``validator_factory`` 以提高性能
+           ( :py:meth:`RequiredPath.filter` 配置一切都为默认值的前提下)
 
         :param validator: 数据验证器
         :type validator: Any
@@ -63,8 +66,8 @@ class RequiredPath:
             Optional[
             Callable[
             [Any, validators.ValidatorFactoryConfig],
-            Callable[[ABCConfigData], ABCConfigData]
-            ] | validators.ValidatorTypes | Literal["ignore", "pydantic"]
+            Callable[[CellType[ABCConfigData]], ABCConfigData]
+            ] | validators.ValidatorTypes | Literal["ignore", "pydantic", "component"]
             ]
         :param static_config: 静态配置
         :type static_config: Optional[validators.ValidatorFactoryConfig]
@@ -75,24 +78,32 @@ class RequiredPath:
             validator_factory = self.ValidatorFactories[validator_factory]
 
         self._validator: Iterable[str] | Mapping[str, type] = deepcopy(validator)
-        self._validator_factory: Callable[[V, ValidatorFactoryConfig], Callable[[D], D]] = validator_factory
+        self._validator_factory: Callable[[V, ValidatorFactoryConfig], Callable[[CellType[D]], D]] = validator_factory
         if static_config is not None:
-            self._static_validator: Optional[Callable[[D], D]] = self._validator_factory(self._validator, static_config)
+            self._static_validator: Optional[Callable[[CellType[D]], D]] = self._validator_factory(self._validator,
+                                                                                                   static_config)
         else:
             self._static_validator = None
 
     ValidatorFactories: dict[
         ValidatorTypes,
-        Callable[[Any, ValidatorFactoryConfig], Callable[[ABCConfigData], ABCConfigData]]
+        Callable[[Any, ValidatorFactoryConfig], Callable[[CellType[ABCConfigData]], ABCConfigData]]
     ] = {
         ValidatorTypes.DEFAULT: DefaultValidatorFactory,
         ValidatorTypes.NO_VALIDATION: lambda v, *_: v,
         ValidatorTypes.PYDANTIC: pydantic_validator,
+        ValidatorTypes.COMPONENT: ComponentValidatorFactory,
     }
+    """
+    验证器工厂注册表
+
+    .. versionchanged:: 0.1.6
+       现在待验证的配置数据必须由 :py:class:`CellType` 包装后传入
+    """
 
     def filter[D: ABCConfigData](
             self,
-            data: D,
+            data: CellType[D] | D,
             *,
             allow_modify: Optional[bool] = None,
             skip_missing: Optional[bool] = None,
@@ -102,15 +113,15 @@ class RequiredPath:
         检查过滤需求的键
 
         .. attention::
-           返回的配置数据是*快照*
+           返回的配置数据是 `*快照*`
 
         .. caution::
-           提供了任意配置参数(``allow_modify``, ``skip_missing``, ...)时,这次调用将完全舍弃static_config使用当前提供的配置参数
+           提供了任意配置参数(``allow_modify``, ``skip_missing``, ...)时,这次调用将完全舍弃 `static_config` 使用当前提供的配置参数
 
-           这会导致调用validator_factory产生额外开销(如果你提供static_config参数是为了避免反复调用validator_factory的话)
+           这会导致调用 `validator_factory` 产生额外开销(如果你提供 `static_config` 参数是为了避免反复调用 `validator_factory` 的话)
 
         :param data: 要过滤的原始数据
-        :type data: ABCConfigData
+        :type data: CellType[ABCConfigData]
         :param allow_modify: 是否允许值不存在时修改data参数对象填充默认值(即使为False仍然会在结果中填充默认值,但不会修改data参数对象)
         :type allow_modify: bool
         :param skip_missing: 忽略丢失的键
@@ -127,6 +138,8 @@ class RequiredPath:
 
         .. versionchanged:: 0.1.6
            参数 ``ignore_missing`` 重命名为 ``skip_missing``
+
+           ``data`` 参数支持 :py:class:`CellType`
         """
         config_kwargs = {}
         if allow_modify is not None:
@@ -136,9 +149,14 @@ class RequiredPath:
         if extra:
             config_kwargs["extra"] = extra
 
+        if not isinstance(data, CellType):
+            data = CellType(data)
+
         if (self._static_validator is None) or config_kwargs:
             config = ValidatorFactoryConfig(**config_kwargs)
-            validator: Callable[[ABCConfigData], ABCConfigData] = self._validator_factory(self._validator, config)
+            validator: Callable[
+                [CellType[ABCConfigData]], ABCConfigData
+            ] = self._validator_factory(self._validator, config)
         else:
             validator = self._static_validator
 
@@ -226,7 +244,7 @@ class ConfigRequirementDecorator:
         :param allow_create: 详见 :py:meth:`ConfigPool.load`
         :param config_cacher: 缓存配置的装饰器，默认为None，即不缓存
         :type config_cacher: Optional[Callable[[Callable], Callable]]
-        :param filter_kwargs: :py:meth:`RequiredPath.filter` 要绑定的默认参数，默认为allow_modify=True
+        :param filter_kwargs: :py:meth:`RequiredPath.filter` 要绑定的默认参数，这会导致 ``static_config`` 失效
         :type filter_kwargs: dict[str, Any]
 
         :raise UnsupportedConfigFormatError: 不支持的配置格式
@@ -241,7 +259,7 @@ class ConfigRequirementDecorator:
 
         self._config_file: ABCConfigFile = config
         self._required = required
-        self._filter_kwargs = {"allow_modify": True} | filter_kwargs
+        self._filter_kwargs = filter_kwargs
         self._cache_config: Callable = config_cacher if config_cacher is not None else lambda x: x
 
     def check(self, *, ignore_cache: bool = False, **filter_kwargs) -> Any:
@@ -255,8 +273,11 @@ class ConfigRequirementDecorator:
         :rtype: Any
         """
         kwargs = self._filter_kwargs | filter_kwargs
+        cell = CellType(self._config_file.config)
         if ignore_cache:
-            return self._required.filter(self._config_file.config, **kwargs)
+            result = self._required.filter(cell, **kwargs)
+            self._config_file._config = cell.cell_contents
+            return result
         return self._wrapped_filter(**kwargs)
 
     def __call__(self, func):
@@ -272,7 +293,10 @@ class ConfigRequirementDecorator:
         return wrapper(func)
 
     def _wrapped_filter(self, **kwargs):
-        return self._cache_config(self._required.filter(self._config_file.config, **kwargs))
+        cell = CellType(self._config_file.config)
+        result = self._cache_config(self._required.filter(cell, **kwargs))
+        self._config_file._config = cell.cell_contents
+        return result
 
 
 DefaultConfigPool = ConfigPool()
@@ -641,7 +665,7 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
         super().__init__(reg_alias=reg_alias)
 
         self.create_dir = create_dir
-        self.cleanup_registry: bool = True
+        self._cleanup_registry: bool = True
         """
         自动清理为了传递SL处理所加入配置池的配置文件
         """
@@ -693,7 +717,7 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
             root_path: str,
             namespace: str,
             file_name: str,
-            *_, **__,
+            *args, **kwargs,
     ) -> None:
         file_path = config_pool.helper.calc_path(root_path, namespace, file_name)
         if self.create_dir:
@@ -702,7 +726,7 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
         formatted_filename = self.filename_formatter(file_name)
         formatted_namespace = self.namespace_formatter(namespace, file_name)
 
-        self.save_file(config_pool, config_file, formatted_namespace, formatted_filename)
+        self.save_file(config_pool, config_file, formatted_namespace, formatted_filename, *args, **kwargs)
         self.after_save(config_pool, config_file, file_path, root_path, formatted_namespace, formatted_filename)
 
     def load(
@@ -711,7 +735,7 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
             root_path: str,
             namespace: str,
             file_name: str,
-            *_, **__,
+            *args, **kwargs,
     ) -> ABCConfigFile:
         file_path = config_pool.helper.calc_path(root_path, namespace, file_name)
         if self.create_dir:
@@ -721,14 +745,16 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
         formatted_namespace = self.namespace_formatter(namespace, file_name)
 
         self.before_load(config_pool, file_path, root_path, formatted_namespace, formatted_filename)
-        return self.load_file(config_pool, formatted_namespace, formatted_filename)
+        return self.load_file(config_pool, formatted_namespace, formatted_filename, *args, **kwargs)
 
     def save_file(
             self,
             config_pool: ABCConfigPool,
             config_file: ABCConfigFile,
             namespace: str,
-            file_name: str
+            file_name: str,
+            *args,
+            **kwargs
     ) -> None:
         """
         保存指定命名空间的配置
@@ -743,15 +769,17 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
         :type file_name: str
         """
 
-        config_pool.save(namespace, file_name, config=config_file)
-        if self.cleanup_registry:
+        config_pool.save(namespace, file_name, config=config_file, *args, **kwargs)
+        if self._cleanup_registry:
             config_pool.unset(namespace, file_name)
 
     def load_file(
             self,
             config_pool: ABCConfigPool,
             namespace: str,
-            file_name: str
+            file_name: str,
+            *args,
+            **kwargs,
     ) -> ABCConfigFile:
         """
         加载指定命名空间的配置
@@ -767,8 +795,8 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
         :type file_name: str
         """
 
-        cfg_file = config_pool.load(namespace, file_name)
-        if self.cleanup_registry:
+        cfg_file = config_pool.load(namespace, file_name, *args, **kwargs)
+        if self._cleanup_registry:
             config_pool.unset(namespace, file_name)
         return cfg_file
 

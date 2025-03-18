@@ -209,7 +209,7 @@ TOMLTests = (
         (), ()
     ),
     (
-        None,
+        {},
         (), ()
     ),
     (
@@ -234,6 +234,10 @@ TOMLTests = (
     ),
     (
         11.45,
+        (FailedProcessConfigFileError,), ()
+    ),
+    (
+        None,
         (FailedProcessConfigFileError,), ()
     ),
     (

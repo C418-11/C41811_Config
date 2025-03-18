@@ -91,7 +91,7 @@ class TestConfigPool:
             '', "test",
             config_formats="json",
             allow_create=True
-        ) == ConfigFile(ConfigData({}), config_format="json")
+        ) == ConfigFile(ConfigData(), config_format="json")
 
     @staticmethod
     def test_wrong_save(pool, data):
@@ -239,7 +239,7 @@ class TestRequiredPath:
             {"allow_modify": True, "skip_missing": True},
     ))
     def test_no_validation(data, kwargs):
-        assert RequiredPath(lambda _: _, "no-validation").filter(deepcopy(data), **kwargs) == data
+        assert RequiredPath(lambda _: _.cell_contents, "no-validation").filter(deepcopy(data), **kwargs) == data
 
     PydanticTests = ("path, value, kwargs, ignore_excs, ignore_warns", (
         ("foo", {"bar": 123, "bar1": 456}, {}, (), ()),

@@ -316,10 +316,10 @@ class ABCIndexedConfigData[D: Indexed | MutableIndexed](
         修改路径的值
 
         .. caution::
-           value参数未默认做深拷贝，可能导致非预期的行为
+           ``value`` 参数未默认做深拷贝，可能导致非预期的行为
 
         .. attention::
-           allow_create时，使用与self.data一样的类型新建路径
+           ``allow_create`` 时，使用与 `self.data` 一样的类型新建路径
 
         :param path: 路径
         :type path: str | ABCPath
@@ -481,23 +481,23 @@ class ABCIndexedConfigData[D: Indexed | MutableIndexed](
            从 ``set_default`` 重命名为 ``setdefault``
         """
 
-    def __contains__(self, key) -> bool:
-        return key in self._data
+    @abstractmethod
+    def __contains__(self, key) -> bool: ...
 
-    def __iter__(self):
-        return iter(self._data)
+    @abstractmethod
+    def __iter__(self): ...
 
-    def __len__(self):
-        return len(self._data)
+    @abstractmethod
+    def __len__(self): ...
 
     @abstractmethod
     def __getitem__(self, key): ...
 
-    def __setitem__(self, key, value) -> None:
-        self._data[key] = value
+    @abstractmethod
+    def __setitem__(self, key, value) -> None: ...
 
-    def __delitem__(self, key) -> None:
-        del self._data[key]
+    @abstractmethod
+    def __delitem__(self, key) -> None: ...
 
 
 class ABCProcessorHelper(ABC):
@@ -616,7 +616,8 @@ class ABCConfigFile[D: ABCConfigData](ABC):
         """
         :return: 配置数据
 
-        .. versionchanged::
+        .. versionchanged:: 0.1.6
+           重命名属性 ``data`` 为 ``config``
         """
         return self._config
 

@@ -19,6 +19,8 @@ from collections.abc import Sequence
 from collections.abc import ValuesView
 from contextlib import suppress
 from copy import deepcopy
+from dataclasses import dataclass
+from dataclasses import field
 from numbers import Number
 from re import Pattern
 from textwrap import dedent
@@ -48,7 +50,7 @@ from .errors import KeyInfo
 from .errors import RequiredPathNotFoundError
 from .errors import UnsupportedConfigFormatError
 from .path import Path
-from .utils import singleton
+from .utils import Unset as _Unset
 
 
 def _fmt_path(path: str | ABCPath) -> ABCPath:
@@ -285,12 +287,32 @@ class BasicIndexedConfigData[D: Indexed | MutableIndexed](
             return default
 
     @override
+    def __contains__(self, key) -> bool:
+        return key in self._data
+
+    @override
+    def __iter__(self):
+        return iter(self._data)
+
+    @override
+    def __len__(self):
+        return len(self._data)
+
+    @override
     def __getitem__(self, key):
         data = self._data[key]
         is_sequence = isinstance(data, Sequence) and not isinstance(data, (str, bytes))
         if isinstance(data, Mapping) or is_sequence:
             return ConfigData(data)
         return deepcopy(data)
+
+    @override
+    def __setitem__(self, key, value) -> None:
+        self._data[key] = value
+
+    @override
+    def __delitem__(self, key) -> None:
+        del self._data[key]
 
 
 class ConfigData(ABC):
@@ -366,22 +388,21 @@ def _operate(operate_func, inplace_func):
     return decorator
 
 
-@singleton
-class _UnsetArgType:
-    def __str__(self):
-        return "<Unset Argument>"
+class NoneConfigData(BasicSingleConfigData):
+    """
+    空的配置数据
+
+    .. versionadded:: 0.1.6
+    """
 
     def __bool__(self):
         return False
 
 
-_UnsetArg = _UnsetArgType()
-
-
 @_generate_operators
 class MappingConfigData[D: Mapping | MutableMapping](BasicIndexedConfigData, MutableMapping):
     """
-    支持 Mapping 的 ConfigData
+    映射配置数据
 
     .. versionadded:: 0.1.5
     """
@@ -511,8 +532,8 @@ class MappingConfigData[D: Mapping | MutableMapping](BasicIndexedConfigData, Mut
 
     @override
     @_check_read_only
-    def pop(self, key, /, default: Any = _UnsetArg):
-        if default is _UnsetArg:
+    def pop(self, key, /, default: Any = _Unset):
+        if default is _Unset:
             return self._data.pop(key)
         return self._data.pop(key, default)
 
@@ -543,7 +564,7 @@ class MappingConfigData[D: Mapping | MutableMapping](BasicIndexedConfigData, Mut
 @_generate_operators
 class SequenceConfigData[D: Sequence | MutableSequence](BasicIndexedConfigData, MutableSequence):
     """
-    支持 Sequence 的 ConfigData
+    序列配置数据
 
     .. versionadded:: 0.1.5
     """
@@ -620,7 +641,7 @@ class SequenceConfigData[D: Sequence | MutableSequence](BasicIndexedConfigData, 
 @_generate_operators
 class NumberConfigData[D: Number](BasicSingleConfigData):
     """
-    支持 Number 的 ConfigData
+    数值配置数据
 
     .. versionadded:: 0.1.5
     """
@@ -743,7 +764,7 @@ class NumberConfigData[D: Number](BasicSingleConfigData):
 class BoolConfigData[D: bool](NumberConfigData):
     # noinspection GrazieInspection
     """
-    支持 bool 的 ConfigData
+    布尔值配置数据
 
     .. versionadded:: 0.1.5
     """
@@ -759,7 +780,7 @@ class BoolConfigData[D: bool](NumberConfigData):
 @_generate_operators
 class StringConfigData[D: str | bytes](BasicSingleConfigData):
     """
-    支持 str 和 bytes 的 ConfigData
+    字符/字节串配置数据
     """
     _data: D
     data: D
@@ -808,6 +829,9 @@ class StringConfigData[D: str | bytes](BasicSingleConfigData):
 
 
 class ObjectConfigData[D: object](BasicSingleConfigData):
+    """
+    对象配置数据
+    """
     _data: D
     data: D
 
@@ -834,6 +858,7 @@ class ObjectConfigData[D: object](BasicSingleConfigData):
 type AnyConfigData = (
         ABCConfigData
         | ABCIndexedConfigData
+        | NoneConfigData
         | MappingConfigData
         | StringConfigData
         | SequenceConfigData
@@ -844,7 +869,8 @@ type AnyConfigData = (
 
 ConfigData.TYPES = OrderedDict((
     ((ABCConfigData,), lambda _: _),
-    ((Mapping, MutableMapping, type(None)), MappingConfigData),
+    ((type(None),), NoneConfigData),
+    ((Mapping, MutableMapping), MappingConfigData),
     ((str, bytes), StringConfigData),
     ((Sequence, MutableSequence), SequenceConfigData),
     ((bool,), BoolConfigData),
@@ -852,6 +878,7 @@ ConfigData.TYPES = OrderedDict((
     ((object,), ObjectConfigData),
 ))
 
+ConfigData.register(NoneConfigData)
 ConfigData.register(MappingConfigData)
 ConfigData.register(SequenceConfigData)
 ConfigData.register(NumberConfigData)
@@ -860,14 +887,200 @@ ConfigData.register(StringConfigData)
 ConfigData.register(ObjectConfigData)
 
 
-class ConfigFile(ABCConfigFile):
+@dataclass
+class ComponentOrders:
+    """
+    组件顺序
+
+    .. versionadded:: 0.1.6
+    """
+
+    create: list[str] = field(default_factory=list)
+    read: list[str] = field(default_factory=list)
+    update: list[str] = field(default_factory=list)
+    delete: list[str] = field(default_factory=list)
+
+
+@dataclass
+class ComponentMember:
+    """
+    组件成员
+
+    .. versionadded:: 0.1.6
+    """
+
+    filename: str
+    alias: str | None = field(default=None)
+    config_format: str | None = field(default=None)
+
+
+@dataclass
+class ComponentMeta:
+    """
+    组件元数据
+
+    .. versionadded:: 0.1.6
+    """
+
+    config: MappingConfigData = field(default_factory=MappingConfigData)
+    orders: ComponentOrders = field(default_factory=ComponentOrders)
+    members: list[ComponentMember] = field(default_factory=list)
+
+
+class ComponentConfigData[D: MappingConfigData](BasicConfigData, ABCIndexedConfigData):
+    """
+    组件配置数据
+
+    .. versionadded:: 0.1.6
+    """
+
+    def __init__(self, meta: ComponentMeta = None, members: MutableMapping[str, D] = None):
+        """
+        :param meta: 组件元数据
+        :type meta: ComponentMeta
+        :param members: 组件成员
+        :type members: MutableMapping[str, MappingConfigData]
+        """
+        if meta is None:
+            meta = ComponentMeta()
+        if members is None:
+            members = {}
+
+        self._meta = deepcopy(meta)
+
+        member_meta: ComponentMember  # 不加这行类型检查会奇奇怪怪报错，加了之后flake8又报错🤣👍  # noqa: F842
+        self._filename_2_meta = {member_meta.filename: member_meta for member_meta in self._meta.members}
+        self._alias_2_filename = {
+            member_meta.alias: member_meta.filename
+            for member_meta in self._meta.members
+            if member_meta.alias is not None
+        }
+        self._members: MutableMapping[str, D] = deepcopy(members)
+
+        if len(self._filename_2_meta) != len(self._meta.members):
+            raise ValueError("repeated filename in meta")
+
+        same_names = self._alias_2_filename.keys() & self._alias_2_filename.values()
+        if same_names:
+            raise ValueError(f"alias and filename cannot be the same {tuple(same_names)}")
+
+        unexpected_names = self._members.keys() ^ (self._alias_2_filename.values() | self._filename_2_meta.keys())
+        if unexpected_names:
+            raise ValueError(f"cannot match members from meta {tuple(unexpected_names)}")
+
+    @property
+    def meta(self) -> ComponentMeta:
+        """
+        .. caution::
+            未默认做深拷贝，可能导致非预期行为
+
+            除非你知道你在做什么，不要轻易修改！
+
+                由于 :py:class:`ComponentMeta` 仅提供一个通用的接口，
+                直接修改其中元数据而不修改 ``config`` 字段 `*可能*` 会导致SL与元数据的不同步，
+                这取决于 :py:class:`ComponentSL` 所取用的元数据解析器的行为
+        """
+        return self._meta
+
+    @property
+    def members(self) -> Mapping[str, D]:
+        """
+        .. caution::
+            未默认做深拷贝，可能导致非预期行为
+        """
+        return self._members
+
+    @property
+    def data_read_only(self) -> bool | None:
+        return not isinstance(self._members, MutableMapping)
+
+    def _member(self, key: str) -> D:
+        try:
+            return self._members[key]
+        except KeyError:
+            with suppress(KeyError):
+                return self._members[self._alias_2_filename[key]]
+            raise
+
+    def _resolve_members(self, path: str | ABCPath):
+        ...
+
+    def retrieve(self, path: str | ABCPath, *, return_raw_value: bool = False) -> Any:  # todo
+        pass
+
+    def modify(self, path: str | ABCPath, value: Any, *, allow_create: bool = True) -> Self:
+        pass
+
+    def delete(self, path: str | ABCPath) -> Self:
+        pass
+
+    def unset(self, path: str | ABCPath) -> Self:
+        pass
+
+    def exists(self, path: str | ABCPath, *, ignore_wrong_type: bool = False) -> bool:
+        pass
+
+    def get(self, path: str | ABCPath, default=None, *, return_raw_value: bool = False) -> Any:
+        pass
+
+    def setdefault(self, path: str | ABCPath, default=None, *, return_raw_value: bool = False) -> Any:
+        pass
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return NotImplemented
+        return all((
+            self._meta == other._meta,
+            self._members == other._members
+        ))
+
+    def __str__(self) -> str:
+        return str(self._members)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self._members!r})"
+
+    def __deepcopy__(self, memo) -> Self:
+        return self.from_data(self._meta, self._members)
+
+    @override
+    def __contains__(self, key) -> bool:
+        return key in self._members
+
+    @override
+    def __iter__(self):
+        return iter(self._members)
+
+    @override
+    def __len__(self):
+        return len(self._members)
+
+    @override
+    def __getitem__(self, key) -> D:
+        return self._members[key]
+
+    @override
+    @_check_read_only
+    def __setitem__(self, key, value: D) -> None:
+        self._members[key] = value
+
+    @override
+    @_check_read_only
+    def __delitem__(self, key) -> None:
+        del self._members[key]
+
+
+ConfigData.register(ComponentConfigData)
+
+
+class ConfigFile[D: Any](ABCConfigFile):
     """
     配置文件类
     """
 
     def __init__(
             self,
-            initial_config: Any,
+            initial_config: D,
             *,
             config_format: Optional[str] = None
     ) -> None:
@@ -1192,6 +1405,7 @@ __all__ = (
     "BasicConfigData",
     "BasicSingleConfigData",
     "BasicIndexedConfigData",
+    "NoneConfigData",
     "MappingConfigData",
     "SequenceConfigData",
     "BoolConfigData",
@@ -1200,6 +1414,10 @@ __all__ = (
     "ObjectConfigData",
     "AnyConfigData",
     "ConfigData",
+    "ComponentOrders",
+    "ComponentMember",
+    "ComponentMeta",
+    "ComponentConfigData",
     "ConfigFile",
     "PHelper",
     "BasicConfigPool",
