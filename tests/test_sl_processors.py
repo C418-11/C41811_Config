@@ -20,6 +20,7 @@ from C41811.Config.errors import FailedProcessConfigFileError
 from C41811.Config.main import BasicCompressedConfigSL
 from C41811.Config.processors import TarFileSL
 from C41811.Config.processors import ZipFileSL
+from C41811.Config.processors.Component import ComponentSL
 from C41811.Config.processors.PyYaml import PyYamlSL
 from C41811.Config.processors.RuamelYaml import RuamelYamlSL
 from C41811.Config.processors.TarFile import CompressionTypes as TarFileCompressionTypes
@@ -461,7 +462,17 @@ def test_wrong_sl_arguments():
         JsonSL(NotImplemented)
 
 
-SLProcessors = (JsonSL, PickleSL, PythonLiteralSL, PyYamlSL, RuamelYamlSL, TomlSL, TarFileSL, ZipFileSL)
+SLProcessors = (
+    JsonSL,
+    PickleSL,
+    PythonLiteralSL,
+    PyYamlSL,
+    RuamelYamlSL,
+    TomlSL,
+    TarFileSL,
+    ZipFileSL,
+    ComponentSL,
+)
 
 
 @mark.parametrize("sl_cls", SLProcessors)

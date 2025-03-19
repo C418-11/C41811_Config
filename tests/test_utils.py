@@ -3,10 +3,11 @@
 
 
 from pytest import mark
+
 from C41811.Config.utils import CellType
-from C41811.Config.utils import singleton
 from C41811.Config.utils import Unset
 from C41811.Config.utils import UnsetType
+from C41811.Config.utils import singleton
 
 
 @mark.parametrize("cls", [singleton(type("A", (), {})), UnsetType])
@@ -27,6 +28,7 @@ def test_unset_type():
     assert not Unset
 
     repr(Unset)
+    str(Unset)
 
 
 def test_cell_type():

@@ -35,7 +35,7 @@ class ABCMetaParser(ABC):
     """
 
     @abstractmethod
-    def from_config(self, meta_config: MappingConfigData) -> ComponentMeta:
+    def convert_config2meta(self, meta_config: MappingConfigData) -> ComponentMeta:
         """
         解析元配置
 
@@ -47,7 +47,7 @@ class ABCMetaParser(ABC):
         """
 
     @abstractmethod
-    def from_meta(self, meta: ComponentMeta) -> MappingConfigData:
+    def convert_meta2config(self, meta: ComponentMeta) -> MappingConfigData:
         """
         解析元数据
 
@@ -73,7 +73,7 @@ class MetaParser(ABCMetaParser):
     )
 
     @override
-    def from_config(self, meta_config: MappingConfigData) -> ComponentMeta:
+    def convert_config2meta(self, meta_config: MappingConfigData) -> ComponentMeta:
         meta = self.validator.filter(CellType(meta_config))
 
         members = meta.get("members", SequenceConfigData()).data
@@ -86,7 +86,8 @@ class MetaParser(ABCMetaParser):
                 raise ValueError(f"unexpected member type {member}")
 
         orders: ComponentOrders = ComponentOrders(**meta.get("orders", MappingConfigData()).data)
-        order = meta.setdefault("order",
+        order = meta.setdefault(
+            "order",
             [member.alias if member.alias else member.filename for member in members]
         )
         if not isinstance(order, list):
@@ -105,7 +106,7 @@ class MetaParser(ABCMetaParser):
         return ComponentMeta(meta, orders, members)
 
     @override
-    def from_meta(self, meta: ComponentMeta) -> MappingConfigData:
+    def convert_meta2config(self, meta: ComponentMeta) -> MappingConfigData:
         return meta.config
 
 
@@ -161,7 +162,7 @@ class ComponentSL(BasicChainConfigSL):
             with self.raises(TypeError):
                 raise TypeError(f"{namespace} is not a ComponentConfigData")
 
-        meta_config = self.meta_parser.from_meta(config_data.meta)
+        meta_config = self.meta_parser.convert_meta2config(config_data.meta)
         file_name, file_ext = os.path.splitext(file_name)
         super().save_file(config_pool, ConfigFile(meta_config), namespace, self.initial_file + file_ext, *args,
                           **kwargs)
@@ -188,7 +189,7 @@ class ComponentSL(BasicChainConfigSL):
             with self.raises(TypeError):
                 raise TypeError(f"{namespace} is not a MappingConfigData")
 
-        meta = self.meta_parser.from_config(initial_data)
+        meta = self.meta_parser.convert_config2meta(initial_data)
         members = {}
         for member in meta.members:
             members[member.filename] = super().load_file(

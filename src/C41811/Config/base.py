@@ -839,7 +839,7 @@ class ObjectConfigData[D: object](BasicSingleConfigData):
         """
         .. caution::
            未默认做深拷贝，可能导致非预期行为
-        
+
         :param data: 配置的原始数据
         :type data: Any
         """
@@ -961,22 +961,22 @@ class ComponentConfigData[D: MappingConfigData](BasicConfigData, ABCIndexedConfi
         self._meta = deepcopy(meta)
 
         member_meta: ComponentMember  # 不加这行类型检查会奇奇怪怪报错，加了之后flake8又报错🤣👍  # noqa: F842
-        self._filename_2_meta = {member_meta.filename: member_meta for member_meta in self._meta.members}
-        self._alias_2_filename = {
+        self._filename2meta = {member_meta.filename: member_meta for member_meta in self._meta.members}
+        self._alias2filename = {
             member_meta.alias: member_meta.filename
             for member_meta in self._meta.members
             if member_meta.alias is not None
         }
         self._members: MutableMapping[str, D] = deepcopy(members)
 
-        if len(self._filename_2_meta) != len(self._meta.members):
+        if len(self._filename2meta) != len(self._meta.members):
             raise ValueError("repeated filename in meta")
 
-        same_names = self._alias_2_filename.keys() & self._alias_2_filename.values()
+        same_names = self._alias2filename.keys() & self._alias2filename.values()
         if same_names:
             raise ValueError(f"alias and filename cannot be the same {tuple(same_names)}")
 
-        unexpected_names = self._members.keys() ^ (self._alias_2_filename.values() | self._filename_2_meta.keys())
+        unexpected_names = self._members.keys() ^ (self._alias2filename.values() | self._filename2meta.keys())
         if unexpected_names:
             raise ValueError(f"cannot match members from meta {tuple(unexpected_names)}")
 
@@ -1011,7 +1011,7 @@ class ComponentConfigData[D: MappingConfigData](BasicConfigData, ABCIndexedConfi
             return self._members[key]
         except KeyError:
             with suppress(KeyError):
-                return self._members[self._alias_2_filename[key]]
+                return self._members[self._alias2filename[key]]
             raise
 
     def _resolve_members(self, path: str | ABCPath):

@@ -16,18 +16,18 @@ from pytest import fixture
 from pytest import mark
 from pytest import raises
 
+from C41811.Config import BoolConfigData
+from C41811.Config import ComponentConfigData
 from C41811.Config import ComponentMember
 from C41811.Config import ComponentMeta
-from C41811.Config import ObjectConfigData
-from C41811.Config import NoneConfigData
-from C41811.Config import ComponentConfigData
-from C41811.Config import BoolConfigData
 from C41811.Config import ConfigData
 from C41811.Config import ConfigFile
 from C41811.Config import ConfigPool
 from C41811.Config import IndexKey
 from C41811.Config import MappingConfigData
+from C41811.Config import NoneConfigData
 from C41811.Config import NumberConfigData
+from C41811.Config import ObjectConfigData
 from C41811.Config import Path
 from C41811.Config import SequenceConfigData
 from C41811.Config import StringConfigData
@@ -35,6 +35,7 @@ from C41811.Config.errors import ConfigDataReadOnlyError
 from C41811.Config.errors import ConfigDataTypeError
 from C41811.Config.errors import RequiredPathNotFoundError
 from C41811.Config.errors import UnsupportedConfigFormatError
+from C41811.Config.utils import Unset
 from utils import safe_raises
 
 
@@ -482,8 +483,8 @@ class TestMappingConfigData:
 
     @staticmethod
     @mark.parametrize("data", (
-        {"a": 1, "b": 2},
-        {"a": 1, "b": 2, "c": 3},
+            {"a": 1, "b": 2},
+            {"a": 1, "b": 2, "c": 3},
     ))
     def test_popitem(data):
         data = ConfigData(data)
@@ -491,6 +492,35 @@ class TestMappingConfigData:
         popped = data.popitem()
         assert popped in items
         assert popped not in data.items()
+
+    @staticmethod
+    @mark.parametrize("dct, key, result, ignore_excs", (
+            ({"a": 1}, "a", 1, ()),
+            ({"a": 1, "b": 2}, "b", 2, ()),
+            ({"a": 1}, "b", Unset, (KeyError,)),
+    ))
+    def test_pop(dct, key, result, ignore_excs):
+        data = ConfigData(dct)
+        with safe_raises(ignore_excs) as info:
+            assert data.pop(key) == result
+        if info:
+            return
+        assert key not in data
+
+    @staticmethod
+    @mark.parametrize("dct, key, default, result, ignore_excs", (
+            ({"a": 1}, "a", 2, 1, ()),
+            ({"a": 1, "b": 2}, "b", 3, 2, ()),
+            ({"a": 1}, "b", 2, 2, ()),
+            ({"a": 1}, "c", 5, 5, ()),
+    ))
+    def test_pop_default(dct, key, default, result, ignore_excs):
+        data = ConfigData(dct)
+        with safe_raises(ignore_excs) as info:
+            assert data.pop(key, default) == result
+        if info:
+            return
+        assert key not in data
 
     @staticmethod
     @mark.parametrize("data, mapping, result", (
@@ -1158,6 +1188,7 @@ class TestStringConfigData:
 def test_object_config_data():
     class MyClass:
         ...
+
     obj = MyClass()
     data = ConfigData(obj)
     assert isinstance(data, ObjectConfigData)

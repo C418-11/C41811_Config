@@ -192,13 +192,12 @@ class FieldDefinition[T: type | types.UnionType | types.EllipsisType | types.Gen
        新增 ``allow_recursive`` 字段
     """
 
-    @overload
-    def __init__(self, annotation: T, default: Any, *, allow_recursive: bool = True):
-        ...
+    @overload  # @formatter:off
+    def __init__(self, annotation: T, default: Any, *, allow_recursive: bool = True): ...
 
     @overload
-    def __init__(self, annotation: T, *, default_factory: Callable[[], Any], allow_recursive: bool = True):
-        ...
+    def __init__(self, annotation: T, *, default_factory: Callable[[], Any], allow_recursive: bool = True): ...
+    # @formatter:on
 
     def __init__(
             self,

@@ -14,6 +14,10 @@ from pytest import fixture
 from pytest import mark
 from pytest import raises
 
+from C41811.Config import ComponentConfigData
+from C41811.Config import ComponentMember
+from C41811.Config import ComponentMeta
+from C41811.Config import ComponentOrders
 from C41811.Config import ConfigData
 from C41811.Config import ConfigFile
 from C41811.Config import ConfigPool
@@ -25,6 +29,7 @@ from C41811.Config import ValidatorFactoryConfig
 from C41811.Config.errors import ConfigDataTypeError
 from C41811.Config.errors import RequiredPathNotFoundError
 from C41811.Config.errors import UnsupportedConfigFormatError
+from C41811.Config.processors.Component import MetaParser
 from utils import safe_raises
 from utils import safe_warns
 
@@ -487,6 +492,44 @@ class TestRequiredPath:
         with safe_raises(ignore_excs), safe_warns(ignore_warns):
             data = RequiredPath(mapping).filter(data, **kwargs)
             assert data.data == result
+
+    ComponentTests = ("data, validator, result, kwargs, ignores", (
+        (ComponentConfigData(ComponentMeta(), {}),
+         {
+             None: {
+                 "members": ["foo.json", "bar.json"]
+             },
+             "foo.json": {
+                 "first\\.second\\.third": 4,
+             },
+             "bar.json": {
+                 "key": {"value"},
+             },
+         },
+         ComponentConfigData(
+             ComponentMeta(
+                 members=[ComponentMember("foo.json"), ComponentMember("bar.json")],
+                 orders=ComponentOrders(*([["foo.json", "bar.json"]]*4))
+             ),
+             {
+                 "foo.json": ConfigData({"first": {"second": {"third": 4}}}),
+                 "bar.json": ConfigData({"key": {"value"}}),
+             },
+         ),
+         dict(meta_validator=lambda meta, _: MetaParser().convert_config2meta(meta.config)), ()),  # todo 由ComponentSL自主注入
+    ))  # todo 更多测试用例
+
+    @staticmethod
+    @mark.parametrize(*ComponentTests)
+    def test_component(data, validator, result, kwargs, ignores):
+        ignore_warns = tuple(e for e in ignores if issubclass(e, Warning))
+        ignore_excs = tuple(set(ignores) - set(ignore_warns))
+
+        with safe_raises(ignore_excs), safe_warns(ignore_warns):
+            data = RequiredPath(validator, "component").filter(data, **kwargs)
+            assert data.meta.orders == result.meta.orders
+            assert data.meta.members == result.meta.members
+            assert data.members == result.members
 
     @staticmethod
     @mark.parametrize("validator, static_config, times", (
