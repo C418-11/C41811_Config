@@ -76,9 +76,21 @@ class MetaParser(ABCMetaParser):
     def from_config(self, meta_config: MappingConfigData) -> ComponentMeta:
         meta = self.validator.filter(CellType(meta_config))
 
-        orders: ComponentOrders = ComponentOrders(**meta.get("orders", MappingConfigData()).data)
+        members = meta.get("members", SequenceConfigData()).data
+        for i, member in enumerate(members):
+            if isinstance(member, str):
+                members[i] = ComponentMember(member)
+            elif isinstance(member, dict):
+                members[i] = ComponentMember(**member)
+            else:
+                raise ValueError(f"unexpected member type {member}")
 
-        order = meta.get("order", SequenceConfigData()).data
+        orders: ComponentOrders = ComponentOrders(**meta.get("orders", MappingConfigData()).data)
+        order = meta.setdefault("order",
+            [member.alias if member.alias else member.filename for member in members]
+        )
+        if not isinstance(order, list):
+            order = order.data
         for name in order:
             for attr in {"create", "read", "update", "delete"}:
                 if name in getattr(orders, attr):
@@ -89,15 +101,6 @@ class MetaParser(ABCMetaParser):
             o = getattr(orders, attr)
             if len(set(o)) != len(o):
                 raise ValueError(f"name(s) repeated in {attr} order")
-
-        members = meta.get("members", SequenceConfigData()).data
-        for i, member in enumerate(members):
-            if isinstance(member, str):
-                members[i] = ComponentMember(member)
-            elif isinstance(member, dict):
-                members[i] = ComponentMember(**member)
-            else:
-                raise ValueError(f"unexpected member type {member}")
 
         return ComponentMeta(meta, orders, members)
 

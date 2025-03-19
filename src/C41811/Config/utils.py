@@ -51,7 +51,7 @@ class CellType[C: Any]:
         self.cell_contents = contents
 
     def __repr__(self):
-        return f"<{type(self).__name__} ({self.cell_contents=})>"
+        return f"<{type(self).__name__} ({self.cell_contents!r})>"
 
 
 __all__ = (

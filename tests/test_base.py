@@ -16,6 +16,11 @@ from pytest import fixture
 from pytest import mark
 from pytest import raises
 
+from C41811.Config import ComponentMember
+from C41811.Config import ComponentMeta
+from C41811.Config import ObjectConfigData
+from C41811.Config import NoneConfigData
+from C41811.Config import ComponentConfigData
 from C41811.Config import BoolConfigData
 from C41811.Config import ConfigData
 from C41811.Config import ConfigFile
@@ -31,6 +36,10 @@ from C41811.Config.errors import ConfigDataTypeError
 from C41811.Config.errors import RequiredPathNotFoundError
 from C41811.Config.errors import UnsupportedConfigFormatError
 from utils import safe_raises
+
+
+def test_none_config_data():
+    assert not NoneConfigData(None)
 
 
 class TestMappingConfigData:
@@ -460,6 +469,39 @@ class TestMappingConfigData:
     @mark.parametrize(*ItemsTests)
     def test_items(data, kwargs, items):
         assert list(data.items(**kwargs)) == items
+
+    @staticmethod
+    @mark.parametrize("data", (
+            {123: {"abc", "zzz"}},
+            {"key": "value"},
+    ))
+    def test_clear(data):
+        data = ConfigData(data)
+        data.clear()
+        assert not data
+
+    @staticmethod
+    @mark.parametrize("data", (
+        {"a": 1, "b": 2},
+        {"a": 1, "b": 2, "c": 3},
+    ))
+    def test_popitem(data):
+        data = ConfigData(data)
+        items = data.items()
+        popped = data.popitem()
+        assert popped in items
+        assert popped not in data.items()
+
+    @staticmethod
+    @mark.parametrize("data, mapping, result", (
+            ({"a": 1}, {"a": 2}, {"a": 2}),
+            ({"a": 1}, {"b": 2}, {"a": 1, "b": 2}),
+            ({"a": 1, "d": 4}, {"a": 2, "b": 3}, {"a": 2, "b": 3, "d": 4}),
+    ))
+    def test_update(data, mapping, result):
+        data = ConfigData(data)
+        data.update(mapping)
+        assert data == ConfigData(result)
 
     @staticmethod
     def test_repr(data):
@@ -1082,6 +1124,92 @@ class TestStringConfigData:
     ))
     def test_reversed(string):
         assert list(reversed(ConfigData(string))) == list(reversed(string))
+
+    @staticmethod
+    @mark.parametrize("data, string, result", (
+            ("test", "test", True),
+            ("test", "TEST", False),
+            ("test", "t", True),
+            ("aabb", "ab", True),
+    ))
+    def test_contains(data, string, result):
+        data = ConfigData(data)
+        assert (string in data) is result
+
+    @staticmethod
+    @mark.parametrize("string", (
+            "123456",
+            "aabbcc",
+    ))
+    def test_iter(string):
+        data = ConfigData(string)
+        assert list(data) == list(string)
+
+    @staticmethod
+    @mark.parametrize("string", (
+            "123456",
+            "aabb",
+    ))
+    def test_len(string):
+        data = ConfigData(string)
+        assert len(data) == len(string)
+
+
+def test_object_config_data():
+    class MyClass:
+        ...
+    obj = MyClass()
+    data = ConfigData(obj)
+    assert isinstance(data, ObjectConfigData)
+    assert data.data == obj
+    assert data.data_read_only is False
+
+
+class TestComponentConfigData:
+    @staticmethod
+    @fixture
+    def empty_data() -> ComponentConfigData:
+        return ComponentConfigData()
+
+    @staticmethod
+    @fixture
+    def meta() -> ComponentMeta:
+        return ComponentMeta(members=[ComponentMember("foo.json"), ComponentMember("bar.json")])
+
+    @staticmethod
+    @fixture
+    def members() -> dict[str, MappingConfigData]:
+        return {
+            "foo": ConfigData({
+                "key": {
+                    "value": "foo",
+                },
+                "first": {
+                    "second": 3,
+                },
+            }),
+            "bar": ConfigData({
+                "key": {
+                    "value": "bar",
+                    "extra": 0
+                }
+            }),
+        }
+
+    @staticmethod
+    @fixture
+    def data(meta, members) -> ComponentConfigData:
+        return ComponentConfigData(meta, members)
+
+    @staticmethod
+    def test_empty_init(empty_data):
+        assert not empty_data.members
+        assert not empty_data.meta.config
+        assert not empty_data.meta.members
+        assert not empty_data.meta.orders.create
+        assert not empty_data.meta.orders.read
+        assert not empty_data.meta.orders.update
+        assert not empty_data.meta.orders.delete
 
 
 def _insert_operator(tests, op, iop: Optional[Callable] = None, *ext):

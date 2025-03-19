@@ -684,7 +684,7 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
         :return: 格式化后的命名空间
         :rtype: str
         """
-        return namespace
+        return namespace  # 全被子类复写了，测不到 # pragma: no cover
 
     def filename_formatter(self, file_name: str) -> str:
         # noinspection SpellCheckingInspection

@@ -75,7 +75,7 @@ class BasicConfigData(ABCConfigData, ABC):
     @override
     @property
     def data_read_only(self) -> bool | None:
-        return True
+        return True  # 全被子类复写了，测不到 # pragma: no cover
 
     @override
     @property
@@ -540,7 +540,7 @@ class MappingConfigData[D: Mapping | MutableMapping](BasicIndexedConfigData, Mut
     @override
     @_check_read_only
     def popitem(self):
-        self._data.popitem()
+        return self._data.popitem()
 
     @override
     @_check_read_only
@@ -835,6 +835,18 @@ class ObjectConfigData[D: object](BasicSingleConfigData):
     _data: D
     data: D
 
+    def __init__(self, data: D):
+        """
+        .. caution::
+           未默认做深拷贝，可能导致非预期行为
+        
+        :param data: 配置的原始数据
+        :type data: Any
+        """
+        super().__init__(None)
+
+        self._data: D = data
+
     @override
     @property
     def data_read_only(self) -> False:
@@ -1038,7 +1050,7 @@ class ComponentConfigData[D: MappingConfigData](BasicConfigData, ABCIndexedConfi
         return str(self._members)
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self._members!r})"
+        return f"{self.__class__.__name__}(meta={self._meta!r}, members={self._members!r})"
 
     def __deepcopy__(self, memo) -> Self:
         return self.from_data(self._meta, self._members)
