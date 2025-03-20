@@ -40,7 +40,7 @@ C41811.Config is suitable for a variety of configuration management scenarios, e
   configuration files can be centrally managed and accessed, improving the efficiency and consistency of configurations.
 * Complex data models: Automatically fills in missing key default values and verifies the type of configuration data to
   ensure the integrity and accuracy of configuration data.
-* Need for complex configuration operations: Provides methods such as get, set_default, unset, etc., to simplify complex
+* Need for complex configuration operations: Provides methods such as get, setdefault, unset, etc., to simplify complex
   operations on configuration data.
 * Mixing multiple configuration formats: Supports inferring the appropriate configuration format from registered
   processors based on file extensions, allowing seamless use of configuration files in different formats.
