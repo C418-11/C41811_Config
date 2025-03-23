@@ -39,6 +39,7 @@ from .abc import ABCConfigFile
 from .abc import ABCConfigPool
 from .abc import ABCIndexedConfigData
 from .abc import ABCKey
+from .abc import ABCMetaParser
 from .abc import ABCPath
 from .abc import ABCProcessorHelper
 from .abc import ABCSLProcessorPool
@@ -394,6 +395,17 @@ class NoneConfigData(BasicSingleConfigData):
 
     .. versionadded:: 0.2.0
     """
+
+    def __init__(self, data: Optional[None] = None):
+        """
+        :param data: 配置的原始数据
+        :type data: None
+        """
+
+        if data is not None:
+            raise ValueError(f"{type(self).__name__} can only accept None as data")
+
+        super().__init__(data)
 
     def __bool__(self):
         return False
@@ -937,6 +949,7 @@ class ComponentMeta:
     config: MappingConfigData = field(default_factory=MappingConfigData)
     orders: ComponentOrders = field(default_factory=ComponentOrders)
     members: list[ComponentMember] = field(default_factory=list)
+    parser: Optional[ABCMetaParser] = field(default=None)
 
 
 class ComponentConfigData[D: MappingConfigData](BasicConfigData, ABCIndexedConfigData):
@@ -976,7 +989,7 @@ class ComponentConfigData[D: MappingConfigData](BasicConfigData, ABCIndexedConfi
         if same_names:
             raise ValueError(f"alias and filename cannot be the same {tuple(same_names)}")
 
-        unexpected_names = self._members.keys() ^ (self._alias2filename.values() | self._filename2meta.keys())
+        unexpected_names = self._members.keys() ^ self._filename2meta.keys()
         if unexpected_names:
             raise ValueError(f"cannot match members from meta {tuple(unexpected_names)}")
 
@@ -1151,9 +1164,27 @@ class ConfigFile[D: Any](ABCConfigFile):
         if config_format not in processor_pool.SLProcessors:
             raise UnsupportedConfigFormatError(config_format)
 
-        return processor_pool.SLProcessors[
-            config_format
-        ].load(processor_pool, processor_pool.root_path, namespace, file_name, *processor_args, **processor_kwargs)
+        return processor_pool.SLProcessors[config_format].load(processor_pool, processor_pool.root_path, namespace,
+                                                               file_name, *processor_args, **processor_kwargs)
+
+    @classmethod
+    @override
+    def initialize(
+            cls,
+            processor_pool: ABCSLProcessorPool,
+            namespace: str,
+            file_name: str,
+            config_format: str,
+            *processor_args,
+            **processor_kwargs
+    ) -> Self:
+
+        if config_format not in processor_pool.SLProcessors:
+            raise UnsupportedConfigFormatError(config_format)
+
+        return processor_pool.SLProcessors[config_format].initialize(processor_pool, processor_pool.root_path,
+                                                                     namespace, file_name, *processor_args,
+                                                                     **processor_kwargs)
 
 
 class PHelper(ABCProcessorHelper): ...  # noqa: E701

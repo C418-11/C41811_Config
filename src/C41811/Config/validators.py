@@ -293,6 +293,20 @@ class DefaultValidatorFactory[D: MappingConfigData | NoneConfigData]:
         :param validator_config: 验证器配置
         :type validator_config: ValidatorFactoryConfig
 
+        额外验证器工厂配置参数
+        ---------------------
+        .. list-table::
+           :widths: auto
+
+           * - 键名
+             - 描述
+             - 默认值
+             - 类型
+           * - model_config_key
+             - 内部编译 `pydantic` 的 ``BaseModel`` 时，模型配置是以嵌套字典的形式存储的，因此请确保此参数不与任何其中子模型名冲突
+             - ".__model_config__"
+             - Any
+
         .. versionchanged:: 0.1.2
            支持验证器混搭路径字符串和嵌套字典
 
@@ -523,6 +537,28 @@ class ComponentValidatorFactory[D: ComponentConfigData | NoneConfigData]:
         :type validator: Mapping[str | None, Any]
         :param validator_config: 验证器配置
         :type validator_config: ValidatorFactoryConfig
+
+        额外验证器工厂配置参数
+        ---------------------
+        .. list-table::
+           :widths: auto
+
+           * - 键名
+             - 描述
+             - 默认值
+             - 类型
+           * - validator_factory
+             - 处理组件成员的验证器工厂
+             - :py:class:`DefaultValidatorFactory`
+             - Callable[[Any, ValidatorFactoryConfig], Callable[[ComponentConfigData], ComponentConfigData]]
+           * - allow_create
+             - 是否允许创建不存在的组件
+             - True
+             - bool
+           * - meta_validator
+             - 组件元数据验证器
+             - 尝试从传入的组件元数据获得，若不存在(值为None)则放弃验证
+             - Callable[[ComponentMeta, ValidatorFactoryConfig], ComponentMeta]
         """
 
         self.validator = validator
@@ -550,28 +586,25 @@ class ComponentValidatorFactory[D: ComponentConfigData | NoneConfigData]:
                 validation_meta = True
                 continue
 
-            if (member not in data) and self.validator_config.extra.setdefault("allow_create", True):
+            if (member not in data) and self.validator_config.extra.get("allow_create", True):
                 data[member] = MappingConfigData()
             data_cell = CellType(data[member])
             members[member] = validator(data_cell)
-            cell.cell_contents[member] = data_cell.cell_contents
+            if self.validator_config.allow_modify:
+                cell.cell_contents[member] = data_cell.cell_contents
 
-        meta = data.meta
+        meta = deepcopy(data.meta)
         if validation_meta:
             meta.config = self.validators[None](CellType(meta.config))
 
-            meta_validator = self.validator_config.extra.get("meta_validator")
+            meta_validator = None if meta.parser is None else meta.parser.validator
+            meta_validator = self.validator_config.extra.get("meta_validator", meta_validator)
             if meta_validator is not None:
                 meta = meta_validator(meta, self.validator_config)
-
-        result = data.from_data(meta, members)
         if self.validator_config.allow_modify:
             cell.cell_contents._meta = meta
-            missing_member = members.keys() - cell.cell_contents.members.keys()
-            for member in missing_member:
-                cell.cell_contents[member] = members[member]
 
-        return result
+        return data.from_data(meta, members)
 
 
 __all__ = (

@@ -688,6 +688,37 @@ class ABCConfigFile[D: ABCConfigData](ABC):
            重命名 ``config_pool`` 为 ``processor_pool``
         """
 
+    @classmethod
+    @abstractmethod
+    def initialize(
+            cls,
+            processor_pool: ABCSLProcessorPool,
+            namespace: str,
+            file_name: str,
+            config_format: str,
+            *processor_args,
+            **processor_kwargs
+    ) -> Self:
+        """
+        初始化一个受SL处理器支持的配置文件
+
+        :param processor_pool: 配置池
+        :type processor_pool: ABCSLProcessorPool
+        :param namespace: 文件命名空间
+        :type namespace: str
+        :param file_name: 文件名
+        :type file_name: str
+        :param config_format: 配置文件的格式
+        :type config_format: str
+
+        :return: 配置对象
+        :rtype: Self
+
+        :raise UnsupportedConfigFormatError: 不支持的配置格式
+
+        .. versionadded:: 0.2.0
+        """
+
     def __bool__(self):
         return bool(self._config)
 
@@ -1029,6 +1060,34 @@ class ABCConfigSL(ABC):
            添加参数 ``processor_pool``
         """
 
+    @abstractmethod
+    def initialize(
+            self,
+            processor_pool: ABCSLProcessorPool,
+            root_path: str,
+            namespace: str,
+            file_name: str,
+            *args,
+            **kwargs
+    ) -> ABCConfigFile:
+        """
+        初始化一个受SL处理器支持的配置文件
+
+        :param processor_pool: 配置池
+        :type processor_pool: ABCSLProcessorPool
+        :param root_path: 保存的根目录
+        :type root_path: str
+        :param namespace: 配置的命名空间
+        :type namespace: str
+        :param file_name: 配置文件名
+        :type file_name: str
+
+        :return: 配置对象
+        :rtype: ABCConfigFile
+
+        .. versionadded:: 0.2.0
+        """
+
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return NotImplemented  # pragma: no cover
@@ -1051,6 +1110,44 @@ class ABCConfigSL(ABC):
         ))
 
 
+class ABCMetaParser[D: ABCConfigData, M: Any](ABC):
+    """
+    元信息解析器抽象类
+
+    .. versionadded:: 0.2.0
+    """
+
+    @abstractmethod
+    def convert_config2meta(self, meta_config: D) -> M:
+        """
+        解析元配置
+
+        :param meta_config: 元配置
+        :type meta_config: ABCConfigData
+
+        :return: 元数据
+        :rtype: Any
+        """
+
+    @abstractmethod
+    def convert_meta2config(self, meta: M) -> D:
+        """
+        解析元数据
+
+        :param meta: 元数据
+        :type meta: Any
+
+        :return: 元配置
+        :rtype: ABCConfigData
+        """
+
+    @abstractmethod
+    def validator(self, meta: M, *args) -> M:
+        """
+        元数据验证器
+        """
+
+
 __all__ = (
     "ABCKey",
     "ABCPath",
@@ -1062,4 +1159,5 @@ __all__ = (
     "ABCConfigFile",
     "SLArgument",
     "ABCConfigSL",
+    "ABCMetaParser",
 )

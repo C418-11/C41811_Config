@@ -29,6 +29,7 @@ from .abc import ABCSLProcessorPool
 from .abc import SLArgument
 from .base import BasicConfigPool
 from .base import ConfigData
+from .base import ConfigFile
 from .errors import FailedProcessConfigFileError
 from .safe_writer import safe_open
 from .utils import CellType
@@ -178,6 +179,28 @@ class ConfigPool(BasicConfigPool):
             allow_create: bool = False,
             **kwargs
     ) -> ABCConfigFile:
+        """
+        加载配置
+
+        :param namespace: 命名空间
+        :type namespace: str
+        :param file_name: 文件名
+        :type file_name: str
+        :param config_formats: 配置格式
+        :type config_formats: Optional[str | Iterable[str]]
+        :param allow_create: 是否允许创建配置文件
+        :type allow_create: bool
+
+        :return: 配置对象
+        :rtype: ABCConfigFile
+
+        .. versionchanged:: 0.2.0
+           现在会像 :py:meth:`save` 一样接收并传递额外参数
+
+           移除 ``config_file_cls`` 参数
+
+           现在由 :py:meth:`ABCConfigFile.initialize` 创建新的空 :py:class:`ABCConfigFile` 对象
+        """
         if (namespace, file_name) in self:
             return self.get(namespace, file_name)
 
@@ -188,10 +211,7 @@ class ConfigPool(BasicConfigPool):
             except FileNotFoundError:
                 if not allow_create:
                     raise
-                result = config_file_cls(
-                    ConfigData(),
-                    config_format=cf
-                )
+                result = config_file_cls.initialize(pool, ns, fn, cf, *args, **kwargs)
 
             pool.set(namespace, file_name, result)
             return result
@@ -367,6 +387,18 @@ class BasicConfigSL(ABCConfigSL, ABC):
             config_pool = DefaultConfigPool
 
         super().register_to(config_pool)
+
+    @override
+    def initialize(
+            self,
+            processor_pool: ABCSLProcessorPool,
+            root_path: str,
+            namespace: str,
+            file_name: str,
+            *args,
+            **kwargs
+    ) -> ABCConfigFile:
+        return ConfigFile(ConfigData(), config_format=self.reg_name)
 
 
 def _merge_args(

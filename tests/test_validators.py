@@ -8,8 +8,9 @@
 .. versionadded:: 0.2.0
 """
 
-from C41811.Config import FieldDefinition
 from pytest import raises
+
+from C41811.Config import FieldDefinition
 
 
 def test_field_definition():

@@ -40,7 +40,11 @@ from utils import safe_raises
 
 
 def test_none_config_data():
-    assert not NoneConfigData(None)
+    assert not NoneConfigData()
+
+    with raises(ValueError):
+        # noinspection PyTypeChecker
+        NoneConfigData(NotImplemented)
 
 
 class TestMappingConfigData:
@@ -1196,6 +1200,13 @@ def test_object_config_data():
     assert data.data_read_only is False
 
 
+def _ccd_from_members(members: dict[str, MappingConfigData]) -> ComponentConfigData:
+    return ComponentConfigData(
+        meta=ComponentMeta(members=[ComponentMember(fn) for fn in members.keys()]),
+        members=members,
+    )
+
+
 class TestComponentConfigData:
     @staticmethod
     @fixture
@@ -1205,13 +1216,13 @@ class TestComponentConfigData:
     @staticmethod
     @fixture
     def meta() -> ComponentMeta:
-        return ComponentMeta(members=[ComponentMember("foo.json"), ComponentMember("bar.json")])
+        return ComponentMeta(members=[ComponentMember("foo.json", alias="f"), ComponentMember("bar.json", alias="b")])
 
     @staticmethod
     @fixture
     def members() -> dict[str, MappingConfigData]:
         return {
-            "foo": ConfigData({
+            "foo.json": ConfigData({
                 "key": {
                     "value": "foo",
                 },
@@ -1219,7 +1230,7 @@ class TestComponentConfigData:
                     "second": 3,
                 },
             }),
-            "bar": ConfigData({
+            "bar.json": ConfigData({
                 "key": {
                     "value": "bar",
                     "extra": 0
@@ -1241,6 +1252,151 @@ class TestComponentConfigData:
         assert not empty_data.meta.orders.read
         assert not empty_data.meta.orders.update
         assert not empty_data.meta.orders.delete
+
+    @staticmethod
+    def test_wrong_init():
+        ccd = ComponentConfigData
+        with raises(ValueError, match="repeat"):
+            ccd(ComponentMeta(members=[*([ComponentMember("repeat")] * 3)]))
+
+        with raises(ValueError, match="alias"):
+            ccd(ComponentMeta(members=[ComponentMember("same", alias="same")]))
+
+        with raises(ValueError, match="members"):
+            ccd(members={"not in meta": ConfigData()})
+
+        with raises(ValueError, match="members"):
+            ccd(meta=ComponentMeta(members=[ComponentMember("not in members")]))
+
+    @staticmethod
+    @mark.parametrize("a, b", (
+            ({}, {}),
+            (
+                    {},
+                    {"a": MappingConfigData()},
+            ),
+            (
+                    {"a": MappingConfigData()},
+                    {"a": MappingConfigData()},
+            ),
+            (
+                    {},
+                    {"a": MappingConfigData({"foo": "bar"}), "b": MappingConfigData({"foo": "quz"})},
+            ),
+            (
+                    {"a": MappingConfigData({"foo": "bar"}), "b": MappingConfigData({"foo": "quz"})},
+                    {"a": MappingConfigData({"foo": "bar"}), "b": MappingConfigData({"foo": "quz"})},
+            ),
+    ))
+    def test_eq(a, b):
+        is_eq = a == b
+        a, b = _ccd_from_members(a), _ccd_from_members(b)
+
+        assert (a == b) is is_eq
+        assert (not a != b) is is_eq
+        assert not a == {}
+        assert b != {}
+
+    @staticmethod
+    @mark.parametrize("members", (
+            {},
+            {"a": MappingConfigData()},
+            {"a": MappingConfigData({"foo": "bar"}), "b": MappingConfigData({"foo": "quz"})},
+    ))
+    def test_str(members):
+        assert str(members) in str(_ccd_from_members(members))
+
+    @staticmethod
+    @mark.parametrize("members", (
+            {},
+            {"a": MappingConfigData()},
+            {"a": MappingConfigData({"foo": "bar"}), "b": MappingConfigData({"foo": "quz"})},
+    ))
+    def test_repr(members):
+        ccd = _ccd_from_members(members)
+        assert repr(members) in repr(ccd)
+
+    @staticmethod
+    @mark.parametrize("members", (
+            {},
+            {"a": MappingConfigData()},
+            {"a": MappingConfigData({"foo": "bar"}), "b": MappingConfigData({"foo": "quz"})},
+    ))
+    def test_deepcopy(members):
+        ccd = _ccd_from_members(members)
+        copied = deepcopy(ccd)
+
+        assert copied == ccd
+        assert copied is not ccd
+
+    @staticmethod
+    @mark.parametrize("members, key", (
+            ({"a": MappingConfigData()}, "a"),
+            ({"a": MappingConfigData()}, "b"),
+            ({"a": MappingConfigData({"foo": "bar"}), "b": MappingConfigData({"foo": "quz"})}, "b"),
+    ))
+    def test_contains(members, key):
+        assert (key in _ccd_from_members(members)) is (key in members)
+
+    @staticmethod
+    @mark.parametrize("members", (
+            {"a": MappingConfigData(), "b": MappingConfigData()},
+            {"a": MappingConfigData({"foo": "bar"}), "b": MappingConfigData({"foo": "quz"})},
+            {"a": MappingConfigData({"foo": {"extra": "value"}}), "b": MappingConfigData({"foo": {"key": "value"}})},
+    ))
+    def test_iter(members):
+        assert list(_ccd_from_members(members)) == list(members.keys())
+
+    @staticmethod
+    @mark.parametrize("members", (
+            {},
+            {"a": MappingConfigData()},
+            {"a": MappingConfigData(), "b": MappingConfigData()},
+            {"a": MappingConfigData(), "b": MappingConfigData(), "c": MappingConfigData()},
+    ))
+    def test_len(members):
+        assert len(_ccd_from_members(members)) == len(members)
+
+    @staticmethod
+    @mark.parametrize("members, key", (
+            ({}, 'key'),
+            ({"a": MappingConfigData({"key": "a"})}, "a"),
+            ({"a": MappingConfigData({"key": "a"}), "b": MappingConfigData({"key": "b"})}, "b"),
+    ))
+    def test_getitem(members, key):
+        ignore_excs = []
+        if key not in members:
+            ignore_excs.append(KeyError)
+
+        with safe_raises(tuple(ignore_excs)):
+            assert _ccd_from_members(members)[key] == members[key]
+
+    @staticmethod
+    @mark.parametrize("members, key, value", (
+            ({}, 'key', MappingConfigData()),
+            ({"a": MappingConfigData()}, "a", MappingConfigData({"key": "value"})),
+            ({"a": MappingConfigData()}, "b", MappingConfigData()),
+    ))
+    def test_setitem(members, key, value):
+        ccd = _ccd_from_members(members)
+        ccd[key] = value
+        assert ccd[key] == value
+
+    @staticmethod
+    @mark.parametrize("members, key", (
+            ({}, "key"),
+            ({"a": MappingConfigData()}, "a"),
+            ({"a": MappingConfigData(), "b": MappingConfigData()}, "a"),
+    ))
+    def test_delitem(members, key):
+        ccd = _ccd_from_members(members)
+        ignore_excs = []
+        if key not in members:
+            ignore_excs.append(KeyError)
+
+        with safe_raises(tuple(ignore_excs)):
+            del ccd[key]
+        assert key not in ccd
 
 
 def _insert_operator(tests, op, iop: Optional[Callable] = None, *ext):
@@ -1354,6 +1510,11 @@ class TestConfigFile:
     def test_wrong_load(file, pool):
         with raises(UnsupportedConfigFormatError, match="Unsupported config format: json"):
             file.load(pool, '', ".json", config_format="json")
+
+    @staticmethod
+    def test_wrong_initialize(file, pool):
+        with raises(UnsupportedConfigFormatError, match="Unsupported config format: json"):
+            file.initialize(pool, '', ".json", config_format="json")
 
     ExtraKwargs = (
         {"config_format": "json"},

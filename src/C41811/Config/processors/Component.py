@@ -7,14 +7,14 @@
 """
 
 import os
-from abc import ABC
-from abc import abstractmethod
 from typing import Literal
 from typing import Optional
 from typing import override
 
 from ..abc import ABCConfigFile
 from ..abc import ABCConfigPool
+from ..abc import ABCMetaParser
+from ..abc import ABCSLProcessorPool
 from ..base import ComponentConfigData
 from ..base import ComponentMember
 from ..base import ComponentMeta
@@ -29,41 +29,11 @@ from ..utils import CellType
 from ..validators import ValidatorFactoryConfig
 
 
-class ABCMetaParser(ABC):
-    """
-    元信息解析器抽象类
-    """
-
-    @abstractmethod
-    def convert_config2meta(self, meta_config: MappingConfigData) -> ComponentMeta:
-        """
-        解析元配置
-
-        :param meta_config: 元配置
-        :type meta_config: MappingConfigData
-
-        :return: 元数据
-        :rtype: ComponentMeta
-        """
-
-    @abstractmethod
-    def convert_meta2config(self, meta: ComponentMeta) -> MappingConfigData:
-        """
-        解析元数据
-
-        :param meta: 元数据
-        :type meta: ComponentMeta
-
-        :return: 元配置
-        :rtype: MappingConfigData
-        """
-
-
-class MetaParser(ABCMetaParser):
+class ComponentMetaParser[D: MappingConfigData, M: ComponentMeta](ABCMetaParser):
     """
     默认元信息解析器
     """
-    validator = RequiredPath(
+    _validator = RequiredPath(
         {
             "members": list[str | ComponentMember],
             "order": list[str],
@@ -73,8 +43,17 @@ class MetaParser(ABCMetaParser):
     )
 
     @override
-    def convert_config2meta(self, meta_config: MappingConfigData) -> ComponentMeta:
-        meta = self.validator.filter(CellType(meta_config))
+    def convert_config2meta(self, meta_config: D) -> M:
+        """
+        解析元配置
+
+        :param meta_config: 元配置
+        :type meta_config: base.MappingConfigData
+
+        :return: 元数据
+        :rtype: base.ComponentMeta
+        """
+        meta = self._validator.filter(CellType(meta_config))
 
         members = meta.get("members", SequenceConfigData()).data
         for i, member in enumerate(members):
@@ -103,11 +82,23 @@ class MetaParser(ABCMetaParser):
             if len(set(o)) != len(o):
                 raise ValueError(f"name(s) repeated in {attr} order")
 
-        return ComponentMeta(meta, orders, members)
+        return ComponentMeta(meta, orders, members, self)
 
     @override
-    def convert_meta2config(self, meta: ComponentMeta) -> MappingConfigData:
+    def convert_meta2config(self, meta: M) -> D:
+        """
+        解析元数据
+
+        :param meta: 元数据
+        :type meta: base.ComponentMeta
+
+        :return: 元配置
+        :rtype: base.MappingConfigData
+        """
         return meta.config
+
+    def validator(self, meta: M, *args) -> M:
+        return self.convert_config2meta(meta.config)
 
 
 class ComponentSL(BasicChainConfigSL):
@@ -125,7 +116,7 @@ class ComponentSL(BasicChainConfigSL):
         super().__init__(reg_alias=reg_alias, create_dir=create_dir)
 
         if meta_parser is None:
-            meta_parser = MetaParser()
+            meta_parser = ComponentMetaParser()
         self.meta_parser = meta_parser
 
     @property
@@ -196,11 +187,21 @@ class ComponentSL(BasicChainConfigSL):
                 config_pool, namespace, member.filename, *args, **kwargs
             ).config
 
-        return ConfigFile(ComponentConfigData(meta, members))
+        return ConfigFile(ComponentConfigData(meta, members), config_format=self.reg_name)
+
+    def initialize(
+            self,
+            processor_pool: ABCSLProcessorPool,
+            root_path: str,
+            namespace: str,
+            file_name: str,
+            *args,
+            **kwargs
+    ) -> ABCConfigFile:
+        return ConfigFile(ComponentConfigData(ComponentMeta(parser=self.meta_parser)), config_format=self.reg_name)
 
 
 __all__ = (
-    "ABCMetaParser",
-    "MetaParser",
+    "ComponentMetaParser",
     "ComponentSL",
 )

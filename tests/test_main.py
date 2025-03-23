@@ -23,13 +23,14 @@ from C41811.Config import ConfigFile
 from C41811.Config import ConfigPool
 from C41811.Config import FieldDefinition
 from C41811.Config import JsonSL
+from C41811.Config import NoneConfigData
 from C41811.Config import Path
 from C41811.Config import RequiredPath
 from C41811.Config import ValidatorFactoryConfig
 from C41811.Config.errors import ConfigDataTypeError
 from C41811.Config.errors import RequiredPathNotFoundError
 from C41811.Config.errors import UnsupportedConfigFormatError
-from C41811.Config.processors.Component import MetaParser
+from C41811.Config.processors.Component import ComponentMetaParser
 from utils import safe_raises
 from utils import safe_warns
 
@@ -494,7 +495,8 @@ class TestRequiredPath:
             assert data.data == result
 
     ComponentTests = ("data, validator, result, kwargs, ignores", (
-        (ComponentConfigData(ComponentMeta(), {}),
+        (ComponentConfigData(ComponentMeta(parser=ComponentMetaParser()), {}),
+         #                                   ↑ 一般情况是由ComponentSL的initialize|load在构造时自动传入parser参数
          {
              None: {
                  "members": ["foo.json", "bar.json"]
@@ -509,15 +511,24 @@ class TestRequiredPath:
          ComponentConfigData(
              ComponentMeta(
                  members=[ComponentMember("foo.json"), ComponentMember("bar.json")],
-                 orders=ComponentOrders(*([["foo.json", "bar.json"]]*4))
+                 orders=ComponentOrders(*([["foo.json", "bar.json"]] * 4))
              ),
              {
                  "foo.json": ConfigData({"first": {"second": {"third": 4}}}),
                  "bar.json": ConfigData({"key": {"value"}}),
              },
          ),
-         dict(meta_validator=lambda meta, _: MetaParser().convert_config2meta(meta.config)), ()),  # todo 由ComponentSL自主注入
-    ))  # todo 更多测试用例
+         {}, ()),
+        (NoneConfigData(),
+         {
+             None: {
+                 "members": ["foo.json"]
+             },
+             "foo.json": {
+                 "first\\.second\\.third": 4,
+             },
+         }, None, {}, (ValueError,)),
+    ))
 
     @staticmethod
     @mark.parametrize(*ComponentTests)
