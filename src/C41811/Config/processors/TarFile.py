@@ -2,6 +2,10 @@
 # cython: language_level = 3
 
 
+"""
+.. versionadded:: 0.2.0
+"""
+
 import itertools
 import os
 import tarfile
@@ -16,12 +20,12 @@ from ..safe_writer import safe_open
 
 
 @dataclass(frozen=True)
-class CompressionType:
+class TarCompressionType:
     full_name: str
     short_name: str | None
 
 
-class CompressionTypes(CompressionType, ReprEnum):
+class TarCompressionTypes(TarCompressionType, ReprEnum):
     """
     压缩类型
     """
@@ -43,7 +47,7 @@ class TarFileSL(BasicCompressedConfigSL):
             *,
             reg_alias: Optional[str] = None,
             create_dir: bool = True,
-            compression: CompressionTypes | str | None = CompressionTypes.ONLY_STORAGE,
+            compression: TarCompressionTypes | str | None = TarCompressionTypes.ONLY_STORAGE,
     ):
         """
         :param reg_alias: sl处理器注册别名
@@ -51,18 +55,18 @@ class TarFileSL(BasicCompressedConfigSL):
         :param create_dir: 是否创建目录
         :type create_dir: bool
         :param compression: 压缩类型
-        :type compression: CompressionTypes | str | None
+        :type compression: TarCompressionTypes | str | None
         """
         super().__init__(reg_alias=reg_alias, create_dir=create_dir)
 
         if compression is None:
-            compression = CompressionTypes.ONLY_STORAGE
+            compression = TarCompressionTypes.ONLY_STORAGE
         elif isinstance(compression, str):
-            for compression_type in CompressionTypes:
+            for compression_type in TarCompressionTypes:
                 if compression in (compression_type.full_name, compression_type.short_name):
                     compression = compression_type
                     break
-        self._compression: CompressionType = compression
+        self._compression: TarCompressionType = compression
         self._short_name = '' if self._compression.short_name is None else self._compression.short_name
 
     @property
@@ -108,7 +112,7 @@ class TarFileSL(BasicCompressedConfigSL):
 
 
 __all__ = (
-    "CompressionType",
-    "CompressionTypes",
+    "TarCompressionType",
+    "TarCompressionTypes",
     "TarFileSL",
 )

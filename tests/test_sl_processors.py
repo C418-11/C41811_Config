@@ -23,9 +23,9 @@ from C41811.Config.processors import ZipFileSL
 from C41811.Config.processors.Component import ComponentSL
 from C41811.Config.processors.PyYaml import PyYamlSL
 from C41811.Config.processors.RuamelYaml import RuamelYamlSL
-from C41811.Config.processors.TarFile import CompressionTypes as TarFileCompressionTypes
+from C41811.Config.processors.TarFile import TarCompressionTypes
 from C41811.Config.processors.Toml import TomlSL
-from C41811.Config.processors.ZipFile import CompressionTypes as ZipFileCompressionTypes
+from C41811.Config.processors.ZipFile import ZipCompressionTypes
 from utils import safe_raises
 
 JsonSLTests = (
@@ -349,19 +349,19 @@ def test_local_file_sl_processors(pool, sl_cls: type[BasicLocalFileConfigSL], ra
 TarFileTests = (
     (
         {"Now": {"supports": {"compression": "!"}}},
-        (), dict(compression=TarFileCompressionTypes.GZIP)
+        (), dict(compression=TarCompressionTypes.GZIP)
     ),
     (
         {"a": True, "b": {"c": [.5, None]}},
-        (), dict(compression=TarFileCompressionTypes.BZIP2)
+        (), dict(compression=TarCompressionTypes.BZIP2)
     ),
     (
         {"a": True, "b": {"c": [.5, None]}},
-        (), dict(compression=TarFileCompressionTypes.LZMA)
+        (), dict(compression=TarCompressionTypes.LZMA)
     ),
     (
         {"a": True, "b": {"c": [.5, None]}},
-        (), dict(compression=TarFileCompressionTypes.ONLY_STORAGE)
+        (), dict(compression=TarCompressionTypes.ONLY_STORAGE)
     ),
     (
         {"a": True, "b": {"c": [.5, None]}},
@@ -384,19 +384,19 @@ ZipFileTests = (
     ),
     (
         {"a": True, "b": {"c": [.5, None]}},
-        (), dict(compression=ZipFileCompressionTypes.ZIP)
+        (), dict(compression=ZipCompressionTypes.ZIP)
     ),
     (
         {"a": True, "b": {"c": [.5, None]}},
-        (), dict(compression=ZipFileCompressionTypes.BZIP2)
+        (), dict(compression=ZipCompressionTypes.BZIP2)
     ),
     (
         {"a": True, "b": {"c": [.5, None]}},
-        (), dict(compression=ZipFileCompressionTypes.LZMA)
+        (), dict(compression=ZipCompressionTypes.LZMA)
     ),
     (
         {"a": True, "b": {"c": [.5, None]}},
-        (), dict(compression=ZipFileCompressionTypes.ONLY_STORAGE)
+        (), dict(compression=ZipCompressionTypes.ONLY_STORAGE)
     ),
     (
         {"a": True, "b": {"c": [.5, None]}},
@@ -412,7 +412,7 @@ ZipFileTests = (
     ),
     (
         {"a": True, "b": {"c": [.5, None]}},
-        (), dict(compression=ZipFileCompressionTypes.ZIP, compress_level=9)
+        (), dict(compression=ZipCompressionTypes.ZIP, compress_level=9)
     ),
 )
 

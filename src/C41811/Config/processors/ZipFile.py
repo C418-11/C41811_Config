@@ -2,6 +2,10 @@
 # cython: language_level = 3
 
 
+"""
+.. versionadded:: 0.2.0
+"""
+
 import itertools
 import os
 import zipfile
@@ -17,13 +21,13 @@ from ..safe_writer import safe_open
 
 
 @dataclass(frozen=True)
-class CompressionType:
+class ZipCompressionType:
     full_name: str
     short_name: str | None
     zipfile_constant: int
 
 
-class CompressionTypes(CompressionType, ReprEnum):
+class ZipCompressionTypes(ZipCompressionType, ReprEnum):
     """
     压缩类型
     """
@@ -45,7 +49,7 @@ class ZipFileSL(BasicCompressedConfigSL):
             *,
             reg_alias: Optional[str] = None,
             create_dir: bool = True,
-            compression: CompressionTypes | str | int | None = CompressionTypes.ONLY_STORAGE,
+            compression: ZipCompressionTypes | str | int | None = ZipCompressionTypes.ONLY_STORAGE,
             compress_level: Optional[Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9] | int] = None,
     ):
         """
@@ -54,23 +58,23 @@ class ZipFileSL(BasicCompressedConfigSL):
         :param create_dir: 是否创建目录
         :type create_dir: bool
         :param compression: 压缩类型
-        :type compression: CompressionTypes | str | int | None
+        :type compression: ZipCompressionTypes | str | int | None
         :param compress_level: 压缩等级
         :type compress_level: Optional[Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9] | int]
         """
         super().__init__(reg_alias=reg_alias, create_dir=create_dir)
 
         if compression is None:
-            compression = CompressionTypes.ONLY_STORAGE
+            compression = ZipCompressionTypes.ONLY_STORAGE
         elif isinstance(compression, (str, int)):
-            for compression_type in CompressionTypes:
+            for compression_type in ZipCompressionTypes:
                 if compression in (
                         compression_type.full_name, compression_type.short_name, compression_type.zipfile_constant
                 ):
                     compression = compression_type
                     break
 
-        self._compression: CompressionType = compression
+        self._compression: ZipCompressionType = compression
         self._compress_level: int | None = compress_level
         self._short_name = '' if self._compression.short_name is None else self._compression.short_name
 
@@ -123,7 +127,7 @@ class ZipFileSL(BasicCompressedConfigSL):
 
 
 __all__ = (
-    "CompressionType",
-    "CompressionTypes",
+    "ZipCompressionType",
+    "ZipCompressionTypes",
     "ZipFileSL",
 )
