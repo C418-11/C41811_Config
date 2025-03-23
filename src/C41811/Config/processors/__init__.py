@@ -9,6 +9,7 @@ SL处理器
    从 ``SLProcessors`` 重命名为 ``processors``
 """
 
+from .Component import ComponentSL  # noqa: F401, F403
 from .Json import JsonSL  # noqa: F401, F403
 from .Pickle import PickleSL  # noqa: F401, F403
 from .PythonLiteral import PythonLiteralSL  # noqa: F401, F403
