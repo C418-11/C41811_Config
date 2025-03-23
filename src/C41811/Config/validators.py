@@ -294,7 +294,7 @@ class DefaultValidatorFactory[D: MappingConfigData | NoneConfigData]:
         :type validator_config: ValidatorFactoryConfig
 
         额外验证器工厂配置参数
-        ---------------------
+        -----------------------
         .. list-table::
            :widths: auto
 
@@ -539,7 +539,7 @@ class ComponentValidatorFactory[D: ComponentConfigData | NoneConfigData]:
         :type validator_config: ValidatorFactoryConfig
 
         额外验证器工厂配置参数
-        ---------------------
+        -----------------------
         .. list-table::
            :widths: auto
 
