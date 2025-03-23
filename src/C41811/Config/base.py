@@ -544,10 +544,16 @@ class MappingConfigData[D: Mapping | MutableMapping](BasicIndexedConfigData, Mut
 
     @override
     @_check_read_only
-    def pop(self, key, /, default: Any = _Unset):
-        if default is _Unset:
-            return self._data.pop(key)
-        return self._data.pop(key, default)
+    def pop(self, path: str | Path, /, default: Any = _Unset):
+        path = _fmt_path(path)
+        try:
+            result = self.retrieve(path)
+            self.delete(path)
+            return result
+        except RequiredPathNotFoundError:
+            if default is not _Unset:
+                return default
+            raise
 
     @override
     @_check_read_only

@@ -501,7 +501,7 @@ class TestMappingConfigData:
     @mark.parametrize("dct, key, result, ignore_excs", (
             ({"a": 1}, "a", 1, ()),
             ({"a": 1, "b": 2}, "b", 2, ()),
-            ({"a": 1}, "b", Unset, (KeyError,)),
+            ({"a": 1}, "b", Unset, (RequiredPathNotFoundError,)),
     ))
     def test_pop(dct, key, result, ignore_excs):
         data = ConfigData(dct)
