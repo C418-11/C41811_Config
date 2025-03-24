@@ -3,6 +3,7 @@
 
 import re
 from collections import OrderedDict
+from typing import Optional
 
 from pytest import fixture
 from pytest import mark
@@ -10,17 +11,21 @@ from pytest import raises
 
 from C41811.Config import BasicConfigSL
 from C41811.Config import BasicLocalFileConfigSL
+from C41811.Config import ComponentConfigData
+from C41811.Config import ComponentMeta
 from C41811.Config import ConfigData
 from C41811.Config import ConfigFile
 from C41811.Config import ConfigPool
 from C41811.Config import JsonSL
 from C41811.Config import PickleSL
 from C41811.Config import PythonLiteralSL
+from C41811.Config.abc import ABCConfigSL
 from C41811.Config.errors import FailedProcessConfigFileError
 from C41811.Config.main import BasicCompressedConfigSL
+from C41811.Config.processors import ComponentSL
 from C41811.Config.processors import TarFileSL
 from C41811.Config.processors import ZipFileSL
-from C41811.Config.processors.Component import ComponentSL
+from C41811.Config.processors.Component import ComponentMetaParser
 from C41811.Config.processors.PyYaml import PyYamlSL
 from C41811.Config.processors.RuamelYaml import RuamelYamlSL
 from C41811.Config.processors.TarFile import TarCompressionTypes
@@ -455,6 +460,125 @@ def test_compressed_file_sl_processors(
     if info:
         return
     assert loaded_file == file
+
+
+ComponentTests = (
+    "sl_clss, meta, members, ignore_excs, init_arguments",
+    (
+        ((JsonSL(s_arg=dict(indent=2)),),
+         {"members": ["test.json"]},
+         {"test.json": ConfigData({"test": "test"})},
+         (), {}),
+        ((JsonSL(s_arg=dict(indent=2)),),
+         {"members": [dict(filename="test", config_format="json")]},
+         {"test": ConfigData({"test": "test"})},
+         (), {}),
+        ((JsonSL(s_arg=dict(indent=2)),),
+         {"members": ["test.json"], "orders": {"create": ["test.json"]}, "order": ["test.json"]},
+         {"test.json": ConfigData({"test": "test"})},
+         (), {}),
+        ((JsonSL(s_arg=dict(indent=2)),),
+         {"members": [dict(filename="test.json", alies="t")], "orders": {"create": ["t"]}, "order": ["t"]},
+         {"test.json": ConfigData({"test": "test"})},
+         (), {}),
+        ((JsonSL(s_arg=dict(indent=2)),),
+         {"members": ["test.json"], "orders": {"create": ["test.json", "test.json"]}},
+         {"test.json": ConfigData({"test": "test"})},
+         ((ValueError,), (), ()), {}),
+        ((
+             JsonSL(s_arg=dict(indent=2)),  # 爷真是个天才，这都能一遍过正常跑👍
+             PythonLiteralSL(),
+             ZipFileSL(compress_level=9),
+             TarFileSL(compression=TarCompressionTypes.GZIP)
+         ),
+         {"members": ["test.json.zip", "test.py.tar.gz"], "order": ["test.py.tar.gz", "test.json.zip"]},
+         {"test.json.zip": ConfigData({"test": "test"}), "test.py.tar.gz": ConfigData({"test": "test"})},
+         (), {}),
+    )
+)
+
+
+@mark.parametrize(*ComponentTests)
+def test_component_file_sl_processor(
+        pool,
+        sl_clss: list[ABCConfigSL],
+        meta: Optional[dict] | ComponentMeta,
+        members: Optional[dict],
+        ignore_excs,
+        init_arguments: dict
+):
+    component_sl = ComponentSL(**init_arguments)
+    component_sl.register_to(pool)
+    for sl_cls in sl_clss:
+        sl_cls.register_to(pool)
+
+    if not ignore_excs:
+        ignore_excs = ((), (), ())
+
+    with safe_raises(ignore_excs[0]) as info:
+        config_data = ComponentConfigData(
+            meta if isinstance(meta, ComponentMeta) else ComponentMetaParser().convert_config2meta(ConfigData(meta)),
+            members=members,
+        )
+    if info:
+        return
+
+    file = ConfigFile(config_data, config_format=component_sl.reg_name)
+    file_name = f"TestConfigFile{sl_clss[0].supported_file_patterns[0]}{component_sl.supported_file_patterns[0]}"
+
+    with safe_raises(ignore_excs[1]) as info:
+        pool.save('', file_name, config=file)
+    if info:
+        return
+    pool.delete('', file_name)
+    with safe_raises(ignore_excs[2]) as info:
+        loaded_data: ComponentConfigData = pool.load('', file_name).config
+    if info:
+        return
+    assert loaded_data.meta.members == config_data.meta.members
+    assert loaded_data.meta.orders == config_data.meta.orders
+    assert loaded_data.members == config_data.members
+
+
+def test_save_none_component(pool):
+    comp_sl = ComponentSL()
+    json_sl = JsonSL()
+    comp_sl.register_to(pool)
+    json_sl.register_to(pool)
+
+    file_name = f"TestConfigFile{json_sl.supported_file_patterns[0]}{comp_sl.supported_file_patterns[0]}"
+    pool.save('', file_name, config=ConfigFile(ConfigData(), config_format=comp_sl.reg_name))
+
+
+def test_component_initialize(pool):
+    comp_sl = ComponentSL()
+    json_sl = JsonSL()
+    comp_sl.register_to(pool)
+    json_sl.register_to(pool)
+
+    file_name = f"TestConfigFile{json_sl.supported_file_patterns[0]}{comp_sl.supported_file_patterns[0]}"
+    pool.load('', file_name, allow_create=True)
+
+
+def test_component_wrong_config_data(pool):
+    comp_sl = ComponentSL()
+    json_sl = JsonSL()
+    comp_sl.register_to(pool)
+    json_sl.register_to(pool)
+
+    file_name = f"TestConfigFile{json_sl.supported_file_patterns[0]}{comp_sl.supported_file_patterns[0]}"
+    with raises(FailedProcessConfigFileError, match="is not a"):
+        pool.save(
+            '', file_name,
+            config=ConfigFile(ConfigData([])),
+        )
+    pool.unset('', file_name)
+    pool.save(
+        comp_sl.namespace_formatter('', file_name), comp_sl.initial_file + json_sl.supported_file_patterns[0],
+        config=ConfigFile(ConfigData([])),
+    )
+    with raises(FailedProcessConfigFileError, match="is not a"):
+        pool.load('', file_name, )
 
 
 def test_wrong_sl_arguments():

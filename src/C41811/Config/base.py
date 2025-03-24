@@ -2,7 +2,6 @@
 # cython: language_level = 3
 
 
-import builtins
 import math
 import operator
 from abc import ABC
@@ -979,8 +978,9 @@ class ComponentConfigData[D: MappingConfigData](BasicConfigData, ABCIndexedConfi
 
         self._meta = deepcopy(meta)
 
-        member_meta: ComponentMember  # 不加这行类型检查会奇奇怪怪报错，加了之后flake8又报错🤣👍  # noqa: F842
-        self._filename2meta = {member_meta.filename: member_meta for member_meta in self._meta.members}
+        self._filename2meta: dict[str, ComponentMember] = {
+            member_meta.filename: member_meta for member_meta in self._meta.members
+        }
         self._alias2filename = {
             member_meta.alias: member_meta.filename
             for member_meta in self._meta.members
@@ -1025,37 +1025,118 @@ class ComponentConfigData[D: MappingConfigData](BasicConfigData, ABCIndexedConfi
     def data_read_only(self) -> bool | None:
         return not isinstance(self._members, MutableMapping)
 
-    def _member(self, key: str) -> D:
+    @property
+    def filename2meta(self) -> Mapping[str, ComponentMember]:
+        return deepcopy(self._filename2meta)
+
+    @property
+    def alias2filename(self) -> Mapping[str, str]:
+        return deepcopy(self._alias2filename)
+
+    def _member(self, member: str) -> D:
         try:
-            return self._members[key]
+            return self._members[member]
         except KeyError:
             with suppress(KeyError):
-                return self._members[self._alias2filename[key]]
+                return self._members[self._alias2filename[member]]
             raise
 
-    def _resolve_members(self, path: str | ABCPath):
-        ...
+    def _resolve_members[P: ABCPath, R: Any](
+            self, path: P, order: list[str], operate: ConfigOperate, processor: Callable[[P, D], R]
+    ) -> R:
+        for member in order:
+            with suppress(RequiredPathNotFoundError):
+                return processor(path, self._member(member))
+        raise RequiredPathNotFoundError(path, operate)
 
-    def retrieve(self, path: str | ABCPath, *, return_raw_value: bool = False) -> Any:  # todo
-        pass
+    def retrieve(self, path: str | ABCPath, *args, **kwargs) -> Any:
+        path = _fmt_path(path)
 
-    def modify(self, path: str | ABCPath, value: Any, *, allow_create: bool = True) -> Self:
-        pass
+        def processor(pth: ABCPath, member: D) -> Any:
+            return member.retrieve(pth, *args, **kwargs)
 
-    def delete(self, path: str | ABCPath) -> Self:
-        pass
+        return self._resolve_members(
+            path, order=self._meta.orders.read, operate=ConfigOperate.Read, processor=processor
+        )
 
-    def unset(self, path: str | ABCPath) -> Self:
-        pass
+    @_check_read_only
+    def modify(self, path: str | ABCPath, *args, **kwargs) -> Self:
+        path = _fmt_path(path)
 
-    def exists(self, path: str | ABCPath, *, ignore_wrong_type: bool = False) -> bool:
-        pass
+        def processor(pth: ABCPath, member: D) -> Self:
+            member.modify(pth, *args, **kwargs)
+            return self
 
-    def get(self, path: str | ABCPath, default=None, *, return_raw_value: bool = False) -> Any:
-        pass
+        return self._resolve_members(
+            path, order=self._meta.orders.update, operate=ConfigOperate.Write, processor=processor
+        )
 
-    def setdefault(self, path: str | ABCPath, default=None, *, return_raw_value: bool = False) -> Any:
-        pass
+    @_check_read_only
+    def delete(self, path: str | ABCPath, *args, **kwargs) -> Self:
+        path = _fmt_path(path)
+
+        def processor(pth: ABCPath, member: D) -> Self:
+            member.delete(pth, *args, **kwargs)
+            return self
+
+        return self._resolve_members(
+            path, order=self._meta.orders.delete, operate=ConfigOperate.Delete, processor=processor
+        )
+
+    @_check_read_only
+    def unset(self, path: str | ABCPath, *args, **kwargs) -> Self:
+        path = _fmt_path(path)
+
+        def processor(pth: ABCPath, member: D) -> Self:
+            member.delete(pth, *args, **kwargs)
+
+        with suppress(RequiredPathNotFoundError):
+            self._resolve_members(
+                path, order=self._meta.orders.delete, operate=ConfigOperate.Delete, processor=processor
+            )
+        return self
+
+    def exists(self, path: str | ABCPath, *args, **kwargs) -> bool:
+        path = _fmt_path(path)
+
+        def processor(pth: ABCPath, member: D) -> bool:
+            return member.exists(pth, *args, **kwargs)
+
+        return self._resolve_members(
+            path, order=self._meta.orders.read, operate=ConfigOperate.Read, processor=processor
+        )
+
+    def get(self, path: str | ABCPath, default=None, *args, **kwargs) -> Any:
+        path = _fmt_path(path)
+
+        def processor(pth: ABCPath, member: D) -> Any:
+            return member.retrieve(pth, *args, **kwargs)
+
+        with suppress(RequiredPathNotFoundError):
+            return self._resolve_members(
+                path, order=self._meta.orders.read, operate=ConfigOperate.Read, processor=processor
+            )
+        return default
+
+    @_check_read_only
+    def setdefault(self, path: str | ABCPath, default=None, *args, **kwargs) -> Any:
+        path = _fmt_path(path)
+
+        def _retrieve_processor(pth: ABCPath, member: D) -> Any:
+            return member.retrieve(pth, *args, **kwargs)
+
+        with suppress(RequiredPathNotFoundError):
+            return self._resolve_members(
+                path, order=self._meta.orders.read, operate=ConfigOperate.Read, processor=_retrieve_processor
+            )
+
+        def _modify_processor(pth: ABCPath, member: D) -> Any:
+            member.modify(pth, default)
+            return default
+
+        return self._resolve_members(
+            path, order=self._meta.orders.create, operate=ConfigOperate.Write, processor=_modify_processor
+        )
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
@@ -1242,7 +1323,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
             file_name: str,
             config_formats: Optional[str | Iterable[str]],
             configfile_format: Optional[str] = None,
-    ) -> builtins.set[str]:
+    ) -> Iterable[str]:
         """
         从给定参数计算所有可能的配置格式
 
@@ -1267,24 +1348,25 @@ class BasicConfigPool(ABCConfigPool, ABC):
         格式计算优先级
         --------------
 
-        1.如果传入了config_formats且非None非空集则直接使用
+        1.config_formats的bool求值为真
 
-        2.如果文件名注册了对应的SL处理器则直接使用
+        2.文件名注册了对应的SL处理器
 
-        3.如果传入了file_config_format且非None则直接使用
+        3.file_config_format非None
 
         .. versionadded:: 0.2.0
         """
+        result_formats = []
         # 先尝试从传入的参数中获取配置文件格式
         if config_formats is None:
-            config_formats = set()
+            config_formats = []
         elif isinstance(config_formats, str):
-            return {config_formats}
+            config_formats = [config_formats]
         else:
-            config_formats = set(config_formats)
+            config_formats = list(config_formats)
 
         if config_formats:
-            return config_formats
+            result_formats.extend(config_formats)
 
         def _check_file_name(match: str | Pattern) -> bool:
             if isinstance(match, str):
@@ -1294,12 +1376,16 @@ class BasicConfigPool(ABCConfigPool, ABC):
         # 再尝试从文件名匹配配置文件格式
         for m in self.FileNameProcessors:
             if _check_file_name(m):
-                return self.FileNameProcessors[m]
+                result_formats.extend(self.FileNameProcessors[m])
 
         # 最后尝试从配置文件对象本身获取配置文件格式
-        if configfile_format is None:
+        if configfile_format is not None:
+            result_formats.append(configfile_format)
+
+        if not result_formats:
             raise UnsupportedConfigFormatError("Unknown")
-        return {configfile_format}
+
+        return OrderedDict.fromkeys(result_formats)
 
     def _test_all_sl[R: Any](
             self,

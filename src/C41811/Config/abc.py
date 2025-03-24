@@ -550,7 +550,7 @@ class ABCSLProcessorPool(ABC):
         .. versionchanged:: 0.2.0
            从 ``SLProcessor`` 重命名为 ``SLProcessors``
         """
-        self.FileNameProcessors: OrderedDict[str | Pattern, set[str]] = OrderedDict()  # {FileNameMatch: {RegName}}
+        self.FileNameProcessors: OrderedDict[str | Pattern, list[str]] = OrderedDict()  # {FileNameMatch: [RegName]}
         # noinspection SpellCheckingInspection
         """
         文件名处理器注册表
@@ -558,7 +558,7 @@ class ABCSLProcessorPool(ABC):
         .. caution::
            此字典是顺序敏感的，越靠前越优先被检查
 
-        数据结构: ``{文件名匹配: {处理器注册名}}``
+        数据结构: ``{文件名匹配: [处理器注册名]}``
 
         文件名匹配:
             - 为字符串时会使用 ``endswith`` 进行匹配
@@ -991,10 +991,7 @@ class ABCConfigSL(ABC):
 
         config_pool.SLProcessors[self.reg_name] = self
         for match in self.supported_file_patterns:
-            if match not in config_pool.FileNameProcessors:
-                config_pool.FileNameProcessors[match] = {self.reg_name}
-                continue
-            config_pool.FileNameProcessors[match].add(self.reg_name)
+            config_pool.FileNameProcessors.setdefault(match, []).append(self.reg_name)
 
     @abstractmethod
     def save(

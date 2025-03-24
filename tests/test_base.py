@@ -1269,6 +1269,13 @@ class TestComponentConfigData:
             ccd(meta=ComponentMeta(members=[ComponentMember("not in members")]))
 
     @staticmethod
+    def test_readonly_attr(empty_data):
+        for attr in {"meta", "members", "filename2meta", "alias2filename"}:
+            getattr(empty_data, attr)
+            with raises(AttributeError):
+                setattr(empty_data, attr, None)
+
+    @staticmethod
     @mark.parametrize("a, b", (
             ({}, {}),
             (

@@ -7,6 +7,7 @@
 """
 
 import os
+from copy import deepcopy
 from typing import Literal
 from typing import Optional
 from typing import override
@@ -61,8 +62,6 @@ class ComponentMetaParser[D: MappingConfigData, M: ComponentMeta](ABCMetaParser)
                 members[i] = ComponentMember(member)
             elif isinstance(member, dict):
                 members[i] = ComponentMember(**member)
-            else:
-                raise ValueError(f"unexpected member type {member}")
 
         orders: ComponentOrders = ComponentOrders(**meta.get("orders", MappingConfigData()).data)
         order = meta.setdefault(
@@ -155,11 +154,18 @@ class ComponentSL(BasicChainConfigSL):
 
         meta_config = self.meta_parser.convert_meta2config(config_data.meta)
         file_name, file_ext = os.path.splitext(file_name)
-        super().save_file(config_pool, ConfigFile(meta_config), namespace, self.initial_file + file_ext, *args,
-                          **kwargs)
+        super().save_file(config_pool, ConfigFile(meta_config), namespace, self.initial_file + file_ext,
+                          *args, **kwargs)
 
-        for filename, data in config_data.members.items():
-            super().save_file(config_pool, ConfigFile(data), namespace, filename, *args, **kwargs)
+        for member in config_data.meta.members:
+            super().save_file(
+                config_pool,
+                ConfigFile(config_data[member.filename], config_format=member.config_format),
+                namespace,
+                member.filename,
+                *args,
+                **kwargs,
+            )
 
     def load_file(
             self,
@@ -183,8 +189,11 @@ class ComponentSL(BasicChainConfigSL):
         meta = self.meta_parser.convert_config2meta(initial_data)
         members = {}
         for member in meta.members:
+            merged_kwargs = deepcopy(kwargs)
+            if member.config_format is not None:
+                merged_kwargs.setdefault("config_formats", set()).add(member.config_format)
             members[member.filename] = super().load_file(
-                config_pool, namespace, member.filename, *args, **kwargs
+                config_pool, namespace, member.filename, *args, **merged_kwargs
             ).config
 
         return ConfigFile(ComponentConfigData(meta, members), config_format=self.reg_name)
