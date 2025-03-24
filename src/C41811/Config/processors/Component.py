@@ -72,12 +72,12 @@ class ComponentMetaParser[D: MappingConfigData, M: ComponentMeta](ABCMetaParser)
         if not isinstance(order, list):
             order = order.data
         for name in order:
-            for attr in {"create", "read", "update", "delete"}:
+            for attr in getattr(orders, "__dataclass_fields__"):
                 if name in getattr(orders, attr):
                     continue
                 getattr(orders, attr).append(name)
 
-        for attr in {"create", "read", "update", "delete"}:
+        for attr in getattr(orders, "__dataclass_fields__"):
             o = getattr(orders, attr)
             if len(set(o)) != len(o):
                 raise ValueError(f"name(s) repeated in {attr} order")
