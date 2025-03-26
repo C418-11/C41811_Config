@@ -28,7 +28,7 @@ class TestKey:
     ))
     def test_both(key, other):
         assert key.key == other
-        assert hash(key) == hash(other)
+        assert hash(key) != hash(other)
         assert str(key) == str(other)
         assert key == deepcopy(key)
         assert key != NotImplemented
@@ -38,6 +38,16 @@ class TestKey:
 
         assert str(key.key) in str(key)
         assert str(key.key) in repr(key)
+
+    @staticmethod
+    @mark.parametrize("key, meta", (
+            (IndexKey(0, "meta data"), "meta data"),
+            (AttrKey("uhh", "abcde"), "abcde"),
+    ))
+    def test_meta(key, meta):
+        assert key.meta == meta
+        with raises(AttributeError):
+            key.meta = None
 
     @staticmethod
     @mark.parametrize("key, other", (
@@ -54,11 +64,13 @@ class TestPath:
     @staticmethod
     @fixture
     def path():
-        return Path.from_str(r"\.aaa\.bbb\.ccc\[0\]\.ddd\.eee\[1\]")
+        return Path.from_str(r"\.aaa\.bbb\{attr meta\}\.ccc\{index meta\}\[0\]\.ddd\.eee\[1\]")
 
     @staticmethod
     @mark.parametrize("string", (
             r"\.aaa\.bbb\.ccc\[0\]\.ddd\.eee\[1\]",
+            r"\.aaa\.bbb\.ccc\[0\]\.ddd\.eee\[1\]",
+            r"\{meta a\}\.aaa\{meta b\}\.bbb\.ccc\{meta index\}\[0\]\.ddd\.eee\[1\]",
             r"\.a\[2\]\.b\[3\]",
             r"\.a.a\\.a\.b\[18\]\[7\]\.e",
             r"\[2\]\[3\]",
@@ -84,8 +96,8 @@ class TestPath:
     @mark.parametrize("index, value", (
             (0, AttrKey("aaa")),
             (1, AttrKey("bbb")),
-            (2, AttrKey("ccc")),
-            (3, IndexKey(0)),
+            (2, AttrKey("ccc", "attr meta")),
+            (3, IndexKey(0, "index meta")),
             (4, AttrKey("ddd")),
             (5, AttrKey("eee")),
             (6, IndexKey(1)),
@@ -95,12 +107,14 @@ class TestPath:
 
     @staticmethod
     @mark.parametrize("key, is_contained", (
-            (IndexKey(0), True),
+            (IndexKey(0), False),
+            (IndexKey(0, "index meta"), True),
             (IndexKey(1), True),
             (IndexKey(3), False),
             (AttrKey("aaa"), True),
             (AttrKey("bbb"), True),
-            (AttrKey("ccc"), True),
+            (AttrKey("ccc"), False),
+            (AttrKey("ccc", "attr meta"), True),
             (AttrKey("ddd"), True),
             (AttrKey("eee"), True),
             (AttrKey("fff"), False),
@@ -115,6 +129,7 @@ class TestPath:
             (r"\[1\]\.ccc\[2\]", 3),
             (r"\.aaa\.bbb\.ccc\[0\]", 4),
             (r"\.aaa\.bbb\.ccc\[0\]\.ddd", 5),
+            (r"\.aaa\.bbb\.ccc\{meta\}\[0\]\{meta\}\.ddd", 5),
             (r"\.aaa\.bbb\.ccc\[0\]\.ddd\.eee\[1\]\.fff", 8),
     ))
     def test_len(path, length):
@@ -124,6 +139,7 @@ class TestPath:
     @mark.parametrize("path, keys", (
             (r"\.aaa", [AttrKey("aaa")]),
             (r"aaa", [AttrKey("aaa")]),
+            (r"\{meta\}\.aaa\{meta\}\[0\]", [AttrKey("aaa", "meta"), IndexKey(0, "meta")]),
             (r"\[1\]\.ccc\[2\]", [IndexKey(1), AttrKey("ccc"), IndexKey(2)]),
             (r"\.aaa\.bbb\.ccc\[0\]", [AttrKey("aaa"), AttrKey("bbb"), AttrKey("ccc"), IndexKey(0)]),
             (r"\.aaa\.bbb\.ccc\[0\]\.ddd",
@@ -136,6 +152,7 @@ class TestPath:
     @mark.parametrize("path", (
             r"\.aaa",
             r"aaa",
+            r"\{meta\}\.aaa\{meta\}\[0\]"
             r"\[1\]\.ccc\[2\]",
             r"\.aaa\.bbb\.ccc\[0\]",
             r"\.aaa\.bbb\.ccc\[0\]\.ddd",
@@ -149,6 +166,7 @@ class TestPath:
     @mark.parametrize("path", (
             r"\.aaa",
             r"aaa",
+            r"\{meta\}\.aaa\{meta\}\[0\]"
             r"\[1\]\.ccc\[2\]",
             r"\.aaa\.bbb\.ccc\[0\]",
             r"\.aaa\.bbb\.ccc\[0\]\.ddd",
@@ -183,6 +201,7 @@ class TestPathSyntaxParser:
             (r"\[d\]\abc", [r"\[d", r"\]", r"\abc"], (SyntaxWarning,)),
             (r"abc\[e\]", [r"\.abc", r"\[e", r"\]"], ()),
             (r"abc", [r"\.abc"], ()),
+            (r"\{meta info\}\.abc", [r"\{meta info", r"\}", r"\.abc"], ()),
             (r"\\abc", [r"\.\\abc"], ()),
             (r"\.\a", [r"\.\a"], (SyntaxWarning,)),
             (r"\a\a", [r"\.\a\a"], (SyntaxWarning,)),
@@ -205,15 +224,24 @@ class TestPathSyntaxParser:
             ),
             (r"abc\[2\]", [AttrKey("abc"), IndexKey(2)], (), ()),
             (r"\.abc\[2\]", [AttrKey("abc"), IndexKey(2)], (), ()),
+            (r"\{meta\}\.aaa\{meta\}\[0\]", [AttrKey("aaa", "meta"), IndexKey(0, "meta")], (), ()),
             (r"abc", [AttrKey("abc")], (), ()),
             (r"\\abc", [AttrKey(r"\abc")], (), ()),
             (r"\.abc", [AttrKey("abc")], (), ()),
             (r"\[2\]\[3\]", [IndexKey(2), IndexKey(3)], (), ()),
             (r"[2]\[3\]", [AttrKey(r"[2]"), IndexKey(3)], (), ()),
             (r"\.a\[2\]\.b\[3\]", [AttrKey('a'), IndexKey(2), AttrKey('b'), IndexKey(3)], (), ()),
+            (r"\{any thing\}", [], (), ()),
             (r"\.\a", [AttrKey(r"\a")], (), (SyntaxWarning,)),
             (r"\a", [AttrKey(r"\a")], (), (SyntaxWarning,)),
             (r"\a\a", [AttrKey(r"\a\a")], (), (SyntaxWarning,)),
+            (r"\{", None, (ConfigDataPathSyntaxException,), ()),
+            (r"\{\{", None, (ConfigDataPathSyntaxException,), ()),
+            (r"\{\[", None, (ConfigDataPathSyntaxException,), ()),
+            (r"\[\{", None, (ConfigDataPathSyntaxException,), ()),
+            (r"\[\}", None, (ConfigDataPathSyntaxException,), ()),
+            (r"\{\]", None, (ConfigDataPathSyntaxException,), ()),
+            (r"\}", None, (ConfigDataPathSyntaxException,), ()),
             (r"[2\]\[3\]", None, (ConfigDataPathSyntaxException,), ()),
             (r"\[2\[3\]", None, (ConfigDataPathSyntaxException,), ()),
             (r"\[2\]\.3\]", None, (ConfigDataPathSyntaxException,), ()),

@@ -24,12 +24,26 @@ class ABCKey(ABC):
     用于获取配置的键
     """
 
-    def __init__(self, key: Any):
+    def __init__(self, key: Any, meta: Optional[str] = None):
+        """
+        :param key: 键名
+        :type key: str
+        :param meta: 元信息
+        :type meta: Optional[str]
+        """
         self._key = deepcopy(key)
+        self._meta: None | str = meta
 
     @property
     def key(self):
         return deepcopy(self._key)
+
+    @property
+    def meta(self):
+        """
+        .. versionadded:: 0.2.0
+        """
+        return self._meta
 
     @abstractmethod
     def unparse(self) -> str:
@@ -123,19 +137,25 @@ class ABCKey(ABC):
         if not isinstance(other, type(self)):
             return NotImplemented
 
-        return self._key == other._key
+        return all((
+            self._key == other._key,
+            self._meta == other._meta,
+        ))
 
     def __hash__(self):
-        return hash(self._key)
+        return hash((self._key, self._meta))
 
     def __deepcopy__(self, memo):
-        return type(self)(self.key)
+        if self._meta is None:
+            return type(self)(self._key)
+        return type(self)(self._key, self._meta)
 
     def __str__(self):
         return str(self._key)
 
     def __repr__(self):
-        return f"<{type(self).__name__}({self._key})>"
+        meta = '' if self._meta is None else f", meta={self._meta}"
+        return f"<{type(self).__name__}(key={self._key}{meta})>"
 
 
 class ABCPath(ABC):
@@ -159,6 +179,9 @@ class ABCPath(ABC):
 
     def __contains__(self, item):
         return item in self._keys
+
+    def __bool__(self):
+        return bool(self._keys)
 
     def __len__(self):
         return len(self._keys)
@@ -1087,7 +1110,7 @@ class ABCConfigSL(ABC):
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
-            return NotImplemented  # pragma: no cover
+            return NotImplemented
 
         processor_reg_name = self.processor_reg_name == other.processor_reg_name
         reg_alias = self.reg_alias == other.reg_alias

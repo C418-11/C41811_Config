@@ -1309,6 +1309,18 @@ class TestComponentConfigData:
                 {"a": ConfigData({"a": "value"}), "b": ConfigData({"b": True})},
             ), "a", "value", (), {}),
             (_ccd_from_meta(
+                {"members": ["a", "b", "c"]},
+                {"a": ConfigData({}), "b": ConfigData({"key": False}), "c": ConfigData({"key": None})},
+            ), "\\{c\\}\\.key", None, (), {}),
+            (_ccd_from_meta(
+                {"members": ["b", dict(filename="a", alias="c")]},
+                {"a": ConfigData({"key": False}), "b": ConfigData({"key": None})},
+            ), "\\{c\\}\\.key", False, (), {}),
+            (_ccd_from_meta(
+                {"members": ["b", dict(filename="a", alias="c")]},
+                {"a": ConfigData({"key": False}), "b": ConfigData({"key": None})},
+            ), "\\{z\\}\\.key", None, (RequiredPathNotFoundError,), {}),
+            (_ccd_from_meta(
                 {"order": ["z"]},
                 {},
             ), "", None, (KeyError,), {}),
@@ -1368,6 +1380,18 @@ class TestComponentConfigData:
                 {"a": ConfigData({"foo": {"bar": "value"}}), "b": ConfigData({"foo": {"bar": None}})},
             ), "foo", {"bar": True}, (), dict(allow_create=False)),
             (_ccd_from_meta(
+                {"members": ["c", "b", "a"]},
+                {"a": ConfigData({}), "b": ConfigData({"key": False}), "c": ConfigData({"key": None})},
+            ), "\\{a\\}\\.key", True, (), {}),
+            (_ccd_from_meta(
+                {"members": ["b", dict(filename="a", alias="c")]},
+                {"a": ConfigData({"key": False}), "b": ConfigData({"key": None})},
+            ), "\\{c\\}\\.key", True, (), {}),
+            (_ccd_from_meta(
+                {"members": ["b", dict(filename="a", alias="c")]},
+                {"a": ConfigData({"key": False}), "b": ConfigData({"key": None})},
+            ), "\\{z\\}\\.key", None, (RequiredPathNotFoundError,), {}),
+            (_ccd_from_meta(
                 {"members": ["b", "a"]},
                 {"a": ConfigData({"foo": {"bar": "value"}}), "b": ConfigData({"foo": {"bar": None}})},
             ), "quz", {"value": True}, (RequiredPathNotFoundError,), dict(allow_create=False)),
@@ -1398,13 +1422,25 @@ class TestComponentConfigData:
                 {"a": ConfigData({"key": "value"}), "b": ConfigData({"key": "value"})},
             ), "key", "value", (), {}),
             (_ccd_from_meta(
+                {"members": ["a", "b", "c"]},
+                {"a": ConfigData({}), "b": ConfigData({"key": False}), "c": ConfigData({"key": None})},
+            ), "\\{c\\}\\.key", False, (), {}),
+            (_ccd_from_meta(
+                {"members": ["b", dict(filename="a", alias="c")]},
+                {"a": ConfigData({"key": False}), "b": ConfigData({"key": True})},
+            ), "\\{c\\}\\.key", True, (), {}),
+            (_ccd_from_meta(
+                {"members": ["b", dict(filename="a", alias="c")]},
+                {"a": ConfigData({"key": False}), "b": ConfigData({"key": None})},
+            ), "\\{z\\}\\.key", Unset, (RequiredPathNotFoundError,), {}),
+            (_ccd_from_meta(
                 {"members": ["a", "b"], "order": []},
                 {"a": ConfigData({"key": "value"}), "b": ConfigData({"key": "value"})},
-            ), "key", "value", (RequiredPathNotFoundError,), {}),
+            ), "key", Unset, (RequiredPathNotFoundError,), {}),
             (_ccd_from_meta(
                 {"members": ["a", "b"]},
                 {"a": ConfigData({}), "b": ConfigData({})},
-            ), "key", "value", (RequiredPathNotFoundError,), {}),
+            ), "key", Unset, (RequiredPathNotFoundError,), {}),
         )
     )
 
@@ -1439,6 +1475,18 @@ class TestComponentConfigData:
                 {"members": ["a", "b"]},
                 {"a": ConfigData({}), "b": ConfigData({})},
             ), "key", "value", (), {}),
+            (_ccd_from_meta(
+                {"members": ["a", "b", "c"]},
+                {"a": ConfigData({}), "b": ConfigData({"key": False}), "c": ConfigData({"key": None})},
+            ), "\\{c\\}\\.key", False, (), {}),
+            (_ccd_from_meta(
+                {"members": ["b", dict(filename="a", alias="c")]},
+                {"a": ConfigData({"key": False}), "b": ConfigData({"key": True})},
+            ), "\\{c\\}\\.key", True, (), {}),
+            (_ccd_from_meta(
+                {"members": ["b", dict(filename="a", alias="c")]},
+                {"a": ConfigData({"key": False}), "b": ConfigData({"key": None})},
+            ), "\\{z\\}\\.key", Unset, (), {}),
         )
     )
 
@@ -1477,6 +1525,26 @@ class TestComponentConfigData:
                 {},
                 {},
             ), "key", False, (), {}),
+            (_ccd_from_meta(
+                {"members": ["a", "b", "c"]},
+                {"a": ConfigData({}), "b": ConfigData({"key": False}), "c": ConfigData({"key": None})},
+            ), "\\{c\\}\\.key", True, (), {}),
+            (_ccd_from_meta(
+                {"members": ["a", "b", "c"]},
+                {"a": ConfigData({"key": False}), "b": ConfigData({}), "c": ConfigData({"key": None})},
+            ), "\\{b\\}\\.key", False, (), {}),
+            (_ccd_from_meta(
+                {"members": ["b", dict(filename="a", alias="c")]},
+                {"a": ConfigData({"key": False}), "b": ConfigData({"key": True})},
+            ), "\\{c\\}\\.key", True, (), {}),
+            (_ccd_from_meta(
+                {"members": ["b", dict(filename="a", alias="c")]},
+                {"a": ConfigData({"key": False}), "b": ConfigData({"key": True})},
+            ), "\\{c\\}\\.any", False, (), {}),
+            (_ccd_from_meta(
+                {"members": ["b", dict(filename="a", alias="c")]},
+                {"a": ConfigData({"key": False}), "b": ConfigData({"key": None})},
+            ), "\\{z\\}\\.key", False, (), {}),
         )
     )
 

@@ -1071,6 +1071,13 @@ class ComponentConfigData[D: MappingConfigData](BasicConfigData, ABCIndexedConfi
         :return: 处理结果
         :rtype: Any
         """
+        if path and (path[0].meta is not None):
+            try:
+                member = self._member(path[0].meta)
+            except KeyError:
+                raise exception from None
+            return processor(path, member)
+
         if not order:
             raise exception
 
@@ -1164,12 +1171,17 @@ class ComponentConfigData[D: MappingConfigData](BasicConfigData, ABCIndexedConfi
         def processor(pth: ABCPath, member: D) -> bool:
             return member.exists(pth, *args, **kwargs)
 
-        return self._resolve_members(
-            path,
-            order=self._meta.orders.read,
-            processor=processor,
-            exception=Exception("never raised"),
-        )
+        with suppress(RequiredPathNotFoundError):  # 个别极端条件触发，例如\{不存在的成员\}\.key
+            return self._resolve_members(
+                path,
+                order=self._meta.orders.read,
+                processor=processor,
+                exception=RequiredPathNotFoundError(
+                    key_info=KeyInfo(path, path[0], 0),
+                    operate=ConfigOperate.Delete,
+                ),
+            )
+        return False
 
     def get(self, path: str | ABCPath, default=None, *args, **kwargs) -> Any:
         path = _fmt_path(path)
