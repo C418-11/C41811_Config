@@ -566,10 +566,9 @@ class MappingConfigData[D: Mapping | MutableMapping](BasicIndexedConfigData, Mut
 
     def __getattr__(self, item) -> Self | Any:
         try:
-            item_obj = self[item]
+            return self[item]
         except KeyError:
             raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{item}'")
-        return item_obj
 
     @_operate(operator.or_, operator.ior)  # @formatter:off
     def __or__(self, other) -> Any: ...
@@ -1034,6 +1033,15 @@ class ComponentConfigData[D: MappingConfigData](BasicConfigData, ABCIndexedConfi
         return deepcopy(self._alias2filename)
 
     def _member(self, member: str) -> D:
+        """
+        通过成员文件名以及其别名获取成员配置数据
+
+        :param member: 成员名
+        :type member: str
+
+        :return: 成员数据
+        :rtype: MappingConfigData
+        """
         try:
             return self._members[member]
         except KeyError:
@@ -1042,12 +1050,40 @@ class ComponentConfigData[D: MappingConfigData](BasicConfigData, ABCIndexedConfi
             raise
 
     def _resolve_members[P: ABCPath, R: Any](
-            self, path: P, order: list[str], operate: ConfigOperate, processor: Callable[[P, D], R]
+            self, path: P, order: list[str], processor: Callable[[P, D], R], exception: Exception
     ) -> R:
+        """
+        逐个尝试解析成员配置数据
+
+        .. important::
+           针对 :py:class:`RequiredPathNotFoundError` ， :py:class:`ConfigDataTypeError` 做了特殊处理，
+           多个成员都抛出其一时最终仅抛出其中 :py:attr:`KeyInfo.index` 最大的
+
+        :param path: 路径
+        :type path: ABCPath
+        :param order: 成员处理顺序
+        :type order: list[str]
+        :param processor: 成员处理函数
+        :type processor: Callable[[ABCPath, MappingConfigData], Any]
+        :param exception: 顺序为空抛出的错误
+        :type exception: Exception
+
+        :return: 处理结果
+        :rtype: Any
+        """
+        if not order:
+            raise exception
+
+        error: None | RequiredPathNotFoundError | ConfigDataTypeError = None
         for member in order:
-            with suppress(RequiredPathNotFoundError):
+            try:
                 return processor(path, self._member(member))
-        raise RequiredPathNotFoundError(path, operate)
+            except (RequiredPathNotFoundError, ConfigDataTypeError) as err:
+                if error is None:
+                    error = err
+                if err.key_info.index > error.key_info.index:
+                    error = err
+        raise error from None
 
     def retrieve(self, path: str | ABCPath, *args, **kwargs) -> Any:
         path = _fmt_path(path)
@@ -1056,7 +1092,13 @@ class ComponentConfigData[D: MappingConfigData](BasicConfigData, ABCIndexedConfi
             return member.retrieve(pth, *args, **kwargs)
 
         return self._resolve_members(
-            path, order=self._meta.orders.read, operate=ConfigOperate.Read, processor=processor
+            path,
+            order=self._meta.orders.read,
+            processor=processor,
+            exception=RequiredPathNotFoundError(
+                key_info=KeyInfo(path, path[0], 0),
+                operate=ConfigOperate.Read,
+            ),
         )
 
     @_check_read_only
@@ -1068,7 +1110,13 @@ class ComponentConfigData[D: MappingConfigData](BasicConfigData, ABCIndexedConfi
             return self
 
         return self._resolve_members(
-            path, order=self._meta.orders.update, operate=ConfigOperate.Write, processor=processor
+            path,
+            order=self._meta.orders.update,
+            processor=processor,
+            exception=RequiredPathNotFoundError(
+                key_info=KeyInfo(path, path[0], 0),
+                operate=ConfigOperate.Write,
+            ),
         )
 
     @_check_read_only
@@ -1080,7 +1128,13 @@ class ComponentConfigData[D: MappingConfigData](BasicConfigData, ABCIndexedConfi
             return self
 
         return self._resolve_members(
-            path, order=self._meta.orders.delete, operate=ConfigOperate.Delete, processor=processor
+            path,
+            order=self._meta.orders.delete,
+            processor=processor,
+            exception=RequiredPathNotFoundError(
+                key_info=KeyInfo(path, path[0], 0),
+                operate=ConfigOperate.Delete,
+            ),
         )
 
     @_check_read_only
@@ -1092,18 +1146,29 @@ class ComponentConfigData[D: MappingConfigData](BasicConfigData, ABCIndexedConfi
 
         with suppress(RequiredPathNotFoundError):
             self._resolve_members(
-                path, order=self._meta.orders.delete, operate=ConfigOperate.Delete, processor=processor
+                path,
+                order=self._meta.orders.delete,
+                processor=processor,
+                exception=RequiredPathNotFoundError(
+                    key_info=KeyInfo(path, path[0], 0),
+                    operate=ConfigOperate.Delete,
+                ),
             )
         return self
 
     def exists(self, path: str | ABCPath, *args, **kwargs) -> bool:
+        if not self._meta.orders.read:
+            return False
         path = _fmt_path(path)
 
         def processor(pth: ABCPath, member: D) -> bool:
             return member.exists(pth, *args, **kwargs)
 
         return self._resolve_members(
-            path, order=self._meta.orders.read, operate=ConfigOperate.Read, processor=processor
+            path,
+            order=self._meta.orders.read,
+            processor=processor,
+            exception=Exception("never raised"),
         )
 
     def get(self, path: str | ABCPath, default=None, *args, **kwargs) -> Any:
@@ -1114,7 +1179,13 @@ class ComponentConfigData[D: MappingConfigData](BasicConfigData, ABCIndexedConfi
 
         with suppress(RequiredPathNotFoundError):
             return self._resolve_members(
-                path, order=self._meta.orders.read, operate=ConfigOperate.Read, processor=processor
+                path,
+                order=self._meta.orders.read,
+                processor=processor,
+                exception=RequiredPathNotFoundError(
+                    key_info=KeyInfo(path, path[0], 0),
+                    operate=ConfigOperate.Read,
+                ),
             )
         return default
 
@@ -1127,7 +1198,13 @@ class ComponentConfigData[D: MappingConfigData](BasicConfigData, ABCIndexedConfi
 
         with suppress(RequiredPathNotFoundError):
             return self._resolve_members(
-                path, order=self._meta.orders.read, operate=ConfigOperate.Read, processor=_retrieve_processor
+                path,
+                order=self._meta.orders.read,
+                processor=_retrieve_processor,
+                exception=RequiredPathNotFoundError(
+                    key_info=KeyInfo(path, path[0], 0),
+                    operate=ConfigOperate.Read,
+                ),
             )
 
         def _modify_processor(pth: ABCPath, member: D) -> Any:
@@ -1135,7 +1212,13 @@ class ComponentConfigData[D: MappingConfigData](BasicConfigData, ABCIndexedConfi
             return default
 
         return self._resolve_members(
-            path, order=self._meta.orders.create, operate=ConfigOperate.Write, processor=_modify_processor
+            path,
+            order=self._meta.orders.create,
+            processor=_modify_processor,
+            exception=RequiredPathNotFoundError(
+                key_info=KeyInfo(path, path[0], 0),
+                operate=ConfigOperate.Write,
+            ),
         )
 
     def __eq__(self, other):

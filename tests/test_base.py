@@ -9,6 +9,7 @@ from collections import OrderedDict
 from collections.abc import Callable
 from contextlib import suppress
 from copy import deepcopy
+from typing import Any
 from typing import Optional
 
 from pyrsistent import pmap
@@ -35,6 +36,7 @@ from C41811.Config.errors import ConfigDataReadOnlyError
 from C41811.Config.errors import ConfigDataTypeError
 from C41811.Config.errors import RequiredPathNotFoundError
 from C41811.Config.errors import UnsupportedConfigFormatError
+from C41811.Config.processors.Component import ComponentMetaParser
 from C41811.Config.utils import Unset
 from utils import safe_raises
 
@@ -119,10 +121,8 @@ class TestMappingConfigData:
         if kwargs is None:
             kwargs = {}
 
-        with safe_raises(ignore_excs) as info:
-            result = data.retrieve(path, **kwargs)
-        if not info:
-            assert result == value
+        with safe_raises(ignore_excs):
+            assert data.retrieve(path, **kwargs) == value
 
     ModifyTests = (
         "path,         value,        ignore_excs,                  kwargs", (  # @formatter:off # noqa: E122
@@ -143,9 +143,9 @@ class TestMappingConfigData:
 
         with safe_raises(ignore_excs) as info:
             data.modify(path, value, **kwargs)
-            result = data.retrieve(path, return_raw_value=True)
-        if not info:
-            assert result == value
+        if info:
+            return
+        assert data.retrieve(path, return_raw_value=True) == value
 
     DeleteTests = (
         "path,           ignore_excs", (  # @formatter:off # noqa: E122
@@ -198,10 +198,8 @@ class TestMappingConfigData:
     @staticmethod
     @mark.parametrize(*ExistsTests)
     def test_exists(data, path, is_exist, ignore_excs, kwargs):
-        with safe_raises(ignore_excs) as info:
-            exists = data.exists(path, **kwargs)
-        if not info:
-            assert exists == is_exist
+        with safe_raises(ignore_excs):
+            assert data.exists(path, **kwargs) is is_exist
 
     GetTests = (
         RetrieveTests[0],
@@ -224,10 +222,8 @@ class TestMappingConfigData:
             ignore_excs = tuple(exc for exc in ignore_excs if not issubclass(exc, LookupError))
             value = None
 
-        with safe_raises(ignore_excs) as info:
-            result = data.get(path, **kwargs)
-        if not info:
-            assert result == value
+        with safe_raises(ignore_excs):
+            assert data.get(path, **kwargs) == value
 
     SetDefaultTests = (
         RetrieveTests[0],
@@ -625,10 +621,8 @@ class TestSequenceConfigData:
         if kwargs is None:
             kwargs = {}
 
-        with safe_raises(ignore_excs) as info:
-            result = data.retrieve(path, **kwargs)
-        if not info:
-            assert result == value
+        with safe_raises(ignore_excs):
+            assert data.retrieve(path, **kwargs) == value
 
     ModifyTests = (
         "path,         value,        ignore_excs,                  kwargs", (  # @formatter:off # noqa: E122
@@ -647,11 +641,9 @@ class TestSequenceConfigData:
         if kwargs is None:
             kwargs = {}
 
-        with safe_raises(ignore_excs) as info:
+        with safe_raises(ignore_excs):
             data.modify(path, value, **kwargs)
-            result = data.retrieve(path, return_raw_value=True)
-        if not info:
-            assert result == value
+            assert data.retrieve(path, return_raw_value=True) == value
 
     DeleteTests = (
         "path,             ignore_excs", (  # @formatter:off # noqa: E122
@@ -706,10 +698,8 @@ class TestSequenceConfigData:
     @staticmethod
     @mark.parametrize(*ExistsTests)
     def test_exists(data, path, is_exist, ignore_excs, kwargs):
-        with safe_raises(ignore_excs) as info:
-            exists = data.exists(path, **kwargs)
-        if not info:
-            assert exists == is_exist
+        with safe_raises(ignore_excs):
+            assert data.exists(path, **kwargs) is is_exist
 
     GetTests = (
         RetrieveTests[0],
@@ -732,10 +722,8 @@ class TestSequenceConfigData:
             ignore_excs = tuple(exc for exc in ignore_excs if not issubclass(exc, LookupError))
             value = None
 
-        with safe_raises(ignore_excs) as info:
-            result = data.get(path, **kwargs)
-        if not info:
-            assert result == value
+        with safe_raises(ignore_excs):
+            assert data.get(path, **kwargs) == value
 
     SetDefaultTests = (
         RetrieveTests[0],
@@ -1207,6 +1195,13 @@ def _ccd_from_members(members: dict[str, MappingConfigData]) -> ComponentConfigD
     )
 
 
+def _ccd_from_meta(meta: dict[str, Any], members: dict[str, MappingConfigData]) -> ComponentConfigData:
+    return ComponentConfigData(
+        ComponentMetaParser().convert_config2meta(ConfigData(meta)),
+        members
+    )
+
+
 class TestComponentConfigData:
     @staticmethod
     @fixture
@@ -1274,6 +1269,279 @@ class TestComponentConfigData:
             getattr(empty_data, attr)
             with raises(AttributeError):
                 setattr(empty_data, attr, None)
+
+    RetrieveTests = (
+        "data, path, value, ignore_excs, kwargs", (
+            (_ccd_from_meta(
+                {"members": ["a", "b", "c"]},
+                {"a": ConfigData({}), "b": ConfigData({}), "c": ConfigData({"key": "value"})},
+            ), "key", "value", (), {}),
+            (_ccd_from_meta(
+                {"members": ["a", "b", "c"]},
+                {"a": ConfigData({"foo": {"bar": "value"}}), "b": ConfigData({}), "c": ConfigData({})},
+            ), "foo\\.bar", "value", (), {}),
+            (_ccd_from_meta(
+                {"members": ["a", "b", "c"]},
+                {"a": ConfigData({}), "b": ConfigData({"foo": {"bar": "value"}}), "c": ConfigData({})},
+            ), "foo\\.bar", "value", (), {}),
+            (_ccd_from_meta(
+                {"members": ["a", "b", "c"]},
+                {"a": ConfigData({}), "b": ConfigData({}), "c": ConfigData({"foo": {"bar": "value"}})},
+            ), "foo\\.bar", "value", (), {}),
+            (_ccd_from_meta(
+                {"members": ["b", "a", "c"]},
+                {"a": ConfigData({}), "b": ConfigData({}), "c": ConfigData({"foo": {"bar": "value"}})},
+            ), "foo", {"bar": "value"}, (), dict(return_raw_value=True)),
+            (_ccd_from_meta(
+                {"members": ["a", "c", "b"]},
+                {"a": ConfigData({}), "b": ConfigData({"key": True}), "c": ConfigData({"key": "value"})},
+            ), "key", "value", (), {}),
+            (_ccd_from_meta(
+                {"members": ["a", "c", "b"]},
+                {
+                    "a": ConfigData(pmap()),
+                    "b": ConfigData(pmap({"key": True})),
+                    "c": ConfigData(pmap({"key": "value"}))
+                },
+            ), "key", "value", (), {}),
+            (_ccd_from_meta(
+                {"members": [dict(filename="a", alias="c"), "b"], "order": ["c"]},
+                {"a": ConfigData({"a": "value"}), "b": ConfigData({"b": True})},
+            ), "a", "value", (), {}),
+            (_ccd_from_meta(
+                {"order": ["z"]},
+                {},
+            ), "", None, (KeyError,), {}),
+            (_ccd_from_meta(
+                {"members": ["a", "c", "b"]},
+                {
+                    "a": ConfigData({"foo": "value"}),
+                    "b": ConfigData({"foo": {"bar": "value"}}),
+                    "c": ConfigData({"foo": {"bar": {"baz": "value"}}}),
+                },
+            ), "foo\\.bar\\.baz\\.qux", None, (ConfigDataTypeError,), {}),
+            (_ccd_from_meta(
+                {"members": ["a", "b"]},
+                {"a": ConfigData({"a": "value"}), "b": ConfigData({"b": True})},
+            ), "key", None, (RequiredPathNotFoundError,), {}),
+            (_ccd_from_meta(
+                {"members": ["a"], "order": []},
+                {"a": ConfigData()},
+            ), "", None, (RequiredPathNotFoundError,), {}),
+        )
+    )
+
+    @staticmethod
+    @mark.parametrize(*RetrieveTests)
+    def test_retrieve(data, path, value, ignore_excs, kwargs):
+        with safe_raises(ignore_excs):
+            assert data.retrieve(path, **kwargs) == value
+
+    ModifyTests = (
+        "data, path, value, ignore_excs, kwargs", (
+            (_ccd_from_meta(
+                {"members": [dict(filename="a", alias="c"), "b"], "order": ["c"]},
+                {"a": ConfigData({"key": "value"}), "b": ConfigData({})},
+            ), "key", True, (), {}),
+            (_ccd_from_meta(
+                {"members": ["a", "b"]},
+                {"a": ConfigData({"key": "value"}), "b": ConfigData({})},
+            ), "key", True, (), {}),
+            (_ccd_from_meta(
+                {"members": ["b", "a"]},
+                {"a": ConfigData({"key": "value"}), "b": ConfigData({})},
+            ), "key", True, (), {}),
+            (_ccd_from_meta(
+                {"members": ["a", "b"], "orders": {"read": ["a", "b"], "update": ["b", "a"]}},
+                {"a": ConfigData({"key": "value"}), "b": ConfigData({})},
+            ), "key", "value", (), {}),
+            (_ccd_from_meta(
+                {"members": ["b", "a"]},
+                {"a": ConfigData({"key": "value"}), "b": ConfigData({"key": None})},
+            ), "key", True, (), {}),
+            (_ccd_from_meta(
+                {"members": ["b", "a"]},
+                {"a": ConfigData({"foo": {"bar": "value"}}), "b": ConfigData({"foo": {"bar": None}})},
+            ), "foo\\.bar", True, (), {}),
+            (_ccd_from_meta(
+                {"members": ["b", "a"]},
+                {"a": ConfigData({"foo": {"bar": "value"}}), "b": ConfigData({"foo": {"bar": None}})},
+            ), "foo", {"bar": True}, (), dict(allow_create=False)),
+            (_ccd_from_meta(
+                {"members": ["b", "a"]},
+                {"a": ConfigData({"foo": {"bar": "value"}}), "b": ConfigData({"foo": {"bar": None}})},
+            ), "quz", {"value": True}, (RequiredPathNotFoundError,), dict(allow_create=False)),
+        )
+    )
+
+    @staticmethod
+    @mark.parametrize(*ModifyTests)
+    def test_modify(data, path, value, ignore_excs, kwargs):
+        with safe_raises(ignore_excs) as info:
+            data.modify(path, value, **kwargs)
+        if info:
+            return
+        assert data.retrieve(path, return_raw_value=True) == value
+
+    DeleteTests = (
+        "data, path, value, ignore_excs, kwargs", (
+            (_ccd_from_meta(
+                {"members": ["a", "b"]},
+                {"a": ConfigData({"foo": {"bar": "value"}}), "b": ConfigData({"foo": {"bar": False}})},
+            ), "foo\\.bar", False, (), {}),
+            (_ccd_from_meta(
+                {"members": [dict(filename="a", alias="c"), "b"], "order": ["c"]},
+                {"a": ConfigData({"key": "value"}), "b": ConfigData({"key": "value"})},
+            ), "key", Unset, (), {}),
+            (_ccd_from_meta(
+                {"members": ["a", "b"], "orders": {"delete": ["b", "a"], "read": ["a", "b"]}},
+                {"a": ConfigData({"key": "value"}), "b": ConfigData({"key": "value"})},
+            ), "key", "value", (), {}),
+            (_ccd_from_meta(
+                {"members": ["a", "b"], "order": []},
+                {"a": ConfigData({"key": "value"}), "b": ConfigData({"key": "value"})},
+            ), "key", "value", (RequiredPathNotFoundError,), {}),
+            (_ccd_from_meta(
+                {"members": ["a", "b"]},
+                {"a": ConfigData({}), "b": ConfigData({})},
+            ), "key", "value", (RequiredPathNotFoundError,), {}),
+        )
+    )
+
+    @staticmethod
+    @mark.parametrize(*DeleteTests)
+    def test_delete(data, path, value, ignore_excs, kwargs):
+        with safe_raises(ignore_excs) as info:
+            data.delete(path, **kwargs)
+        if info:
+            return
+        assert data.get(path, value) == value
+
+    UnsetTests = (
+        "data, path, value, ignore_excs, kwargs", (
+            (_ccd_from_meta(
+                {"members": ["a", "b"]},
+                {"a": ConfigData({"foo": {"bar": "value"}}), "b": ConfigData({"foo": {"bar": False}})},
+            ), "foo\\.bar", False, (), {}),
+            (_ccd_from_meta(
+                {"members": [dict(filename="a", alias="c"), "b"], "order": ["c"]},
+                {"a": ConfigData({"key": "value"}), "b": ConfigData({"key": "value"})},
+            ), "key", Unset, (), {}),
+            (_ccd_from_meta(
+                {"members": ["a", "b"], "orders": {"delete": ["b", "a"], "read": ["a", "b"]}},
+                {"a": ConfigData({"key": "value"}), "b": ConfigData({"key": "value"})},
+            ), "key", "value", (), {}),
+            (_ccd_from_meta(
+                {"members": ["a", "b"], "order": []},
+                {"a": ConfigData({"key": "value"}), "b": ConfigData({"key": "value"})},
+            ), "key", "value", (), {}),
+            (_ccd_from_meta(
+                {"members": ["a", "b"]},
+                {"a": ConfigData({}), "b": ConfigData({})},
+            ), "key", "value", (), {}),
+        )
+    )
+
+    @staticmethod
+    @mark.parametrize(*UnsetTests)
+    def test_unset(data, path, value, ignore_excs, kwargs):
+        with safe_raises(ignore_excs) as info:
+            data.unset(path, **kwargs)
+        if info:
+            return
+        assert data.get(path, value) == value
+
+    ExistsTests = (
+        "data, path, is_exists, ignore_excs, kwargs", (
+            (_ccd_from_meta(
+                {"members": ["a", "b"]},
+                {"a": ConfigData({"foo": {"bar": None}}), "b": ConfigData({"foo": {"bar": {"quz": None}}})},
+            ), "foo\\.bar\\.quz", True, (), {}),
+            (_ccd_from_meta(
+                {"members": ["b", "a"]},
+                {"a": ConfigData({"foo": {"bar": None}}), "b": ConfigData({"foo": {"bar": {"quz": None}}})},
+            ), "foo\\.bar\\.quz", True, (), {}),
+            (_ccd_from_meta(
+                {"members": ["a", "b"]},
+                {"a": ConfigData({}), "b": ConfigData({})},
+            ), "key", False, (), {}),
+            (_ccd_from_meta(
+                {"members": ["a", "b"]},
+                {"a": ConfigData({"key": "value"}), "b": ConfigData({})},
+            ), "key", True, (), {}),
+            (_ccd_from_meta(
+                {"members": ["b", "a"]},
+                {"a": ConfigData({"key": "value"}), "b": ConfigData({})},
+            ), "key", False, (), {}),
+            (_ccd_from_meta(
+                {},
+                {},
+            ), "key", False, (), {}),
+        )
+    )
+
+    @staticmethod
+    @mark.parametrize(*ExistsTests)
+    def test_exists(data, path, is_exists, ignore_excs, kwargs):
+        with safe_raises(ignore_excs):
+            assert data.exists(path, **kwargs) is is_exists
+
+    GetTests = (
+        "data, path, value, ignore_excs, kwargs", (
+            (_ccd_from_meta(
+                {},
+                {},
+            ), "value", None, (), {}),
+            (_ccd_from_meta(
+                {"members": ["a", "b"]},
+                {"a": ConfigData({"foo": {"bar": True}}), "b": ConfigData({"foo": {"bar": False}})},
+            ), "foo\\.bar", True, (), {}),
+            (_ccd_from_meta(
+                {"members": ["b", "a"]},
+                {"a": ConfigData({"foo": {"bar": True}}), "b": ConfigData({"foo": {"bar": False}})},
+            ), "foo\\.bar", False, (), {}),
+            (_ccd_from_meta(
+                {},
+                {},
+            ), "value", None, (), {}),
+        )
+    )
+
+    @staticmethod
+    @mark.parametrize(*GetTests)
+    def test_get(data, path, value, ignore_excs, kwargs):
+        with safe_raises(ignore_excs):
+            assert data.get(path, value, **kwargs) == value
+
+    SetDefaultTests = (
+        "data, path, value, ignore_excs, kwargs", (
+            (_ccd_from_meta(
+                {"members": ["a", "b"]},
+                {"a": ConfigData({}), "b": ConfigData({})}
+            ), "test\\.path", None, (), {}),
+            (_ccd_from_meta(
+                {"members": ["a", "b"], "orders": {"create": ["b", "a"], "read": ["a", "b"]}},
+                {"a": ConfigData({}), "b": ConfigData({})}
+            ), "test\\.path", True, (), {}),
+            (_ccd_from_meta(
+                {"members": ["a", "b"], "orders": {"create": ["b", "a"], "read": ["a", "b"]}},
+                {"a": ConfigData({}), "b": ConfigData({"test": {"path": None}})}
+            ), "test\\.path", False, (AssertionError,), {}),
+            (_ccd_from_meta(
+                {},
+                {}
+            ), "test\\.path", None, (RequiredPathNotFoundError,), {}),
+        )
+    )
+
+    @staticmethod
+    @mark.parametrize(*SetDefaultTests)
+    def test_set_default(data, path, value, ignore_excs, kwargs):
+        with safe_raises(ignore_excs) as info:
+            assert data.setdefault(path, value, **kwargs) == value
+        if info:
+            return
+        assert data.retrieve(path, return_raw_value=True) == value
 
     @staticmethod
     @mark.parametrize("a, b", (
