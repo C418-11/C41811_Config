@@ -151,6 +151,10 @@ def _process_pydantic_exceptions(err: ValidationError) -> Exception:
             ConfigDataTypeError,
             dict(required_type=dict, now_type=type(err_input))
         ),
+        "literal_error": lambda: ErrInfo(
+            RequiredPathNotFoundError,
+            dict(operate=ConfigOperate.Write)
+        ),
     }
 
     err_type_processor = types_kwarg.get(e["type"])
@@ -481,7 +485,7 @@ class DefaultValidatorFactory[D: MappingConfigData | NoneConfigData]:
         try:
             dict_obj = self.model(**data.data).model_dump()
         except ValidationError as err:
-            raise _process_pydantic_exceptions(err) from None
+            raise _process_pydantic_exceptions(err) from err
 
         config_obj: D = data.from_data(dict_obj)
         if self.validator_config.skip_missing:
@@ -515,7 +519,7 @@ def pydantic_validator[D: ABCConfigData](
         try:
             dict_obj = validator(**data).model_dump()
         except ValidationError as err:
-            raise _process_pydantic_exceptions(err) from None
+            raise _process_pydantic_exceptions(err) from err
         config_obj = data.from_data(dict_obj)
         if cfg.allow_modify:
             _fill_not_exits(data, config_obj)
