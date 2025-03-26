@@ -333,14 +333,14 @@ Mapping[str | ABCPath, Any]
             "first\\.second": dict[str, str]  # 类型不匹配
         }).check()
     except ConfigDataTypeError as err:
-        print(err)  # 打印：\.first\.second\.third -> \.third (3 / 2) Must be '<class 'str'>', Not '<class 'int'>'
+        print(err)  # 打印：\.first\.second\.third -> \.third (3 / 3) Must be '<class 'str'>', Not '<class 'int'>'
 
     try:
         requireConfig('', "test.json", {
             "baz": list[str]
         }).check()
     except ConfigDataTypeError as err:
-        print(err)  # 打印：\.baz\[0\] -> \[0\] (2 / 1) Must be '<class 'str'>', Not '<class 'int'>'
+        print(err)  # 打印：\.baz\[0\] -> \[0\] (2 / 2) Must be '<class 'str'>', Not '<class 'int'>'
 
     # 默认值，路径不存在时自动填充
     print(requireConfig('', "test.json", {
