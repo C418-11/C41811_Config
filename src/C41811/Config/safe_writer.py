@@ -75,7 +75,7 @@ def _path2str(x: str | bytes | Path):  # pragma: no cover
 
 _proper_fsync = os.fsync
 
-if sys.platform != "win32":  # pragma: no cover
+if sys.platform != "win32":  # pragma: no cover  # noqa: C901 (ignore complexity)
     # noinspection SpellCheckingInspection
     if hasattr(fcntl, "F_FULLFSYNC"):
         def _proper_fsync(fd):  # noqa: F811, E303

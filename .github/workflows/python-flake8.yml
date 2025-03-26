@@ -26,6 +26,6 @@ jobs:
       - name: Run tests
         run: >
           flake8
-          --doctests --max-line-length=120 --max-complexity=15 --show-source
+          --doctests --max-line-length=120 --max-complexity=10 --show-source
           --count --statistics
           tests src

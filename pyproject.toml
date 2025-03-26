@@ -120,7 +120,7 @@ commands_pre = [
 ]
 commands = [
     ["flake8",
-        "--doctests", "--max-line-length=120", "--max-complexity=15",
+        "--doctests", "--max-line-length=120", "--max-complexity=10",
         "--show-source", "--count", "--statistics",
         "tests", "src"
     ],
@@ -143,7 +143,7 @@ commands = [
     ],
     [
         "flake8",
-        "--doctests", "--max-line-length=120", "--max-complexity=15",
+        "--doctests", "--max-line-length=120", "--max-complexity=10",
         "--show-source", "--count", "--statistics",
         "--exit-zero", "--format=html", "--htmldir=./docs/_static/_flake8", "--tee",
         "tests", "src"
