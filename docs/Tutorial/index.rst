@@ -4,7 +4,7 @@
 .. toctree::
    :maxdepth: 2
 
-   faq
    get-start
    detail
    example
+   faq
