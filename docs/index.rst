@@ -19,9 +19,9 @@ C41811.Config 的文档
           :target: ./index.html
           :alt: Documentation Status
 
-       .. image:: https://img.shields.io/badge/%E5%B8%B8%E8%A7%81-%E7%94%A8%E6%B3%95-green?logo=googledocs&logoColor=white
-          :target: ./CommonUsage.html
-          :alt: Common Usage
+       .. image:: https://img.shields.io/badge/%E5%B8%B8%E8%A7%81-%E9%97%AE%E9%A2%98-green?logo=googledocs&logoColor=white
+          :target: ./Tutorial/FAQ.html
+          :alt: FAQ
 
        .. image:: https://img.shields.io/badge/Made%20with-Sphinx-1f425f.svg
           :target: https://www.sphinx-doc.org/
@@ -71,8 +71,8 @@ C41811.Config 的文档
 .. toctree::
    :maxdepth: 2
 
-   /test/index
-   CommonUsage
+   /Reports/index
+   /Tutorial/index
 
 索引和表
 ========
