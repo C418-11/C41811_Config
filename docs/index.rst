@@ -20,7 +20,7 @@ C41811.Config 的文档
           :alt: Documentation Status
 
        .. image:: https://img.shields.io/badge/%E5%B8%B8%E8%A7%81-%E9%97%AE%E9%A2%98-green?logo=googledocs&logoColor=white
-          :target: ./Tutorial/FAQ.html
+          :target: ./Tutorial/faq.html
           :alt: FAQ
 
        .. image:: https://img.shields.io/badge/Made%20with-Sphinx-1f425f.svg

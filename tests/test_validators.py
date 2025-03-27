@@ -11,6 +11,10 @@
 from pytest import raises
 
 from C41811.Config import FieldDefinition
+# noinspection PyProtectedMember
+from C41811.Config.validators import SkipMissing
+# noinspection PyProtectedMember
+from C41811.Config.validators import SkipMissingType
 
 
 def test_field_definition():
@@ -19,3 +23,9 @@ def test_field_definition():
     with raises(ValueError):
         # noinspection PyArgumentList
         FieldDefinition(str | list, "default", default_factory=list)
+
+
+def test_skip_missing():
+    assert SkipMissingType() is SkipMissing
+
+    str(SkipMissing)

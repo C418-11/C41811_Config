@@ -1,34 +1,81 @@
-常见用法
-========
+详细文档
+==============
 
-如何注册SL处理器/为什么死活在报UnsupportedConfigFormatError？
--------------------------------------------------------------
+配置数据路径语法
+-----------------
+
+由三种类型组成
+
+.. rubric:: 属性键
+   :name: term-attr-key
+
+由 ``\.`` 开头，紧随的字符串组成
 
 .. code-block:: python
-    :caption: 例子：将JsonSL注册到配置池
+   :caption: 例
 
-    # 注册到默认配置池
-    from C41811.Config import JsonSL
-    JsonSL().register_to()
-    # 等同于
-    from C41811.Config import DefaultConfigPool
-    JsonSL().register_to(DefaultConfigPool)
-    # 注册到其他配置池
-    from C41811.Config import ConfigPool
-    pool = ConfigPool()
-    JsonSL().register_to(pool)
+   r"\.key1\.key2\.key3"
 
-其他SL处理器同理
+.. rubric:: 索引键
 
-如何简单的管理配置默认值，类型验证？
-------------------------------------
+由 ``\[`` 开头，紧随的数字与 ``\]`` 组成
 
-参见 ``requireConfig的所有详细用法？`` > ``默认验证器工厂``
+.. code-block:: python
+   :caption: 例
 
-requireConfig的所有详细用法？
+   r"\[0\]"
+
+.. rubric:: 元信息
+
+由 ``\{`` 开头，紧随的字符串与 ``\}`` 组成
+
+元信息会被附加到紧随的键上
+
+.. code-block:: python
+   :caption: 例
+
+   r"\{meta 1\}\.key\{meta 2\}\[0\]"
+
+   # 这相当于
+
+   [AttrKey("key", meta="meta 1"), IndexKey(0, meta="meta 2")]
+
+如果路径字符串以 :ref:`term-attr-key` 开头可以省略 ``\.``
+
+.. code-block:: python
+   :caption: 例
+
+   r"key1\.key2\.key3"
+
+   # 这将被视为
+
+   r"\.key1\.key2\.key3"
+
+.. rubric:: 转义
+
+键名或元信息中如有 ``\`` 需要转义 为 ``\\``
+
+.. code-block:: python
+   :caption: 例
+
+   r"\{1\\2\}\.\\key\{2\\2\}\[0\]"
+
+   # 这将解析为
+
+   [AttrKey(r"\key", meta=r"1\2"), IndexKey(0, meta=r"2\2")]
+
+可以简单的通过 ``str.replace('\\', '\\\\')`` 来转义
+
+.. attention::
+   如果没有转义，且 ``\`` 后面的字符不是以上特殊转义字符，则会原样保留并发出警告
+
+   不应依赖此行为
+
+.. _detail-requireConfig:
+requireConfig详细用法
 -----------------------------
 
-支持手动调用和装饰器两种获取验证数据的方式
+手动调用和装饰器两种获取验证数据的方式
 
 .. code-block:: python
     :caption: 手动调用和装饰器
@@ -87,7 +134,7 @@ Pydantic验证器工厂
    这是因为pydantic自带该功能
    如果提供了该参数会产生一个警告 不会起到任何实际作用
 
-``validator_factory`` 参数设为 :py:attr:`Config.ValidatorTypes.PYDANTIC` 或 ``"pydantic"`` 时使用该验证工厂
+``validator_factory`` 参数设为 :py:attr:`~Config.validators.ValidatorTypes.PYDANTIC` 或 ``"pydantic"`` 时使用该验证工厂
 
 ``validator`` 参数为任意合法的 ``pydantic.BaseModel``
 
@@ -123,7 +170,7 @@ Pydantic验证器工厂
 默认验证器工厂
 ^^^^^^^^^^^^^^
 
-``validator_factory`` 参数设为 :py:attr:`Config.ValidatorTypes.DEFAULT` 或 ``None`` 时使用该验证工厂
+``validator_factory`` 参数设为 :py:attr:`~Config.validators.ValidatorTypes.DEFAULT` 或 ``None`` 时使用该验证工厂
 
 ``validator`` 参数可以为 ``Iterable[str]`` 或 ``Mapping[str | ABCPath, Any]``
 
@@ -432,15 +479,15 @@ Mapping[str | ABCPath, Any]
 ``static_config`` 提供该参数以获得更高的性能
 
 .. seealso::
-   :py:class:`Config.RequiredPath`
+   :py:class:`~Config.RequiredPath`
 
 
 不使用验证器工厂
 ^^^^^^^^^^^^^^^^
 
-``validator_factory`` 参数设为 :py:attr:`Config.ValidatorTypes.IGNORE` 或 ``"ignore"`` 时采用该策略
+``validator_factory`` 参数设为 :py:attr:`~Config.validators.ValidatorTypes.NO_VALIDATION` 或 ``"no-validation"`` 时采用该策略
 
-这将直接把 ``validator`` 参数当作Callable[[ABCConfigData], ABCConfigData]来使用
+这将直接把 ``validator`` 参数当作 ``Callable[[ABCConfigData], ABCConfigData]`` 来使用
 
 .. code-block:: python
     :caption: 一个修改所有值为"modified!"的验证器
@@ -469,54 +516,5 @@ Mapping[str | ABCPath, Any]
     # 输出：{'key': 'modified!'}
 
 
-如何快速保存所有配置文件？
---------------------------
-
-确保你要保存的配置文件都在 `同一个` 配置池中
-
- :py:attr:`Config.requireConfig`
- :py:attr:`Config.load`
- :py:attr:`Config.get`
- 都属于 :py:attr:`Config.DefaultConfigPool` 配置池
-
- 如果 ``ConfigFile`` 不是从这些地方得到的
- 可以使用 :py:attr:`Config.set_`
- (等同于 ``DefaultConfigPool.set``)
- 或者任意配置池(``ABCConfigPool`` 子类) 的 ``set`` 方法将其添加到同一配置池中
-
- .. seealso::
-     :py:func:`Config.abc.ABCConfigPool.set` 或提供 ``config`` 参数的 :py:func:`Config.abc.ABCConfigPool.save`
-
- .. code-block:: python
-    :caption: 一些手动添加到配置池的方式
-
-    # 添加到默认配置文件池
-    from C41811.Config import set_
-    set_(...)
-    # 等同于
-    from C41811.Config import DefaultConfigPool
-    DefaultConfigPool.set(...)
-    # 或者使用自定义的配置池
-    from C41811.Config import ConfigPool
-    pool = ConfigPool()
-    pool.set(...)
-
-然后简单的调用saveAll
-
-.. seealso::
-   :py:func:`Config.abc.ABCConfigPool.save_all`
-
-
-.. code-block:: python
-   :caption: 保存所有配置文件
-
-   # 保存所有默认配置文件池中的配置文件
-   from C41811.Config import saveAll
-   saveAll(...)
-   # 等同于
-   from C41811.Config import DefaultConfigPool
-   DefaultConfigPool.save_all(...)
-   # 使用自定义的配置池
-   from C41811.Config import ConfigPool
-   pool = ConfigPool()
-   pool.save_all(...)
+TODO
+--------------

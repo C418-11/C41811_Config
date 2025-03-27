@@ -173,7 +173,7 @@ class SkipMissingType:
        从 ``IgnoreMissingType`` 重命名为 ``SkipMissingType``
     """
 
-    def __str__(self):  # pragma: no cover
+    def __str__(self):
         return "<SkipMissing>"
 
     @staticmethod
@@ -335,7 +335,9 @@ class DefaultValidatorFactory[D: MappingConfigData | NoneConfigData]:
         self._compile()
         self.model: type[BaseModel]
 
-    def _fmt_mapping_key(self, validator: Mapping) -> tuple[Mapping[str, Any], set[str]]:  # noqa: E501, C901 (ignore complexity)
+    def _fmt_mapping_key(self, validator: Mapping) -> tuple[
+        Mapping[str, Any], set[str]
+    ]:  # noqa: C901 (ignore complexity)
         """
         格式化验证器键
 

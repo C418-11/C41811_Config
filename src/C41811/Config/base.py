@@ -1056,7 +1056,7 @@ class ComponentConfigData[D: MappingConfigData](BasicConfigData, ABCIndexedConfi
         逐个尝试解析成员配置数据
 
         .. important::
-           针对 :py:class:`RequiredPathNotFoundError` ， :py:class:`ConfigDataTypeError` 做了特殊处理，
+           针对 :py:exc:`RequiredPathNotFoundError` ， :py:exc:`ConfigDataTypeError` 做了特殊处理，
            多个成员都抛出其一时最终仅抛出其中 :py:attr:`KeyInfo.index` 最大的
 
         :param path: 路径

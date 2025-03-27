@@ -57,8 +57,8 @@ class RequiredPath:
     ):
         """
         .. tip::
-           提供 ``static_config`` 参数，可以避免在 :py:meth:`RequiredPath.filter` 中反复调用 ``validator_factory`` 以提高性能
-           ( :py:meth:`RequiredPath.filter` 配置一切都为默认值的前提下)
+           提供 ``static_config`` 参数，可以避免在 :py:meth:`~RequiredPath.filter` 中反复调用 ``validator_factory`` 以提高性能
+           ( :py:meth:`~RequiredPath.filter` 配置一切都为默认值的前提下)
 
         :param validator: 数据验证器
         :type validator: Any
@@ -325,45 +325,27 @@ DefaultConfigPool = ConfigPool()
 """
 requireConfig = DefaultConfigPool.require
 """
-:py:attr:`DefaultConfigPool` ``.require()``
-
-.. seealso::
-   :py:meth:`ConfigPool.require`
+:py:data:`DefaultConfigPool` . :py:meth:`~ConfigPool.require`
 """
 saveAll = DefaultConfigPool.save_all
 """
-:py:attr:`DefaultConfigPool` ``.save_all()``
-
-.. seealso::
-   :py:meth:`ConfigPool.save_all`
+:py:data:`DefaultConfigPool` . :py:meth:`~ConfigPool.save_all`
 """
 get = DefaultConfigPool.get
 """
-:py:attr:`DefaultConfigPool` ``.get()``
-
-.. seealso::
-   :py:meth:`ConfigPool.get`
+:py:data:`DefaultConfigPool` . :py:meth:`~ConfigPool.get`
 """
 set_ = DefaultConfigPool.set
 """
-:py:attr:`DefaultConfigPool` ``.set()``
-
-.. seealso::
-   :py:meth:`ConfigPool.set`
+:py:data:`DefaultConfigPool` . :py:meth:`~ConfigPool.set`
 """
 save = DefaultConfigPool.save
 """
-:py:attr:`DefaultConfigPool` ``.save()``
-
-.. seealso::
-   :py:meth:`ConfigPool.save`
+:py:data:`DefaultConfigPool` . :py:meth:`~ConfigPool.save`
 """
 load = DefaultConfigPool.load
 """
-:py:attr:`DefaultConfigPool` ``.load()``
-
-.. seealso::
-   :py:meth:`ConfigPool.load`
+:py:data:`DefaultConfigPool` . :py:meth:`~ConfigPool.load`
 """
 
 
