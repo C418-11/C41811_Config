@@ -3,6 +3,8 @@
 
 import re
 from collections import OrderedDict
+from datetime import datetime
+from textwrap import dedent
 from typing import Optional
 
 from pytest import fixture
@@ -18,8 +20,11 @@ from C41811.Config import ConfigData
 from C41811.Config import ConfigFile
 from C41811.Config import ConfigPool
 from C41811.Config import JsonSL
+from C41811.Config import MappingConfigData
 from C41811.Config import PickleSL
+from C41811.Config import PlainTextSL
 from C41811.Config import PythonLiteralSL
+from C41811.Config import PythonSL
 from C41811.Config import TarFileSL
 from C41811.Config import ZipFileSL
 from C41811.Config.abc import ABCConfigSL
@@ -305,6 +310,17 @@ PythonLiteralTests = (
     ),
 )
 
+PlainTextTests = (
+    (
+        "A\nB\nC\nD\nE",
+        (), (),
+    ),
+    (
+        ["A", "B", "C", "D", "E"],
+        (), ({"linesep": "\n"}, {"split_line": True, "remove_linesep": "\n"}),
+    ),
+)
+
 
 def _insert_sl_cls(sl_cls, tests: tuple):
     yield from ((sl_cls, *test) for test in tests)
@@ -319,6 +335,7 @@ LocalFileTests = (
         *_insert_sl_cls(RuamelYamlSL, RuamelYamlTests),
         *_insert_sl_cls(TomlSL, TOMLTests),
         *_insert_sl_cls(PythonLiteralSL, PythonLiteralTests),
+        *_insert_sl_cls(PlainTextSL, PlainTextTests),
     )
 )
 
@@ -581,6 +598,35 @@ def test_component_wrong_config_data(pool):
         pool.load('', file_name, )
 
 
+def test_python(pool):
+    PythonSL().register_to(pool)
+    PlainTextSL().register_to(pool)
+
+    pool.save(
+        '', "test-python.py",
+        config=ConfigFile(dedent(
+            """
+            key = "value"
+
+            length = len(key)
+
+            repeated = key * length
+
+            from datetime import datetime as _dt
+
+            datetime = _dt.now()
+            """
+        )), config_formats={"plaintext"})
+
+    pool.unset('', "test-python.py")
+    cfg: MappingConfigData = pool.load('', "test-python.py").config
+
+    assert cfg["key"] == "value"
+    assert cfg["length"] == 5
+    assert cfg["repeated"] == ("value" * 5)
+    assert isinstance(cfg["datetime"], datetime)
+
+
 def test_wrong_sl_arguments():
     with raises(TypeError):
         JsonSL(NotImplemented)
@@ -596,6 +642,8 @@ SLProcessors = (
     TarFileSL,
     ZipFileSL,
     ComponentSL,
+    PythonSL,
+    PlainTextSL,
 )
 
 
