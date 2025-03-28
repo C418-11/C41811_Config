@@ -851,17 +851,16 @@ class ABCConfigPool(ABCSLProcessorPool):
         """
 
     @abstractmethod
-    def load(
+    def initialize(
             self,
             namespace: str,
             file_name: str,
             *args,
             config_formats: Optional[str | Iterable[str]] = None,
-            allow_create: bool = False,
             **kwargs
     ) -> ABCConfigFile:
         """
-        加载配置
+        初始化配置文件到指定命名空间并返回
 
         :param namespace: 命名空间
         :type namespace: str
@@ -869,8 +868,34 @@ class ABCConfigPool(ABCSLProcessorPool):
         :type file_name: str
         :param config_formats: 配置格式
         :type config_formats: Optional[str | Iterable[str]]
-        :param allow_create: 是否允许创建配置文件
-        :type allow_create: bool
+
+        :return: 配置对象
+        :rtype: ABCConfigFile
+
+        .. versionadded:: 0.2.0
+        """
+
+    @abstractmethod
+    def load(
+            self,
+            namespace: str,
+            file_name: str,
+            *args,
+            config_formats: Optional[str | Iterable[str]] = None,
+            allow_initialize: bool = False,
+            **kwargs
+    ) -> ABCConfigFile:
+        """
+        加载配置到指定命名空间并返回
+
+        :param namespace: 命名空间
+        :type namespace: str
+        :param file_name: 文件名
+        :type file_name: str
+        :param config_formats: 配置格式
+        :type config_formats: Optional[str | Iterable[str]]
+        :param allow_initialize: 是否允许初始化配置文件
+        :type allow_initialize: bool
 
         :return: 配置对象
         :rtype: ABCConfigFile
@@ -879,6 +904,8 @@ class ABCConfigPool(ABCSLProcessorPool):
            现在会像 :py:meth:`save` 一样接收并传递额外参数
 
            移除 ``config_file_cls`` 参数
+
+           重命名参数 ``allow_create`` 为 ``allow_initialize``
         """
 
     @abstractmethod

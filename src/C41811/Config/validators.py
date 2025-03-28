@@ -335,9 +335,9 @@ class DefaultValidatorFactory[D: MappingConfigData | NoneConfigData]:
         self._compile()
         self.model: type[BaseModel]
 
-    def _fmt_mapping_key(self, validator: Mapping) -> tuple[
-        Mapping[str, Any], set[str]
-    ]:  # noqa: C901 (ignore complexity)
+    def _fmt_mapping_key(
+            self, validator: Mapping
+    ) -> tuple[Mapping[str, Any], set[str]]:  # noqa: C901 (ignore complexity)
         """
         格式化验证器键
 
@@ -557,8 +557,8 @@ class ComponentValidatorFactory[D: ComponentConfigData | NoneConfigData]:
              - 处理组件成员的验证器工厂
              - :py:class:`DefaultValidatorFactory`
              - Callable[[Any, ValidatorFactoryConfig], Callable[[ComponentConfigData], ComponentConfigData]]
-           * - allow_create
-             - 是否允许创建不存在的组件
+           * - allow_initialize
+             - 是否允许初始化不存在的组件成员(注意！ 现在的实现方式会强制初始化成员为 :py:class:`MappingConfigData`)
              - True
              - bool
            * - meta_validator
@@ -592,7 +592,7 @@ class ComponentValidatorFactory[D: ComponentConfigData | NoneConfigData]:
                 validation_meta = True
                 continue
 
-            if (member not in data) and self.validator_config.extra.get("allow_create", True):
+            if (member not in data) and self.validator_config.extra.get("allow_initialize", True):
                 data[member] = MappingConfigData()
             data_cell = CellType(data[member])
             members[member] = validator(data_cell)

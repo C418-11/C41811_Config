@@ -170,55 +170,6 @@ class ConfigPool(BasicConfigPool):
     """
 
     @override
-    def load(
-            self,
-            namespace: str,
-            file_name: str,
-            *args,
-            config_formats: Optional[str | Iterable[str]] = None,
-            allow_create: bool = False,
-            **kwargs
-    ) -> ABCConfigFile:
-        """
-        加载配置
-
-        :param namespace: 命名空间
-        :type namespace: str
-        :param file_name: 文件名
-        :type file_name: str
-        :param config_formats: 配置格式
-        :type config_formats: Optional[str | Iterable[str]]
-        :param allow_create: 是否允许创建配置文件
-        :type allow_create: bool
-
-        :return: 配置对象
-        :rtype: ABCConfigFile
-
-        .. versionchanged:: 0.2.0
-           现在会像 :py:meth:`save` 一样接收并传递额外参数
-
-           移除 ``config_file_cls`` 参数
-
-           现在由 :py:meth:`ABCConfigFile.initialize` 创建新的空 :py:class:`ABCConfigFile` 对象
-        """
-        if (namespace, file_name) in self:
-            return self.get(namespace, file_name)
-
-        def processor(pool, ns, fn, cf):
-            config_file_cls = self.SLProcessors[cf].supported_file_classes[0]
-            try:
-                result = config_file_cls.load(pool, ns, fn, cf, *args, **kwargs)
-            except FileNotFoundError:
-                if not allow_create:
-                    raise
-                result = config_file_cls.initialize(pool, ns, fn, cf, *args, **kwargs)
-
-            pool.set(namespace, file_name, result)
-            return result
-
-        return self._test_all_sl(namespace, file_name, config_formats, processor)
-
-    @override
     def require(
             self,
             namespace: str,
@@ -248,7 +199,7 @@ class ConfigRequirementDecorator:
             required: RequiredPath,
             *,
             config_formats: Optional[str | Iterable[str]] = None,
-            allow_create: bool = True,
+            allow_initialize: bool = True,
             config_cacher: Optional[Callable[[Callable], Callable]] = None,
             filter_kwargs: Optional[dict[str, Any]] = None
     ):
@@ -261,7 +212,7 @@ class ConfigRequirementDecorator:
         :param required: 需求的键
         :type required: RequiredPath
         :param config_formats: 详见 :py:meth:`ConfigPool.load`
-        :param allow_create: 详见 :py:meth:`ConfigPool.load`
+        :param allow_initialize: 详见 :py:meth:`ConfigPool.load`
         :param config_cacher: 缓存配置的装饰器，默认为None，即不缓存
         :type config_cacher: Optional[Callable[[Callable], Callable]]
         :param filter_kwargs: :py:meth:`RequiredPath.filter` 要绑定的默认参数，这会导致 ``static_config`` 失效
@@ -271,8 +222,11 @@ class ConfigRequirementDecorator:
 
         .. versionchanged:: 0.2.0
            重命名参数 ``cache_config`` 为 ``config_cacher``
+
+           重命名参数 ``allow_create`` 为 ``allow_initialize``
         """
-        config = config_pool.load(namespace, file_name, config_formats=config_formats, allow_create=allow_create)
+        config = config_pool.load(namespace, file_name,
+                                  config_formats=config_formats, allow_initialize=allow_initialize)
 
         if filter_kwargs is None:
             filter_kwargs = {}
@@ -760,6 +714,24 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
 
         self.before_load(config_pool, file_path, root_path, formatted_namespace, formatted_filename)
         return self.load_file(config_pool, formatted_namespace, formatted_filename, *args, **kwargs)
+
+    def initialize(
+            self,
+            config_pool: ABCConfigPool,
+            root_path: str,
+            namespace: str,
+            file_name: str,
+            *args, **kwargs
+    ) -> ABCConfigFile:
+
+        formatted_namespace = self.namespace_formatter(namespace, file_name)
+        formatted_filename = self.filename_formatter(file_name)
+
+        return config_pool.initialize(
+            formatted_namespace,
+            formatted_filename,
+            *args, **kwargs
+        )
 
     def save_file(
             self,

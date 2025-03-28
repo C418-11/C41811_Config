@@ -93,11 +93,8 @@ class TestConfigPool:
         with raises(FileNotFoundError, match="No such file or directory"):
             pool.load('', "test", config_formats="json")
 
-        assert pool.load(
-            '', "test",
-            config_formats="json",
-            allow_create=True
-        ) == ConfigFile(ConfigData(), config_format="json")
+        assert pool.load('', "test",
+                         config_formats="json", allow_initialize=True) == ConfigFile(ConfigData(), config_format="json")
 
     @staticmethod
     def test_wrong_save(pool, data):

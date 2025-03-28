@@ -1585,6 +1585,75 @@ class BasicConfigPool(ABCConfigPool, ABC):
 
         return {k: v for k, v in errors.items() if v}
 
+    @override
+    def initialize(
+            self,
+            namespace: str,
+            file_name: str,
+            *args,
+            config_formats: Optional[str | Iterable[str]] = None,
+            **kwargs,
+    ) -> ABCConfigFile:
+        def processor(pool: Self, ns: str, fn: str, cf: str):
+            config_file_cls: type[ABCConfigFile] = self.SLProcessors[cf].supported_file_classes[0]
+            result = config_file_cls.initialize(pool, ns, fn, cf, *args, **kwargs)
+
+            pool.set(namespace, file_name, result)
+            return result
+
+        return self._test_all_sl(namespace, file_name, config_formats, processor)
+
+    @override
+    def load(
+            self,
+            namespace: str,
+            file_name: str,
+            *args,
+            config_formats: Optional[str | Iterable[str]] = None,
+            allow_initialize: bool = False,
+            **kwargs,
+    ) -> ABCConfigFile:
+        """
+        加载配置到指定命名空间并返回
+
+        :param namespace: 命名空间
+        :type namespace: str
+        :param file_name: 文件名
+        :type file_name: str
+        :param config_formats: 配置格式
+        :type config_formats: Optional[str | Iterable[str]]
+        :param allow_initialize: 是否允许初始化配置文件
+        :type allow_initialize: bool
+
+        :return: 配置对象
+        :rtype: ABCConfigFile
+
+        .. versionchanged:: 0.2.0
+           现在会像 :py:meth:`save` 一样接收并传递额外参数
+
+           移除 ``config_file_cls`` 参数
+
+           重命名参数 ``allow_create`` 为 ``allow_initialize``
+
+           现在由 :py:meth:`ABCConfigFile.initialize` 创建新的空 :py:class:`ABCConfigFile` 对象
+        """
+        if (namespace, file_name) in self:
+            return self.get(namespace, file_name)
+
+        def processor(pool: Self, ns: str, fn: str, cf: str):
+            config_file_cls = self.SLProcessors[cf].supported_file_classes[0]
+            try:
+                result = config_file_cls.load(pool, ns, fn, cf, *args, **kwargs)
+            except FileNotFoundError:
+                if not allow_initialize:
+                    raise
+                result = pool.initialize(ns, fn, *args, config_formats=cf, **kwargs)
+
+            pool.set(namespace, file_name, result)
+            return result
+
+        return self._test_all_sl(namespace, file_name, config_formats, processor)
+
     def delete(self, namespace: str, file_name: str) -> Self:
         del self._configs[namespace][file_name]
         if not self._configs[namespace]:

@@ -574,7 +574,7 @@ def test_component_initialize(pool):
     json_sl.register_to(pool)
 
     file_name = f"TestConfigFile{json_sl.supported_file_patterns[0]}{comp_sl.supported_file_patterns[0]}"
-    pool.load('', file_name, allow_create=True)
+    pool.load('', file_name, allow_initialize=True)
 
 
 def test_component_wrong_config_data(pool):
@@ -595,7 +595,7 @@ def test_component_wrong_config_data(pool):
         config=ConfigFile(ConfigData([])),
     )
     with raises(FailedProcessConfigFileError, match="is not a"):
-        pool.load('', file_name, )
+        pool.load('', file_name)
 
 
 def test_python(pool):
