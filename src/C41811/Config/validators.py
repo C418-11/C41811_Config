@@ -335,9 +335,9 @@ class DefaultValidatorFactory[D: MappingConfigData | NoneConfigData]:
         self._compile()
         self.model: type[BaseModel]
 
-    def _fmt_mapping_key(
+    def _fmt_mapping_key(  # noqa: C901 (ignore complexity)
             self, validator: Mapping
-    ) -> tuple[Mapping[str, Any], set[str]]:  # noqa: C901 (ignore complexity)
+    ) -> tuple[Mapping[str, Any], set[str]]:
         """
         格式化验证器键
 

@@ -598,6 +598,43 @@ def test_component_wrong_config_data(pool):
         pool.load('', file_name)
 
 
+def test_compressed_component(pool):
+    component_sl = ComponentSL()
+    json_sl = JsonSL()
+    tar_sl = TarFileSL(compression=TarCompressionTypes.GZIP, compress_level=0)
+    zip_sl = ZipFileSL(compression=ZipCompressionTypes.LZMA, compress_level=9)
+
+    component_sl.register_to(pool)
+    json_sl.register_to(pool)
+    tar_sl.register_to(pool)
+    zip_sl.register_to(pool)
+
+    file_name = f"TestConfigFile{''.join(sl.supported_file_patterns[0] for sl in (json_sl, component_sl, tar_sl))}"
+    fn_a = f"a{json_sl.supported_file_patterns[0]}"
+    fn_b = f"b{json_sl.supported_file_patterns[0]}{zip_sl.supported_file_patterns[0]}"
+    fn_c = f"c{json_sl.supported_file_patterns[0]}{tar_sl.supported_file_patterns[0]}"
+
+    cfg: MappingConfigData = pool.require(
+        '', file_name,
+        {
+            None: {"members": [fn_a, fn_b, fn_c]},
+            fn_a: {"key": None},
+            fn_b: {"key": True},
+            fn_c: {"key": False},
+        },
+        "component"
+    ).check()
+    assert cfg.retrieve(fr"\{{{fn_a}\}}\.key") is None
+    assert cfg.retrieve(fr"\{{{fn_b}\}}\.key") is True
+    assert cfg.retrieve(fr"\{{{fn_c}\}}\.key") is False
+    pool.save_all()
+    pool.delete('', file_name)
+    cfg = pool.load('', file_name).config
+    assert cfg.retrieve(fr"\{{{fn_a}\}}\.key") is None
+    assert cfg.retrieve(fr"\{{{fn_b}\}}\.key") is True
+    assert cfg.retrieve(fr"\{{{fn_c}\}}\.key") is False
+
+
 def test_python(pool):
     PythonSL().register_to(pool)
     PlainTextSL().register_to(pool)

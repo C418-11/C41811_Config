@@ -11,6 +11,7 @@ import os
 import tarfile
 from dataclasses import dataclass
 from enum import ReprEnum
+from typing import Literal
 from typing import Optional
 from typing import override
 
@@ -48,6 +49,7 @@ class TarFileSL(BasicCompressedConfigSL):
             reg_alias: Optional[str] = None,
             create_dir: bool = True,
             compression: TarCompressionTypes | str | None = TarCompressionTypes.ONLY_STORAGE,
+            compress_level: Optional[Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9] | int] = None,
     ):
         """
         :param reg_alias: sl处理器注册别名
@@ -67,6 +69,7 @@ class TarFileSL(BasicCompressedConfigSL):
                     compression = compression_type
                     break
         self._compression: TarCompressionType = compression
+        self._compress_level: int | None = compress_level
         self._short_name = '' if self._compression.short_name is None else self._compression.short_name
 
     @property
@@ -91,16 +94,18 @@ class TarFileSL(BasicCompressedConfigSL):
 
     @override
     def compress_file(self, file_path: str, extract_dir: str):
+        kwargs = {}
+        if self._compress_level is not None:
+            # noinspection SpellCheckingInspection
+            kwargs["compresslevel"] = self._compress_level
         with (
             safe_open(file_path, "wb") as file,
-            tarfile.open(mode=f"w:{self._short_name}", fileobj=file) as tar
+            tarfile.open(mode=f"w:{self._short_name}", fileobj=file, **kwargs) as tar
         ):
-            items = []
-            for _, *items in os.walk(extract_dir):
-                break
-            for item in itertools.chain(*items):
-                path = os.path.normpath(os.path.join(extract_dir, item))
-                tar.add(path, arcname=item)
+            for root, dirs, files in os.walk(extract_dir):
+                for item in itertools.chain(dirs, files):
+                    path = os.path.normpath(os.path.join(root, item))
+                    tar.add(path, arcname=os.path.relpath(path, extract_dir))
 
     @override
     def extract_file(self, file_path: str, extract_dir: str):

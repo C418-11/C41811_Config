@@ -110,12 +110,10 @@ class ZipFileSL(BasicCompressedConfigSL):
                 file, mode='w', compression=self._compression.zipfile_constant, compresslevel=self._compress_level
             ) as zip_file
         ):
-            items = []
-            for _, *items in os.walk(extract_dir):
-                break
-            for item in itertools.chain(*items):
-                path = os.path.normpath(os.path.join(extract_dir, item))
-                zip_file.write(path, arcname=item)
+            for root, dirs, files in os.walk(extract_dir):
+                for item in itertools.chain(dirs, files):
+                    path = os.path.normpath(os.path.join(root, item))
+                    zip_file.write(path, arcname=os.path.relpath(path, extract_dir))
 
     @override
     def extract_file(self, file_path: str, extract_dir: str):
