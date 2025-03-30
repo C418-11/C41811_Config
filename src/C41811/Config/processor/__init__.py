@@ -3,10 +3,10 @@
 
 # noinspection GrazieInspection
 """
-SL处理器
+SaveLoad处理器
 
 .. versionchanged:: 0.2.0
-   从 ``SLProcessors`` 重命名为 ``processors``
+   重命名 ``SLProcessors`` 为 ``processor``
 """
 
 from .Component import ComponentSL  # noqa: F401, F403

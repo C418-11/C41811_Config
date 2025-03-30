@@ -36,7 +36,7 @@ from C41811.Config.errors import ConfigDataReadOnlyError
 from C41811.Config.errors import ConfigDataTypeError
 from C41811.Config.errors import RequiredPathNotFoundError
 from C41811.Config.errors import UnsupportedConfigFormatError
-from C41811.Config.processors.Component import ComponentMetaParser
+from C41811.Config.processor.Component import ComponentMetaParser
 from C41811.Config.utils import Unset
 from utils import safe_raises
 

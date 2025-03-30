@@ -10,6 +10,10 @@ from typing import Any
 
 
 def singleton(cls):
+    """
+    单例模式类装饰器
+    """
+
     def __new__(c, *args, **kwargs):
         if not hasattr(c, "__singleton_instance__"):
             c.__singleton_instance__ = c.__singleton_new__(c, *args, **kwargs)
@@ -32,6 +36,10 @@ def singleton(cls):
 
 @singleton
 class UnsetType:
+    """
+    用于填充默认值的特殊值
+    """
+
     def __str__(self):
         return "<Unset Argument>"
 
@@ -40,6 +48,9 @@ class UnsetType:
 
 
 Unset = UnsetType()
+"""
+用于填充默认值的特殊值
+"""
 
 
 class CellType[C: Any]:

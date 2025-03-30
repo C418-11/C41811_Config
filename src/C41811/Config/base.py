@@ -67,7 +67,7 @@ class BasicConfigData(ABCConfigData, ABC):
     .. versionadded:: 0.1.5
 
     .. versionchanged:: 0.2.0
-       从 ``BaseConfigData`` 重命名为 ``BasicConfigData``
+       重命名 ``BaseConfigData`` 为 ``BasicConfigData``
     """
 
     _read_only: bool | None = False
@@ -152,41 +152,45 @@ class BasicIndexedConfigData[D: Indexed | MutableIndexed](
     .. versionadded:: 0.1.5
 
     .. versionchanged:: 0.2.0
-       从 ``BaseSupportsIndexConfigData`` 重命名为 ``BasicIndexedConfigData``
+       重命名 ``BaseSupportsIndexConfigData`` 为 ``BasicIndexedConfigData``
     """
 
     def _process_path(
             self,
             path: ABCPath,
-            process_check: Callable[[Any, ABCKey, list[ABCKey], int], Any],
+            path_checker: Callable[[Any, ABCKey, list[ABCKey], int], Any],
             process_return: Callable[[Any], Any]
     ) -> Any:
+        # noinspection GrazieInspection
         """
-        处理键路径的通用函数阿
+        处理键路径的通用函数
 
         :param path: 键路径
         :type path: str
-        :param process_check: 检查并处理每个路径段，返回值非None时结束操作并返回值
-        :type process_check: Callable[(now_data: Any, now_path: str, last_path: str, path_index: int), Any]
+        :param path_checker: 检查并处理每个路径段，返回值非None时结束操作并返回值
+        :type path_checker: Callable[(current_data: Any, current_key: str, last_path: str, path_index: int), Any]
         :param process_return: 处理最终结果，该函数返回值会被直接返回
-        :type process_return: Callable[(now_data: Any), Any]
+        :type process_return: Callable[(current_data: Any), Any]
 
         :return: 处理结果
         :rtype: Any
-        """
-        now_data = self._data
 
-        for key_index, now_key in enumerate(path):
-            now_key: ABCKey
+        .. versionchanged:: 0.2.0
+           重命名参数 ``process_check`` 为 ``path_checker``
+        """
+        current_data = self._data
+
+        for key_index, current_key in enumerate(path):
+            current_key: ABCKey
             last_key: list[ABCKey] = path[key_index + 1:]
 
-            check_result = process_check(now_data, now_key, last_key, key_index)
+            check_result = path_checker(current_data, current_key, last_key, key_index)
             if check_result is not None:
                 return check_result
 
-            now_data = now_key.__get_inner_element__(now_data)
+            current_data = current_key.__get_inner_element__(current_data)
 
-        return process_return(now_data)
+        return process_return(current_data)
 
     @override
     def retrieve(self, path: str | ABCPath, *, return_raw_value: bool = False) -> Any:
@@ -463,7 +467,7 @@ class MappingConfigData[D: Mapping | MutableMapping](BasicIndexedConfigData, Mut
 
            参数 ``end_point_only`` 会滤掉非 ``叶子节点`` 的键
 
-           >>> data.keys(end_point_only=True)
+           >>> data.keys(end_point_only=True)  # 内部计算为保留顺序采用了OrderedDict所以返回值是odict_keys
            odict_keys(['foo1'])
 
            参数 ``recursive`` 用于获取所有的 ``路径``
@@ -475,7 +479,6 @@ class MappingConfigData[D: Mapping | MutableMapping](BasicIndexedConfigData, Mut
 
            >>> data.keys(recursive=True, end_point_only=True)
            odict_keys(['foo\\.bar\\.baz', 'foo\\.bar1', 'foo1'])
-
         """
 
         def _recursive(data: Mapping) -> Generator[str, None, None]:
@@ -508,7 +511,7 @@ class MappingConfigData[D: Mapping | MutableMapping](BasicIndexedConfigData, Mut
         :rtype: ValuesView[Any]
 
         .. versionchanged:: 0.2.0
-           重命名 ``get_raw`` 参数为 ``return_raw_value``
+           重命名参数 ``get_raw`` 为 ``return_raw_value``
         """
         if return_raw_value:
             return self._data.values()
@@ -528,7 +531,7 @@ class MappingConfigData[D: Mapping | MutableMapping](BasicIndexedConfigData, Mut
         :rtype: ItemsView[str, Any]
 
         .. versionchanged:: 0.2.0
-           重命名 ``get_raw`` 参数为 ``return_raw_value``
+           重命名参数 ``get_raw`` 为 ``return_raw_value``
         """
         if return_raw_value:
             return self._data.items()
@@ -853,11 +856,11 @@ class ObjectConfigData[D: object](BasicSingleConfigData):
 
     def __init__(self, data: D):
         """
-        .. caution::
-           未默认做深拷贝，可能导致非预期行为
-
         :param data: 配置的原始数据
         :type data: Any
+
+        .. caution::
+           未默认做深拷贝，可能导致非预期行为
         """
         super().__init__(None)
 
@@ -874,11 +877,11 @@ class ObjectConfigData[D: object](BasicSingleConfigData):
         """
         配置的原始数据
 
-        .. caution::
-           直接返回了原始对象，未默认进行深拷贝
-
         :return: 配置的原始数据
         :rtype: Any
+
+        .. caution::
+           直接返回了原始对象，未默认进行深拷贝
         """
         return self._data
 
@@ -898,9 +901,9 @@ type AnyConfigData = (
 ConfigData.TYPES = OrderedDict((
     ((ABCConfigData,), lambda _: _),
     ((type(None),), NoneConfigData),
-    ((Mapping, MutableMapping), MappingConfigData),
+    ((Mapping,), MappingConfigData),
     ((str, bytes), StringConfigData),
-    ((Sequence, MutableSequence), SequenceConfigData),
+    ((Sequence,), SequenceConfigData),
     ((bool,), BoolConfigData),
     ((Number,), NumberConfigData),
     ((object,), ObjectConfigData),
@@ -1055,10 +1058,6 @@ class ComponentConfigData[D: MappingConfigData](BasicConfigData, ABCIndexedConfi
         """
         逐个尝试解析成员配置数据
 
-        .. important::
-           针对 :py:exc:`RequiredPathNotFoundError` ， :py:exc:`ConfigDataTypeError` 做了特殊处理，
-           多个成员都抛出其一时最终仅抛出其中 :py:attr:`KeyInfo.index` 最大的
-
         :param path: 路径
         :type path: ABCPath
         :param order: 成员处理顺序
@@ -1070,6 +1069,10 @@ class ComponentConfigData[D: MappingConfigData](BasicConfigData, ABCIndexedConfi
 
         :return: 处理结果
         :rtype: Any
+
+        .. important::
+           针对 :py:exc:`RequiredPathNotFoundError` ， :py:exc:`ConfigDataTypeError` 做了特殊处理，
+           多个成员都抛出其一时最终仅抛出其中 :py:attr:`KeyInfo.index` 最大的
         """
         if path and (path[0].meta is not None):
             try:
@@ -1292,13 +1295,13 @@ class ConfigFile[D: Any](ABCConfigFile):
             config_format: Optional[str] = None
     ) -> None:
         """
-        .. caution::
-           本身并未对 ``initial_config`` 参数进行深拷贝，但是 :py:class:`ConfigData` 可能会将其深拷贝
-
         :param initial_config: 配置数据
         :type initial_config: Any
         :param config_format: 配置文件的格式
         :type config_format: Optional[str]
+
+        .. caution::
+           本身并未对 ``initial_config`` 参数进行深拷贝，但是 :py:class:`ConfigData` 可能会将其深拷贝
 
         .. versionchanged:: 0.2.0
            现在会自动尝试转换 ``initial_config`` 参数为 :py:class:`ConfigData`
@@ -1379,7 +1382,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
     实现了一些通用方法
 
     .. versionchanged:: 0.2.0
-       从 ``BaseConfigPool`` 重命名为 ``BasicConfigPool``
+       重命名 ``BaseConfigPool`` 为 ``BasicConfigPool``
     """
 
     def __init__(self, root_path="./.config"):

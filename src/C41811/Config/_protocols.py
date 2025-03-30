@@ -20,27 +20,28 @@ class SupportsReadAndReadline(Protocol[_T_co]):
     @overload
     def readline(self) -> _T_co: ...
 
+    @overload
+    def readline(self, __length: int) -> _T_co: ...
+
     def readline(self, __length: int = ...) -> _T_co: ...
 
 
-class Indexed(Protocol[_T_co]):
+class Indexed(Protocol[_T_contra, _T_co]):
     # noinspection GrazieInspection
     """
     .. versionchanged:: 0.2.0
-       从 ``SupportsIndex`` 重命名为 ``Indexed``
+       重命名 ``SupportsIndex`` 为 ``Indexed``
     """
 
     def __getitem__(self, __key: _T_contra) -> _T_co: ...
 
 
-class MutableIndexed(Protocol[_T_contra]):
+class MutableIndexed(Indexed):
     # noinspection GrazieInspection
     """
     .. versionchanged:: 0.2.0
-       从 ``SupportsWriteIndex`` 重命名为 ``MutableIndexed``
+       重命名 ``SupportsWriteIndex`` 为 ``MutableIndexed``
     """
-
-    def __getitem__(self, __key: _T_contra) -> _T_contra: ...
 
     def __setitem__(self, __key: _T_contra, __value: _T_contra) -> None: ...
 

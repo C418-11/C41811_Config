@@ -220,9 +220,6 @@ class ABCConfigData[D: Any](ABC):
         :return: 新的配置数据
         :rtype: Self
 
-        .. versionchanged:: 0.2.0
-           现在会自适应参数数量
-
         .. note::
            套壳__init__，主要是为了方便内部快速创建与传入的ABCConfigData同类型的对象
 
@@ -237,6 +234,9 @@ class ABCConfigData[D: Any](ABC):
            .. code-block:: python
 
               instance.from_data(data)
+
+        .. versionchanged:: 0.2.0
+           现在会自适应参数数量
         """
         return cls(*args, **kwargs)
 
@@ -299,7 +299,6 @@ class ABCConfigData[D: Any](ABC):
 
 class ABCIndexedConfigData[D: Indexed | MutableIndexed](
     ABCConfigData,
-    Indexed,
     MutableIndexed,
     ABC
 ):
@@ -310,7 +309,7 @@ class ABCIndexedConfigData[D: Indexed | MutableIndexed](
     .. versionadded:: 0.1.5
 
     .. versionchanged:: 0.2.0
-       从 ``ABCSupportsIndexConfigData`` 重命名为 ``ABCIndexedConfigData``
+       重命名 ``ABCSupportsIndexConfigData`` 为 ``ABCIndexedConfigData``
     """
 
     @abstractmethod
@@ -320,7 +319,7 @@ class ABCIndexedConfigData[D: Indexed | MutableIndexed](
 
         :param path: 路径
         :type path: str | ABCPath
-        :param return_raw_value: 是否获取原始值，为False时，会将Mapping转换为当前类
+        :param return_raw_value: 是否获取原始值，为False时，会将Mapping | Sequence转换为对应类
         :type return_raw_value: bool
 
         :return: 路径的值
@@ -330,19 +329,13 @@ class ABCIndexedConfigData[D: Indexed | MutableIndexed](
         :raise RequiredPathNotFoundError: 需求的键不存在
 
         .. versionchanged:: 0.2.0
-           重命名 ``get_raw`` 参数为 ``return_raw_value``
+           重命名参数 ``get_raw`` 为 ``return_raw_value``
         """
 
     @abstractmethod
     def modify(self, path: str | ABCPath, value: Any, *, allow_create: bool = True) -> Self:
         """
         修改路径的值
-
-        .. caution::
-           ``value`` 参数未默认做深拷贝，可能导致非预期的行为
-
-        .. attention::
-           ``allow_create`` 时，使用与 `self.data` 一样的类型新建路径
 
         :param path: 路径
         :type path: str | ABCPath
@@ -357,6 +350,12 @@ class ABCIndexedConfigData[D: Indexed | MutableIndexed](
         :raise ConfigDataReadOnlyError: 配置数据为只读
         :raise ConfigDataTypeError: 配置数据类型错误
         :raise RequiredPathNotFoundError: 需求的键不存在
+
+        .. caution::
+           ``value`` 参数未默认做深拷贝，可能导致非预期的行为
+
+        .. attention::
+           ``allow_create`` 时，使用与 `self.data` 一样的类型新建路径
         """
 
     @abstractmethod
@@ -450,7 +449,7 @@ class ABCIndexedConfigData[D: Indexed | MutableIndexed](
            'default value'
 
         .. versionchanged:: 0.2.0
-           重命名 ``get_raw`` 参数为 ``return_raw_value``
+           重命名参数 ``get_raw`` 为 ``return_raw_value``
         """
 
     @abstractmethod
@@ -499,9 +498,9 @@ class ABCIndexedConfigData[D: Indexed | MutableIndexed](
            MappingConfigData({'key': 'value', 'not exists': None, 'with default': 'default value'})
 
         .. versionchanged:: 0.2.0
-           重命名 ``get_raw`` 参数为 ``return_raw_value``
+           重命名参数 ``get_raw`` 为 ``return_raw_value``
 
-           从 ``set_default`` 重命名为 ``setdefault``
+           重命名 ``set_default`` 为 ``setdefault``
         """
 
     @abstractmethod
@@ -571,7 +570,7 @@ class ABCSLProcessorPool(ABC):
         数据结构: ``{处理器注册名: 处理器实例}}``
 
         .. versionchanged:: 0.2.0
-           从 ``SLProcessor`` 重命名为 ``SLProcessors``
+           重命名 ``SLProcessor`` 为 ``SLProcessors``
         """
         self.FileNameProcessors: OrderedDict[str | Pattern, list[str]] = OrderedDict()  # {FileNameMatch: [RegName]}
         # noinspection SpellCheckingInspection
@@ -588,7 +587,7 @@ class ABCSLProcessorPool(ABC):
             - 为 ``re.Pattern`` 时会使用 ``Pattern.fullmatch`` 进行匹配
 
         .. versionchanged:: 0.2.0
-           从 ``FileExtProcessor`` 重命名为 ``FileNameProcessors``
+           重命名 ``FileExtProcessor`` 为 ``FileNameProcessors``
 
            现在是顺序敏感的
         """
@@ -618,13 +617,13 @@ class ABCConfigFile[D: ABCConfigData](ABC):
             config_format: Optional[str] = None
     ) -> None:
         """
-        .. caution::
-           ``initial_config`` 参数未默认做深拷贝，可能导致非预期的行为
-
         :param initial_config: 配置数据
         :type initial_config: ABCConfigData
         :param config_format: 配置文件的格式
         :type config_format: Optional[str]
+
+        .. caution::
+           ``initial_config`` 参数未默认做深拷贝，可能导致非预期的行为
 
         .. versionchanged:: 0.2.0
            重命名参数 ``config_data`` 为 ``initial_config``
@@ -1028,7 +1027,7 @@ class ABCConfigSL(ABC):
         :return: 支持的文件名匹配
 
         .. versionchanged:: 0.2.0
-           从 ``file_ext`` 重命名为 ``supported_file_patterns``
+           重命名 ``file_ext`` 为 ``supported_file_patterns``
         """
 
     def register_to(self, config_pool: ABCSLProcessorPool) -> None:

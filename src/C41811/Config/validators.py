@@ -53,7 +53,7 @@ class ValidatorTypes(Enum):
     NO_VALIDATION = "no-validation"
     """
     .. versionchanged:: 0.2.0
-       从 ``IGNORE`` 重命名为 ``NO_VALIDATION``
+       重命名 ``IGNORE`` 为 ``NO_VALIDATION``
     """
     PYDANTIC = "pydantic"
     COMPONENT = "component"
@@ -72,7 +72,7 @@ class ValidatorFactoryConfig:
     是否允许在填充默认值时同步填充源数据
 
     .. versionchanged:: 0.1.2
-       从 ``allow_create`` 重命名为 ``allow_modify``
+       重命名 ``allow_create`` 为 ``allow_modify``
 
     .. versionchanged:: 0.2.0
        现在默认为 ``True``
@@ -82,7 +82,7 @@ class ValidatorFactoryConfig:
     是否忽略不存在的路径
 
     .. versionchanged:: 0.2.0
-       从 ``ignore_missing`` 重命名为 ``skip_missing``
+       重命名 ``ignore_missing`` 为 ``skip_missing``
     """
 
     extra: dict = dataclasses.field(default_factory=dict)
@@ -170,7 +170,7 @@ class SkipMissingType:
     用于表明值可以缺失特殊值
 
     .. versionchanged:: 0.2.0
-       从 ``IgnoreMissingType`` 重命名为 ``SkipMissingType``
+       重命名 ``IgnoreMissingType`` 为 ``SkipMissingType``
     """
 
     def __str__(self):
@@ -223,7 +223,11 @@ class FieldDefinition[T: type | types.UnionType | types.EllipsisType | types.Gen
         :type allow_recursive: bool
 
         .. versionchanged:: 0.2.0
-           更改函数签名，重命名 ``type_`` 、 ``value`` 参数为 ``annotation`` 、 ``default`` 添加参数 ``default_factory``
+           重命名参数 ``type_`` 为 ``value``
+
+           重命名参数 ``annotation`` 为 ``default``
+
+           添加参数 ``default_factory``
         """
         kwargs = {}
         if default is not _Unset:
@@ -544,6 +548,7 @@ class ComponentValidatorFactory[D: ComponentConfigData | NoneConfigData]:
         :param validator_config: 验证器配置
         :type validator_config: ValidatorFactoryConfig
 
+        .. _component-validator-factory-extra-config:
         额外验证器工厂配置参数
         -----------------------
         .. list-table::

@@ -56,10 +56,6 @@ class RequiredPath:
             static_config: Optional[ValidatorFactoryConfig] = None
     ):
         """
-        .. tip::
-           提供 ``static_config`` 参数，可以避免在 :py:meth:`~RequiredPath.filter` 中反复调用 ``validator_factory`` 以提高性能
-           ( :py:meth:`~RequiredPath.filter` 配置一切都为默认值的前提下)
-
         :param validator: 数据验证器
         :type validator: Any
         :param validator_factory: 数据验证器工厂
@@ -72,6 +68,10 @@ class RequiredPath:
             ]
         :param static_config: 静态配置
         :type static_config: Optional[validators.ValidatorFactoryConfig]
+
+        .. tip::
+           提供 ``static_config`` 参数，可以避免在 :py:meth:`~RequiredPath.filter` 中反复调用 ``validator_factory`` 以提高性能
+           ( :py:meth:`~RequiredPath.filter` 配置一切都为默认值的前提下)
         """
         if not callable(validator_factory):
             validator_factory = ValidatorTypes(validator_factory)
@@ -113,14 +113,6 @@ class RequiredPath:
         """
         检查过滤需求的键
 
-        .. attention::
-           返回的配置数据是 `*快照*`
-
-        .. caution::
-           提供了任意配置参数(``allow_modify``, ``skip_missing``, ...)时,这次调用将完全舍弃 `static_config` 使用当前提供的配置参数
-
-           这会导致调用 `validator_factory` 产生额外开销(如果你提供 `static_config` 参数是为了避免反复调用 `validator_factory` 的话)
-
         :param data: 要过滤的原始数据
         :type data: CellType[ABCConfigData]
         :param allow_modify: 是否允许值不存在时修改data参数对象填充默认值(即使为False仍然会在结果中填充默认值,但不会修改data参数对象)
@@ -137,8 +129,16 @@ class RequiredPath:
         :raise RequiredPathNotFoundError: 必要的键未找到
         :raise UnknownErrorDuringValidateError: 验证过程中发生未知错误
 
+        .. attention::
+           返回的配置数据是 `*快照*`
+
+        .. caution::
+           提供了任意配置参数(``allow_modify``, ``skip_missing``, ...)时,这次调用将完全舍弃 `static_config` 使用当前提供的配置参数
+
+           这会导致调用 `validator_factory` 产生额外开销(如果你提供 `static_config` 参数是为了避免反复调用 `validator_factory` 的话)
+
         .. versionchanged:: 0.2.0
-           参数 ``ignore_missing`` 重命名为 ``skip_missing``
+           重命名参数 ``ignore_missing`` 为 ``skip_missing``
 
            ``data`` 参数支持 :py:class:`CellType`
         """
@@ -188,7 +188,7 @@ class ConfigRequirementDecorator:
     配置获取器，可作装饰器使用
 
     .. versionchanged:: 0.2.0
-       从 ``RequireConfigDecorator`` 重命名为 ``ConfigRequirementDecorator``
+       重命名 ``RequireConfigDecorator`` 为 ``ConfigRequirementDecorator``
     """
 
     def __init__(
@@ -308,7 +308,7 @@ class BasicConfigSL(ABCConfigSL, ABC):
     基础配置SL管理器 提供了一些实用功能
 
     .. versionchanged:: 0.2.0
-       从 ``BaseConfigSL`` 重命名为 ``BasicConfigSL``
+       重命名 ``BaseConfigSL`` 为 ``BasicConfigSL``
     """
 
     @override
@@ -394,7 +394,7 @@ class BasicLocalFileConfigSL(BasicConfigSL, ABC):
     基础本地配置文件SL处理器
 
     .. versionchanged:: 0.2.0
-       从 ``BaseLocalFileConfigSL`` 重命名为 ``BasicLocalFileConfigSL``
+       重命名从 ``BaseLocalFileConfigSL`` 为 ``BasicLocalFileConfigSL``
     """
 
     _s_open_kwargs: dict[str, Any] = dict(mode='w', encoding="utf-8")
@@ -770,15 +770,15 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
         """
         加载指定命名空间的配置
 
-        .. caution::
-           传递SL处理前没有清理已经缓存在配置池里的配置文件，返回的可能不是最新数据
-
         :param config_pool: 配置池
         :type config_pool: ABCConfigPool
         :param namespace: 命名空间
         :type namespace: str
         :param file_name: 文件名
         :type file_name: str
+
+        .. caution::
+           传递SL处理前没有清理已经缓存在配置池里的配置文件，返回的可能不是最新数据
         """
 
         cfg_file = config_pool.load(namespace, file_name, *args, **kwargs)

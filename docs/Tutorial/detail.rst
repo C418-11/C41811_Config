@@ -1,6 +1,7 @@
 详细文档
 ==============
 
+.. _term-config-data-path-syntax:
 配置数据路径语法
 -----------------
 
@@ -26,6 +27,7 @@
    r"\[0\]"
 
 .. rubric:: 元信息
+   :name: term-key-meta
 
 由 ``\{`` 开头，紧随的字符串与 ``\}`` 组成
 
@@ -72,10 +74,19 @@
    不应依赖此行为
 
 .. _detail-requireConfig:
-requireConfig详细用法
+requireConfig
 -----------------------------
 
-手动调用和装饰器两种获取验证数据的方式
+用于加载并验证配置数据的高层方法
+
+.. tip::
+
+   提供参数 ``static_config`` 以获得更高性能
+
+   .. seealso::
+      :py:class:`~Config.main.RequiredPath`
+
+有手动调用和装饰器两种获取验证数据的方式
 
 .. code-block:: python
     :caption: 手动调用和装饰器
@@ -174,6 +185,8 @@ Pydantic验证器工厂
 
 ``validator`` 参数可以为 ``Iterable[str]`` 或 ``Mapping[str | ABCPath, Any]``
 
+``Iterable`` 的元素或 ``Mapping`` 的键会被作为 :ref:`term-config-data-path-syntax` 解析，
+如非特殊配置结果将一定包含这些 :ref:`配置数据路径 <term-config-data-path-syntax>`
 
 .. note::
 
@@ -183,7 +196,7 @@ Pydantic验证器工厂
 
     如果validator同时包含路径和路径的父路径
 
-    例： ``"\.first\.second\.third"`` 与 ``"\.first"`` 同时出现
+    例： ``r"\.first\.second\.third"`` 与 ``r"\.first"`` 同时出现
 
     这时 ``first`` 中不仅包含 ``second`` ，还会允许任意额外的键
 
@@ -404,14 +417,14 @@ Mapping[str | ABCPath, Any]
         "baz": FieldDefinition(Sequence[int], [654]),
     }).check())  # 打印：{'first': {'second': {'third': 111}}, 'not': {'exists': 987}, 'baz': [444]}
     print(requireConfig('', "test.json", {
-        "first\\.second": FieldDefinition(dict, {"key": int}, allow_recursive=False),  # 并不会被递归处理,会被当作默认处理
+        "first\\.second": FieldDefinition(dict, {"key": int}, allow_recursive=False),  # 并不会被递归处理，会被当作默认值处理
         "not exists": FieldDefinition(dict, {"key": int}, allow_recursive=False),
         "type": FieldDefinition(type, frozenset),
     }).check())
     # 打印：
     #  {'first': {'second': {'third': 111, 'foo': 222}}, 'not exists': {'key': <class 'int'>}, 'type': <class 'frozenset'>}
 
-    # 含有非字符串键的验证器不会被递归处理
+    # 含有非字符串键的子Mapping不会被递归处理
     print(requireConfig('', "test.json", {
         "first\\.second": {"third": str, 3: 4},
         # 效果等同于FieldDefinition(dict, {"third": str, 3: 4}, allow_recursive=False)
@@ -476,11 +489,8 @@ Mapping[str | ABCPath, Any]
 
     print(data.exists("not\\.exists"))  # 打印：False
 
-``static_config`` 提供该参数以获得更高的性能
-
 .. seealso::
-   :py:class:`~Config.RequiredPath`
-
+   :py:class:`~Config.validators.DefaultValidatorFactory`
 
 不使用验证器工厂
 ^^^^^^^^^^^^^^^^
@@ -515,29 +525,198 @@ Mapping[str | ABCPath, Any]
     print(requireConfig('', "test.json", modify_value_validator, "ignore").check())
     # 输出：{'key': 'modified!'}
 
+组件验证工厂
+^^^^^^^^^^^^^^^
 
-组件配置数据
---------------
+``validator_factory`` 参数设为 :py:attr:`~Config.validators.ValidatorTypes.COMPONENT` 或 ``"component"`` 时使用该验证工厂
+
+``validator`` 参数为 ``Mapping[str | None, Any]``
+
+键为组件成员文件名，值为成员对应的验证器，组件成员文件名为None则为元配置信息验证器
+
+.. warning::
+   :name: component-validator-factory-none-config-data-warning
+
+   永远不应该尝试验证 :py:class:`~Config.base.NoneConfigData` ，这将创建一个 :py:attr:`~Config.base.ComponentMeta.parser` 为
+   ``None`` 的 :py:class:`~Config.base.ComponentMeta`，如果你没有在 :ref:`component-validator-factory-extra-config` 传入新的
+   `组件元数据验证器` 这将可能导致(至少目前默认情况下会)无法将组件元配置同步到组件元信息，最终导致元信息和组件成员不匹配抛出错误
+
+.. seealso::
+   :py:class:`~Config.validators.ComponentValidatorFactory`
+
+ConfigData
+------------------
+
+此类本身不提供任何实际配置数据操作，仅根据传入的参数类型从注册表中选择对应的子类实例化并返回
+
+注册表存储在 :py:attr:`~Config.base.ConfigData.TYPES`
+
+.. rubric:: 传入的数据类型及其对应子类
+
+优先级从上倒下，ConfigData未传入参数时取 ``None`` ，取初始化参数的第一个参数的类型进行判断
+
+.. list-table::
+   :widths: auto
+   :header-rows: 1
+
+   * - 数据类型
+     - 子类
+
+   * - :py:class:`~Config.abc.ABCConfigData`
+     - 原样返回
+
+   * - :py:class:`types.NoneType`
+     - :py:class:`~Config.base.NoneConfigData`
+
+   * - :py:class:`collections.abc.Mapping`
+     - :py:class:`~Config.base.MappingConfigData`
+
+   * - :py:class:`~builtins.str` , :py:class:`~builtins.bytes`
+     - :py:class:`~Config.base.StringConfigData`
+
+   * - :py:class:`collections.abc.Sequence`
+     - :py:class:`~Config.base.SequenceConfigData`
+
+   * - :py:class:`~builtins.bool`
+     - :py:class:`~Config.base.BoolConfigData`
+
+   * - :py:class:`numbers.Number`
+     - :py:class:`~Config.base.NumberConfigData`
+
+   * - :py:class:`~builtins.object`
+     - :py:class:`~Config.base.ObjectConfigData`
+
+.. note::
+   是的， :py:class:`~Config.base.ComponentConfigData` 不在这里面，仅由
+   :py:class:`~Config.processor.ComponentSL` 或
+   :py:class:`~Config.validators.ComponentValidatorFactory` 创建
+
+   .. seealso::
+      具体原因与 :ref:`component-validator-factory-none-config-data-warning` 大同小异
+
+.. rubric:: 若希望作为类型提示请考虑下表
+
+.. list-table::
+   :widths: auto
+   :header-rows: 1
+
+   * - 配置数据类型
+     - 描述
+
+   * - :py:class:`~Config.abc.ABCConfigData`
+     - 所有配置数据的抽象基类，仅提供了最基础的 :py:meth:`~Config.abc.ABCConfigData.freeze`
+       :py:meth:`~Config.abc.ABCConfigData.from_data` 等方法
+
+   * - :py:class:`~Config.abc.ABCIndexedConfigData`
+     - 支持复杂嵌套数据的抽象基类，提供了 :py:meth:`~Config.abc.ABCIndexedConfigData.retrieve`
+       :py:meth:`~Config.abc.ABCIndexedConfigData.modify` 等高级嵌套数据访问方法
+
+   * - :py:class:`~Config.base.BasicSingleConfigData`
+     - 单文件配置数据的基类，提供的单文件配置数据的基本实现，如 :py:attr:`~Config.base.BasicSingleConfigData.data`
+
+NoneConfigData
+^^^^^^^^^^^^^^^^^^
+
+无参数调用 :py:class:`~Config.base.ConfigData` 的默认值，也是 :py:meth:`~Config.main.BasicConfigSL.initialize` 的默认返回值
+
+初始化参数永远必须为 ``None`` 或压根不传，允许传参更大是为了兼容父类接口
+
+MappingConfigData
+^^^^^^^^^^^^^^^^^^^
 
 .. todo
 
-TODO 待做
-------------
+SequenceConfigData
+^^^^^^^^^^^^^^^^^^^
 
+StringConfigData
+^^^^^^^^^^^^^^^^^^^
+
+NumberConfigData
+^^^^^^^^^^^^^^^^^^^
+
+BooleanConfigData
+^^^^^^^^^^^^^^^^^^^
+
+ComponentConfigData
+^^^^^^^^^^^^^^^^^^^^
+
+组件配置数据由元信息与成员配置组成
+
+.. _component-meta:
 元信息
-^^^^^^^^
+...........
 
-1.元配置存储
+存储了 :ref:`component-meta-config` 、 :ref:`component-meta-member` 、 :ref:`component-meta-order` 、
+:ref:`component-meta-parser` 几部分必须的值。
 
-2.成员定义以及别名
+.. seealso::
+   :py:class:`~Config.base.ComponentMeta`
 
-3.组件顺序
+.. rubric:: 元配置
+   :name: component-meta-config
 
-4.解析器
+元信息默认存储在 ``__init__`` 配置文件内，元配置就是 ``__init__`` 内的原始配置数据
 
+.. attention::
+   原始配置数据结构完全由 :ref:`component-meta-parser` 定义，除非是处理额外附加数据，否则不应该直接对其进行操作
+
+目前是以 :py:class:`~Config.base.MappingConfigData` 存储
+
+.. rubric:: 成员定义
+   :name: component-meta-member
+
+成员 `文件名` ， `别名` ，及其 `配置格式`
+
+`文件名` 应严格与 :ref:`component-member` 一一对应
+
+`别名` 可以在 :ref:`component-meta-order` 中或 :ref:`component-member-path-meta-syntax` 中使用
+
+`配置格式` 会在保存加载期间优先使用
+
+.. seealso::
+   :py:class:`~Config.base.ComponentMember`
+
+.. rubric:: 处理顺序
+   :name: component-meta-order
+
+:py:meth:`~Config.base.ComponentConfigData.retrieve` 等方法从成员的搜索顺序
+
+.. seealso::
+   :py:class:`~Config.base.ComponentOrder`
+
+.. rubric:: 解析器
+   :name: component-meta-parser
+
+负责将 :ref:`component-meta-config` 与 :ref:`component-meta` 以一定格式互相转换
+
+.. seealso::
+   :py:class:`~Config.processor.Component.ComponentMetaParser`
+
+.. _component-member:
 成员
-^^^^^^^^
+...........
 
-1.处理顺序受元信息控制
+成员配置文件的配置数据
 
-2.使用元路径语法指定成员进行操作
+.. _component-member-path-meta-syntax:
+.. rubric:: 键元信息语法指定成员进行操作
+
+:py:meth:`~Config.base.ComponentConfigData.retrieve` 等方法支持使用 :ref:`键元信息 <term-key-meta>` 指定成员进行操作
+
+.. code-block:: python
+   :caption: 指定从成员member.json读取数据
+
+   comp_data.retrieve(r"\{member.json\}\.key")
+   # 如果有别名也可以使用别名
+   comp_data.retrieve(r"\{alies-member\}\.key")
+
+具体来说，会读取 ``path[0].meta`` ，所以只有第一个键的元信息起到作用
+
+SL处理器
+-------------
+
+.. todo
+
+.. list-table::
+   :widths: auto

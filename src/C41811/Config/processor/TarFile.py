@@ -9,6 +9,7 @@
 import itertools
 import os
 import tarfile
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import ReprEnum
 from typing import Literal
@@ -38,6 +39,10 @@ class TarCompressionTypes(TarCompressionType, ReprEnum):
     LZMA = ("lzma", "xz")
 
 
+type ExtractionFilter = (Literal["fully_trusted", "tar", "data"]
+                         | Callable[[tarfile.TarInfo, str], tarfile.TarInfo | None])
+
+
 class TarFileSL(BasicCompressedConfigSL):
     """
     tar格式处理器
@@ -50,6 +55,7 @@ class TarFileSL(BasicCompressedConfigSL):
             create_dir: bool = True,
             compression: TarCompressionTypes | str | None = TarCompressionTypes.ONLY_STORAGE,
             compress_level: Optional[Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9] | int] = None,
+            extraction_filter: Optional[ExtractionFilter] = "data",
     ):
         """
         :param reg_alias: sl处理器注册别名
@@ -58,6 +64,11 @@ class TarFileSL(BasicCompressedConfigSL):
         :type create_dir: bool
         :param compression: 压缩类型
         :type compression: TarCompressionTypes | str | None
+        :param compress_level: 压缩等级
+        :type compress_level: Optional[Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9] | int]
+        :param extraction_filter: 解压过滤器
+        :type extraction_filter:
+            Optional[Literal["fully_trusted", "tar", "data"] | Callable[[tarfile.TarInfo, str], tarfile.TarInfo | None]]
         """
         super().__init__(reg_alias=reg_alias, create_dir=create_dir)
 
@@ -70,6 +81,7 @@ class TarFileSL(BasicCompressedConfigSL):
                     break
         self._compression: TarCompressionType = compression
         self._compress_level: int | None = compress_level
+        self._extraction_filter: ExtractionFilter | None = extraction_filter
         self._short_name = '' if self._compression.short_name is None else self._compression.short_name
 
     @property
@@ -113,7 +125,8 @@ class TarFileSL(BasicCompressedConfigSL):
             safe_open(file_path, "rb") as file,
             tarfile.open(mode=f"r:{self._short_name}", fileobj=file) as tar
         ):
-            tar.extractall(extract_dir)
+            # py3.12不传入filter会发出警告 https://peps.python.org/pep-0706/#defaults-and-their-configuration
+            tar.extractall(extract_dir, filter=self._extraction_filter)
 
 
 __all__ = (

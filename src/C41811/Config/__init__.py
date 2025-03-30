@@ -26,4 +26,4 @@ from .base import *  # noqa: F401, F403
 from .main import *  # noqa: F401, F403
 from .path import *  # noqa: F401, F403
 from .validators import *  # noqa: F401, F403
-from .processors import *  # noqa: F401, F403
+from .processor import *  # noqa: F401, F403

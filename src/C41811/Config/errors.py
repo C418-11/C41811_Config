@@ -75,7 +75,7 @@ class UnknownTokenTypeError(ConfigDataPathSyntaxException):
     未知的键类型
 
     .. versionchanged:: 0.1.3
-       从 ``UnknownTokenType`` 重命名为 ``UnknownTokenTypeError``
+       重命名 ``UnknownTokenType`` 为 ``UnknownTokenTypeError``
     """
 
     msg = "Unknown token type: "
@@ -206,7 +206,7 @@ class UnknownErrorDuringValidateError(Exception):
     在验证配置数据时发生未知错误
 
     .. versionchanged:: 0.1.3
-       从 ``UnknownErrorDuringValidate`` 重命名为 ``UnknownErrorDuringValidateError``
+       重命名 ``UnknownErrorDuringValidate`` 为 ``UnknownErrorDuringValidateError``
     """
 
     def __init__(self, *args, **kwargs):

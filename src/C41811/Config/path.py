@@ -27,7 +27,7 @@ class IndexMixin(ABCKey, ABC):
     混入类，提供对Index操作的支持
 
     .. versionchanged:: 0.1.5
-       从ItemMixin重命名为IndexMixin
+       重命名 ``ItemMixin`` 为 ``IndexMixin``
     """
 
     @override

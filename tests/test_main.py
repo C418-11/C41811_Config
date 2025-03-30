@@ -30,7 +30,7 @@ from C41811.Config import ValidatorFactoryConfig
 from C41811.Config.errors import ConfigDataTypeError
 from C41811.Config.errors import RequiredPathNotFoundError
 from C41811.Config.errors import UnsupportedConfigFormatError
-from C41811.Config.processors.Component import ComponentMetaParser
+from C41811.Config.processor.Component import ComponentMetaParser
 from utils import safe_raises
 from utils import safe_warns
 

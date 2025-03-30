@@ -30,12 +30,12 @@ from C41811.Config import ZipFileSL
 from C41811.Config.abc import ABCConfigSL
 from C41811.Config.errors import FailedProcessConfigFileError
 from C41811.Config.main import BasicCompressedConfigSL
-from C41811.Config.processors.Component import ComponentMetaParser
-from C41811.Config.processors.PyYaml import PyYamlSL
-from C41811.Config.processors.RuamelYaml import RuamelYamlSL
-from C41811.Config.processors.TarFile import TarCompressionTypes
-from C41811.Config.processors.Toml import TomlSL
-from C41811.Config.processors.ZipFile import ZipCompressionTypes
+from C41811.Config.processor.Component import ComponentMetaParser
+from C41811.Config.processor.PyYaml import PyYamlSL
+from C41811.Config.processor.RuamelYaml import RuamelYamlSL
+from C41811.Config.processor.TarFile import TarCompressionTypes
+from C41811.Config.processor.Toml import TomlSL
+from C41811.Config.processor.ZipFile import ZipCompressionTypes
 from utils import safe_raises
 
 JsonSLTests = (
