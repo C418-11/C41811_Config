@@ -19,6 +19,7 @@ release = get_version(
 # noinspection SpellCheckingInspection
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.intersphinx",
     "sphinx_copybutton",
 ]
 
@@ -40,6 +41,14 @@ html_css_files = [
 ]
 html_short_title = "C41811.Config"
 html_favicon = "./_static/favicon.png"
+
+# -- Options for inter sphinx extension ---------------------------------------
+
+# noinspection SpellCheckingInspection
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+    "pydantic": ("https://docs.pydantic.dev/2.11/", None),
+}
 
 # -- AutoAPI Configuration ---------------------------------------------------
 # https://sphinx-autoapi.readthedocs.io/en/latest/reference/config.html

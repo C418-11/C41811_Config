@@ -142,7 +142,7 @@ requireConfig
 Pydantic验证器工厂
 ^^^^^^^^^^^^^^^^^^
 
-.. important::
+.. hint::
    pydantic 验证器工厂不支持 ``skip_missing`` 配置选项
    这是因为pydantic自带该功能
    如果提供了该参数会产生一个警告 不会起到任何实际作用
@@ -530,6 +530,8 @@ Mapping[str | ABCPath, Any]
     print(requireConfig('', "test.json", modify_value_validator, "ignore").check())
     # 输出：{'key': 'modified!'}
 
+.. _component-validator-factory:
+
 组件验证工厂
 ^^^^^^^^^^^^^^^
 
@@ -539,13 +541,10 @@ Mapping[str | ABCPath, Any]
 
 键为组件成员文件名，值为成员对应的验证器，组件成员文件名为None则为元配置信息验证器
 
-.. _component-validator-factory-none-config-data-warning:
-
-.. warning::
-
+.. danger::
    永远不应该尝试验证 :py:class:`~Config.base.NoneConfigData` ，这将创建一个 :py:attr:`~Config.base.ComponentMeta.parser` 为
    ``None`` 的 :py:class:`~Config.base.ComponentMeta`，如果你没有在
-   :py:meth:`额外验证器工厂配置参数 <Config.validators.ComponentValidatorFactory.__init__>` 传入新的
+   :py:class:`额外验证器工厂配置参数 <Config.validators.ComponentValidatorFactory>` 传入新的
    `组件元数据验证器` 这将可能导致(至少目前默认情况下会)无法将组件元配置同步到组件元信息，最终导致元信息和组件成员不匹配抛出错误
 
 .. seealso::
@@ -599,7 +598,7 @@ ConfigData
    :py:class:`~Config.validators.ComponentValidatorFactory` 创建
 
    .. seealso::
-      具体原因与 :ref:`component-validator-factory-none-config-data-warning` 大同小异
+      具体原因与 :ref:`component-validator-factory` 所述大同小异
 
 .. rubric:: 若希望作为类型提示请考虑下表
 

@@ -413,8 +413,6 @@ def _timeout_checker(
         max_interval: Real = .5,
 ):  # pragma: no cover # 除了windows其他平台压根不会触发timeout
     def _calc_interval(interval):
-        nonlocal max_interval, interval_increase_speed
-
         interval = min(interval + interval_increase_speed, max_interval)
         time.sleep(interval)
         return interval
@@ -426,7 +424,6 @@ def _timeout_checker(
             interval = _calc_interval(interval)
 
     def _timeout_loop():
-        nonlocal timeout
         start = time.time() + float(interval_increase_speed)
         interval = 0
         while (time.time() - start) < timeout:
