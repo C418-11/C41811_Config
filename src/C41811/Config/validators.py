@@ -548,9 +548,9 @@ class ComponentValidatorFactory[D: ComponentConfigData | NoneConfigData]:
         :param validator_config: 验证器配置
         :type validator_config: ValidatorFactoryConfig
 
-        .. _component-validator-factory-extra-config:
         额外验证器工厂配置参数
         -----------------------
+
         .. list-table::
            :widths: auto
 

@@ -2,6 +2,7 @@
 ==============
 
 .. _term-config-data-path-syntax:
+
 配置数据路径语法
 -----------------
 
@@ -74,6 +75,7 @@
    不应依赖此行为
 
 .. _detail-requireConfig:
+
 requireConfig
 -----------------------------
 
@@ -193,6 +195,7 @@ Pydantic验证器工厂
     [path, path1, path2, ...] 与 {path: Any, path1: Any, path2: Any, ...} 等价
 
 .. tip::
+    :collapsible:
 
     如果validator同时包含路径和路径的父路径
 
@@ -258,6 +261,8 @@ Mapping[str | ABCPath, Any]
 .............................
 
 .. tip::
+    :collapsible:
+
     ``r"first\.second\.third": int`` 与 ``"first": {"second": {"third": int}}`` 等价
 
     * 允许混用路径与嵌套字典
@@ -534,11 +539,13 @@ Mapping[str | ABCPath, Any]
 
 键为组件成员文件名，值为成员对应的验证器，组件成员文件名为None则为元配置信息验证器
 
+.. _component-validator-factory-none-config-data-warning:
+
 .. warning::
-   :name: component-validator-factory-none-config-data-warning
 
    永远不应该尝试验证 :py:class:`~Config.base.NoneConfigData` ，这将创建一个 :py:attr:`~Config.base.ComponentMeta.parser` 为
-   ``None`` 的 :py:class:`~Config.base.ComponentMeta`，如果你没有在 :ref:`component-validator-factory-extra-config` 传入新的
+   ``None`` 的 :py:class:`~Config.base.ComponentMeta`，如果你没有在
+   :py:meth:`额外验证器工厂配置参数 <Config.validators.ComponentValidatorFactory.__init__>` 传入新的
    `组件元数据验证器` 这将可能导致(至少目前默认情况下会)无法将组件元配置同步到组件元信息，最终导致元信息和组件成员不匹配抛出错误
 
 .. seealso::
@@ -644,6 +651,7 @@ ComponentConfigData
 组件配置数据由元信息与成员配置组成
 
 .. _component-meta:
+
 元信息
 ...........
 
@@ -661,7 +669,7 @@ ComponentConfigData
 .. attention::
    原始配置数据结构完全由 :ref:`component-meta-parser` 定义，除非是处理额外附加数据，否则不应该直接对其进行操作
 
-目前是以 :py:class:`~Config.base.MappingConfigData` 存储
+以 :py:class:`~Config.base.MappingConfigData` 存储
 
 .. rubric:: 成员定义
    :name: component-meta-member
@@ -694,10 +702,11 @@ ComponentConfigData
    :py:class:`~Config.processor.Component.ComponentMetaParser`
 
 .. _component-member:
+
 成员
 ...........
 
-成员配置文件的配置数据
+成员配置文件的配置数据，支持所有 :py:class:`~Config.abc.ABCIndexedConfigData` 的子类
 
 .. _component-member-path-meta-syntax:
 .. rubric:: 键元信息语法指定成员进行操作
@@ -710,6 +719,8 @@ ComponentConfigData
    comp_data.retrieve(r"\{member.json\}\.key")
    # 如果有别名也可以使用别名
    comp_data.retrieve(r"\{alies-member\}\.key")
+   # 如果成员为SequenceConfigData
+   comp_data.retrieve(r"\{member.json\}\[0\]")
 
 具体来说，会读取 ``path[0].meta`` ，所以只有第一个键的元信息起到作用
 
@@ -717,6 +728,3 @@ SL处理器
 -------------
 
 .. todo
-
-.. list-table::
-   :widths: auto

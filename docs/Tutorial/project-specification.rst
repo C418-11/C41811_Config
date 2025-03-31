@@ -42,7 +42,7 @@
 
 3. 返回值使用 `:return:` + `:rtype:` 配对声明
 
-4. 异常声明使用 `:raises <Exception>:` 格式
+4. 异常声明使用 `:raise <Exception>:` 格式
 
 5. 版本变更：
 

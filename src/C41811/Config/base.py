@@ -946,20 +946,20 @@ class ComponentMember:
 
 
 @dataclass
-class ComponentMeta:
+class ComponentMeta[D: ABCConfigData]:
     """
     组件元数据
 
     .. versionadded:: 0.2.0
     """
 
-    config: MappingConfigData = field(default_factory=MappingConfigData)
+    config: D = field(default_factory=ConfigData)
     orders: ComponentOrders = field(default_factory=ComponentOrders)
     members: list[ComponentMember] = field(default_factory=list)
     parser: Optional[ABCMetaParser] = field(default=None)
 
 
-class ComponentConfigData[D: MappingConfigData](BasicConfigData, ABCIndexedConfigData):
+class ComponentConfigData[D: ABCIndexedConfigData](BasicConfigData, ABCIndexedConfigData):
     """
     组件配置数据
 
@@ -1134,6 +1134,7 @@ class ComponentConfigData[D: MappingConfigData](BasicConfigData, ABCIndexedConfi
         path = _fmt_path(path)
 
         def processor(pth: ABCPath, member: D) -> Self:
+            # noinspection PyArgumentList
             member.delete(pth, *args, **kwargs)
             return self
 
@@ -1152,6 +1153,7 @@ class ComponentConfigData[D: MappingConfigData](BasicConfigData, ABCIndexedConfi
         path = _fmt_path(path)
 
         def processor(pth: ABCPath, member: D) -> Self:
+            # noinspection PyArgumentList
             member.delete(pth, *args, **kwargs)
 
         with suppress(RequiredPathNotFoundError):
