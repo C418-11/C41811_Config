@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# cython: language_level = 3
 
 """
 大多数测试经过 :py:class:`RequiredPath` 包装后测试
