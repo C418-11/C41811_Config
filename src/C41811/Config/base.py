@@ -786,14 +786,15 @@ class BoolConfigData[D: bool](NumberConfigData):
     布尔值配置数据
 
     .. versionadded:: 0.1.5
+
+    .. versionchanged:: 0.2.0
+       直接对参数调用 :py:class:`~builtins.bool`
     """
     _data: D
     data: D
 
     def __init__(self, data: Optional[D] = None):
-        if data is None:
-            data = bool()
-        super().__init__(data)
+        super().__init__(bool(data))
 
 
 @_generate_operators
