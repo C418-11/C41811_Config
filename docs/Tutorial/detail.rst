@@ -574,22 +574,22 @@ ConfigData
    * - :py:class:`types.NoneType`
      - :py:class:`~Config.base.NoneConfigData`
 
-   * - :py:class:`collections.abc.Mapping`
+   * - :py:class:`~collections.abc.Mapping`
      - :py:class:`~Config.base.MappingConfigData`
 
-   * - :py:class:`~builtins.str` , :py:class:`~builtins.bytes`
+   * - :py:class:`str` , :py:class:`bytes`
      - :py:class:`~Config.base.StringConfigData`
 
-   * - :py:class:`collections.abc.Sequence`
+   * - :py:class:`~collections.abc.Sequence`
      - :py:class:`~Config.base.SequenceConfigData`
 
-   * - :py:class:`~builtins.bool`
+   * - :py:class:`bool`
      - :py:class:`~Config.base.BoolConfigData`
 
    * - :py:class:`numbers.Number`
      - :py:class:`~Config.base.NumberConfigData`
 
-   * - :py:class:`~builtins.object`
+   * - :py:class:`object`
      - :py:class:`~Config.base.ObjectConfigData`
 
 .. note::
@@ -660,7 +660,7 @@ NumberConfigData
 BoolConfigData
 ^^^^^^^^^^^^^^^^^^^
 
-继承自 :py:class:`~Config.base.NumberConfigData` ，提供了 :py:class:`~builtins.bool` 的实现
+继承自 :py:class:`~Config.base.NumberConfigData` ，提供了 :py:class:`bool` 的实现
 
 ComponentConfigData
 ^^^^^^^^^^^^^^^^^^^^
@@ -775,7 +775,7 @@ SL处理器
      - 基于第三方库PyYaml
 
    * - YAML
-     - :py:class:`~Config.processor.RuamelYaml.YamlSL`
+     - :py:class:`~Config.processor.RuamelYaml.RuamelYamlSL`
      - ruamel_yaml
      - .yaml .yml
      - 基于第三方库RuamelYaml
@@ -790,7 +790,7 @@ SL处理器
      - :py:class:`~Config.processor.Python.PythonSL`
      - python
      - .py
-     - 基于 :py:func:`~builtins.exec`，尝试保存会抛出 :py:exc:`~builtins.NotImplementedError` ，建议与
+     - 基于 :py:func:`exec`，尝试保存会抛出 :py:exc:`NotImplementedError` ，建议与
        :py:class:`~Config.processor.PlainText` 搭配使用
 
    * - PythonLiteral
@@ -806,7 +806,7 @@ SL处理器
      - 纯文本格式，支持额外参数
        ``linesep: str`` 在保存时额外添加换行符，
        ``split_line: bool`` 加载时使用 :py:meth:`~typing.TextIO.readlines`，
-       ``remove_linesep: str`` 在加载时使用 :py:meth:`~builtins.str.removesuffix` 移除换行符
+       ``remove_linesep: str`` 在加载时使用 :py:meth:`str.removesuffix` 移除换行符
 
    * - TarFile
      - :py:class:`~Config.processor.TarFile.TarFileSL`

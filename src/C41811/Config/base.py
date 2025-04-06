@@ -788,7 +788,7 @@ class BoolConfigData[D: bool](NumberConfigData):
     .. versionadded:: 0.1.5
 
     .. versionchanged:: 0.2.0
-       直接对参数调用 :py:class:`~builtins.bool`
+       直接对参数调用 :py:class:`bool`
     """
     _data: D
     data: D

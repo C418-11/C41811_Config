@@ -99,7 +99,7 @@ class RequiredPath:
     验证器工厂注册表
 
     .. versionchanged:: 0.2.0
-       现在待验证的配置数据必须由 :py:class:`CellType` 包装后传入
+       现在待验证的配置数据必须由 :py:class:`~Config.utils.CellType` 包装后传入
     """
 
     def filter[D: ABCConfigData](
