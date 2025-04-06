@@ -630,19 +630,37 @@ NoneConfigData
 MappingConfigData
 ^^^^^^^^^^^^^^^^^^^
 
-.. todo
+最常见的配置数据类型，提供了 :py:class:`~collections.abc.MutableMapping` 的完整实现。
+
+:py:meth:`~Config.abc.ABCIndexedConfigData.retrieve` 等高级方法当返回值为 :py:class:`~collections.abc.Mapping` 或
+:py:class:`~collections.abc.Sequence` 时， :py:meth:`~Config.abc.ABCIndexedConfigData.retrieve` 会返回
+:py:class:`~Config.base.MappingConfigData` 或 :py:class:`~Config.base.SequenceConfigData`
 
 SequenceConfigData
 ^^^^^^^^^^^^^^^^^^^
 
+提供了 :py:class:`~collections.abc.MutableSequence` 的完整实现
+
+:py:meth:`~Config.abc.ABCIndexedConfigData.retrieve` 等高级方法当返回值为 :py:class:`~collections.abc.Mapping` 或
+:py:class:`~collections.abc.Sequence` 时， :py:meth:`~Config.abc.ABCIndexedConfigData.retrieve` 会返回
+:py:class:`~Config.base.MappingConfigData` 或 :py:class:`~Config.base.SequenceConfigData`
+
 StringConfigData
 ^^^^^^^^^^^^^^^^^^^
+
+字符串与字节串的配置数据
+
+尚未完整实现 :py:class:`~collections.UserString` 的接口
 
 NumberConfigData
 ^^^^^^^^^^^^^^^^^^^
 
-BooleanConfigData
+提供了 :py:class:`numbers.Integral` 与 :py:class:`numbers.Real` 的大部分实现
+
+BoolConfigData
 ^^^^^^^^^^^^^^^^^^^
+
+继承自 :py:class:`~Config.base.NumberConfigData` ，提供了 :py:class:`~builtins.bool` 的实现
 
 ComponentConfigData
 ^^^^^^^^^^^^^^^^^^^^
@@ -726,4 +744,86 @@ ComponentConfigData
 SL处理器
 -------------
 
-.. todo
+项目中的 ``SL`` 都是 ``SaveLoad`` 的缩写
+
+.. list-table::
+   :widths: auto
+   :header-rows: 1
+
+   * - 配置格式
+     - 处理器
+     - 注册名
+     - 支持的文件后缀
+     - 简介
+
+   * - JSON
+     - :py:class:`~Config.processor.Json.JsonSL`
+     - json
+     - .json
+     - 基于内置 :py:mod:`json` 模块
+
+   * - Pickle
+     - :py:class:`~Config.processor.Pickle.PickleSL`
+     - pickle
+     - .pickle .pkl
+     - 基于内置 :py:mod:`pickle` 模块
+
+   * - YAML
+     - :py:class:`~Config.processor.PyYaml.PyYamlSL`
+     - yaml
+     - .yaml .yml
+     - 基于第三方库PyYaml
+
+   * - YAML
+     - :py:class:`~Config.processor.RuamelYaml.YamlSL`
+     - ruamel_yaml
+     - .yaml .yml
+     - 基于第三方库RuamelYaml
+
+   * - TOML
+     - :py:class:`~Config.processor.Toml.TomlSL`
+     - toml
+     - .toml
+     - 基于第三方库toml
+
+   * - Python
+     - :py:class:`~Config.processor.Python.PythonSL`
+     - python
+     - .py
+     - 基于 :py:func:`~builtins.exec`，尝试保存会抛出 :py:exc:`~builtins.NotImplementedError` ，建议与
+       :py:class:`~Config.processor.PlainText` 搭配使用
+
+   * - PythonLiteral
+     - :py:class:`~Config.processor.PythonLiteral.PythonLiteralSL`
+     - python_literal
+     - .python_literal .pyl .py
+     - 基于 :py:func:`~ast.literal_eval` 与 :py:func:`~pprint.pformat`
+
+   * - PlainText
+     - :py:class:`~Config.processor.PlainText.PlainTextSL`
+     - plaintext
+     - .txt
+     - 纯文本格式，支持额外参数
+       ``linesep: str`` 在保存时额外添加换行符，
+       ``split_line: bool`` 加载时使用 :py:meth:`~typing.TextIO.readlines`，
+       ``remove_linesep: str`` 在加载时使用 :py:meth:`~builtins.str.removesuffix` 移除换行符
+
+   * - TarFile
+     - :py:class:`~Config.processor.TarFile.TarFileSL`
+     - tarfile:$compression_shortname$
+     - .tar .tar.$compression_shortname$ .tar.$compression_fullname$
+     - 基于内置 :py:mod:`tarfile` 模块
+
+   * - ZipFile
+     - :py:class:`~Config.processor.ZipFile.ZipFileSL`
+     - zipfile:$compression_shortname$-$compress_level$
+     - .$compress_level$.zip .zip
+       .$compress_level$.$compression_fullname$ .$compress_level$.$compression_shortname$
+       .$compression_shortname$ .$compression_fullname$
+     - 基于内置 :py:mod:`zipfile` 模块
+
+   * - Component
+     - :py:class:`~Config.processor.Component.ComponentSL`
+     - component
+     - .component .comp
+     - 组合多个 :py:class:`~Config.abc.ABCIndexedConfigData` 为一个 :py:class:`~Config.base.ComponentConfigData`
