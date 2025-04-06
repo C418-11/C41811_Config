@@ -15,6 +15,9 @@ from ..main import BasicLocalFileConfigSL
 class PickleSL(BasicLocalFileConfigSL):
     """
     pickle格式处理器
+
+    .. versionchanged:: 0.2.0
+       添加 ``.pkl`` 文件后缀支持
     """
 
     @property
@@ -25,7 +28,7 @@ class PickleSL(BasicLocalFileConfigSL):
     @property
     @override
     def supported_file_patterns(self) -> tuple[str, ...]:
-        return ".pickle",
+        return ".pickle", ".pkl"
 
     supported_file_classes = [ConfigFile]
 
