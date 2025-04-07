@@ -117,7 +117,7 @@ class TarFileSL(BasicCompressedConfigSL):
             for root, dirs, files in os.walk(extract_dir):
                 for item in itertools.chain(dirs, files):
                     path = os.path.normpath(os.path.join(root, item))
-                    tar.add(path, arcname=os.path.relpath(path, extract_dir))
+                    tar.add(path, arcname=os.path.relpath(path, extract_dir), recursive=False)
 
     @override
     def extract_file(self, file_path: str, extract_dir: str):
