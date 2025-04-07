@@ -234,7 +234,7 @@ class ConfigRequirementDecorator:
         self._config_file: ABCConfigFile = config
         self._required = required
         self._filter_kwargs = filter_kwargs
-        self._cache_config: Callable = config_cacher if config_cacher is not None else lambda x: x
+        self._cache_config: Callable = lambda _: _ if config_cacher is None else config_cacher
 
     def check(self, *, ignore_cache: bool = False, **filter_kwargs) -> Any:
         """

@@ -92,7 +92,7 @@ def _fill_not_exits(raw_obj: MappingConfigData, obj: MappingConfigData):
     all_leaf = dict(recursive=True, end_point_only=True)
     diff_keys = obj.keys(**all_leaf) - raw_obj.keys(**all_leaf)
     for key in diff_keys:
-        raw_obj.modify(key, obj.retrieve(key))
+        raw_obj.modify(key, obj.retrieve(key, return_raw_value=True))
 
 
 def _process_pydantic_exceptions(err: ValidationError) -> Exception:
