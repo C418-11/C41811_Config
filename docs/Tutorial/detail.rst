@@ -672,14 +672,14 @@ ComponentConfigData
 元信息
 ...........
 
-存储了 :ref:`component-meta-config` 、 :ref:`component-meta-member` 、 :ref:`component-meta-order` 、
+存储了 :ref:`term-component-meta-config` 、 :ref:`component-meta-member` 、 :ref:`component-meta-order` 、
 :ref:`component-meta-parser` 几部分必须的值。
 
 .. seealso::
    :py:class:`~Config.base.ComponentMeta`
 
 .. rubric:: 元配置
-   :name: component-meta-config
+   :name: term-component-meta-config
 
 元信息默认存储在 ``__init__`` 配置文件内，元配置就是 ``__init__`` 内的原始配置数据
 
@@ -713,7 +713,7 @@ ComponentConfigData
 .. rubric:: 解析器
    :name: component-meta-parser
 
-负责将 :ref:`component-meta-config` 与 :ref:`component-meta` 以一定格式互相转换
+负责将 :ref:`term-component-meta-config` 与 :ref:`component-meta` 以一定格式互相转换
 
 .. seealso::
    :py:class:`~Config.processor.Component.ComponentMetaParser`
@@ -827,3 +827,42 @@ SL处理器
      - component
      - .component .comp
      - 组合多个 :py:class:`~Config.abc.ABCIndexedConfigData` 为一个 :py:class:`~Config.base.ComponentConfigData`
+
+ComponentMetaParser
+--------------------
+
+:py:class:`~Config.processor.Component.ComponentSL` 的默认 :ref:`term-component-meta-config` 解析器。
+
+.. rubric:: 元配置数据结构
+
+.. code-block:: python
+   :caption: 详解
+
+   {
+       "members": [  # 声明组件成员，此处声明的文件名必须与提供的组件成员严格匹配
+           "filename.json",  # 可以直接提供文件名
+           {
+               "filename": "name",  # 也可以通过键值对声明
+               # 通过键值对声明可以附带额外信息
+               "alias": "na",  # 此成员别名为"na"，可被`键元信息`语法或下面的操作顺序使用
+               "config_format": "ruamel_yaml",  # 此成员配置格式为ruamel.yaml的YAML解析器
+           },
+           {"filename": "my-member.pickle"},  # 当然这些额外信息是可选的
+       ],
+       # 操作顺序，并没有严格的检查，已经声明的组件成员可以不被使用但是禁止出现完全重复的名称
+       "order": [  # 定义基础的操作顺序，若未提供则顺序敏感地使用members所声明的文件名(若存在则优先使用别名)，可以提供一个空列表以禁用默认行为
+           # "filename.json",  # 越靠前优先级越高
+           # "na",  # 显然这里是允许别名的
+           # 已经声明的my-member.pickle没有在这里被使用
+       ],
+       "orders": {  # order会被同步追加到create/read/modify/delete
+           # 会简单的检查将要追加的名称是否已经在表中(如果是则跳过)，这并不会同时检查文件名与别名是否同时存在
+           "create": [],  # 禁止创建新的键，create的行为不是很符合预期，此项目前仅控制setdefault方法
+           "read": ["filename.json", "my-member.pickle"],  # retrieve等方法仅按照此顺序读取配置数据
+           "modify": ["filename.json", "na"],  # 显然这是针对modify一类方法的
+           "delete": ["filename.json", "my-member.pickle", "na"],  # delete,unset一类涉及删除路径的操作
+           # 注意，当最终得到的orders其中某项未空时(例如"delete": [])
+           # 会抛出RequiredPathNotFoundError且未找到路径一定为根键
+       },
+   }
+
