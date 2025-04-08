@@ -278,7 +278,7 @@ class ABCConfigData[D: Any](ABC):
         """
         冻结配置数据 (切换只读模式)
 
-        :param freeze: 是否冻结配置数据, 为 ``None`` 时进行切换
+        :param freeze: 是否冻结配置数据, 为 :py:const:`None` 时进行切换
         :type freeze: Optional[bool]
         :return: 返回当前实例便于链式调用
         :rtype: Self

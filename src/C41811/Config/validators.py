@@ -75,7 +75,7 @@ class ValidatorFactoryConfig:
        重命名 ``allow_create`` 为 ``allow_modify``
 
     .. versionchanged:: 0.2.0
-       现在默认为 ``True``
+       现在默认为 :py:const:`True`
     """
     skip_missing: bool = False
     """
@@ -311,7 +311,8 @@ class DefaultValidatorFactory[D: MappingConfigData | NoneConfigData]:
              - 默认值
              - 类型
            * - model_config_key
-             - 内部编译 `pydantic` 的 ``BaseModel`` 时，模型配置是以嵌套字典的形式存储的，因此请确保此参数不与任何其中子模型名冲突
+             - 内部编译 :py:mod:`pydantic` 的 :py:class:`~pydantic.main.BaseModel` 时，模型配置是以嵌套字典的形式存储的，
+               因此请确保此参数不与任何其中子模型名冲突
              - ".__model_config__"
              - Any
 
@@ -510,7 +511,7 @@ def pydantic_validator[D: ABCConfigData](
     """
     验证器工厂配置 ``skip_missing`` 无效
 
-    :param validator: pydantic.BaseModel的子类
+    :param validator: :py:class:`~pydantic.main.BaseModel` 的子类
     :type validator: type[BaseModel]
     :param cfg: 验证器配置
     :type cfg: ValidatorFactoryConfig

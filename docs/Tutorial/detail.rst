@@ -149,7 +149,7 @@ Pydantic验证器工厂
 
 ``validator_factory`` 参数设为 :py:attr:`~Config.validators.ValidatorTypes.PYDANTIC` 或 ``"pydantic"`` 时使用该验证工厂
 
-``validator`` 参数为任意合法的 ``pydantic.BaseModel``
+``validator`` 参数为任意合法的 :py:class:`~pydantic.main.BaseModel`
 
 .. code-block:: python
     :caption: 一个简单的pydantic验证器
@@ -183,7 +183,7 @@ Pydantic验证器工厂
 默认验证器工厂
 ^^^^^^^^^^^^^^
 
-``validator_factory`` 参数设为 :py:attr:`~Config.validators.ValidatorTypes.DEFAULT` 或 ``None`` 时使用该验证工厂
+``validator_factory`` 参数设为 :py:attr:`~Config.validators.ValidatorTypes.DEFAULT` 或 :py:const:`None` 时使用该验证工厂
 
 ``validator`` 参数可以为 ``Iterable[str]`` 或 ``Mapping[str | ABCPath, Any]``
 
@@ -543,7 +543,7 @@ Mapping[str | ABCPath, Any]
 
 .. danger::
    永远不应该尝试验证 :py:class:`~Config.base.NoneConfigData` ，这将创建一个 :py:attr:`~Config.base.ComponentMeta.parser` 为
-   ``None`` 的 :py:class:`~Config.base.ComponentMeta`，如果你没有在
+   :py:const:`None` 的 :py:class:`~Config.base.ComponentMeta`，如果你没有在
    :py:class:`额外验证器工厂配置参数 <Config.validators.ComponentValidatorFactory>` 传入新的
    `组件元数据验证器` 这将可能导致(至少目前默认情况下会)无法将组件元配置同步到组件元信息，最终导致元信息和组件成员不匹配抛出错误
 
@@ -559,7 +559,7 @@ ConfigData
 
 .. rubric:: 传入的数据类型及其对应子类
 
-优先级从上倒下，ConfigData未传入参数时取 ``None`` ，取初始化参数的第一个参数的类型进行判断
+优先级从上倒下，ConfigData未传入参数时取 :py:const:`None` ，取初始化参数的第一个参数的类型进行判断
 
 .. list-table::
    :widths: auto
@@ -625,7 +625,7 @@ NoneConfigData
 
 无参数调用 :py:class:`~Config.base.ConfigData` 的默认值，也是 :py:meth:`~Config.main.BasicConfigSL.initialize` 的默认返回值
 
-初始化参数永远必须为 ``None`` 或压根不传，允许传参更大是为了兼容父类接口
+初始化参数永远必须为 :py:const:`None` 或压根不传，允许传参更大是为了兼容父类接口
 
 MappingConfigData
 ^^^^^^^^^^^^^^^^^^^
