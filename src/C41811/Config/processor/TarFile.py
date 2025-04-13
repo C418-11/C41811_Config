@@ -12,8 +12,11 @@ import tarfile
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import ReprEnum
+from typing import Any
+from typing import IO
 from typing import Literal
 from typing import Optional
+from typing import cast
 from typing import override
 
 from ..base import ConfigFile
@@ -79,7 +82,8 @@ class TarFileSL(BasicCompressedConfigSL):
                 if compression in (compression_type.full_name, compression_type.short_name):
                     compression = compression_type
                     break
-        self._compression: TarCompressionType = compression
+
+        self._compression: TarCompressionType = cast(TarCompressionTypes, compression)
         self._compress_level: int | None = compress_level
         self._extraction_filter: ExtractionFilter | None = extraction_filter
         self._short_name = '' if self._compression.short_name is None else self._compression.short_name
@@ -105,14 +109,17 @@ class TarFileSL(BasicCompressedConfigSL):
     supported_file_classes = [ConfigFile]
 
     @override
-    def compress_file(self, file_path: str, extract_dir: str):
-        kwargs = {}
+    def compress_file(self, file_path: str, extract_dir: str) -> None:
+        kwargs: dict[str, Any] = {}
         if self._compress_level is not None:
             # noinspection SpellCheckingInspection
             kwargs["compresslevel"] = self._compress_level
         with (
             safe_open(file_path, "wb") as file,
-            tarfile.open(mode=f"w:{self._short_name}", fileobj=file, **kwargs) as tar
+            tarfile.open(
+                mode=cast(Literal["w:", "w:gz", "w:bz2", "w:xz"], f"w:{self._short_name}"),
+                fileobj=cast(IO[bytes], file), **kwargs
+            ) as tar
         ):
             for root, dirs, files in os.walk(extract_dir):
                 for item in itertools.chain(dirs, files):
@@ -120,10 +127,13 @@ class TarFileSL(BasicCompressedConfigSL):
                     tar.add(path, arcname=os.path.relpath(path, extract_dir), recursive=False)
 
     @override
-    def extract_file(self, file_path: str, extract_dir: str):
+    def extract_file(self, file_path: str, extract_dir: str) -> None:
         with (
             safe_open(file_path, "rb") as file,
-            tarfile.open(mode=f"r:{self._short_name}", fileobj=file) as tar
+            tarfile.open(
+                mode=cast(Literal["r:", "r:gz", "r:bz2", "r:xz"], f"r:{self._short_name}"),
+                fileobj=cast(IO[bytes], file)
+            ) as tar
         ):
             # py3.12不传入filter会发出警告 https://peps.python.org/pep-0706/#defaults-and-their-configuration
             tar.extractall(extract_dir, filter=self._extraction_filter)

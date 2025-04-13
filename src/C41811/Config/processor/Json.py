@@ -3,6 +3,7 @@
 
 
 import json
+from typing import Any
 from typing import override
 
 from .._protocols import SupportsReadAndReadline
@@ -32,10 +33,10 @@ class JsonSL(BasicLocalFileConfigSL):
     @override
     def save_file(
             self,
-            config_file: ABCConfigFile,
+            config_file: ABCConfigFile[Any],
             target_file: SupportsWrite[str],
-            *merged_args,
-            **merged_kwargs
+            *merged_args: Any,
+            **merged_kwargs: Any
     ) -> None:
         with self.raises():
             json.dump(config_file.config.data, target_file, *merged_args, **merged_kwargs)
@@ -44,9 +45,9 @@ class JsonSL(BasicLocalFileConfigSL):
     def load_file(
             self,
             source_file: SupportsReadAndReadline[str],
-            *merged_args,
-            **merged_kwargs
-    ) -> ConfigFile:
+            *merged_args: Any,
+            **merged_kwargs: Any
+    ) -> ConfigFile[Any]:
         with self.raises():
             data = json.load(source_file, *merged_args, **merged_kwargs)
 

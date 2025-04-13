@@ -38,16 +38,19 @@ import sys
 import time
 from abc import ABC
 from abc import abstractmethod
+from collections.abc import Generator
 from contextlib import contextmanager
 from contextlib import suppress
 from enum import IntEnum
 from numbers import Real
 from pathlib import Path
 from threading import Lock
+from typing import Any
 from typing import ContextManager
 from typing import IO
 from typing import Optional
 from typing import TextIO
+from typing import cast
 from typing import override
 from weakref import WeakValueDictionary
 
@@ -57,15 +60,18 @@ try:
     import fcntl
 except ImportError:  # pragma: no cover
     # noinspection SpellCheckingInspection
-    fcntl = None
+    fcntl = None  # type: ignore[assignment]
 
 try:
     from os import fspath
 except ImportError:  # pragma: no cover
-    fspath = None
+    fspath = None  # type: ignore[assignment]
+
+type PathLike = str | bytes | Path
+type AIO = IO[Any]
 
 
-def _path2str(x: str | bytes | Path):  # pragma: no cover
+def _path2str(x: PathLike) -> str | bytes:  # pragma: no cover
     if hasattr(x, "decode"):
         return x.decode(sys.getfilesystemencoding())
     if isinstance(x, Path):
@@ -78,14 +84,14 @@ _proper_fsync = os.fsync
 if sys.platform != "win32":  # pragma: no cover  # noqa: C901 (ignore complexity)
     # noinspection SpellCheckingInspection
     if hasattr(fcntl, "F_FULLFSYNC"):
-        def _proper_fsync(fd):  # noqa: F811, E303
+        def _proper_fsync(fd: int) -> None:  # noqa: F811, E303
             # https://lists.apple.com/archives/darwin-dev/2005/Feb/msg00072.html
             # https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man2/fsync.2.html
             # https://github.com/untitaker/python-atomicwrites/issues/6
             fcntl.fcntl(fd, fcntl.F_FULLFSYNC)
 
 
-    def _sync_directory(directory):  # noqa: E303
+    def _sync_directory(directory: str) -> None:  # noqa: E303
         # Ensure that filenames are written to disk
         fd = os.open(directory, 0)
         try:
@@ -94,12 +100,12 @@ if sys.platform != "win32":  # pragma: no cover  # noqa: C901 (ignore complexity
             os.close(fd)
 
 
-    def _replace_atomic(src, dst):  # noqa: E303
+    def _replace_atomic(src: PathLike, dst: PathLike) -> None:  # noqa: E303
         os.rename(src, dst)
         _sync_directory(os.path.normpath(os.path.dirname(dst)))
 
 
-    def _move_atomic(src, dst):  # noqa: E303
+    def _move_atomic(src: PathLike, dst: PathLike) -> None:  # noqa: E303
         os.link(src, dst)
         os.unlink(src)
 
@@ -117,26 +123,26 @@ else:  # pragma: no cover
     _windows_default_flags = _MOVEFILE_WRITE_THROUGH
 
 
-    def _handle_errors(rv):  # noqa: E303
+    def _handle_errors(rv: Any) -> None:  # noqa: E303
         if not rv:
             raise WinError()
 
 
-    def _replace_atomic(src, dst):  # noqa: E303
+    def _replace_atomic(src: PathLike, dst: PathLike) -> None:  # noqa: E303
         _handle_errors(windll.kernel32.MoveFileExW(
             _path2str(src), _path2str(dst),
             _windows_default_flags | _MOVEFILE_REPLACE_EXISTING
         ))
 
 
-    def _move_atomic(src, dst):  # noqa: E303
+    def _move_atomic(src: PathLike, dst: PathLike) -> None:  # noqa: E303
         _handle_errors(windll.kernel32.MoveFileExW(
             _path2str(src), _path2str(dst),
             _windows_default_flags
         ))
 
 
-def replace_atomic(src, dst):
+def replace_atomic(src: PathLike, dst: PathLike) -> None:
     """
     移动 ``src`` 到 ``dst`` 。如果 ``dst`` 存在，它将被静默覆盖。
 
@@ -150,7 +156,7 @@ def replace_atomic(src, dst):
     _replace_atomic(src, dst)
 
 
-def move_atomic(src, dst):  # pragma: no cover
+def move_atomic(src: PathLike, dst: PathLike) -> None:  # pragma: no cover
     """
     移动 ``src`` 到 ``dst`` 。可能存在两个文件系统条目同时存在的时间窗口。如果 ``dst`` 已经存在，将引发：py:exc: ‘ FileExistsError ’。
 
@@ -164,60 +170,58 @@ def move_atomic(src, dst):  # pragma: no cover
     _move_atomic(src, dst)
 
 
-class ABCTempIOManager(ABC):
+class ABCTempIOManager[F: AIO](ABC):
     """
     管理临时文件。
     """
 
-    @staticmethod
     @abstractmethod
-    def from_file(file: IO) -> IO:
+    def from_file(self, file: F) -> F:
         """
         为给定的文件创建一个临时文件。
         """
 
-    @staticmethod
     @abstractmethod
-    def from_path(path: str, mode: str) -> IO:
+    def from_path(self, path: Path | str, mode: str) -> F:
         """
         为给定的路径创建一个临时文件。
         """
 
     @staticmethod
     @abstractmethod
-    def sync(file: IO):
+    def sync(file: F) -> None:
         """
         负责在提交之前清除尽可能多的文件缓存。
         """
 
     @staticmethod
     @abstractmethod
-    def rollback(file: IO):
+    def rollback(file: F) -> None:
         """
         清理所有临时资源。
         """
 
     @staticmethod
     @abstractmethod
-    def commit(temp_file: IO, file: IO):
+    def commit(temp_file: F, file: F) -> None:
         """
         将临时文件移动到目标位置。
         """
 
     @staticmethod
     @abstractmethod
-    def commit_by_path(temp_file: IO, path: str, mode: str):
+    def commit_by_path(temp_file: F, path: PathLike, mode: str) -> None:
         """
         将临时文件移动到目标位置。
         """
 
 
-class TempTextIOManager[F: TextIO](ABCTempIOManager):
+class TempTextIOManager[F: TextIO](ABCTempIOManager[F]):
     """
     管理 ``TextIO`` 对象。
     """
 
-    def __init__(self, prefix: str = '', suffix: str = ".tmp", **open_kwargs):
+    def __init__(self, prefix: str = '', suffix: str = ".tmp", **open_kwargs: Any) -> None:
         """
         :param prefix: 临时文件前缀
         :type prefix: str
@@ -231,22 +235,24 @@ class TempTextIOManager[F: TextIO](ABCTempIOManager):
 
     @override
     def from_file(self, file: F) -> F:  # pragma: no cover # 用不上 暂不维护
-        file: TextIO  # 防止类型检查器抽风
-        path, name = os.path.split(file.name)
-        f = open(os.path.join(path, f"{self._prefix}{name}{self._suffix}"), mode=file.mode, **self._open_kwargs)
-        shutil.copyfile(file.name, f.name)
-        return f
+        path, name = os.path.split(cast(TextIO, file).name)
+        f = open(
+            os.path.join(path, f"{self._prefix}{name}{self._suffix}"),
+            mode=cast(TextIO, file).mode, **self._open_kwargs
+        )
+        shutil.copyfile(cast(TextIO, file).name, f.name)
+        return cast(F, f)
 
     @override
-    def from_path(self, path: str, mode: str) -> F:
+    def from_path(self, path: Path | str, mode: str) -> F:
         f_path = f"{path}{self._suffix}"
         if os.path.exists(path):
             shutil.copyfile(path, f_path)
-        return open(f_path, mode=mode, **self._open_kwargs)
+        return cast(F, open(f_path, mode=mode, **self._open_kwargs))
 
     @staticmethod
     @override
-    def sync(file: F):
+    def sync(file: F) -> None:
         if not file.writable():
             return
         file.flush()
@@ -254,23 +260,23 @@ class TempTextIOManager[F: TextIO](ABCTempIOManager):
 
     @staticmethod
     @override
-    def rollback(file: F):
-        file: TextIO  # 防止类型检查器抽风
-        os.unlink(file.name)
+    def rollback(file: F) -> None:
+        os.unlink(cast(TextIO, file).name)
 
     @classmethod
     @override
-    def commit(cls, temp_file: F, file: IO):  # pragma: no cover # 用不上 暂不维护
+    def commit(cls, temp_file: F, file: F) -> None:  # pragma: no cover # 用不上 暂不维护
         if not file.writable():
             return
-        temp_file: TextIO  # 防止类型检查器抽风
-        cls.commit_by_path(temp_file.name, file.name, file.mode)
+        cls.commit_by_path(
+            temp_file,
+            cast(TextIO, file).name,
+            cast(TextIO, file).mode
+        )
 
     @classmethod
     @override
-    def commit_by_path(cls, temp_file: F, path: str, mode: str):
-        temp_file: TextIO  # 防止类型检查器抽风
-
+    def commit_by_path(cls, temp_file: F, path: PathLike, mode: str) -> None:
         writeable = any(x in mode for x in "wax+")
         if not writeable:
             cls.rollback(temp_file)
@@ -283,9 +289,9 @@ class TempTextIOManager[F: TextIO](ABCTempIOManager):
             overwrite = False
 
         if overwrite:
-            replace_atomic(temp_file.name, path)
+            replace_atomic(cast(TextIO, temp_file).name, path)
         else:  # pragma: no cover
-            move_atomic(temp_file.name, path)
+            move_atomic(cast(TextIO, temp_file).name, path)
 
 
 class LockFlags(IntEnum):
@@ -296,7 +302,7 @@ class LockFlags(IntEnum):
     SHARED = portalocker.LOCK_SH | portalocker.LOCK_NB
 
 
-FileLocks: WeakValueDictionary[str, Lock] = WeakValueDictionary()
+FileLocks: WeakValueDictionary[str | bytes, Lock] = WeakValueDictionary()
 """
 存储文件名对应的锁
 """
@@ -306,17 +312,17 @@ GlobalModifyLock = Lock()
 """
 
 
-class SafeOpen[F: IO]:
+class SafeOpen[F: AIO]:
     """
     安全的打开文件
     """
 
     def __init__(
             self,
-            io_manager: ABCTempIOManager,
+            io_manager: ABCTempIOManager[Any],
             timeout: Optional[float] = 1,
             flag: LockFlags = LockFlags.EXCLUSIVE
-    ):
+    ) -> None:
         """
         :param io_manager: IO管理器
         :type io_manager: ABCTempIOManager
@@ -331,7 +337,7 @@ class SafeOpen[F: IO]:
         self._flag = flag
 
     @contextmanager
-    def open_path(self, path: str | Path, mode: str):
+    def open_path(self, path: str | Path, mode: str) -> Generator[F | None, Any, None]:
         """
         打开路径 (上下文管理器)
 
@@ -342,7 +348,7 @@ class SafeOpen[F: IO]:
         :return: 返回值为IO对象的上下文管理器
         """
         with GlobalModifyLock:
-            lock = FileLocks.setdefault(path, Lock())
+            lock = FileLocks.setdefault(_path2str(path), Lock())
 
         if not lock.acquire(timeout=-1 if self._timeout is None else self._timeout):  # pragma: no cover
             raise TimeoutError("Timeout waiting for file lock")
@@ -350,12 +356,12 @@ class SafeOpen[F: IO]:
         f: Optional[F] = None
         try:
             f = self._manager.from_path(path, mode)
-            acquire_lock(f, self._flag, timeout=self._timeout)
-            with f:
+            acquire_lock(cast(AIO, f), self._flag, timeout=cast(Real | None, self._timeout))
+            with cast(AIO, f):
                 yield f
-                self._manager.sync(f)
-                release_lock(f)
-            self._manager.commit_by_path(f, path, mode)
+                self._manager.sync(cast(AIO, f))
+                release_lock(cast(AIO, f))
+            self._manager.commit_by_path(cast(AIO, f), path, mode)
         except BaseException as err:
             if f is not None:
                 try:
@@ -366,10 +372,10 @@ class SafeOpen[F: IO]:
         finally:
             lock.release()
             with suppress(Exception):
-                release_lock(f)
+                release_lock(f)  # type: ignore[arg-type]
 
     @contextmanager
-    def open_file(self, file: F):  # pragma: no cover # 用不上 暂不维护
+    def open_file(self, file: F) -> Generator[F | None, Any, None]:  # pragma: no cover # 用不上 暂不维护
         """
         打开文件 (上下文管理器)
 
@@ -378,22 +384,21 @@ class SafeOpen[F: IO]:
         :return: 返回值为IO对象的上下文管理器
         """
         with GlobalModifyLock:
-            file: TextIO  # 防止类型检查器抽风
-            lock = FileLocks.setdefault(file.name, Lock())
+            lock = FileLocks.setdefault(cast(TextIO, file).name, Lock())
 
         if not lock.acquire(timeout=-1 if self._timeout is None else self._timeout):
             raise TimeoutError("Timeout waiting for file lock")
 
-        acquire_lock(file, self._flag, timeout=self._timeout, immediately_release=True)
+        acquire_lock(file, self._flag, timeout=cast(Real | None, self._timeout), immediately_release=True)
         f: Optional[F] = None
         try:
             f = self._manager.from_file(file)
-            acquire_lock(file, self._flag, timeout=self._timeout)
-            with f:
+            acquire_lock(file, self._flag, timeout=cast(Real | None, self._timeout))
+            with cast(AIO, f):
                 yield f
-                self._manager.sync(f)
+                self._manager.sync(cast(AIO, f))
             release_lock(file)
-            self._manager.commit(f, file)
+            self._manager.commit(cast(AIO, f), file)
         except BaseException as err:
             if f is not None:
                 try:
@@ -408,25 +413,25 @@ class SafeOpen[F: IO]:
 
 
 def _timeout_checker(
-        timeout: Optional[float] = None,
-        interval_increase_speed: Real = .03,
-        max_interval: Real = .5,
-):  # pragma: no cover # 除了windows其他平台压根不会触发timeout
-    def _calc_interval(interval):
-        interval = min(interval + interval_increase_speed, max_interval)
-        time.sleep(interval)
+        timeout: Optional[Real] = None,
+        interval_increase_speed: Real = .03,  # type: ignore[assignment]
+        max_interval: Real = .5,  # type: ignore[assignment]
+) -> Generator[None, Any, Any]:  # pragma: no cover # 除了windows其他平台压根不会触发timeout
+    def _calc_interval(interval: Real) -> Real:
+        interval = min(cast(Real, interval + interval_increase_speed), max_interval)
+        time.sleep(float(interval))
         return interval
 
-    def _inf_loop():
-        interval = 0
+    def _inf_loop() -> Generator[None, Any, Any]:
+        interval: Real = 0  # type: ignore[assignment]
         while True:
             yield
             interval = _calc_interval(interval)
 
-    def _timeout_loop():
+    def _timeout_loop() -> Generator[None, Any, Any]:
         start = time.time() + float(interval_increase_speed)
-        interval = 0
-        while (time.time() - start) < timeout:
+        interval: Real = 0  # type: ignore[assignment]
+        while cast(Real, time.time() - start) < timeout:
             yield
             interval = _calc_interval(interval)
         raise TimeoutError("Timeout waiting for file lock")
@@ -436,7 +441,13 @@ def _timeout_checker(
     return _timeout_loop()
 
 
-def acquire_lock(file: IO, flags: LockFlags, *, timeout: Optional[Real] = 1, immediately_release: bool = False):
+def acquire_lock(
+        file: AIO,
+        flags: LockFlags,
+        *,
+        timeout: Optional[Real] = 1,  # type: ignore[assignment]
+        immediately_release: bool = False
+) -> None:
     """
     获取文件锁
 
@@ -451,13 +462,13 @@ def acquire_lock(file: IO, flags: LockFlags, *, timeout: Optional[Real] = 1, imm
     """
     for _ in _timeout_checker(timeout):
         with suppress(portalocker.AlreadyLocked):
-            portalocker.lock(file, flags)
+            portalocker.lock(file, cast(portalocker.LockFlags, flags))
             break
     if immediately_release:
         release_lock(file)
 
 
-def release_lock(file: IO):
+def release_lock(file: AIO) -> None:
     """
     释放文件锁
 
@@ -473,9 +484,9 @@ def safe_open(
         *,
         timeout: Optional[float] = 1,
         flag: LockFlags = LockFlags.EXCLUSIVE,
-        io_manager: Optional[ABCTempIOManager] = None,
-        **manager_kwargs
-) -> ContextManager[IO | TextIO]:
+        io_manager: Optional[ABCTempIOManager[Any]] = None,
+        **manager_kwargs: Any
+) -> ContextManager[AIO | TextIO]:
     """
     安全打开文件
 
@@ -497,7 +508,10 @@ def safe_open(
     """
     if io_manager is None:
         io_manager = TempTextIOManager(**manager_kwargs)
-    return SafeOpen(io_manager, timeout, flag).open_path(path, mode)
+    return cast(
+        ContextManager[AIO | TextIO],
+        SafeOpen(io_manager, timeout, flag).open_path(path, mode)
+    )
 
 
 __all__ = (

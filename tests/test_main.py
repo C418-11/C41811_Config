@@ -3,8 +3,13 @@
 
 import time
 from collections import OrderedDict
+from collections.abc import Callable
+from collections.abc import Mapping
 from copy import deepcopy
 from decimal import Decimal
+from pathlib import Path as FPath
+from typing import Any
+from typing import cast
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -22,46 +27,52 @@ from C41811.Config import ConfigData
 from C41811.Config import ConfigFile
 from C41811.Config import ConfigPool
 from C41811.Config import FieldDefinition
-from C41811.Config import JsonSL
+from C41811.Config import JsonSL  # type: ignore[attr-defined]
+from C41811.Config import MappingConfigData
 from C41811.Config import NoneConfigData
-from C41811.Config import Path
+from C41811.Config import Path as DPath
 from C41811.Config import RequiredPath
 from C41811.Config import ValidatorFactoryConfig
+from C41811.Config.abc import ABCConfigFile
 from C41811.Config.errors import ConfigDataTypeError
 from C41811.Config.errors import RequiredPathNotFoundError
 from C41811.Config.errors import UnsupportedConfigFormatError
 from C41811.Config.processor.Component import ComponentMetaParser
+from utils import EE
+from utils import EW
 from utils import safe_raises
 from utils import safe_warns
+
+type MCD = MappingConfigData[Mapping[Any, Any]]
 
 
 class TestConfigPool:
     @staticmethod
     @fixture
-    def pool(tmpdir):
-        pool = ConfigPool(root_path=tmpdir)
+    def pool(tmpdir: FPath) -> ConfigPool:
+        pool = ConfigPool(root_path=str(tmpdir))
         JsonSL().register_to(pool)
         return pool
 
     @staticmethod
-    def test_root_path_attr(pool):
+    def test_root_path_attr(pool: ConfigPool) -> None:
         assert pool.root_path
         with raises(AttributeError):
             # noinspection PyPropertyAccess
-            pool.root_path = ""
+            pool.root_path = ""  # type: ignore[misc]
 
     @staticmethod
     @fixture
-    def data():
-        return ConfigData({"foo": 123})
+    def data() -> MCD:
+        return MappingConfigData({"foo": 123})
 
     @staticmethod
     @fixture
-    def file(data):
+    def file(data: MCD) -> ConfigFile[MCD]:
         return ConfigFile(data)
 
     @staticmethod
-    def test_set_get_delete(pool, file):
+    def test_set_get_delete(pool: ConfigPool, file: ConfigFile[MCD]) -> None:
         pool.set('', "test", deepcopy(file))
         assert pool.get("not", "exists") is None
         assert pool.get('', "not exists") is None
@@ -69,9 +80,12 @@ class TestConfigPool:
         assert pool.get('') == {"test": file}
         pool.delete('', "test")
         assert pool.get('', "test") is None, "File should be deleted"
+        pool.set('', "test", deepcopy(file))
+        pool.delete('')
+        assert pool.get('', "test") is None, "All files should be deleted"
 
     @staticmethod
-    def test_save_load(pool, file):
+    def test_save_load(pool: ConfigPool, file: ConfigFile[MCD]) -> None:
         pool.set('', "test", deepcopy(file))
 
         pool.save('', "test", config_formats="json")
@@ -81,7 +95,7 @@ class TestConfigPool:
         assert pool.load('', "test", config_formats={"pickle", "json"}) == file
         assert pool.load('', "test", config_formats={"pickle", "json"}) == file
 
-        json_file = ConfigFile(file.config, config_format="json")
+        json_file: ConfigFile[MCD] = ConfigFile(file.config, config_format="json")
         pool.save('', "test", config=deepcopy(json_file))
         assert pool.load('', "test", config_formats="json") == json_file
 
@@ -89,7 +103,7 @@ class TestConfigPool:
         assert pool.load('', "test1", config_formats="json") == file
 
     @staticmethod
-    def test_file_not_found_load(pool):
+    def test_file_not_found_load(pool: ConfigPool) -> None:
         with raises(FileNotFoundError, match="No such file or directory"):
             pool.load('', "test", config_formats="json")
 
@@ -97,7 +111,7 @@ class TestConfigPool:
                          config_formats="json", allow_initialize=True) == ConfigFile(ConfigData(), config_format="json")
 
     @staticmethod
-    def test_wrong_save(pool, data):
+    def test_wrong_save(pool: ConfigPool, data: MCD) -> None:
         pool.set('', "test", ConfigFile(data))
         with raises(UnsupportedConfigFormatError, match="Unsupported config format: Unknown"):
             pool.save('', "test")
@@ -113,7 +127,7 @@ class TestConfigPool:
             pool.save('', "test", config_formats={''})
 
     @staticmethod
-    def test_wrong_load(pool, data):
+    def test_wrong_load(pool: ConfigPool, data: MCD) -> None:
         with raises(UnsupportedConfigFormatError, match="Unsupported config format: Unknown"):
             pool.load('', "test")
 
@@ -127,7 +141,7 @@ class TestConfigPool:
             pool.load('', "test", config_formats={''})
 
     @staticmethod
-    def test_save_all(pool, data):
+    def test_save_all(pool: ConfigPool, data: MCD) -> None:
         pool.set('', "test", ConfigFile(data, config_format="json"))
         pool.set('', "test1", ConfigFile(data, config_format="json"))
         pool.save_all()
@@ -135,15 +149,15 @@ class TestConfigPool:
         assert pool.load('', "test1", config_formats="json").config == data
 
     @staticmethod
-    def test_save_all_with_error(pool, data):
-        file = ConfigFile(data, config_format="pickle")
+    def test_save_all_with_error(pool: ConfigPool, data: MCD) -> None:
+        file: ConfigFile[MCD] = ConfigFile(data, config_format="pickle")
         pool.set('', "test", file)
         with raises(UnsupportedConfigFormatError, match="Unsupported config format: pickle"):
             pool.save_all()
         assert pool.save_all(ignore_err=True) == {'': {"test": (file, UnsupportedConfigFormatError("pickle"))}}
 
     @staticmethod
-    def test_require(pool):
+    def test_require(pool: ConfigPool) -> None:
         cfg_data: ConfigData = pool.require(
             '', "test.json", {
                 "foo\\.bar": "test",
@@ -151,7 +165,7 @@ class TestConfigPool:
             }
         ).check()
         assert cfg_data == ConfigData({"foo": {"bar": "test", "baz": "test"}})
-        cfg_data: ConfigData = pool.require(
+        cfg_data = pool.require(
             '', "test.json", {
                 "foo\\.bar": "test",
                 "foo\\.baz": "test"
@@ -159,29 +173,29 @@ class TestConfigPool:
         ).check(ignore_cache=True)
         assert cfg_data == ConfigData({"foo": {"bar": "test", "baz": "test"}})
 
-        @pool.require(
+        @pool.require(  # type: ignore[arg-type]
             '', "test.json", {
                 "foo\\.bar": "test",
                 "foo\\.baz": "test"
             }
         )
-        def func(cfg: ConfigData):
+        def func(cfg: MCD) -> None:
             assert cfg == ConfigData({"foo": {"bar": "test", "baz": "test"}})
 
         func()
 
     @staticmethod
-    def test_getitem(pool, file):
+    def test_getitem(pool: ConfigPool, file: ConfigFile[MCD]) -> None:
         pool.set('', "test", deepcopy(file))
-        assert pool['']["test"] == file
+        assert cast(dict[str, ABCConfigFile[Any]], pool[''])["test"] == file
         assert pool['', "test"] == file
         assert pool[''] == {"test": file}
         with raises(ValueError, match="item must be a tuple of length 2, got"):
-            # noinspection PyStatementEffect
-            pool['', "test", "extra"]
+            # noinspection PyStatementEffect,PyTypeChecker
+            pool['', "test", "extra"]  # type: ignore[index]
 
     @staticmethod
-    def test_contains(pool, file):
+    def test_contains(pool: ConfigPool, file: ConfigFile[MCD]) -> None:
         pool.set('', "test", deepcopy(file))
         assert '' in pool
         assert [''] in pool
@@ -191,7 +205,7 @@ class TestConfigPool:
             ['', "test", "extra"] in pool
 
     @staticmethod
-    def test_len(pool, file):
+    def test_len(pool: ConfigPool, file: ConfigFile[MCD]) -> None:
         pool.set('a', "1", file)
         pool.set('a', "2", file)
         pool.set('a', "3", file)
@@ -201,20 +215,20 @@ class TestConfigPool:
         assert len(pool) == 6
 
     @staticmethod
-    def test_configs_attr(pool, file):
+    def test_configs_attr(pool: ConfigPool, file: ConfigFile[MCD]) -> None:
         pool.set('', "test", deepcopy(file))
         assert pool.configs == {'': {'test': file}}
 
     @staticmethod
-    def test_repr(pool):
+    def test_repr(pool: ConfigPool) -> None:
         assert repr(pool.configs) in repr(pool)
 
 
 class TestRequiredPath:
     @staticmethod
     @fixture
-    def data():
-        return ConfigData({
+    def data() -> MCD:
+        return MappingConfigData({
             "foo": {"bar": 123, "bar1": 456},
             "foo1": 114,
             "foo2": ["bar"],
@@ -222,13 +236,13 @@ class TestRequiredPath:
 
     @staticmethod
     @fixture
-    def pydantic_model():
+    def pydantic_model() -> type[BaseModel]:
         class Foo(BaseModel):
             bar: int = Field(123)
             bar1: int = Field(456)
 
         class Data(BaseModel):
-            foo: Foo = Field(default_factory=Foo)
+            foo: Foo = Field(default_factory=cast(Callable[..., Any], Foo))
             foo1: int
             foo2: list[str]
 
@@ -241,10 +255,20 @@ class TestRequiredPath:
             {"skip_missing": True},
             {"allow_modify": True, "skip_missing": True},
     ))
-    def test_no_validation(data, kwargs):
-        assert RequiredPath(lambda _: _.cell_contents, "no-validation").filter(deepcopy(data), **kwargs) == data
+    def test_no_validation(data: MCD, kwargs: dict[str, Any]) -> None:
+        assert RequiredPath(
+            lambda _: _.cell_contents, "no-validation"
+        ).filter(deepcopy(data), **kwargs) == data  # type: ignore[arg-type]
 
-    PydanticTests = ("path, value, kwargs, ignore_excs, ignore_warns", (
+    PydanticTests: tuple[
+        str,
+        tuple[tuple[
+            str,
+            Any,
+            dict[str, Any],
+            EE, EW,
+        ], ...]
+    ] = ("path, value, kwargs, ignore_excs, ignore_warns", (
         ("foo", {"bar": 123, "bar1": 456}, {}, (), ()),
         ("foo\\.bar", 123, {}, (), ()),
         ("foo.bar", 123, {}, (RequiredPathNotFoundError,), ()),
@@ -256,41 +280,74 @@ class TestRequiredPath:
 
     @staticmethod
     @mark.parametrize(*PydanticTests)
-    def test_pydantic(data, pydantic_model, path, value, kwargs, ignore_excs, ignore_warns):
+    def test_pydantic(
+            data: MCD,
+            pydantic_model: type[BaseModel],
+            path: str,
+            value: Any,
+            kwargs: dict[str, Any],
+            ignore_excs: EE,
+            ignore_warns: EW,
+    ) -> None:
         with safe_raises(ignore_excs), safe_warns(ignore_warns):
-            data = RequiredPath(pydantic_model, "pydantic").filter(data, **kwargs)
+            data = cast(
+                MappingConfigData[Any],
+                RequiredPath(pydantic_model, "pydantic").filter(data, **kwargs)  # type: ignore[arg-type]
+            )
             assert data.retrieve(path, return_raw_value=True) == value
 
     @staticmethod
-    def test_pydantic_with_error(data):
+    def test_pydantic_with_none_data() -> None:
+        class Data(BaseModel):
+            foo: int = Field(10)
+            bar: dict[Any, Any] = Field(default_factory=dict)
+
+        RequiredPath(Data, "pydantic").filter(NoneConfigData())  # type: ignore[arg-type]
+
+        class NotExist(BaseModel):
+            key: int
+
+        with raises(RequiredPathNotFoundError):
+            RequiredPath(NotExist, "pydantic").filter(NoneConfigData())  # type: ignore[arg-type]
+
+    @staticmethod
+    def test_pydantic_with_error(data: MCD) -> None:
         with raises(TypeError):
-            RequiredPath(int, "pydantic").filter(data)
+            RequiredPath(int, "pydantic").filter(data)  # type: ignore[arg-type]
 
         class NotExist(BaseModel):
             foo3: int
 
         with raises(RequiredPathNotFoundError):
-            RequiredPath(NotExist, "pydantic").filter(data)
+            RequiredPath(NotExist, "pydantic").filter(data)  # type: ignore[arg-type]
 
         class NotExist2(BaseModel):
             foo: NotExist
 
         with raises(RequiredPathNotFoundError):
-            RequiredPath(NotExist2, "pydantic").filter(data)
+            RequiredPath(NotExist2, "pydantic").filter(data)  # type: ignore[arg-type]
 
         class WrongType(BaseModel):
             foo: str
 
         with raises(ConfigDataTypeError):
-            RequiredPath(WrongType, "pydantic").filter(data)
+            RequiredPath(WrongType, "pydantic").filter(data)  # type: ignore[arg-type]
 
         class WrongType2(BaseModel):
             foo2: list[int]
 
         with raises(ConfigDataTypeError):
-            RequiredPath(WrongType2, "pydantic").filter(data)
+            RequiredPath(WrongType2, "pydantic").filter(data)  # type: ignore[arg-type]
 
-    IterableTests = ("paths, values, kwargs, ignore_excs", (
+    IterableTests: tuple[
+        str,
+        tuple[tuple[
+            list[str] | None,
+            list[Any],
+            dict[str, Any],
+            EE
+        ], ...]
+    ] = ("paths, values, kwargs, ignore_excs", (
         ([], [],
          {}, ()),
         (
@@ -340,9 +397,18 @@ class TestRequiredPath:
 
     @staticmethod
     @mark.parametrize(*IterableTests)
-    def test_default_iterable(data, paths, values, kwargs, ignore_excs):
+    def test_default_iterable(
+            data: MCD,
+            paths: list[str],
+            values: list[Any],
+            kwargs: dict[str, Any],
+            ignore_excs: EE,
+    ) -> None:
         with safe_raises(ignore_excs) as info:
-            data = RequiredPath(paths).filter(data, **kwargs)
+            data = cast(
+                MappingConfigData[Any],
+                RequiredPath(paths).filter(data, **kwargs)  # type: ignore[arg-type]
+            )
         if info:
             return
 
@@ -352,7 +418,15 @@ class TestRequiredPath:
                 continue
             assert data.retrieve(path, return_raw_value=True) == value
 
-    MappingTests = ("mapping, result, kwargs, ignores", (
+    MappingTests: tuple[
+        str,
+        tuple[tuple[
+            Mapping[str, Any] | None,
+            dict[str, Any] | None,
+            dict[str, Any],
+            tuple[type[Warning | BaseException], ...],
+        ], ...]
+    ] = ("mapping, result, kwargs, ignores", (
         (
             OrderedDict((
                 ("foo", dict),
@@ -483,15 +557,33 @@ class TestRequiredPath:
 
     @staticmethod
     @mark.parametrize(*MappingTests)
-    def test_default_mapping(data, mapping, result, kwargs, ignores):
+    def test_default_mapping(
+            data: MCD,
+            mapping: dict[str, Any],
+            result: dict[str, Any],
+            kwargs: dict[str, Any],
+            ignores: tuple[type[Warning | BaseException], ...]
+    ) -> None:
         ignore_warns = tuple(e for e in ignores if issubclass(e, Warning))
         ignore_excs = tuple(set(ignores) - set(ignore_warns))
 
         with safe_raises(ignore_excs), safe_warns(ignore_warns):
-            data = RequiredPath(mapping).filter(data, **kwargs)
+            data = cast(
+                MappingConfigData[Any],
+                RequiredPath(mapping).filter(data, **kwargs)  # type: ignore[arg-type]
+            )
             assert data.data == result
 
-    ComponentTests = ("data, validator, result, kwargs, ignores", (
+    ComponentTests: tuple[
+        str,
+        tuple[tuple[
+            ComponentConfigData[MappingConfigData[Any], ComponentMeta[MCD]] | NoneConfigData,
+            dict[str | None, dict[str, Any]],
+            ComponentConfigData[MappingConfigData[Any], ComponentMeta[MCD]] | None,
+            dict[str, Any],
+            tuple[type[Warning | BaseException], ...],
+        ], ...]
+    ] = ("data, validator, result, kwargs, ignores", (
         (ComponentConfigData(ComponentMeta(parser=ComponentMetaParser()), {}),
          #                                   ↑ 一般情况是由ComponentSL的initialize|load在构造时自动传入parser参数
          {
@@ -511,11 +603,29 @@ class TestRequiredPath:
                  orders=ComponentOrders(*([["foo.json", "bar.json"]] * 4))
              ),
              {
-                 "foo.json": ConfigData({"first": {"second": {"third": 4}}}),
-                 "bar.json": ConfigData({"key": {"value"}}),
+                 "foo.json": MappingConfigData({"first": {"second": {"third": 4}}}),
+                 "bar.json": MappingConfigData({"key": {"value"}}),
              },
          ),
          {}, ()),
+        (NoneConfigData(),
+         {
+             None: {
+                 "members": ["foo.json"]
+             },
+             "foo.json": {
+                 "first\\.second\\.third": 4,
+             },
+         },
+         ComponentConfigData(
+             ComponentMeta(
+                 members=[ComponentMember("foo.json")],
+                 orders=ComponentOrders(*([["foo.json"]] * 4))
+             ),
+             {
+                 "foo.json": MappingConfigData({"first": {"second": {"third": 4}}}),
+             },
+         ), dict(meta_validator=ComponentMetaParser().validator), ()),
         (NoneConfigData(),
          {
              None: {
@@ -529,13 +639,24 @@ class TestRequiredPath:
 
     @staticmethod
     @mark.parametrize(*ComponentTests)
-    def test_component(data, validator, result, kwargs, ignores):
+    def test_component[CCD: ComponentConfigData[MappingConfigData[Any], ComponentMeta[MCD]]](
+            data: CCD,
+            validator: dict[str | None, dict[str, Any]],
+            result: CCD,
+            kwargs: dict[str, Any],
+            ignores: tuple[type[Warning | BaseException], ...],
+    ) -> None:
         ignore_warns = tuple(e for e in ignores if issubclass(e, Warning))
         ignore_excs = tuple(set(ignores) - set(ignore_warns))
 
         with safe_raises(ignore_excs), safe_warns(ignore_warns):
-            data = RequiredPath(validator, "component").filter(data, **kwargs)
+            data = cast(
+                CCD,
+                RequiredPath(validator, "component").filter(data, **kwargs)  # type: ignore[arg-type]
+            )
+            # noinspection PyUnresolvedReferences
             assert data.meta.orders == result.meta.orders
+            # noinspection PyUnresolvedReferences
             assert data.meta.members == result.meta.members
             assert data.members == result.members
 
@@ -566,11 +687,16 @@ class TestRequiredPath:
                  }
              }, ValidatorFactoryConfig(allow_modify=True), 100),
     ))
-    def test_static_config_usetime(data, validator, static_config, times):
-        static_filter = RequiredPath(validator, static_config=static_config).filter
-        dynamic_filter = RequiredPath(validator).filter
+    def test_static_config_usetime(
+            data: MCD,
+            validator: dict[str, Any],
+            static_config: ValidatorFactoryConfig,
+            times: int,
+    ) -> None:
+        static_filter = cast(Callable[[MCD], MCD], RequiredPath(validator, static_config=static_config).filter)
+        dynamic_filter = cast(Callable[[MCD], MCD], RequiredPath(validator).filter)
 
-        def _timeit(cfg_filter) -> Decimal:
+        def _timeit(cfg_filter: Callable[[MCD], MCD]) -> Decimal:
             time_used = Decimal(0)
             for _ in range(times):
                 start = time.perf_counter_ns()
@@ -582,7 +708,6 @@ class TestRequiredPath:
         total_static_time = _timeit(static_filter) / Decimal(1_000_000)
         total_dynamic_time = _timeit(dynamic_filter) / Decimal(1_000_000)
         assert total_static_time < total_dynamic_time
-        times = Decimal(times)
         average_static_time = total_static_time / times
         average_dynamic_time = total_dynamic_time / times
         print()
@@ -596,8 +721,8 @@ class TestRequiredPath:
 
     @staticmethod
     @fixture
-    def recursive_data():
-        return ConfigData({
+    def recursive_data() -> MCD:
+        return MappingConfigData({
             "first": {
                 "second": {
                     "third": 111,
@@ -644,7 +769,7 @@ class TestRequiredPath:
          }, ()),
         ({
              "first": {  # 混搭
-                 Path.from_str("\\.second\\.third"): int,
+                 DPath.from_str("\\.second\\.third"): int,
                  "second": dict,
                  "bar": int
              },
@@ -672,13 +797,18 @@ class TestRequiredPath:
 
     @staticmethod  # 专门针对保留子键的测试
     @mark.parametrize(*IncludeSubKeyTests)
-    def test_include_sub_key(recursive_data, validator, result, ignores):
+    def test_include_sub_key(
+            recursive_data: MCD,
+            validator: dict[str, Any],
+            result: Any,
+            ignores: tuple[EW, EE],
+    ) -> None:
         if not ignores:
             ignores = ((), ())
         ignore_warns, ignore_excs = ignores
 
         with safe_warns(ignore_warns), safe_raises(ignore_excs) as info:
-            data = RequiredPath(validator).filter(recursive_data)
+            data: MCD = RequiredPath(validator).filter(recursive_data)  # type: ignore[arg-type]
 
         if info:
             return

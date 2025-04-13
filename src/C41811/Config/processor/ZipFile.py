@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from enum import ReprEnum
 from typing import Literal
 from typing import Optional
+from typing import cast
 from typing import override
 
 from ..base import ConfigFile
@@ -74,7 +75,7 @@ class ZipFileSL(BasicCompressedConfigSL):
                     compression = compression_type
                     break
 
-        self._compression: ZipCompressionType = compression
+        self._compression: ZipCompressionType = cast(ZipCompressionTypes, compression)
         self._compress_level: int | None = compress_level
         self._short_name = '' if self._compression.short_name is None else self._compression.short_name
 
@@ -103,7 +104,7 @@ class ZipFileSL(BasicCompressedConfigSL):
     supported_file_classes = [ConfigFile]
 
     @override
-    def compress_file(self, file_path: str, extract_dir: str):
+    def compress_file(self, file_path: str, extract_dir: str) -> None:
         with (
             safe_open(file_path, "wb") as file,
             zipfile.ZipFile(
@@ -116,7 +117,7 @@ class ZipFileSL(BasicCompressedConfigSL):
                     zip_file.write(path, arcname=os.path.relpath(path, extract_dir))
 
     @override
-    def extract_file(self, file_path: str, extract_dir: str):
+    def extract_file(self, file_path: str, extract_dir: str) -> None:
         with (
             safe_open(file_path, "rb") as file,
             zipfile.ZipFile(file) as zip_file

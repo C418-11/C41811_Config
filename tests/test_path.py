@@ -2,6 +2,7 @@
 
 
 from copy import deepcopy
+from typing import Any
 
 from pytest import fixture
 from pytest import mark
@@ -11,8 +12,11 @@ from C41811.Config import AttrKey
 from C41811.Config import IndexKey
 from C41811.Config import Path
 from C41811.Config import PathSyntaxParser
+from C41811.Config.abc import AnyKey
 from C41811.Config.errors import ConfigDataPathSyntaxException
 from C41811.Config.errors import UnknownTokenTypeError
+from utils import EE
+from utils import EW
 from utils import safe_raises
 from utils import safe_warns
 
@@ -26,7 +30,7 @@ class TestKey:
             (AttrKey("bcd"), "bcd"),
             (AttrKey(r"z\\z"), r"z\\z"),
     ))
-    def test_both(key, other):
+    def test_both(key: AnyKey, other: Any) -> None:
         assert key.key == other
         assert hash(key) != hash(other)
         assert str(key) == str(other)
@@ -44,10 +48,11 @@ class TestKey:
             (IndexKey(0, "meta data"), "meta data"),
             (AttrKey("uhh", "abcde"), "abcde"),
     ))
-    def test_meta(key, meta):
+    def test_meta(key: AnyKey, meta: str) -> None:
         assert key.meta == meta
         with raises(AttributeError):
-            key.meta = None
+            # noinspection PyPropertyAccess
+            key.meta = None  # type: ignore[misc]
 
     @staticmethod
     @mark.parametrize("key, other", (
@@ -55,7 +60,7 @@ class TestKey:
             (AttrKey("bcd"), "bcd"),
             (AttrKey(r"z\\z"), r"z\\z"),
     ))
-    def test_attr_key(key, other):
+    def test_attr_key(key: AttrKey, other: str) -> None:
         assert len(key) == len(other)
         assert key == other
 
@@ -63,7 +68,7 @@ class TestKey:
 class TestPath:
     @staticmethod
     @fixture
-    def path():
+    def path() -> Path:
         return Path.from_str(r"\.aaa\.bbb\{attr meta\}\.ccc\{index meta\}\[0\]\.ddd\.eee\[1\]")
 
     @staticmethod
@@ -75,7 +80,7 @@ class TestPath:
             r"\.a.a\\.a\.b\[18\]\[7\]\.e",
             r"\[2\]\[3\]",
     ))
-    def test_string(string):
+    def test_string(string: str) -> None:
         assert string == Path.from_str(string).unparse()
 
     @staticmethod
@@ -85,7 +90,7 @@ class TestPath:
             ([4, 2, "aaa"], [IndexKey(4), IndexKey(2), AttrKey("aaa")], ()),
             (["a", 1, None], None, (ValueError,)),
     ))
-    def test_locate(locate, keys, ignore_excs):
+    def test_locate(locate: list[Any], keys: list[AttrKey | IndexKey], ignore_excs: EE) -> None:
         with safe_raises(ignore_excs) as info:
             path = Path.from_locate(locate)
         if not info:
@@ -102,7 +107,7 @@ class TestPath:
             (5, AttrKey("eee")),
             (6, IndexKey(1)),
     ))
-    def test_getitem(path, index, value):
+    def test_getitem(path: Path, index: int, value: AnyKey) -> None:
         assert path[index] == value
 
     @staticmethod
@@ -119,7 +124,7 @@ class TestPath:
             (AttrKey("eee"), True),
             (AttrKey("fff"), False),
     ))
-    def test_contains(path, key, is_contained):
+    def test_contains(path: Path, key: AnyKey, is_contained: bool) -> None:
         assert (key in path) == is_contained
 
     @staticmethod
@@ -132,7 +137,7 @@ class TestPath:
             (r"\.aaa\.bbb\.ccc\{meta\}\[0\]\{meta\}\.ddd", 5),
             (r"\.aaa\.bbb\.ccc\[0\]\.ddd\.eee\[1\]\.fff", 8),
     ))
-    def test_len(path, length):
+    def test_len(path: str, length: int) -> None:
         assert len(Path.from_str(path)) == length
 
     @staticmethod
@@ -145,7 +150,7 @@ class TestPath:
             (r"\.aaa\.bbb\.ccc\[0\]\.ddd",
              [AttrKey("aaa"), AttrKey("bbb"), AttrKey("ccc"), IndexKey(0), AttrKey("ddd")]),
     ))
-    def test_iter(path, keys):
+    def test_iter(path: str, keys: list[AnyKey]) -> None:
         assert list(Path.from_str(path)) == keys
 
     @staticmethod
@@ -157,7 +162,7 @@ class TestPath:
             r"\.aaa\.bbb\.ccc\[0\]",
             r"\.aaa\.bbb\.ccc\[0\]\.ddd",
     ))
-    def test_eq(path):
+    def test_eq(path: str) -> None:
         p = Path.from_str(path)
         assert p == deepcopy(p)
         assert p != NotImplemented
@@ -171,7 +176,7 @@ class TestPath:
             r"\.aaa\.bbb\.ccc\[0\]",
             r"\.aaa\.bbb\.ccc\[0\]\.ddd",
     ))
-    def test_repr(path):
+    def test_repr(path: str) -> None:
         keys = PathSyntaxParser.parse(path)
         assert repr(keys)[1:-1] in repr(Path(keys))
 
@@ -179,15 +184,15 @@ class TestPath:
 class TestPathSyntaxParser:
     @staticmethod
     @fixture
-    def parser():
+    def parser() -> PathSyntaxParser:
         return PathSyntaxParser()
 
     @staticmethod
     @fixture(autouse=True, scope="function")
-    def _clear_cache():
+    def _clear_cache() -> None:
         PathSyntaxParser.tokenize.cache_clear()
 
-    TokenizeTests = (
+    TokenizeTests: tuple[str, tuple[tuple[str, list[str], EW], ...]] = (
         "string, result, ignore_warns", (
             (
                 r"\.a.a\\.a\.b\[c\]\[2\]\.e",
@@ -210,12 +215,18 @@ class TestPathSyntaxParser:
 
     @staticmethod
     @mark.parametrize(*TokenizeTests)
-    def test_tokenize(parser, string, result, ignore_warns):
+    def test_tokenize(parser: PathSyntaxParser, string: str, result: list[str], ignore_warns: EW) -> None:
         with safe_warns(ignore_warns):
             tokenized = list(parser.tokenize(string))
         assert tokenized == result
 
-    ParseTests = (
+    ParseTests: tuple[
+        str,
+        tuple[tuple[
+            str,
+            list[AnyKey] | None, EE, EW
+        ], ...]
+    ] = (
         "string, path_obj, ignore_excs, ignore_warns", (
             (
                 r"\.a.a\\.a\.b\[18\]\[07\]\.e",
@@ -256,7 +267,7 @@ class TestPathSyntaxParser:
 
     @staticmethod
     @mark.parametrize(*ParseTests)
-    def test_parse(parser, string, path_obj, ignore_excs, ignore_warns):
+    def test_parse(parser: PathSyntaxParser, string: str, path_obj: Path, ignore_excs: EE, ignore_warns: EW) -> None:
         with safe_raises(ignore_excs) as e_info, safe_warns(ignore_warns):
             path = parser.parse(string)
         if not e_info:

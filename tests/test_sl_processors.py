@@ -3,8 +3,11 @@
 
 import re
 from collections import OrderedDict
+from collections.abc import Generator
 from datetime import datetime
+from pathlib import Path
 from textwrap import dedent
+from typing import Any
 from typing import Optional
 
 from pytest import fixture
@@ -15,18 +18,18 @@ from C41811.Config import BasicConfigSL
 from C41811.Config import BasicLocalFileConfigSL
 from C41811.Config import ComponentConfigData
 from C41811.Config import ComponentMeta
-from C41811.Config import ComponentSL
+from C41811.Config import ComponentSL  # type: ignore[attr-defined]
 from C41811.Config import ConfigData
 from C41811.Config import ConfigFile
 from C41811.Config import ConfigPool
-from C41811.Config import JsonSL
+from C41811.Config import JsonSL  # type: ignore[attr-defined]
 from C41811.Config import MappingConfigData
-from C41811.Config import PickleSL
-from C41811.Config import PlainTextSL
-from C41811.Config import PythonLiteralSL
-from C41811.Config import PythonSL
-from C41811.Config import TarFileSL
-from C41811.Config import ZipFileSL
+from C41811.Config import PickleSL  # type: ignore[attr-defined]
+from C41811.Config import PlainTextSL  # type: ignore[attr-defined]
+from C41811.Config import PythonLiteralSL  # type: ignore[attr-defined]
+from C41811.Config import PythonSL  # type: ignore[attr-defined]
+from C41811.Config import TarFileSL  # type: ignore[attr-defined]
+from C41811.Config import ZipFileSL  # type: ignore[attr-defined]
 from C41811.Config.abc import ABCConfigSL
 from C41811.Config.errors import FailedProcessConfigFileError
 from C41811.Config.main import BasicCompressedConfigSL
@@ -36,9 +39,10 @@ from C41811.Config.processor.RuamelYaml import RuamelYamlSL
 from C41811.Config.processor.TarFile import TarCompressionTypes
 from C41811.Config.processor.Toml import TomlSL
 from C41811.Config.processor.ZipFile import ZipCompressionTypes
+from utils import EE
 from utils import safe_raises
 
-JsonSLTests = (
+JsonSLTests: tuple[tuple[Any, tuple[EE, ...], tuple[dict[str, Any], ...]], ...] = (
     (
         {"a": 1, "b": {"c": 2}},
         (), ()
@@ -85,7 +89,7 @@ JsonSLTests = (
     ),
 )
 
-PickleSLTests = (
+PickleSLTests: tuple[tuple[Any, tuple[EE, ...], tuple[Any, ...]], ...] = (
     (
         {"a": 1, "b": 2},
         (), ()
@@ -136,7 +140,7 @@ PickleSLTests = (
     ),
 )
 
-PyYamlTests = (
+PyYamlTests: tuple[tuple[Any, tuple[EE, ...], tuple[dict[str, Any], ...]], ...] = (
     (
         {"a": 1, "b": {"c": 2}},
         (), ()
@@ -175,7 +179,7 @@ PyYamlTests = (
     ),
 )
 
-RuamelYamlTests = (
+RuamelYamlTests: tuple[tuple[Any, tuple[EE, ...], tuple[dict[str, Any], ...]], ...] = (
     (
         {"a": 1, "b": {"c": 2}},
         (), ()
@@ -210,7 +214,7 @@ RuamelYamlTests = (
     ),
 )
 
-TOMLTests = (
+TOMLTests: tuple[tuple[Any, tuple[EE, ...], tuple[dict[str, Any], ...]], ...] = (
     (
         {"a": 1, "b": {"c": 2}},
         (), ()
@@ -259,7 +263,7 @@ TOMLTests = (
 
 
 class ErrDuringRepr:
-    def __repr__(self):
+    def __repr__(self) -> str:
         raise Exception("repr error")
 
 
@@ -322,7 +326,10 @@ PlainTextTests = (
 )
 
 
-def _insert_sl_cls(sl_cls, tests: tuple):
+def _insert_sl_cls(
+        sl_cls: type[ABCConfigSL],
+        tests: tuple[Any, ...]
+) -> Generator[tuple[type[ABCConfigSL], Any], Any, None]:
     yield from ((sl_cls, *test) for test in tests)
 
 
@@ -341,16 +348,22 @@ LocalFileTests = (
 
 
 @fixture
-def pool(tmpdir):
-    return ConfigPool(root_path=tmpdir)
+def pool(tmpdir: Path) -> ConfigPool:
+    return ConfigPool(root_path=str(tmpdir))
 
 
 @mark.parametrize(*LocalFileTests)
-def test_local_file_sl_processors(pool, sl_cls: type[BasicLocalFileConfigSL], raw_data, ignore_excs, sl_args):
+def test_local_file_sl_processors(
+        pool: ConfigPool,
+        sl_cls: type[BasicLocalFileConfigSL],
+        raw_data: Any,
+        ignore_excs: tuple[EE, EE],
+        sl_args: tuple[Any, Any],
+) -> None:
     sl_obj = sl_cls(*sl_args)
     sl_obj.register_to(pool)
 
-    file = ConfigFile(ConfigData(raw_data), config_format=sl_obj.reg_name)
+    file: ConfigFile[Any] = ConfigFile(ConfigData(raw_data), config_format=sl_obj.reg_name)
     file_name = f"TestConfigFile{sl_obj.supported_file_patterns[0]}"
 
     if not ignore_excs:
@@ -399,7 +412,7 @@ TarFileTests = (
     ),
 )
 
-ZipFileTests = (
+ZipFileTests: tuple[tuple[Any, tuple[EE, ...], dict[str, Any]], ...] = (
     (
         {"a": True, "b": {"c": [.5, None]}},
         (), {}
@@ -449,19 +462,19 @@ CompressedFileTests = (
 
 @mark.parametrize(*CompressedFileTests)
 def test_compressed_file_sl_processors(
-        pool,
+        pool: ConfigPool,
         sl_cls: type[BasicCompressedConfigSL],
-        raw_data,
-        ignore_excs,
-        init_arguments: dict
-):
+        raw_data: Any,
+        ignore_excs: tuple[EE, EE],
+        init_arguments: dict[str, Any],
+) -> None:
     # noinspection PyArgumentList
     compressed_sl = sl_cls(**init_arguments)
     compressed_sl.register_to(pool)
     local_sl = JsonSL(s_arg=dict(indent=2))
     local_sl.register_to(pool)
 
-    file = ConfigFile(ConfigData(raw_data), config_format=local_sl.reg_name)
+    file: ConfigFile[Any] = ConfigFile(ConfigData(raw_data), config_format=local_sl.reg_name)
     file_name = f"TestConfigFile{local_sl.supported_file_patterns[0]}{compressed_sl.supported_file_patterns[0]}"
 
     if not ignore_excs:
@@ -479,7 +492,16 @@ def test_compressed_file_sl_processors(
     assert loaded_file == file
 
 
-ComponentTests = (
+ComponentTests: tuple[
+    str,
+    tuple[tuple[
+        tuple[ABCConfigSL, ...],
+        dict[str, Any],
+        dict[str, ConfigData],
+        tuple[EE, ...],
+        dict[str, Any],
+    ], ...]
+] = (
     "sl_clss, meta, members, ignore_excs, init_arguments",
     (
         ((JsonSL(s_arg=dict(indent=2)),),
@@ -517,13 +539,13 @@ ComponentTests = (
 
 @mark.parametrize(*ComponentTests)
 def test_component_file_sl_processor(
-        pool,
+        pool: ConfigPool,
         sl_clss: list[ABCConfigSL],
-        meta: Optional[dict] | ComponentMeta,
-        members: Optional[dict],
-        ignore_excs,
-        init_arguments: dict
-):
+        meta: Optional[dict[str | None, MappingConfigData[Any]]] | ComponentMeta[Any],
+        members: Optional[dict[str, Any]],
+        ignore_excs: tuple[EE, EE, EE],
+        init_arguments: dict[str, Any],
+) -> None:
     component_sl = ComponentSL(**init_arguments)
     component_sl.register_to(pool)
     for sl_cls in sl_clss:
@@ -534,13 +556,14 @@ def test_component_file_sl_processor(
 
     with safe_raises(ignore_excs[0]) as info:
         config_data = ComponentConfigData(
-            meta if isinstance(meta, ComponentMeta) else ComponentMetaParser().convert_config2meta(ConfigData(meta)),
+            meta if isinstance(meta, ComponentMeta) else
+            ComponentMetaParser().convert_config2meta(MappingConfigData(meta)),  # type: ignore[arg-type]
             members=members,
         )
     if info:
         return
 
-    file = ConfigFile(config_data, config_format=component_sl.reg_name)
+    file: ConfigFile[Any] = ConfigFile(config_data, config_format=component_sl.reg_name)
     file_name = f"TestConfigFile{sl_clss[0].supported_file_patterns[0]}{component_sl.supported_file_patterns[0]}"
 
     with safe_raises(ignore_excs[1]) as info:
@@ -549,7 +572,7 @@ def test_component_file_sl_processor(
         return
     pool.delete('', file_name)
     with safe_raises(ignore_excs[2]) as info:
-        loaded_data: ComponentConfigData = pool.load('', file_name).config
+        loaded_data: ComponentConfigData[Any, Any] = pool.load('', file_name).config
     if info:
         return
     assert loaded_data.meta.members == config_data.meta.members
@@ -557,7 +580,7 @@ def test_component_file_sl_processor(
     assert loaded_data.members == config_data.members
 
 
-def test_save_none_component(pool):
+def test_save_none_component(pool: ConfigPool) -> None:
     comp_sl = ComponentSL()
     json_sl = JsonSL()
     comp_sl.register_to(pool)
@@ -567,7 +590,7 @@ def test_save_none_component(pool):
     pool.save('', file_name, config=ConfigFile(ConfigData(), config_format=comp_sl.reg_name))
 
 
-def test_component_initialize(pool):
+def test_component_initialize(pool: ConfigPool) -> None:
     comp_sl = ComponentSL()
     json_sl = JsonSL()
     comp_sl.register_to(pool)
@@ -577,7 +600,7 @@ def test_component_initialize(pool):
     pool.load('', file_name, allow_initialize=True)
 
 
-def test_component_wrong_config_data(pool):
+def test_component_wrong_config_data(pool: ConfigPool) -> None:
     comp_sl = ComponentSL()
     json_sl = JsonSL()
     comp_sl.register_to(pool)
@@ -598,7 +621,7 @@ def test_component_wrong_config_data(pool):
         pool.load('', file_name)
 
 
-def test_compressed_component(pool):
+def test_compressed_component(pool: ConfigPool) -> None:
     component_sl = ComponentSL()
     json_sl = JsonSL()
     tar_sl = TarFileSL(compression=TarCompressionTypes.GZIP, compress_level=0)
@@ -614,7 +637,7 @@ def test_compressed_component(pool):
     fn_b = f"b{json_sl.supported_file_patterns[0]}{zip_sl.supported_file_patterns[0]}"
     fn_c = f"c{json_sl.supported_file_patterns[0]}{tar_sl.supported_file_patterns[0]}"
 
-    cfg: MappingConfigData = pool.require(
+    cfg: MappingConfigData[Any] = pool.require(
         '', file_name,
         {
             None: {"members": [fn_a, fn_b, fn_c]},
@@ -635,7 +658,7 @@ def test_compressed_component(pool):
     assert cfg.retrieve(fr"\{{{fn_c}\}}\.key") is False
 
 
-def test_python(pool):
+def test_python(pool: ConfigPool) -> None:
     PythonSL().register_to(pool)
     PlainTextSL().register_to(pool)
 
@@ -656,7 +679,7 @@ def test_python(pool):
         )), config_formats={"plaintext"})
 
     pool.unset('', "test-python.py")
-    cfg: MappingConfigData = pool.load('', "test-python.py").config
+    cfg: MappingConfigData[Any] = pool.load('', "test-python.py").config
 
     assert cfg["key"] == "value"
     assert cfg["length"] == 5
@@ -664,7 +687,7 @@ def test_python(pool):
     assert isinstance(cfg["datetime"], datetime)
 
 
-def test_wrong_sl_arguments():
+def test_wrong_sl_arguments() -> None:
     with raises(TypeError):
         JsonSL(NotImplemented)
 
@@ -685,7 +708,7 @@ SLProcessors = (
 
 
 @mark.parametrize("sl_cls", SLProcessors)
-def test_multi_register(pool, sl_cls):
+def test_multi_register(pool: ConfigPool, sl_cls: type[ABCConfigSL]) -> None:
     sl_cls().register_to(pool)
     sl_obj = sl_cls()
     sl_obj.register_to(pool)
@@ -695,8 +718,8 @@ def test_multi_register(pool, sl_cls):
 
 
 @mark.parametrize("sl_cls", SLProcessors)
-def test_base(sl_cls: type[BasicConfigSL]):
-    attr_tests = (
+def test_base(sl_cls: type[BasicConfigSL]) -> None:
+    attr_tests: tuple[str, ...] = (
         "processor_reg_name",
         "reg_alias",
         "reg_name",
@@ -729,7 +752,7 @@ LocalSLProcessors = tuple(cls for cls in SLProcessors if issubclass(cls, BasicLo
 
 
 @mark.parametrize("sl_cls", LocalSLProcessors)
-def test_local_file_sl(sl_cls):
+def test_local_file_sl(sl_cls: type[BasicLocalFileConfigSL]) -> None:
     sl_obj = sl_cls()
 
     with raises(FailedProcessConfigFileError):
@@ -738,4 +761,4 @@ def test_local_file_sl(sl_cls):
 
     with raises(FailedProcessConfigFileError):
         # noinspection PyTypeChecker
-        sl_obj.save_file(ConfigFile, None)
+        sl_obj.save_file(ConfigFile, None)  # type: ignore[arg-type]

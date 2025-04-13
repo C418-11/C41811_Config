@@ -4,6 +4,10 @@
 import os
 from contextlib import contextmanager
 from contextlib import suppress
+from numbers import Real
+from pathlib import Path
+from typing import Any
+from typing import Generator
 from typing import IO
 
 from pytest import mark
@@ -16,7 +20,7 @@ from C41811.Config.safe_writer import safe_open
 
 
 @contextmanager
-def cleanup(file: IO):
+def cleanup(file: IO[Any]) -> Generator[IO[Any], Any, None]:
     try:
         yield file
     finally:
@@ -28,18 +32,18 @@ def cleanup(file: IO):
 
 
 @mark.parametrize("flag", [LockFlags.EXCLUSIVE, LockFlags.SHARED])
-def test_acquire_lock(tmp_path, flag):
+def test_acquire_lock(tmp_path: Path, flag: LockFlags) -> None:
     with cleanup(open(tmp_path / "test.txt", mode="w")) as file:
         acquire_lock(file, flag)
 
 
-def test_repeat_acquire_lock(tmp_path):
+def test_repeat_acquire_lock(tmp_path: Path) -> None:
     with cleanup(open(tmp_path / "test.txt", mode="w")) as file:
         acquire_lock(file, LockFlags.SHARED)
         acquire_lock(file, LockFlags.SHARED)
 
 
-def test_acquire_lock_immediately_release(tmp_path):
+def test_acquire_lock_immediately_release(tmp_path: Path) -> None:
     with cleanup(open(tmp_path / "test.txt", mode="w")) as file:
         acquire_lock(file, LockFlags.EXCLUSIVE, immediately_release=True)
         acquire_lock(file, LockFlags.EXCLUSIVE, immediately_release=True)
@@ -47,7 +51,7 @@ def test_acquire_lock_immediately_release(tmp_path):
 
 if os.name == "nt":
     @mark.parametrize("timeout", [0, 0.05, 0.1])
-    def test_acquire_timeout(tmp_path, timeout):
+    def test_acquire_timeout(tmp_path: Path, timeout: Real) -> None:
         with cleanup(open(tmp_path / "test.txt", mode="w")) as file:
             acquire_lock(file, LockFlags.EXCLUSIVE)
             with raises(TimeoutError):
@@ -55,7 +59,7 @@ if os.name == "nt":
 
 
 class TestSafeOpen:
-    def test_atomic(self, tmp_path):
+    def test_atomic(self, tmp_path: Path) -> None:
         with suppress(RuntimeError), safe_open(tmp_path / "test.txt", mode="w") as file:
             file.write("test")
             raise RuntimeError
@@ -63,7 +67,7 @@ class TestSafeOpen:
             assert not os.path.exists(tmp_path / "test.txt")
 
     if os.name == "nt":
-        def test_lock(self, tmp_path):
+        def test_lock(self, tmp_path: Path) -> None:
             with safe_open(tmp_path / "test.txt", mode="w") as file:
                 file.write("foo")
                 with raises(TimeoutError), safe_open(tmp_path / "test.txt", mode="w", timeout=.1) as file2:

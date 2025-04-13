@@ -10,6 +10,7 @@ from collections.abc import Callable
 from collections.abc import Generator
 from collections.abc import ItemsView
 from collections.abc import Iterable
+from collections.abc import Iterator
 from collections.abc import KeysView
 from collections.abc import Mapping
 from collections.abc import MutableMapping
@@ -23,25 +24,29 @@ from dataclasses import field
 from numbers import Number
 from re import Pattern
 from textwrap import dedent
+from types import NotImplementedType
 from typing import Any
 from typing import ClassVar
+from typing import Literal
 from typing import Optional
 from typing import Self
+from typing import cast
+from typing import overload
 from typing import override
 
-import wrapt
+import wrapt  # type: ignore[import-untyped]
 
 from ._protocols import Indexed
-from ._protocols import MutableIndexed
 from .abc import ABCConfigData
 from .abc import ABCConfigFile
 from .abc import ABCConfigPool
 from .abc import ABCIndexedConfigData
-from .abc import ABCKey
 from .abc import ABCMetaParser
 from .abc import ABCPath
 from .abc import ABCProcessorHelper
 from .abc import ABCSLProcessorPool
+from .abc import AnyKey
+from .abc import PathLike
 from .errors import ConfigDataReadOnlyError
 from .errors import ConfigDataTypeError
 from .errors import ConfigOperate
@@ -50,16 +55,16 @@ from .errors import KeyInfo
 from .errors import RequiredPathNotFoundError
 from .errors import UnsupportedConfigFormatError
 from .path import Path
-from .utils import Unset as _Unset
+from .utils import Unset
 
 
-def _fmt_path(path: str | ABCPath) -> ABCPath:
+def _fmt_path(path: PathLike) -> ABCPath[Any]:
     if isinstance(path, ABCPath):
         return path
     return Path.from_str(path)
 
 
-class BasicConfigData(ABCConfigData, ABC):
+class BasicConfigData[D](ABCConfigData[D], ABC):
     # noinspection GrazieInspection
     """
     配置数据基类
@@ -77,20 +82,20 @@ class BasicConfigData(ABCConfigData, ABC):
     def data_read_only(self) -> bool | None:
         return True  # 全被子类复写了，测不到 # pragma: no cover
 
-    @override
     @property
+    @override
     def read_only(self) -> bool | None:
         return super().read_only or self._read_only
 
-    @override
     @read_only.setter
-    def read_only(self, value: Any):
+    @override
+    def read_only(self, value: Any) -> None:
         if self.data_read_only:
             raise ConfigDataReadOnlyError
         self._read_only = bool(value)
 
 
-class BasicSingleConfigData[D: Any](BasicConfigData, ABC):
+class BasicSingleConfigData[D](BasicConfigData[D], ABC):
     """
     单文件配置数据基类
 
@@ -115,7 +120,7 @@ class BasicSingleConfigData[D: Any](BasicConfigData, ABC):
         """
         return deepcopy(self._data)
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool | NotImplementedType:
         if not isinstance(other, type(self)):
             return NotImplemented
         return self._data == other._data
@@ -126,23 +131,25 @@ class BasicSingleConfigData[D: Any](BasicConfigData, ABC):
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self._data!r})"
 
-    def __deepcopy__(self, memo) -> Self:
+    def __deepcopy__(self, memo: dict[str, Any]) -> Self:
         return self.from_data(self._data)
 
 
-def _check_read_only(func):
-    @wrapt.decorator
-    def wrapper(wrapped, instance, args, kwargs):
-        if instance.read_only:
+def _check_read_only[F: Callable[..., Any]](func: F) -> F:
+    @wrapt.decorator  # type: ignore[misc]
+    def wrapper(wrapped: F, instance: ABCConfigData[Any] | None, args: tuple[Any, ...], kwargs: dict[str, Any]) -> Any:
+        if instance is None:
+            raise TypeError("must be called from an instance")  # pragma: no cover
+        elif instance.read_only:
             raise ConfigDataReadOnlyError
         return wrapped(*args, **kwargs)
 
-    return wrapper(func)
+    return cast(F, wrapper(func))
 
 
-class BasicIndexedConfigData[D: Indexed | MutableIndexed](
-    BasicSingleConfigData,
-    ABCIndexedConfigData,
+class BasicIndexedConfigData[D: Indexed[Any, Any]](
+    BasicSingleConfigData[D],
+    ABCIndexedConfigData[D],
     ABC
 ):
     # noinspection GrazieInspection
@@ -157,8 +164,8 @@ class BasicIndexedConfigData[D: Indexed | MutableIndexed](
 
     def _process_path(
             self,
-            path: ABCPath,
-            path_checker: Callable[[Any, ABCKey, list[ABCKey], int], Any],
+            path: ABCPath[Any],
+            path_checker: Callable[[Any, AnyKey, ABCPath[Any], int], Any],
             process_return: Callable[[Any], Any]
     ) -> Any:
         # noinspection GrazieInspection
@@ -166,9 +173,10 @@ class BasicIndexedConfigData[D: Indexed | MutableIndexed](
         处理键路径的通用函数
 
         :param path: 键路径
-        :type path: str
+        :type path: ABCPath
         :param path_checker: 检查并处理每个路径段，返回值非None时结束操作并返回值
-        :type path_checker: Callable[(current_data: Any, current_key: str, last_path: str, path_index: int), Any]
+        :type path_checker: Callable[(current_data: Any, current_key: ABCKey, last_path: list[ABCKey], path_index: int),
+                            Any]
         :param process_return: 处理最终结果，该函数返回值会被直接返回
         :type process_return: Callable[(current_data: Any), Any]
 
@@ -181,10 +189,9 @@ class BasicIndexedConfigData[D: Indexed | MutableIndexed](
         current_data = self._data
 
         for key_index, current_key in enumerate(path):
-            current_key: ABCKey
-            last_key: list[ABCKey] = path[key_index + 1:]
+            last_path: ABCPath[Any] = path[key_index + 1:]
 
-            check_result = path_checker(current_data, current_key, last_key, key_index)
+            check_result = path_checker(current_data, current_key, last_path, key_index)
             if check_result is not None:
                 return check_result
 
@@ -193,97 +200,119 @@ class BasicIndexedConfigData[D: Indexed | MutableIndexed](
         return process_return(current_data)
 
     @override
-    def retrieve(self, path: str | ABCPath, *, return_raw_value: bool = False) -> Any:
+    def retrieve(self, path: PathLike, *, return_raw_value: bool = False) -> Any:
         path = _fmt_path(path)
 
-        def checker(now_data, now_key: ABCKey, _last_key: list[ABCKey], key_index: int):
-            missing_protocol = now_key.__supports__(now_data)
+        def checker(current_data: Any, current_key: AnyKey, _last_path: ABCPath[Any], key_index: int) -> None:
+            missing_protocol = current_key.__supports__(current_data)
             if missing_protocol:
-                raise ConfigDataTypeError(KeyInfo(path, now_key, key_index), missing_protocol, type(now_data))
-            if not now_key.__contains_inner_element__(now_data):
-                raise RequiredPathNotFoundError(KeyInfo(path, now_key, key_index), ConfigOperate.Read)
+                raise ConfigDataTypeError(
+                    KeyInfo(cast(ABCPath[Any], path), current_key, key_index), missing_protocol, type(current_data)
+                )
+            if not current_key.__contains_inner_element__(current_data):
+                raise RequiredPathNotFoundError(
+                    KeyInfo(cast(ABCPath[Any], path), current_key, key_index), ConfigOperate.Read
+                )
 
-        def process_return(now_data):
+        def process_return[V: Any](current_data: V) -> V | ConfigData:
             if return_raw_value:
-                return deepcopy(now_data)
+                return deepcopy(current_data)
 
-            is_sequence = isinstance(now_data, Sequence) and not isinstance(now_data, (str, bytes))
-            if isinstance(now_data, Mapping) or is_sequence:
-                return ConfigData(now_data)
+            is_sequence = isinstance(current_data, Sequence) and not isinstance(current_data, (str, bytes))
+            if isinstance(current_data, Mapping) or is_sequence:
+                return ConfigData(current_data)
 
-            return deepcopy(now_data)
+            return deepcopy(current_data)
 
         return self._process_path(path, checker, process_return)
 
     @override
     @_check_read_only
-    def modify(self, path: str | ABCPath, value: Any, *, allow_create: bool = True) -> Self:
+    def modify(self, path: PathLike, value: Any, *, allow_create: bool = True) -> Self:
         path = _fmt_path(path)
 
-        def checker(now_data, now_key: ABCKey, last_key: list[ABCKey], key_index: int):
-            missing_protocol = now_key.__supports_modify__(now_data)
+        def checker(current_data: Any, current_key: AnyKey, last_path: ABCPath[Any], key_index: int) -> None:
+            missing_protocol = current_key.__supports_modify__(current_data)
             if missing_protocol:
-                raise ConfigDataTypeError(KeyInfo(path, now_key, key_index), missing_protocol, type(now_data))
-            if not now_key.__contains_inner_element__(now_data):
+                raise ConfigDataTypeError(
+                    KeyInfo(cast(ABCPath[Any], path), current_key, key_index), missing_protocol, type(current_data)
+                )
+            if not current_key.__contains_inner_element__(current_data):
                 if not allow_create:
-                    raise RequiredPathNotFoundError(KeyInfo(path, now_key, key_index), ConfigOperate.Write)
-                now_key.__set_inner_element__(now_data, type(self._data)())
+                    raise RequiredPathNotFoundError(
+                        KeyInfo(cast(ABCPath[Any], path), current_key, key_index), ConfigOperate.Write
+                    )
+                current_key.__set_inner_element__(current_data, type(self._data)())
 
-            if not last_key:
-                now_key.__set_inner_element__(now_data, value)
+            if not last_path:
+                current_key.__set_inner_element__(current_data, value)
 
         self._process_path(path, checker, lambda *_: None)
         return self
 
     @override
     @_check_read_only
-    def delete(self, path: str | ABCPath) -> Self:
+    def delete(self, path: PathLike) -> Self:
         path = _fmt_path(path)
 
-        def checker(now_data, now_key: ABCKey, last_key: list[ABCKey], key_index: int):
-            missing_protocol = now_key.__supports_modify__(now_data)
+        def checker(
+                current_data: Any,
+                current_key: AnyKey,
+                last_path: ABCPath[Any],
+                key_index: int,
+        ) -> Literal[True] | None:
+            missing_protocol = current_key.__supports_modify__(current_data)
             if missing_protocol:
-                raise ConfigDataTypeError(KeyInfo(path, now_key, key_index), missing_protocol, type(now_data))
-            if not now_key.__contains_inner_element__(now_data):
-                raise RequiredPathNotFoundError(KeyInfo(path, now_key, key_index), ConfigOperate.Delete)
+                raise ConfigDataTypeError(
+                    KeyInfo(cast(ABCPath[Any], path), current_key, key_index), missing_protocol, type(current_data)
+                )
+            if not current_key.__contains_inner_element__(current_data):
+                raise RequiredPathNotFoundError(
+                    KeyInfo(cast(ABCPath[Any], path), current_key, key_index), ConfigOperate.Delete
+                )
 
-            if not last_key:
-                now_key.__delete_inner_element__(now_data)
+            if not last_path:
+                current_key.__delete_inner_element__(current_data)
                 return True
+            return None  # 被mypy强制要求
 
         self._process_path(path, checker, lambda *_: None)
         return self
 
     @override
-    def unset(self, path: str | ABCPath) -> Self:
+    def unset(self, path: PathLike) -> Self:
         with suppress(RequiredPathNotFoundError):
             self.delete(path)
         return self
 
     @override
-    def exists(self, path: str | ABCPath, *, ignore_wrong_type: bool = False) -> bool:
+    def exists(self, path: PathLike, *, ignore_wrong_type: bool = False) -> bool:
         path = _fmt_path(path)
 
-        def checker(now_data, now_key: ABCKey, _last_key: list[ABCKey], key_index: int):
-            missing_protocol = now_key.__supports__(now_data)
+        def checker(current_data: Any, current_key: AnyKey, _last_path: ABCPath[Any],
+                    key_index: int) -> bool | None:
+            missing_protocol = current_key.__supports__(current_data)
             if missing_protocol:
                 if ignore_wrong_type:
                     return False
-                raise ConfigDataTypeError(KeyInfo(path, now_key, key_index), missing_protocol, type(now_data))
-            if not now_key.__contains_inner_element__(now_data):
+                raise ConfigDataTypeError(
+                    KeyInfo(cast(ABCPath[Any], path), current_key, key_index), missing_protocol, type(current_data)
+                )
+            if not current_key.__contains_inner_element__(current_data):
                 return False
+            return None
 
-        return self._process_path(path, checker, lambda *_: True)
+        return cast(bool, self._process_path(path, checker, lambda *_: True))
 
     @override
-    def get(self, path: str | ABCPath, default=None, *, return_raw_value: bool = False) -> Any:
+    def get(self, path: PathLike, default: Optional[Any] = None, *, return_raw_value: bool = False) -> Any:
         try:
             return self.retrieve(path, return_raw_value=return_raw_value)
         except RequiredPathNotFoundError:
             return default
 
     @override
-    def setdefault(self, path: str | ABCPath, default=None, *, return_raw_value: bool = False) -> Any:
+    def setdefault(self, path: PathLike, default: Optional[Any] = None, *, return_raw_value: bool = False) -> Any:
         try:
             return self.retrieve(path)
         except RequiredPathNotFoundError:
@@ -291,32 +320,32 @@ class BasicIndexedConfigData[D: Indexed | MutableIndexed](
             return default
 
     @override
-    def __contains__(self, key) -> bool:
-        return key in self._data
+    def __contains__(self, key: Any) -> bool:
+        return key in self._data  # type: ignore[operator]
 
     @override
-    def __iter__(self):
+    def __iter__(self) -> Iterator[D]:
         return iter(self._data)
 
     @override
-    def __len__(self):
-        return len(self._data)
+    def __len__(self) -> int:
+        return len(self._data)  # type: ignore[arg-type]
 
     @override
-    def __getitem__(self, key):
-        data = self._data[key]
+    def __getitem__(self, index: Any) -> D | Self:
+        data = self._data[index]
         is_sequence = isinstance(data, Sequence) and not isinstance(data, (str, bytes))
         if isinstance(data, Mapping) or is_sequence:
-            return ConfigData(data)
-        return deepcopy(data)
+            return cast(Self, ConfigData(data))
+        return cast(D, deepcopy(data))
 
     @override
-    def __setitem__(self, key, value) -> None:
-        self._data[key] = value
+    def __setitem__(self, index: Any, value: Any) -> None:
+        self._data[index] = value  # type: ignore[index]
 
     @override
-    def __delitem__(self, key) -> None:
-        del self._data[key]
+    def __delitem__(self, index: Any) -> None:
+        del self._data[index]  # type: ignore[attr-defined]
 
 
 class ConfigData(ABC):
@@ -326,7 +355,7 @@ class ConfigData(ABC):
     .. versionchanged:: 0.1.5
        会自动根据传入的配置数据类型选择对应的子类
     """
-    TYPES: ClassVar[OrderedDict[tuple[type, ...], type]]
+    TYPES: ClassVar[OrderedDict[tuple[type, ...], Callable[[Any], Any] | type]]
     """
     存储配置数据类型对应的子类
 
@@ -334,7 +363,7 @@ class ConfigData(ABC):
        现在使用 ``OrderedDict`` 来保证顺序
     """
 
-    def __new__(cls, *args, **kwargs) -> Any:
+    def __new__(cls, *args: Any, **kwargs: Any) -> Any:
         if not args:
             args = (None,)
         for types, config_data_cls in cls.TYPES.items():
@@ -344,7 +373,7 @@ class ConfigData(ABC):
         raise TypeError(f"Unsupported type: {args[0]}")
 
 
-def _generate_operators[T: type](cls: T) -> T:
+def _generate_operators[C](cls: type[C]) -> type[C]:
     for name, func in dict(vars(cls)).items():
         if not hasattr(func, "__generate_operators__"):
             continue
@@ -364,16 +393,16 @@ def _generate_operators[T: type](cls: T) -> T:
             return self
         """)
 
-        funcs = {}
+        funcs: dict[str, Any] = {}
         exec(code, {**operator_funcs, "ConfigData": ConfigData}, funcs)
 
         funcs[name].__qualname__ = func.__qualname__
         funcs[r_name].__qualname__ = f"{cls.__qualname__}.{r_name}"
         funcs[i_name].__qualname__ = f"{cls.__qualname__}.{i_name}"
 
-        @wrapt.decorator
-        def wrapper(wrapped, _instance, args, kwargs):
-            if isinstance(args[0], ABCConfigData):
+        @wrapt.decorator  # type: ignore[misc]
+        def wrapper(wrapped: Callable[..., Any], _instance: C, args: tuple[Any, ...], kwargs: dict[str, Any]) -> Any:
+            if isinstance(args[0], BasicSingleConfigData):
                 args = args[0].data, *args[1:]
             return wrapped(*args, **kwargs)
 
@@ -384,15 +413,21 @@ def _generate_operators[T: type](cls: T) -> T:
     return cls
 
 
-def _operate(operate_func, inplace_func):
-    def decorator[F: Callable](func) -> F:
-        func.__generate_operators__ = {"operate_func": operate_func, "inplace_func": inplace_func}
+def _operate[F: Callable[..., Any]](
+        operate_func: Callable[..., Any],
+        inplace_func: Callable[..., Any],
+) -> Callable[[F], F]:
+    def decorator(func: F) -> F:
+        func.__generate_operators__ = {  # type: ignore[attr-defined]
+            "operate_func": operate_func,
+            "inplace_func": inplace_func,
+        }
         return func
 
     return decorator
 
 
-class NoneConfigData(BasicSingleConfigData):
+class NoneConfigData(BasicSingleConfigData[None]):
     """
     空的配置数据
 
@@ -410,12 +445,12 @@ class NoneConfigData(BasicSingleConfigData):
 
         super().__init__(data)
 
-    def __bool__(self):
+    def __bool__(self) -> Literal[False]:
         return False
 
 
 @_generate_operators
-class MappingConfigData[D: Mapping | MutableMapping](BasicIndexedConfigData, MutableMapping):
+class MappingConfigData[D: Mapping[Any, Any]](BasicIndexedConfigData[D], MutableMapping[Any, Any]):
     """
     映射配置数据
 
@@ -426,8 +461,8 @@ class MappingConfigData[D: Mapping | MutableMapping](BasicIndexedConfigData, Mut
 
     def __init__(self, data: Optional[D] = None):
         if data is None:
-            data = dict()
-        super().__init__(data)
+            data = dict()  # type: ignore[assignment]
+        super().__init__(cast(D, data))
 
     @override
     @property
@@ -481,14 +516,22 @@ class MappingConfigData[D: Mapping | MutableMapping](BasicIndexedConfigData, Mut
            odict_keys(['foo\\.bar\\.baz', 'foo\\.bar1', 'foo1'])
         """
 
-        def _recursive(data: Mapping) -> Generator[str, None, None]:
+        def _recursive(data: Mapping[str, Any], seen: Optional[set[int]] = None) -> Generator[str, None, None]:
+            if seen is None:
+                seen = set()
+
+            if id(data) in seen:
+                return  # todo 可选行为，严格：抛出错误，宽松：跳过循环引用
+            seen.add(id(data))
+
             for k, v in data.items():
-                k: str = k.replace('\\', "\\\\")
+                k = k.replace('\\', "\\\\")
                 if isinstance(v, Mapping):
-                    yield from (f"{k}\\.{x}" for x in _recursive(v))
+                    yield from (f"{k}\\.{x}" for x in _recursive(v, seen))
                     if end_point_only:
                         continue
                 yield k
+            seen.remove(id(data))
 
         if recursive:
             return OrderedDict.fromkeys(x for x in _recursive(self._data)).keys()
@@ -541,47 +584,50 @@ class MappingConfigData[D: Mapping | MutableMapping](BasicIndexedConfigData, Mut
 
     @override
     @_check_read_only
-    def clear(self):
-        self._data.clear()
+    def clear(self) -> None:
+        self._data.clear()  # type: ignore[attr-defined]
 
     @override
     @_check_read_only
-    def pop(self, path: str | Path, /, default: Any = _Unset):
+    def pop(self, path: str | Path, /, default: Any = Unset) -> Any:
         path = _fmt_path(path)
         try:
             result = self.retrieve(path)
             self.delete(path)
             return result
         except RequiredPathNotFoundError:
-            if default is not _Unset:
+            if default is not Unset:
                 return default
             raise
 
     @override
     @_check_read_only
-    def popitem(self):
-        return self._data.popitem()
+    def popitem(self) -> Any:
+        return self._data.popitem()  # type: ignore[attr-defined]
 
     @override
     @_check_read_only
-    def update(self, m, /, **kwargs):
-        self._data.update(m, **kwargs)
+    def update(self, m: Any, /, **kwargs: Any) -> None:  # type: ignore[override]
+        self._data.update(m, **kwargs)  # type: ignore[attr-defined]
 
-    def __getattr__(self, item) -> Self | Any:
+    def __getattr__(self, item: Any) -> Self | Any:
         try:
             return self[item]
         except KeyError:
             raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{item}'")
 
     @_operate(operator.or_, operator.ior)  # @formatter:off
-    def __or__(self, other) -> Any: ...
+    def __or__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
 
-    def __ror__(self, other) -> Any: ...
+    def __ror__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
     # @formatter:on
 
 
 @_generate_operators
-class SequenceConfigData[D: Sequence | MutableSequence](BasicIndexedConfigData, MutableSequence):
+class SequenceConfigData[D: Sequence[Any]](  # type: ignore[misc]
+    BasicIndexedConfigData[D],
+    MutableSequence[Any]
+):
     """
     序列配置数据
 
@@ -592,8 +638,8 @@ class SequenceConfigData[D: Sequence | MutableSequence](BasicIndexedConfigData, 
 
     def __init__(self, data: Optional[D] = None):
         if data is None:
-            data = list()
-        super().__init__(data)
+            data = list()  # type: ignore[assignment]
+        super().__init__(cast(D, data))
 
     @override
     @property
@@ -602,63 +648,63 @@ class SequenceConfigData[D: Sequence | MutableSequence](BasicIndexedConfigData, 
 
     @override
     @_check_read_only
-    def append(self, value):
-        return self._data.append(value)
+    def append(self, value: Any) -> None:
+        self._data.append(value)  # type: ignore[attr-defined]
 
     @override
     @_check_read_only
-    def insert(self, index, value):
-        return self._data.insert(index, value)
+    def insert(self, index: int, value: Any) -> None:
+        self._data.insert(index, value)  # type: ignore[attr-defined]
 
     @override
     @_check_read_only
-    def extend(self, values):
-        return self._data.extend(values)
+    def extend(self, values: Iterable[Any]) -> None:
+        self._data.extend(values)  # type: ignore[attr-defined]
 
     @override
-    def index(self, *args):
+    def index(self, *args: Any) -> int:
         return self._data.index(*args)
 
     @override
-    def count(self, value):
+    def count(self, value: Any) -> int:
         return self._data.count(value)
 
     @override
     @_check_read_only
-    def pop(self, index=-1):
-        return self._data.pop(index)
+    def pop(self, index: int = -1) -> Any:
+        return self._data.pop(index)  # type: ignore[attr-defined]
 
     @override
     @_check_read_only
-    def remove(self, value):
-        return self._data.remove(value)
+    def remove(self, value: Any) -> None:
+        self._data.remove(value)  # type: ignore[attr-defined]
 
     @override
     @_check_read_only
-    def clear(self):
-        return self._data.clear()
+    def clear(self) -> None:
+        self._data.clear()  # type: ignore[attr-defined]
 
     @override
     @_check_read_only
-    def reverse(self):
-        return self._data.reverse()
+    def reverse(self) -> None:
+        self._data.reverse()  # type: ignore[attr-defined]
 
-    def __reversed__(self):
+    def __reversed__(self) -> Iterator[D]:
         return reversed(self._data)
 
     @_operate(operator.mul, operator.imul)
-    def __mul__(self, other) -> Any: ...
+    def __mul__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
 
     @_operate(operator.add, operator.iadd)
-    def __add__(self, other) -> Any: ...
+    def __add__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
 
-    def __rmul__(self, other) -> Any: ...
+    def __rmul__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
 
-    def __radd__(self, other) -> Any: ...
+    def __radd__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
 
 
 @_generate_operators
-class NumberConfigData[D: Number](BasicSingleConfigData):
+class NumberConfigData[D: Number](BasicSingleConfigData[D]):
     """
     数值配置数据
 
@@ -669,118 +715,118 @@ class NumberConfigData[D: Number](BasicSingleConfigData):
 
     def __init__(self, data: Optional[D] = None):
         if data is None:
-            data = int()
-        super().__init__(data)
+            data = int()  # type: ignore[assignment]
+        super().__init__(cast(D, data))
 
     @override
     @property
-    def data_read_only(self) -> False:
+    def data_read_only(self) -> Literal[False]:
         return False
 
     def __int__(self) -> int:
-        return int(self._data)
+        return int(self._data)  # type: ignore[call-overload, no-any-return]
 
     def __float__(self) -> float:
-        return float(self._data)
+        return float(self._data)  # type: ignore[arg-type]
 
     def __bool__(self) -> bool:
         return bool(self._data)
 
     @_operate(operator.add, operator.iadd)
-    def __add__(self, other) -> Any: ...
+    def __add__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
 
     @_operate(operator.sub, operator.isub)
-    def __sub__(self, other) -> Any: ...
+    def __sub__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
 
     @_operate(operator.mul, operator.imul)
-    def __mul__(self, other) -> Any: ...
+    def __mul__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
 
     @_operate(operator.truediv, operator.itruediv)
-    def __truediv__(self, other) -> Any: ...
+    def __truediv__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
 
     @_operate(operator.floordiv, operator.ifloordiv)
-    def __floordiv__(self, other) -> Any: ...
+    def __floordiv__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
 
     @_operate(operator.mod, operator.imod)
-    def __mod__(self, other) -> Any: ...
+    def __mod__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
 
     @_operate(operator.pow, operator.ipow)
-    def __pow__(self, other) -> Any: ...
+    def __pow__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
 
     @_operate(operator.and_, operator.iand)
-    def __and__(self, other) -> Any: ...
+    def __and__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
 
     @_operate(operator.or_, operator.ior)
-    def __or__(self, other) -> Any: ...
+    def __or__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
 
     @_operate(operator.xor, operator.ixor)
-    def __xor__(self, other) -> Any: ...
+    def __xor__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
 
     @_operate(operator.matmul, operator.imatmul)
-    def __matmul__(self, other) -> Any: ...
+    def __matmul__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
 
     @_operate(operator.lshift, operator.ilshift)
-    def __lshift__(self, other) -> Any: ...
+    def __lshift__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
 
     @_operate(operator.rshift, operator.irshift)
-    def __rshift__(self, other) -> Any: ...
+    def __rshift__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
 
-    def __radd__(self, other) -> Any: ...
+    def __radd__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
 
-    def __rsub__(self, other) -> Any: ...
+    def __rsub__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
 
-    def __rmul__(self, other) -> Any: ...
+    def __rmul__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
 
-    def __rtruediv__(self, other) -> Any: ...
+    def __rtruediv__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
 
-    def __rfloordiv__(self, other) -> Any: ...
+    def __rfloordiv__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
 
-    def __rmod__(self, other) -> Any: ...
+    def __rmod__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
 
-    def __rpow__(self, other) -> Any: ...
+    def __rpow__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
 
-    def __rand__(self, other) -> Any: ...
+    def __rand__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
 
-    def __ror__(self, other) -> Any: ...
+    def __ror__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
 
-    def __rxor__(self, other) -> Any: ...
+    def __rxor__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
 
-    def __rmatmul__(self, other) -> Any: ...
+    def __rmatmul__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
 
-    def __rlshift__(self, other) -> Any: ...
+    def __rlshift__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
 
-    def __rrshift__(self, other) -> Any: ...
+    def __rrshift__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
 
-    def __invert__(self):
-        return ~self._data
+    def __invert__(self) -> Any:
+        return ~self._data  # type: ignore[operator]
 
-    def __neg__(self):
-        return -self._data
+    def __neg__(self) -> Any:
+        return -self._data  # type: ignore[operator]
 
-    def __pos__(self):
-        return +self._data
+    def __pos__(self) -> Any:
+        return +self._data  # type: ignore[operator]
 
-    def __abs__(self):
-        return abs(self._data)
+    def __abs__(self) -> D:
+        return abs(self._data)  # type: ignore[arg-type]
 
     # noinspection SpellCheckingInspection
-    def __round__(self, ndigits: int | None = None):
-        return round(self._data, ndigits)
+    def __round__(self, ndigits: int | None = None) -> Any:
+        return round(self._data, ndigits)  # type: ignore[call-overload]
 
-    def __trunc__(self):
-        return math.trunc(self._data)
+    def __trunc__(self) -> Any:
+        return math.trunc(self._data)  # type: ignore[arg-type]
 
-    def __floor__(self):
-        return math.floor(self._data)
+    def __floor__(self) -> Any:
+        return math.floor(self._data)  # type: ignore[call-overload]
 
-    def __ceil__(self):
-        return math.ceil(self._data)
+    def __ceil__(self) -> Any:
+        return math.ceil(self._data)  # type: ignore[call-overload]
 
-    def __index__(self) -> int:
-        return int(self._data)
+    def __index__(self) -> Any:
+        return self._data.__index__()  # type: ignore[attr-defined]
 
 
-class BoolConfigData[D: bool](NumberConfigData):
+class BoolConfigData[D: bool](NumberConfigData[D]):  # type: ignore[type-var]  # bool怎么会不算Number
     # noinspection GrazieInspection
     """
     布尔值配置数据
@@ -793,67 +839,66 @@ class BoolConfigData[D: bool](NumberConfigData):
     _data: D
     data: D
 
-    def __init__(self, data: Optional[D] = None):
-        super().__init__(bool(data))
+    def __init__(self, data: Optional[D] = None) -> None:
+        super().__init__(cast(D, bool(data)))
 
 
 @_generate_operators
-class StringConfigData[D: str | bytes](BasicSingleConfigData):
+class StringConfigData[D: str | bytes](BasicSingleConfigData[D]):
     """
     字符/字节串配置数据
     """
     _data: D
     data: D
 
-    def __init__(self, data: Optional[D] = None):
+    def __init__(self, data: Optional[D] = None) -> None:
         if data is None:
-            data = str()
-        super().__init__(data)
+            data = str()  # type: ignore[assignment]
+        super().__init__(cast(D, data))
 
     @override
     @property
-    def data_read_only(self) -> False:
+    def data_read_only(self) -> Literal[False]:
         return False
 
-    def __format__(self, format_spec: D) -> D:
+    def __format__(self, format_spec: str) -> str:
         return self._data.__format__(format_spec)
 
     @_operate(operator.add, operator.iadd)
-    def __add__(self, other) -> Any: ...
+    def __add__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
 
     @_operate(operator.mul, operator.imul)
-    def __mul__(self, other) -> Any: ...
+    def __mul__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
 
-    def __contains__(self, key) -> bool:
+    def __contains__(self, key: Any) -> bool:
         return key in self._data
 
-    def __iter__(self):
-        return iter(self._data)
+    def __iter__(self) -> Iterator[D]:
+        return iter(cast(Iterable[D], self._data))
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._data)
 
-    def __getitem__(self, item):
-        return self._data[item]
+    def __getitem__(self, item: Any) -> D:
+        return cast(D, self._data[item])
 
     @_check_read_only
-    def __setitem__(self, key, value):
-        self._data[key] = value
+    def __setitem__(self, key: Any, value: D) -> None:
+        self._data[key] = value  # type: ignore[index]
 
     @_check_read_only
-    def __delitem__(self, key):
-        del self._data[key]
+    def __delitem__(self, key: Any) -> None:
+        del self._data[key]  # type: ignore[union-attr]
 
-    def __reversed__(self):
+    def __reversed__(self) -> Any:  # 不支持reversed[D]语法
         return reversed(self._data)
 
 
-class ObjectConfigData[D: object](BasicSingleConfigData):
+class ObjectConfigData[D: object](BasicSingleConfigData[D]):
     """
     对象配置数据
     """
     _data: D
-    data: D
 
     def __init__(self, data: D):
         """
@@ -863,13 +908,13 @@ class ObjectConfigData[D: object](BasicSingleConfigData):
         .. caution::
            未默认做深拷贝，可能导致非预期行为
         """
-        super().__init__(None)
+        super().__init__(cast(D, None))
 
         self._data: D = data
 
     @override
     @property
-    def data_read_only(self) -> False:
+    def data_read_only(self) -> Literal[False]:
         return False
 
     @override
@@ -888,15 +933,15 @@ class ObjectConfigData[D: object](BasicSingleConfigData):
 
 
 type AnyConfigData = (
-        ABCConfigData
-        | ABCIndexedConfigData
+        ABCConfigData[Any]
+        | ABCIndexedConfigData[Any]
         | NoneConfigData
-        | MappingConfigData
-        | StringConfigData
-        | SequenceConfigData
-        | BoolConfigData
-        | NumberConfigData
-        | ObjectConfigData
+        | MappingConfigData[Any]
+        | StringConfigData[Any]
+        | SequenceConfigData[Any]
+        | BoolConfigData[Any]
+        | NumberConfigData[Any]
+        | ObjectConfigData[Any]
 )
 
 ConfigData.TYPES = OrderedDict((
@@ -947,39 +992,40 @@ class ComponentMember:
 
 
 @dataclass
-class ComponentMeta[D: ABCConfigData]:
+class ComponentMeta[D: ABCConfigData[Any]]:
     """
     组件元数据
 
     .. versionadded:: 0.2.0
     """
 
-    config: D = field(default_factory=ConfigData)
+    config: D = cast(D, field(default_factory=ConfigData))
     orders: ComponentOrders = field(default_factory=ComponentOrders)
     members: list[ComponentMember] = field(default_factory=list)
-    parser: Optional[ABCMetaParser] = field(default=None)
+    parser: Optional[ABCMetaParser[Any, Any]] = field(default=None)
 
 
-class ComponentConfigData[D: ABCIndexedConfigData](BasicConfigData, ABCIndexedConfigData):
+class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](BasicConfigData[D],
+                                                                               ABCIndexedConfigData[D]):
     """
     组件配置数据
 
     .. versionadded:: 0.2.0
     """
 
-    def __init__(self, meta: ComponentMeta = None, members: MutableMapping[str, D] = None):
+    def __init__(self, meta: Optional[M] = None, members: Optional[MutableMapping[str, D]] = None):
         """
         :param meta: 组件元数据
-        :type meta: ComponentMeta
+        :type meta: Optional[ComponentMeta]
         :param members: 组件成员
-        :type members: MutableMapping[str, MappingConfigData]
+        :type members: Optional[MutableMapping[str, ABCIndexedConfigData]]
         """
         if meta is None:
-            meta = ComponentMeta()
+            meta = ComponentMeta()  # type: ignore[assignment]
         if members is None:
             members = {}
 
-        self._meta = deepcopy(meta)
+        self._meta: M = cast(M, deepcopy(meta))
 
         self._filename2meta: dict[str, ComponentMember] = {
             member_meta.filename: member_meta for member_meta in self._meta.members
@@ -1003,7 +1049,7 @@ class ComponentConfigData[D: ABCIndexedConfigData](BasicConfigData, ABCIndexedCo
             raise ValueError(f"cannot match members from meta {tuple(unexpected_names)}")
 
     @property
-    def meta(self) -> ComponentMeta:
+    def meta(self) -> M:
         """
         .. caution::
             未默认做深拷贝，可能导致非预期行为
@@ -1053,7 +1099,7 @@ class ComponentConfigData[D: ABCIndexedConfigData](BasicConfigData, ABCIndexedCo
                 return self._members[self._alias2filename[member]]
             raise
 
-    def _resolve_members[P: ABCPath, R: Any](
+    def _resolve_members[P: ABCPath[Any], R](
             self, path: P, order: list[str], processor: Callable[[P, D], R], exception: Exception
     ) -> R:
         """
@@ -1077,10 +1123,10 @@ class ComponentConfigData[D: ABCIndexedConfigData](BasicConfigData, ABCIndexedCo
         """
         if path and (path[0].meta is not None):
             try:
-                member = self._member(path[0].meta)
+                selected_member = self._member(path[0].meta)
             except KeyError:
                 raise exception from None
-            return processor(path, member)
+            return processor(path, selected_member)
 
         if not order:
             raise exception
@@ -1094,68 +1140,78 @@ class ComponentConfigData[D: ABCIndexedConfigData](BasicConfigData, ABCIndexedCo
                     error = err
                 if err.key_info.index > error.key_info.index:
                     error = err
-        raise error from None
+        raise cast(RequiredPathNotFoundError | ConfigDataTypeError, error) from None
 
-    def retrieve(self, path: str | ABCPath, *args, **kwargs) -> Any:
+    def retrieve(self, path: PathLike, *args: Any, **kwargs: Any) -> Any:
         path = _fmt_path(path)
 
-        def processor(pth: ABCPath, member: D) -> Any:
+        def processor(pth: ABCPath[Any], member: D) -> Any:
             return member.retrieve(pth, *args, **kwargs)
 
-        return self._resolve_members(
-            path,
-            order=self._meta.orders.read,
-            processor=processor,
-            exception=RequiredPathNotFoundError(
-                key_info=KeyInfo(path, path[0], 0),
-                operate=ConfigOperate.Read,
-            ),
+        return cast(
+            Self,
+            self._resolve_members(
+                path,
+                order=self._meta.orders.read,
+                processor=processor,
+                exception=RequiredPathNotFoundError(
+                    key_info=KeyInfo(path, path[0], 0),
+                    operate=ConfigOperate.Read,
+                ),
+            )
         )
 
     @_check_read_only
-    def modify(self, path: str | ABCPath, *args, **kwargs) -> Self:
+    def modify(self, path: PathLike, *args: Any, **kwargs: Any) -> Self:
         path = _fmt_path(path)
 
-        def processor(pth: ABCPath, member: D) -> Self:
+        def processor(pth: ABCPath[Any], member: D) -> ComponentConfigData[D, M]:
             member.modify(pth, *args, **kwargs)
             return self
 
-        return self._resolve_members(
-            path,
-            order=self._meta.orders.update,
-            processor=processor,
-            exception=RequiredPathNotFoundError(
-                key_info=KeyInfo(path, path[0], 0),
-                operate=ConfigOperate.Write,
-            ),
+        return cast(
+            Self,
+            self._resolve_members(
+                path,
+                order=self._meta.orders.update,
+                processor=processor,
+                exception=RequiredPathNotFoundError(
+                    key_info=KeyInfo(path, path[0], 0),
+                    operate=ConfigOperate.Write,
+                ),
+            )
         )
 
     @_check_read_only
-    def delete(self, path: str | ABCPath, *args, **kwargs) -> Self:
+    def delete(self, path: PathLike, *args: Any, **kwargs: Any) -> Self:
         path = _fmt_path(path)
 
-        def processor(pth: ABCPath, member: D) -> Self:
+        def processor(pth: ABCPath[Any], member: D) -> ComponentConfigData[D, M]:
             # noinspection PyArgumentList
             member.delete(pth, *args, **kwargs)
             return self
 
-        return self._resolve_members(
-            path,
-            order=self._meta.orders.delete,
-            processor=processor,
-            exception=RequiredPathNotFoundError(
-                key_info=KeyInfo(path, path[0], 0),
-                operate=ConfigOperate.Delete,
-            ),
+        return cast(
+            Self,
+            self._resolve_members(
+                path,
+                order=self._meta.orders.delete,
+                processor=processor,
+                exception=RequiredPathNotFoundError(
+                    key_info=KeyInfo(path, path[0], 0),
+                    operate=ConfigOperate.Delete,
+                ),
+            )
         )
 
     @_check_read_only
-    def unset(self, path: str | ABCPath, *args, **kwargs) -> Self:
+    def unset(self, path: PathLike, *args: Any, **kwargs: Any) -> Self:
         path = _fmt_path(path)
 
-        def processor(pth: ABCPath, member: D) -> Self:
+        def processor(pth: ABCPath[Any], member: D) -> ComponentConfigData[D, M]:
             # noinspection PyArgumentList
             member.delete(pth, *args, **kwargs)
+            return self
 
         with suppress(RequiredPathNotFoundError):
             self._resolve_members(
@@ -1169,12 +1225,12 @@ class ComponentConfigData[D: ABCIndexedConfigData](BasicConfigData, ABCIndexedCo
             )
         return self
 
-    def exists(self, path: str | ABCPath, *args, **kwargs) -> bool:
+    def exists(self, path: PathLike, *args: Any, **kwargs: Any) -> bool:
         if not self._meta.orders.read:
             return False
         path = _fmt_path(path)
 
-        def processor(pth: ABCPath, member: D) -> bool:
+        def processor(pth: ABCPath[Any], member: D) -> bool:
             return member.exists(pth, *args, **kwargs)
 
         with suppress(RequiredPathNotFoundError):  # 个别极端条件触发，例如\{不存在的成员\}\.key
@@ -1189,10 +1245,10 @@ class ComponentConfigData[D: ABCIndexedConfigData](BasicConfigData, ABCIndexedCo
             )
         return False
 
-    def get(self, path: str | ABCPath, default=None, *args, **kwargs) -> Any:
+    def get(self, path: PathLike, default: Any = None, *args: Any, **kwargs: Any) -> Any:
         path = _fmt_path(path)
 
-        def processor(pth: ABCPath, member: D) -> Any:
+        def processor(pth: ABCPath[Any], member: D) -> Any:
             return member.retrieve(pth, *args, **kwargs)
 
         with suppress(RequiredPathNotFoundError):
@@ -1208,10 +1264,10 @@ class ComponentConfigData[D: ABCIndexedConfigData](BasicConfigData, ABCIndexedCo
         return default
 
     @_check_read_only
-    def setdefault(self, path: str | ABCPath, default=None, *args, **kwargs) -> Any:
+    def setdefault(self, path: PathLike, default: Any = None, *args: Any, **kwargs: Any) -> Any:
         path = _fmt_path(path)
 
-        def _retrieve_processor(pth: ABCPath, member: D) -> Any:
+        def _retrieve_processor(pth: ABCPath[Any], member: D) -> Any:
             return member.retrieve(pth, *args, **kwargs)
 
         with suppress(RequiredPathNotFoundError):
@@ -1225,7 +1281,7 @@ class ComponentConfigData[D: ABCIndexedConfigData](BasicConfigData, ABCIndexedCo
                 ),
             )
 
-        def _modify_processor(pth: ABCPath, member: D) -> Any:
+        def _modify_processor(pth: ABCPath[Any], member: D) -> Any:
             member.modify(pth, default)
             return default
 
@@ -1239,7 +1295,7 @@ class ComponentConfigData[D: ABCIndexedConfigData](BasicConfigData, ABCIndexedCo
             ),
         )
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool | NotImplementedType:
         if not isinstance(other, type(self)):
             return NotImplemented
         return all((
@@ -1253,47 +1309,47 @@ class ComponentConfigData[D: ABCIndexedConfigData](BasicConfigData, ABCIndexedCo
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(meta={self._meta!r}, members={self._members!r})"
 
-    def __deepcopy__(self, memo) -> Self:
+    def __deepcopy__(self, memo: dict[str, Any]) -> Self:
         return self.from_data(self._meta, self._members)
 
     @override
-    def __contains__(self, key) -> bool:
+    def __contains__(self, key: Any) -> bool:
         return key in self._members
 
     @override
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         return iter(self._members)
 
     @override
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._members)
 
     @override
-    def __getitem__(self, key) -> D:
-        return self._members[key]
+    def __getitem__(self, index: Any) -> D:
+        return self._members[index]
 
     @override
     @_check_read_only
-    def __setitem__(self, key, value: D) -> None:
-        self._members[key] = value
+    def __setitem__(self, index: Any, value: D) -> None:
+        self._members[index] = value
 
     @override
     @_check_read_only
-    def __delitem__(self, key) -> None:
-        del self._members[key]
+    def __delitem__(self, index: Any) -> None:
+        del self._members[index]
 
 
 ConfigData.register(ComponentConfigData)
 
 
-class ConfigFile[D: Any](ABCConfigFile):
+class ConfigFile[D: ABCConfigData[Any]](ABCConfigFile[D]):
     """
     配置文件类
     """
 
     def __init__(
             self,
-            initial_config: D,
+            initial_config: D | Any,
             *,
             config_format: Optional[str] = None
     ) -> None:
@@ -1312,7 +1368,7 @@ class ConfigFile[D: Any](ABCConfigFile):
            重命名参数 ``config_data`` 为 ``initial_config``
         """
 
-        super().__init__(ConfigData(initial_config), config_format=config_format)
+        super().__init__(cast(D, ConfigData(initial_config)), config_format=config_format)
 
     @override
     def save(
@@ -1321,8 +1377,8 @@ class ConfigFile[D: Any](ABCConfigFile):
             namespace: str,
             file_name: str,
             config_format: str | None = None,
-            *processor_args,
-            **processor_kwargs
+            *processor_args: Any,
+            **processor_kwargs: Any
     ) -> None:
 
         if config_format is None:
@@ -1345,15 +1401,23 @@ class ConfigFile[D: Any](ABCConfigFile):
             namespace: str,
             file_name: str,
             config_format: str,
-            *processor_args,
-            **processor_kwargs
+            *processor_args: Any,
+            **processor_kwargs: Any,
     ) -> Self:
 
         if config_format not in processor_pool.SLProcessors:
             raise UnsupportedConfigFormatError(config_format)
 
-        return processor_pool.SLProcessors[config_format].load(processor_pool, processor_pool.root_path, namespace,
-                                                               file_name, *processor_args, **processor_kwargs)
+        return cast(
+            Self,
+            processor_pool.SLProcessors[config_format].load(
+                processor_pool,
+                processor_pool.root_path,
+                namespace,
+                file_name,
+                *processor_args,
+                **processor_kwargs),
+        )
 
     @classmethod
     @override
@@ -1363,16 +1427,23 @@ class ConfigFile[D: Any](ABCConfigFile):
             namespace: str,
             file_name: str,
             config_format: str,
-            *processor_args,
-            **processor_kwargs
+            *processor_args: Any,
+            **processor_kwargs: Any,
     ) -> Self:
 
         if config_format not in processor_pool.SLProcessors:
             raise UnsupportedConfigFormatError(config_format)
 
-        return processor_pool.SLProcessors[config_format].initialize(processor_pool, processor_pool.root_path,
-                                                                     namespace, file_name, *processor_args,
-                                                                     **processor_kwargs)
+        return cast(
+            Self,
+            processor_pool.SLProcessors[config_format].initialize(
+                processor_pool,
+                processor_pool.root_path,
+                namespace,
+                file_name,
+                *processor_args,
+                **processor_kwargs),
+        )
 
 
 class PHelper(ABCProcessorHelper): ...  # noqa: E701
@@ -1388,17 +1459,37 @@ class BasicConfigPool(ABCConfigPool, ABC):
        重命名 ``BaseConfigPool`` 为 ``BasicConfigPool``
     """
 
-    def __init__(self, root_path="./.config"):
+    def __init__(self, root_path: str = "./.config") -> None:
         super().__init__(root_path)
-        self._configs: dict[str, dict[str, ABCConfigFile]] = {}
+        self._configs: dict[str, dict[str, ABCConfigFile[Any]]] = {}
         self._helper = PHelper()
 
     @property
     def helper(self) -> ABCProcessorHelper:
         return self._helper
 
+    # noinspection PyMethodOverriding
+    @overload  # 咱也不知道为什么mypy只有这样检查会通过而pycharm会报错  # @formatter:off
+    def get(self, namespace: str) -> dict[str, ABCConfigFile[Any]] | None: ...
+
+    # noinspection PyMethodOverriding
+    @overload
+    def get(self, namespace: str, file_name: str) -> ABCConfigFile[Any] | None: ...
+
+    @overload
+    def get(
+            self,
+            namespace: str,
+            file_name: Optional[str] = None,
+    ) -> dict[str, ABCConfigFile[Any]] | ABCConfigFile[Any] | None: ...
+    # @formatter:on
+
     @override
-    def get(self, namespace: str, file_name: Optional[str] = None) -> dict[str, ABCConfigFile] | ABCConfigFile | None:
+    def get(
+            self,
+            namespace: str,
+            file_name: Optional[str] = None,
+    ) -> dict[str, ABCConfigFile[Any]] | ABCConfigFile[Any] | None:
         if namespace not in self._configs:
             return None
         result = self._configs[namespace]
@@ -1412,7 +1503,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
         return None
 
     @override
-    def set(self, namespace: str, file_name: str, config: ABCConfigFile) -> Self:
+    def set(self, namespace: str, file_name: str, config: ABCConfigFile[Any]) -> Self:
         if namespace not in self._configs:
             self._configs[namespace] = {}
 
@@ -1469,7 +1560,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
         if config_formats:
             result_formats.extend(config_formats)
 
-        def _check_file_name(match: str | Pattern) -> bool:
+        def _check_file_name(match: str | Pattern[str]) -> bool:
             if isinstance(match, str):
                 return file_name.endswith(match)
             return bool(match.fullmatch(file_name))  # 目前没SL处理器用得上 # pragma: no cover
@@ -1488,7 +1579,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
 
         return OrderedDict.fromkeys(result_formats)
 
-    def _test_all_sl[R: Any](
+    def _test_all_sl[R](
             self,
             namespace: str,
             file_name: str,
@@ -1531,11 +1622,11 @@ class BasicConfigPool(ABCConfigPool, ABC):
            将格式计算部分提取到单独的函数 :py:meth:`_calc_formats`
         """
 
-        def callback_wrapper(cfg_fmt: str):
+        def callback_wrapper(cfg_fmt: str) -> R:
             return processor(self, namespace, file_name, cfg_fmt)
 
         # 尝试从多个SL加载器中找到能正确加载的那一个
-        errors = {}
+        errors: dict[str, FailedProcessConfigFileError[Any] | UnsupportedConfigFormatError] = {}
         for config_format in self._calc_formats(file_name, config_formats, file_config_format):
             if config_format not in self.SLProcessors:
                 errors[config_format] = UnsupportedConfigFormatError(config_format)
@@ -1546,9 +1637,9 @@ class BasicConfigPool(ABCConfigPool, ABC):
             except FailedProcessConfigFileError as err:
                 errors[config_format] = err
 
-        for err in errors.values():
-            if isinstance(err, UnsupportedConfigFormatError):
-                raise err from None
+        for error in errors.values():
+            if isinstance(error, UnsupportedConfigFormatError):
+                raise error from None
 
         # 如果没有一个SL加载器能正确加载，则抛出异常
         raise FailedProcessConfigFileError(errors)
@@ -1559,23 +1650,23 @@ class BasicConfigPool(ABCConfigPool, ABC):
             namespace: str,
             file_name: str,
             config_formats: Optional[str | Iterable[str]] = None,
-            config: Optional[ABCConfigFile] = None,
-            *args, **kwargs
+            config: Optional[ABCConfigFile[Any]] = None,
+            *args: Any, **kwargs: Any,
     ) -> Self:
         if config is not None:
             self.set(namespace, file_name, config)
 
         file = self._configs[namespace][file_name]
 
-        def processor(pool: Self, ns: str, fn: str, cf: str):
+        def processor(pool: Self, ns: str, fn: str, cf: str) -> None:
             file.save(pool, ns, fn, cf, *args, **kwargs)
 
         self._test_all_sl(namespace, file_name, config_formats, processor, file_config_format=file.config_format)
         return self
 
     @override
-    def save_all(self, ignore_err: bool = False) -> None | dict[str, dict[str, tuple[ABCConfigFile, Exception]]]:
-        errors = {}
+    def save_all(self, ignore_err: bool = False) -> None | dict[str, dict[str, tuple[ABCConfigFile[Any], Exception]]]:
+        errors: dict[str, dict[str, tuple[ABCConfigFile[Any], Exception]]] = {}
         for namespace, configs in deepcopy(self._configs).items():
             errors[namespace] = {}
             for file_name, config in configs.items():
@@ -1596,12 +1687,12 @@ class BasicConfigPool(ABCConfigPool, ABC):
             self,
             namespace: str,
             file_name: str,
-            *args,
+            *args: Any,
             config_formats: Optional[str | Iterable[str]] = None,
-            **kwargs,
-    ) -> ABCConfigFile:
-        def processor(pool: Self, ns: str, fn: str, cf: str):
-            config_file_cls: type[ABCConfigFile] = self.SLProcessors[cf].supported_file_classes[0]
+            **kwargs: Any,
+    ) -> ABCConfigFile[Any]:
+        def processor(pool: Self, ns: str, fn: str, cf: str) -> ABCConfigFile[Any]:
+            config_file_cls: type[ABCConfigFile[Any]] = self.SLProcessors[cf].supported_file_classes[0]
             result = config_file_cls.initialize(pool, ns, fn, cf, *args, **kwargs)
 
             pool.set(namespace, file_name, result)
@@ -1614,11 +1705,11 @@ class BasicConfigPool(ABCConfigPool, ABC):
             self,
             namespace: str,
             file_name: str,
-            *args,
+            *args: Any,
             config_formats: Optional[str | Iterable[str]] = None,
             allow_initialize: bool = False,
-            **kwargs,
-    ) -> ABCConfigFile:
+            **kwargs: Any,
+    ) -> ABCConfigFile[Any]:
         """
         加载配置到指定命名空间并返回
 
@@ -1637,16 +1728,17 @@ class BasicConfigPool(ABCConfigPool, ABC):
         .. versionchanged:: 0.2.0
            现在会像 :py:meth:`save` 一样接收并传递额外参数
 
-           移除 ``config_file_cls`` 参数
+           删除参数 ``config_file_cls``
 
            重命名参数 ``allow_create`` 为 ``allow_initialize``
 
            现在由 :py:meth:`ABCConfigFile.initialize` 创建新的空 :py:class:`ABCConfigFile` 对象
         """
-        if (namespace, file_name) in self:
-            return self.get(namespace, file_name)
+        cache = self.get(namespace, file_name)
+        if cache is not None:
+            return cache
 
-        def processor(pool: Self, ns: str, fn: str, cf: str):
+        def processor(pool: Self, ns: str, fn: str, cf: str) -> ABCConfigFile[Any]:
             config_file_cls = self.SLProcessors[cf].supported_file_classes[0]
             try:
                 result = config_file_cls.load(pool, ns, fn, cf, *args, **kwargs)
@@ -1660,7 +1752,11 @@ class BasicConfigPool(ABCConfigPool, ABC):
 
         return self._test_all_sl(namespace, file_name, config_formats, processor)
 
-    def delete(self, namespace: str, file_name: str) -> Self:
+    def delete(self, namespace: str, file_name: Optional[str] = None) -> Self:
+        if file_name is None:
+            del self._configs[namespace]
+            return self
+
         del self._configs[namespace][file_name]
         if not self._configs[namespace]:
             del self._configs[namespace]
@@ -1671,14 +1767,14 @@ class BasicConfigPool(ABCConfigPool, ABC):
             self.delete(namespace, file_name)
         return self
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: str | tuple[str, str]) -> dict[str, ABCConfigFile[Any]] | ABCConfigFile[Any]:
         if isinstance(item, tuple):
             if len(item) != 2:
                 raise ValueError(f"item must be a tuple of length 2, got {item}")
-            return self[item[0]][item[1]]
+            return deepcopy(self.configs[item[0]][item[1]])
         return deepcopy(self.configs[item])
 
-    def __contains__(self, item):
+    def __contains__(self, item: Any) -> bool:
         """
         .. versionadded:: 0.1.2
         """
@@ -1692,17 +1788,17 @@ class BasicConfigPool(ABCConfigPool, ABC):
             raise ValueError(f"item must be a tuple of length 2, got {item}")
         return (item[0] in self._configs) and (item[1] in self._configs[item[0]])
 
-    def __len__(self):
+    def __len__(self) -> int:
         """
         配置文件总数
         """
         return sum(len(v) for v in self._configs.values())
 
     @property
-    def configs(self):
+    def configs(self) -> dict[str, dict[str, ABCConfigFile[Any]]]:
         return deepcopy(self._configs)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.configs!r})"
 
 

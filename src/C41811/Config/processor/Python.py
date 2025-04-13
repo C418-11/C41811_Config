@@ -6,12 +6,15 @@
 .. versionadded:: 0.2.0
 """
 
+from typing import Any
+from typing import cast
 from typing import override
 
 from .._protocols import SupportsReadAndReadline
 from .._protocols import SupportsWrite
 from ..abc import ABCConfigFile
 from ..base import ConfigFile
+from ..base import MappingConfigData
 from ..main import BasicLocalFileConfigSL
 
 
@@ -35,10 +38,10 @@ class PythonSL(BasicLocalFileConfigSL):
     @override
     def save_file(
             self,
-            config_file: ABCConfigFile,
+            config_file: ABCConfigFile[Any],
             target_file: SupportsWrite[str],
-            *merged_args,
-            **merged_kwargs
+            *merged_args: Any,
+            **merged_kwargs: Any
     ) -> None:
         with self.raises():
             raise NotImplementedError
@@ -47,14 +50,17 @@ class PythonSL(BasicLocalFileConfigSL):
     def load_file(
             self,
             source_file: SupportsReadAndReadline[str],
-            *merged_args,
-            **merged_kwargs
-    ) -> ConfigFile:
-        names = {}
+            *merged_args: Any,
+            **merged_kwargs: Any
+    ) -> ConfigFile[MappingConfigData[dict[str, Any]]]:
+        names: dict[str, Any] = {}
         with self.raises():
             exec(source_file.read(), {}, names)
 
-        return ConfigFile(names, config_format=self.processor_reg_name)
+        return cast(
+            ConfigFile[MappingConfigData[dict[str, Any]]],
+            ConfigFile(names, config_format=self.processor_reg_name)
+        )
 
 
 __all__ = (

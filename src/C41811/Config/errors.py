@@ -8,10 +8,13 @@ from collections.abc import Mapping
 from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any
 from typing import Optional
+from typing import Self
+from typing import cast
 
-from .abc import ABCKey
 from .abc import ABCPath
+from .abc import AnyKey
 
 
 @dataclass
@@ -33,7 +36,7 @@ class TokenInfo:
     """
 
     @property
-    def raw_string(self):
+    def raw_string(self) -> str:
         return ''.join(self.tokens)
 
 
@@ -42,12 +45,12 @@ class ConfigDataPathSyntaxException(Exception):
     配置数据检索路径语法错误
     """
 
-    def __init__(self, token_info: TokenInfo, msg: str = None):
+    def __init__(self, token_info: TokenInfo, msg: Optional[str] = None):
         """
         :param token_info: token相关信息
         :type token_info: TokenInfo
         :param msg: 错误信息
-        :type msg: str
+        :type msg: Optional[str]
 
         .. tip::
            错误信息获取优先级
@@ -61,7 +64,7 @@ class ConfigDataPathSyntaxException(Exception):
         if not (msg is None and hasattr(self, "msg")):
             self.msg = msg
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             f"{self.msg}"
             f"{self.token_info.raw_string} -> {self.token_info.current_token}"
@@ -72,7 +75,7 @@ class ConfigDataPathSyntaxException(Exception):
 class UnknownTokenTypeError(ConfigDataPathSyntaxException):
     # noinspection GrazieInspection
     """
-    未知的键类型
+    未知的标志类型
 
     .. versionchanged:: 0.1.3
        重命名 ``UnknownTokenType`` 为 ``UnknownTokenTypeError``
@@ -92,15 +95,15 @@ class ConfigOperate(Enum):
 
 
 @dataclass
-class KeyInfo:
+class KeyInfo[K: AnyKey]:
     """
     一段路径的相关信息 用于快速定位到指定键
     """
-    path: ABCPath
+    path: ABCPath[K]
     """
     当前完整路径
     """
-    current_key: ABCKey
+    current_key: K
     """
     当前键
     """
@@ -110,7 +113,7 @@ class KeyInfo:
     """
 
     @property
-    def relative_keys(self) -> list[ABCKey]:
+    def relative_keys(self) -> Iterable[K]:
         return self.path[:self.index]
 
 
@@ -124,7 +127,7 @@ class RequiredPathNotFoundError(LookupError):
 
     def __init__(
             self,
-            key_info: KeyInfo,
+            key_info: KeyInfo[Any],
             operate: ConfigOperate = ConfigOperate.Unknown,
     ):
         """
@@ -136,7 +139,7 @@ class RequiredPathNotFoundError(LookupError):
         self.key_info = key_info
         self.operate = ConfigOperate(operate)
 
-    def __str__(self):
+    def __str__(self) -> str:
         string = (
             f"{self.key_info.path.unparse()} -> {self.key_info.current_key.unparse()}"
             f" ({self.key_info.index + 1} / {len(self.key_info.path)})"
@@ -170,33 +173,36 @@ class ConfigDataTypeError(ValueError):
 
     def __init__(
             self,
-            key_info: KeyInfo,
-            required_type: tuple[type] | type,
-            now_type: type,
+            key_info: KeyInfo[Any],
+            required_type: tuple[type, ...] | type,
+            current_type: type,
     ):
         """
         :param key_info: 键相关信息
         :type key_info: KeyInfo
         :param required_type: 该键需求的数据类型
-        :type required_type: tuple[type] | type
-        :param now_type: 当前键的数据类型
-        :type now_type: type
+        :type required_type: tuple[type, ...] | type
+        :param current_type: 当前键的数据类型
+        :type current_type: type
 
         .. versionchanged:: 0.1.4
            ``required_type`` 支持传入多个需求的数据类型
+
+        .. versionchanged:: 0.2.0
+           重命名参数 ``now_type`` 为 ``current_type``
         """
         if isinstance(required_type, Sequence) and (len(required_type) == 1):
             required_type = required_type[0]
 
         self.key_info = key_info
         self.requited_type = required_type
-        self.now_type = now_type
+        self.current_type = current_type
 
         super().__init__(
             f"{self.key_info.path.unparse()} -> {self.key_info.current_key.unparse()}"
             f" ({self.key_info.index + 1} / {len(self.key_info.path)})"
             f" Must be '{self.requited_type}'"
-            f", Not '{self.now_type}'"
+            f", Not '{self.current_type}'"
         )
 
 
@@ -209,7 +215,7 @@ class UnknownErrorDuringValidateError(Exception):
        重命名 ``UnknownErrorDuringValidate`` 为 ``UnknownErrorDuringValidateError``
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """
         :param args: 未知错误信息
         :param kwargs: 未知错误信息
@@ -230,7 +236,7 @@ class UnsupportedConfigFormatError(Exception):
         super().__init__(f"Unsupported config format: {format_}")
         self.format = format_
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         return isinstance(other, UnsupportedConfigFormatError) and self.format == other.format
 
 
@@ -242,14 +248,14 @@ class FailedProcessConfigFileError[E: BaseException](BaseExceptionGroup, Excepti
        现在继承自BaseExceptionGroup
     """
 
-    reasons: tuple[E] | OrderedDict[str, E]
+    reasons: tuple[E, ...] | OrderedDict[str, E]
 
     @staticmethod
     def __new__(
             cls,
             reason: E | Iterable[E] | Mapping[str, E],
             msg: str = "Failed to process config file"
-    ):
+    ) -> Self:
         """
         :param reason: 处理配置文件失败的原因
         :type reason: BaseException | Iterable[BaseException] | Mapping[str, BaseException]
@@ -267,14 +273,14 @@ class FailedProcessConfigFileError[E: BaseException](BaseExceptionGroup, Excepti
                 *map(lambda _: f"{_[0]}: {_[1]}", reason.items())))
             exceptions = tuple(reason.values())
         elif isinstance(reason, Iterable):
-            reasons = tuple(reason)
+            reasons = tuple(cast(Iterable[E], reason))
             message = '\n'.join((
                 msg,
                 *map(str, reason))
             )
-            exceptions = tuple(reason)
+            exceptions = tuple(cast(Iterable[E], reason))
         else:
-            reason: E
+            reason: E  # type: ignore[no-redef]
             reasons = (reason,)
             message = f"{msg}: {reason}"
             exceptions = reasons

@@ -8,6 +8,7 @@
 
 import os
 from copy import deepcopy
+from typing import Any
 from typing import Literal
 from typing import Optional
 from typing import override
@@ -30,11 +31,11 @@ from ..utils import CellType
 from ..validators import ValidatorFactoryConfig
 
 
-class ComponentMetaParser[D: MappingConfigData, M: ComponentMeta](ABCMetaParser):
+class ComponentMetaParser[D: MappingConfigData[Any]](ABCMetaParser[D, ComponentMeta[D]]):
     """
     默认元信息解析器
     """
-    _validator = RequiredPath(
+    _validator: RequiredPath[dict[str, Any], D] = RequiredPath(
         {
             "members": list[str | ComponentMember],
             "order": list[str],
@@ -44,7 +45,7 @@ class ComponentMetaParser[D: MappingConfigData, M: ComponentMeta](ABCMetaParser)
     )
 
     @override
-    def convert_config2meta(self, meta_config: D) -> M:
+    def convert_config2meta(self, meta_config: D) -> ComponentMeta[D]:
         """
         解析元配置
 
@@ -84,7 +85,7 @@ class ComponentMetaParser[D: MappingConfigData, M: ComponentMeta](ABCMetaParser)
         return ComponentMeta(meta, orders, members, self)
 
     @override
-    def convert_meta2config(self, meta: M) -> D:
+    def convert_meta2config(self, meta: ComponentMeta[D]) -> D:
         """
         解析元数据
 
@@ -96,7 +97,7 @@ class ComponentMetaParser[D: MappingConfigData, M: ComponentMeta](ABCMetaParser)
         """
         return meta.config
 
-    def validator(self, meta: M, *args) -> M:
+    def validator(self, meta: ComponentMeta[D], *args: Any) -> ComponentMeta[D]:
         return self.convert_config2meta(meta.config)
 
 
@@ -110,13 +111,14 @@ class ComponentSL(BasicChainConfigSL):
             *,
             reg_alias: Optional[str] = None,
             create_dir: bool = True,
-            meta_parser: Optional[ABCMetaParser] = None
+            meta_parser: Optional[ABCMetaParser[Any, ComponentMeta[Any]]] = None
     ):
         super().__init__(reg_alias=reg_alias, create_dir=create_dir)
 
         if meta_parser is None:
             meta_parser = ComponentMetaParser()
-        self.meta_parser = meta_parser
+
+        self.meta_parser: ABCMetaParser[Any, ComponentMeta[Any]] = meta_parser
 
     @property
     @override
@@ -140,10 +142,10 @@ class ComponentSL(BasicChainConfigSL):
     def save_file(
             self,
             config_pool: ABCConfigPool,
-            config_file: ABCConfigFile[ComponentConfigData],
+            config_file: ABCConfigFile[ComponentConfigData[Any, Any]],
             namespace: str,
             file_name: str,
-            *args, **kwargs
+            *args: Any, **kwargs: Any,
     ) -> None:
         config_data = config_file.config
         if isinstance(config_data, NoneConfigData):
@@ -172,9 +174,9 @@ class ComponentSL(BasicChainConfigSL):
             config_pool: ABCConfigPool,
             namespace: str,
             file_name: str,
-            *args,
-            **kwargs
-    ) -> ConfigFile[ComponentConfigData]:
+            *args: Any,
+            **kwargs: Any
+    ) -> ConfigFile[ComponentConfigData[Any, Any]]:
         file_name, file_ext = os.path.splitext(file_name)
 
         initial_file = super().load_file(
@@ -204,9 +206,9 @@ class ComponentSL(BasicChainConfigSL):
             root_path: str,
             namespace: str,
             file_name: str,
-            *args,
-            **kwargs
-    ) -> ABCConfigFile:
+            *args: Any,
+            **kwargs: Any,
+    ) -> ConfigFile[ComponentConfigData[Any, Any]]:
         return ConfigFile(ComponentConfigData(ComponentMeta(parser=self.meta_parser)), config_format=self.reg_name)
 
 

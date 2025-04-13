@@ -2,6 +2,7 @@
 # cython: language_level = 3
 
 
+from typing import Any
 from typing import override
 
 from .._protocols import SupportsReadAndReadline
@@ -37,10 +38,10 @@ class PyYamlSL(BasicLocalFileConfigSL):
     @override
     def save_file(
             self,
-            config_file: ABCConfigFile,
+            config_file: ABCConfigFile[Any],
             target_file: SupportsWrite[str],
-            *merged_args,
-            **merged_kwargs
+            *merged_args: Any,
+            **merged_kwargs: Any
     ) -> None:
         with self.raises():
             yaml.safe_dump(config_file.config.data, target_file, *merged_args, **merged_kwargs)
@@ -49,9 +50,9 @@ class PyYamlSL(BasicLocalFileConfigSL):
     def load_file(
             self,
             source_file: SupportsReadAndReadline[str],
-            *merged_args,
-            **merged_kwargs
-    ) -> ConfigFile:
+            *merged_args: Any,
+            **merged_kwargs: Any
+    ) -> ConfigFile[Any]:
         with self.raises():
             data = yaml.safe_load(source_file)
 

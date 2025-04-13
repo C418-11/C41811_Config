@@ -4,6 +4,7 @@
 
 import pprint
 from ast import literal_eval
+from typing import Any
 from typing import override
 
 from .._protocols import SupportsReadAndReadline
@@ -33,10 +34,10 @@ class PythonLiteralSL(BasicLocalFileConfigSL):
     @override
     def save_file(
             self,
-            config_file: ABCConfigFile,
+            config_file: ABCConfigFile[Any],
             target_file: SupportsWrite[str],
-            *merged_args,
-            **merged_kwargs
+            *merged_args: Any,
+            **merged_kwargs: Any
     ) -> None:
         with self.raises():
             target_file.write(pprint.pformat(config_file.config.data, *merged_args, **merged_kwargs))
@@ -45,9 +46,9 @@ class PythonLiteralSL(BasicLocalFileConfigSL):
     def load_file(
             self,
             source_file: SupportsReadAndReadline[str],
-            *merged_args,
-            **merged_kwargs
-    ) -> ConfigFile:
+            *merged_args: Any,
+            **merged_kwargs: Any
+    ) -> ConfigFile[Any]:
         with self.raises():
             data = literal_eval(source_file.read())
 

@@ -2,8 +2,13 @@
 # cython: language_level = 3
 
 
+from collections.abc import Mapping
+from collections.abc import MutableMapping
+from typing import Any
+from typing import cast
 from typing import override
 
+from .. import MappingConfigData
 from .._protocols import SupportsReadAndReadline
 from .._protocols import SupportsWrite
 from ..abc import ABCConfigFile
@@ -37,10 +42,10 @@ class TomlSL(BasicLocalFileConfigSL):
     @override
     def save_file(
             self,
-            config_file: ABCConfigFile,
+            config_file: ABCConfigFile[MappingConfigData[Mapping[str, Any]]],
             target_file: SupportsWrite[str],
-            *merged_args,
-            **merged_kwargs
+            *merged_args: Any,
+            **merged_kwargs: Any,
     ) -> None:
         with self.raises():
             toml.dump(config_file.config.data, target_file)
@@ -49,13 +54,16 @@ class TomlSL(BasicLocalFileConfigSL):
     def load_file(
             self,
             source_file: SupportsReadAndReadline[str],
-            *merged_args,
-            **merged_kwargs
-    ) -> ConfigFile:
+            *merged_args: Any,
+            **merged_kwargs: Any,
+    ) -> ConfigFile[MappingConfigData[MutableMapping[str, Any]]]:
         with self.raises():
             data = toml.load(source_file)
 
-        return ConfigFile(data, config_format=self.processor_reg_name)
+        return cast(
+            ConfigFile[MappingConfigData[MutableMapping[str, Any]]],
+            ConfigFile(data, config_format=self.processor_reg_name)
+        )
 
 
 __all__ = (

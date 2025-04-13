@@ -7,11 +7,20 @@ import math
 import operator
 from collections import OrderedDict
 from collections.abc import Callable
+from collections.abc import Generator
+from collections.abc import Iterable
+from collections.abc import Mapping
+from collections.abc import Sequence
 from contextlib import suppress
 from copy import deepcopy
+from numbers import Number
+from pathlib import Path as FPath
 from typing import Any
+from typing import ClassVar
 from typing import Optional
+from typing import cast
 
+from pyrsistent import PMap
 from pyrsistent import pmap
 from pytest import fixture
 from pytest import mark
@@ -29,31 +38,39 @@ from C41811.Config import MappingConfigData
 from C41811.Config import NoneConfigData
 from C41811.Config import NumberConfigData
 from C41811.Config import ObjectConfigData
-from C41811.Config import Path
+from C41811.Config import Path as DPath
 from C41811.Config import SequenceConfigData
 from C41811.Config import StringConfigData
+from C41811.Config.abc import ABCIndexedConfigData
 from C41811.Config.errors import ConfigDataReadOnlyError
 from C41811.Config.errors import ConfigDataTypeError
 from C41811.Config.errors import RequiredPathNotFoundError
 from C41811.Config.errors import UnsupportedConfigFormatError
 from C41811.Config.processor.Component import ComponentMetaParser
 from C41811.Config.utils import Unset
+from utils import EE
 from utils import safe_raises
 
 
-def test_none_config_data():
+def test_none_config_data() -> None:
     assert not NoneConfigData()
 
     with raises(ValueError):
         # noinspection PyTypeChecker
-        NoneConfigData(NotImplemented)
+        NoneConfigData(NotImplemented)  # type: ignore[arg-type]
+
+
+type OD = OrderedDict[str, Any]
+type ROD = PMap[str, Any]
+type M_MCD = MappingConfigData[Mapping[Any, Any]]
+type R_MCD = MappingConfigData[ROD]
 
 
 class TestMappingConfigData:
 
     @staticmethod
     @fixture
-    def odict():
+    def odict() -> OD:
         return OrderedDict((
             ("foo", OrderedDict((
                 ("bar", 123),
@@ -74,35 +91,35 @@ class TestMappingConfigData:
 
     @staticmethod
     @fixture
-    def data(odict) -> MappingConfigData:
-        return ConfigData(odict)
+    def data(odict: OD) -> M_MCD:
+        return MappingConfigData(odict)
 
     @staticmethod
     @fixture
-    def readonly_odict(odict):
+    def readonly_odict(odict: OD) -> ROD:
         return pmap(odict)
 
     @staticmethod
     @fixture
-    def readonly_data(readonly_odict) -> MappingConfigData:
-        return ConfigData(readonly_odict)
+    def readonly_data(readonly_odict: ROD) -> R_MCD:
+        return MappingConfigData(readonly_odict)
 
     # noinspection PyTestUnpassedFixture
     @staticmethod
-    def test_init(odict, readonly_odict):
-        data = ConfigData(odict)
+    def test_init(odict: OD, readonly_odict: ROD) -> None:
+        data = MappingConfigData(odict)
         assert data.data is not odict
         assert data.data == odict
 
         assert MappingConfigData().data == dict()
 
-        readonly_data = ConfigData(readonly_odict)
+        readonly_data = MappingConfigData(readonly_odict)
         assert readonly_data.data is not readonly_odict
         assert readonly_data.data == readonly_odict
 
-    RetrieveTests = (
+    RetrieveTests: tuple[str, tuple[tuple[str, Any, EE, dict[str, Any]], ...]] = (
         "path,          value,                    ignore_excs,                  kwargs", (  # @formatter:off # noqa: E122, E501
-        ("foo",         ConfigData({"bar": 123}), (),                           {}),  # noqa: E122
+        ("foo",         MappingConfigData({"bar": 123}), (),                           {}),  # noqa: E122
         ("foo",         {"bar": 123},             (),                           {"return_raw_value": True}),  # noqa: E122, E501
         ("foo\\.bar",   123,                      (),                           {}),  # noqa: E122
         ("foo1",        114,                      (),                           {}),  # noqa: E122
@@ -117,14 +134,14 @@ class TestMappingConfigData:
 
     @staticmethod
     @mark.parametrize(*RetrieveTests)
-    def test_retrieve(data: MappingConfigData, path, value, ignore_excs, kwargs):
+    def test_retrieve(data: M_MCD, path: str, value: Any, ignore_excs: EE, kwargs: dict[str, Any]) -> None:
         if kwargs is None:
             kwargs = {}
 
         with safe_raises(ignore_excs):
             assert data.retrieve(path, **kwargs) == value
 
-    ModifyTests = (
+    ModifyTests: tuple[str, tuple[tuple[str, Any, EE, dict[str, Any]], ...]] = (
         "path,         value,        ignore_excs,                  kwargs", (  # @formatter:off # noqa: E122
         ("foo",        {"bar": 456}, (),                           {}),  # noqa: E122
         ("foo\\.bar",  123,          (),                           {}),  # noqa: E122
@@ -137,7 +154,7 @@ class TestMappingConfigData:
 
     @staticmethod
     @mark.parametrize(*ModifyTests)
-    def test_modify(data: MappingConfigData, path, value, ignore_excs, kwargs):
+    def test_modify(data: M_MCD, path: str, value: Any, ignore_excs: EE, kwargs: dict[str, Any]) -> None:
         if kwargs is None:
             kwargs = {}
 
@@ -147,7 +164,7 @@ class TestMappingConfigData:
             return
         assert data.retrieve(path, return_raw_value=True) == value
 
-    DeleteTests = (
+    DeleteTests: tuple[str, tuple[tuple[str, EE], ...]] = (
         "path,           ignore_excs", (  # @formatter:off # noqa: E122
         ("foo\\.bar",    ()),  # noqa: E122
         ("foo1",         ()),  # noqa: E122
@@ -164,20 +181,25 @@ class TestMappingConfigData:
 
     @staticmethod
     @mark.parametrize(*DeleteTests)
-    def test_delete(data: MappingConfigData, path, ignore_excs):
+    def test_delete(data: M_MCD, path: str, ignore_excs: EE) -> None:
         with safe_raises(ignore_excs):
             data.delete(path)
         assert path not in data
 
     @staticmethod
     @mark.parametrize(*DeleteTests)
-    def test_unset(data: MappingConfigData, path, ignore_excs):
+    def test_unset(data: M_MCD, path: str, ignore_excs: EE) -> None:
+        if ignore_excs is None:
+            ignore_excs = ()
+        elif not isinstance(ignore_excs, Iterable):
+            ignore_excs = (ignore_excs,)
+
         ignore_excs = tuple(exc for exc in ignore_excs if not issubclass(exc, RequiredPathNotFoundError))
         with safe_raises(ignore_excs):
             data.unset(path)
         assert path not in data
 
-    ExistsTests = (
+    ExistsTests: tuple[str, tuple[tuple[str, bool | None, EE, dict[str, Any]], ...]] = (
         "path,              is_exist, ignore_excs,            kwargs", (  # @formatter:off # noqa: E122
         ("foo",             True,     (),                     {}),  # noqa: E122
         ("foo\\.bar",       True,     (),                     {}),  # noqa: E122
@@ -197,11 +219,11 @@ class TestMappingConfigData:
 
     @staticmethod
     @mark.parametrize(*ExistsTests)
-    def test_exists(data, path, is_exist, ignore_excs, kwargs):
+    def test_exists(data: M_MCD, path: str, is_exist: bool, ignore_excs: EE, kwargs: dict[str, Any]) -> None:
         with safe_raises(ignore_excs):
             assert data.exists(path, **kwargs) is is_exist
 
-    GetTests = (
+    GetTests: tuple[str, tuple[tuple[str, Any, EE, dict[str, Any]], ...]] = (
         RetrieveTests[0],
         (
             *RetrieveTests[1],  # @formatter:off
@@ -214,7 +236,12 @@ class TestMappingConfigData:
 
     @staticmethod
     @mark.parametrize(*GetTests)
-    def test_get(data, path, value, ignore_excs, kwargs):
+    def test_get(data: M_MCD, path: str, value: Any, ignore_excs: EE, kwargs: dict[str, Any]) -> None:
+        if ignore_excs is None:
+            ignore_excs = ()
+        elif not isinstance(ignore_excs, Iterable):
+            ignore_excs = (ignore_excs,)
+
         if kwargs is None:
             kwargs = {}
 
@@ -225,7 +252,7 @@ class TestMappingConfigData:
         with safe_raises(ignore_excs):
             assert data.get(path, **kwargs) == value
 
-    SetDefaultTests = (
+    SetDefaultTests: tuple[str, tuple[tuple[str, Any, EE, dict[str, Any]], ...]] = (
         RetrieveTests[0],
         (
             *((*x[:3], x[3] | {"return_raw_value": True}) for x in RetrieveTests[1]),  # @formatter:off
@@ -238,8 +265,13 @@ class TestMappingConfigData:
 
     @staticmethod
     @mark.parametrize(*GetTests)
-    def test_set_default(data, path, value, ignore_excs, kwargs):
-        has_index_key = any(isinstance(k, IndexKey) for k in Path.from_str(path))
+    def test_set_default(data: M_MCD, path: str, value: Any, ignore_excs: EE, kwargs: dict[str, Any]) -> None:
+        if ignore_excs is None:
+            ignore_excs = ()
+        elif not isinstance(ignore_excs, Iterable):
+            ignore_excs = (ignore_excs,)
+
+        has_index_key = any(isinstance(k, IndexKey) for k in DPath.from_str(path))
         ignore_config_data_type_error = any(issubclass(exc, ConfigDataTypeError) for exc in ignore_excs)
 
         if has_index_key and (not data.exists(path, ignore_wrong_type=ignore_config_data_type_error)):
@@ -262,19 +294,19 @@ class TestMappingConfigData:
 
     GetItemTests = (
         "path, value", (
-            ("foo", ConfigData({"bar": 123}),),
+            ("foo", MappingConfigData({"bar": 123}),),
             ("foo1", 114,),
-            ("foo2", ConfigData(["bar"]),),
+            ("foo2", SequenceConfigData(["bar"]),),
         ))
 
     @staticmethod
     @mark.parametrize(*GetItemTests)
-    def test_getitem(data, path, value):
+    def test_getitem(data: M_MCD, path: str, value: Any) -> None:
         assert data[path] == value
 
     @staticmethod
     @mark.parametrize(*GetItemTests)
-    def test_getattr(data, path, value):
+    def test_getattr(data: M_MCD, path: str, value: Any) -> None:
         assert getattr(data, path) == value
 
     @staticmethod
@@ -284,10 +316,13 @@ class TestMappingConfigData:
             ("foo3", 789),
             ("foo4.bar", 101112),
     ))
-    def test_setitem(data, path, new_value):
+    def test_setitem(data: M_MCD, path: str, new_value: Any) -> None:
         data[path] = new_value
         assert path in data
-        assert data[path].data == new_value if isinstance(data[path], ConfigData) else data[path] == new_value
+        assert (
+            cast(MappingConfigData[Any], data[path]).data == new_value
+            if isinstance(data[path], ConfigData) else data[path] == new_value
+        )
 
     @staticmethod
     @mark.parametrize("path, ignore_excs", (
@@ -297,7 +332,7 @@ class TestMappingConfigData:
             ("foo2\\.bar", (KeyError,)),
             ("foo3", (KeyError,)),
     ))
-    def test_delitem(data, path, ignore_excs):
+    def test_delitem(data: M_MCD, path: str, ignore_excs: EE) -> None:
         with safe_raises(ignore_excs):
             del data[path]
         assert path not in data
@@ -312,10 +347,10 @@ class TestMappingConfigData:
             ("foo2\\.bar", False),
             ("foo3", False),
     ))
-    def test_contains(data, path, is_exist):
+    def test_contains(data: M_MCD, path: str, is_exist: bool) -> None:
         assert (path in data) == is_exist
 
-    IterTests = ("raw_dict", (
+    IterTests: tuple[str, tuple[dict[str, Any], ...]] = ("raw_dict", (
         {},
         {"foo": "bar"},
         {"foo": "bar", "foo\\.bar": "bar"},
@@ -325,29 +360,29 @@ class TestMappingConfigData:
 
     @staticmethod
     @mark.parametrize(*IterTests)
-    def test_iter(raw_dict):
-        assert list(iter(ConfigData(raw_dict))) == list(iter(raw_dict))
+    def test_iter(raw_dict: OD) -> None:
+        assert list(iter(MappingConfigData(raw_dict))) == list(iter(raw_dict))
 
     @staticmethod
     @mark.parametrize(*IterTests)
-    def test_str(raw_dict):
-        assert str(ConfigData(raw_dict)) == str(raw_dict)
+    def test_str(raw_dict: OD) -> None:
+        assert str(MappingConfigData(raw_dict)) == str(raw_dict)
 
     @staticmethod
-    def test_data_readonly_attr(data, readonly_data):
+    def test_data_readonly_attr(data: M_MCD, readonly_data: R_MCD) -> None:
         assert readonly_data.data_read_only
         assert not data.data_read_only
 
         with raises(AttributeError):
             # noinspection PyPropertyAccess
-            data.data_read_only = None
+            data.data_read_only = None  # type: ignore[misc, assignment]
 
         with raises(AttributeError):
             # noinspection PyPropertyAccess
-            readonly_data.data_read_only = None
+            readonly_data.data_read_only = None  # type: ignore[misc, assignment]
 
     @staticmethod
-    def test_readonly_attr(data, readonly_data):
+    def test_readonly_attr(data: M_MCD, readonly_data: R_MCD) -> None:
         assert readonly_data.read_only
         with raises(ConfigDataReadOnlyError):
             readonly_data.read_only = False
@@ -359,7 +394,7 @@ class TestMappingConfigData:
             data.modify("new_key", 123)
 
     @staticmethod
-    def test_data_attr(data):
+    def test_data_attr(data: M_MCD) -> None:
         last_data = data.data
         data["foo.bar"] = 456
         assert last_data != data.data
@@ -370,36 +405,45 @@ class TestMappingConfigData:
 
     @classmethod
     @mark.parametrize(*RetrieveTests)
-    def test_readonly_retrieve(cls, readonly_data, path, value, ignore_excs, kwargs):
-        cls.test_retrieve(readonly_data, path, value, ignore_excs, kwargs)
+    def test_readonly_retrieve(
+            cls,
+            readonly_data: R_MCD,
+            path: str,
+            value: Any,
+            ignore_excs: EE,
+            kwargs: dict[str, Any],
+    ) -> None:
+        cls.test_retrieve(cast(M_MCD, readonly_data), path, value, ignore_excs, kwargs)
 
-    ReadOnlyModifyTests = (
+    ReadOnlyModifyTests: tuple[str, Generator[tuple[str, Any, dict[str, Any]], Any, None]] = (
+        # 从中剔除ignore_excs参数
         ','.join(arg for arg in ModifyTests[0].split(',') if "ignore_excs" not in arg),
         ((*x[:-2], x[-1]) for x in ModifyTests[1])
     )
 
     @classmethod
     @mark.parametrize(*ReadOnlyModifyTests)
-    def test_readonly_modify(cls, readonly_data, path, value, kwargs):
-        cls.test_modify(readonly_data, path, value, ConfigDataReadOnlyError, kwargs)
+    def test_readonly_modify(cls, readonly_data: R_MCD, path: str, value: Any, kwargs: dict[str, Any]) -> None:
+        cls.test_modify(cast(M_MCD, readonly_data), path, value, ConfigDataReadOnlyError, kwargs)
 
-    ReadOnlyDeleteTests = (
+    ReadOnlyDeleteTests: tuple[str, tuple[tuple[str], ...]] = (
+        # 从中剔除ignore_excs参数
         ', '.join(arg for arg in DeleteTests[0].split(', ') if "ignore_excs" not in arg),
         tuple(x[:-1] for x in DeleteTests[1])
     )
 
     @classmethod
     @mark.parametrize(*ReadOnlyDeleteTests)
-    def test_readonly_delete(cls, readonly_data, path):
-        cls.test_delete(readonly_data, path, ConfigDataReadOnlyError)
+    def test_readonly_delete(cls, readonly_data: R_MCD, path: str) -> None:
+        cls.test_delete(cast(M_MCD, readonly_data), path, ConfigDataReadOnlyError)
 
     @classmethod
     @mark.parametrize(*ReadOnlyDeleteTests)
-    def test_readonly_unset(cls, readonly_data, path):
-        cls.test_unset(readonly_data, path, (ConfigDataReadOnlyError,))
+    def test_readonly_unset(cls, readonly_data: R_MCD, path: str) -> None:
+        cls.test_unset(cast(M_MCD, readonly_data), path, (ConfigDataReadOnlyError,))
 
     @staticmethod
-    def test_eq(data, readonly_data):
+    def test_eq(data: M_MCD, readonly_data: R_MCD) -> None:
         assert data == data
         assert data == deepcopy(data)
         assert readonly_data == readonly_data
@@ -407,12 +451,12 @@ class TestMappingConfigData:
         assert data == readonly_data
 
     @staticmethod
-    def test_deepcopy(data):
+    def test_deepcopy(data: M_MCD) -> None:
         last_data = deepcopy(data)
         data["foo.bar"] = 456
         assert last_data != data
 
-    KeysTests = ("kwargs, keys", (
+    KeysTests: tuple[str, tuple[tuple[dict[Any, Any], set[str]], ...]] = ("kwargs, keys", (
         ({}, {'a', "foo", "foo1", "foo2", r"\\.\[\]"}),
         ({"recursive": True}, {
             r"a\.c\.e\.f", r"a\.c", 'a', r"a\.c\.d", r"foo\.bar",
@@ -426,18 +470,18 @@ class TestMappingConfigData:
 
     @staticmethod
     @mark.parametrize(*KeysTests)
-    def test_keys(data, kwargs, keys):
+    def test_keys(data: M_MCD, kwargs: dict[str, Any], keys: set[str]) -> None:
         assert set(data.keys(**kwargs)) == keys
 
-    ValuesTests = (
+    ValuesTests: tuple[str, tuple[tuple[dict[Any, Any], list[Any]], ...]] = (
         "kwargs, values",
         (
             ({},
              [
-                 ConfigData({"bar": 123}),
+                 MappingConfigData({"bar": 123}),
                  114,
                  ["bar"],
-                 ConfigData({'b': 1, 'c': {'d': 2, 'e': {'f': 3}}}),
+                 MappingConfigData({'b': 1, 'c': {'d': 2, 'e': {'f': 3}}}),
                  None,
              ]),
             ({"return_raw_value": True}, [{"bar": 123}, 114, ["bar"], {'b': 1, 'c': {'d': 2, 'e': {'f': 3}}}, None]),
@@ -446,15 +490,15 @@ class TestMappingConfigData:
 
     @staticmethod
     @mark.parametrize(*ValuesTests)
-    def test_values(data, kwargs, values):
+    def test_values(data: M_MCD, kwargs: dict[str, Any], values: Any) -> None:
         assert list(data.values(**kwargs)) == values
 
-    ItemsTests = ("kwargs, items", (
+    ItemsTests: tuple[str, tuple[tuple[dict[Any, Any], list[tuple[Any, Any]]], ...]] = ("kwargs, items", (
         ({}, [
-            ("foo", ConfigData({"bar": 123})),
+            ("foo", MappingConfigData({"bar": 123})),
             ("foo1", 114),
             ("foo2", ["bar"]),
-            ("a", ConfigData({'b': 1, 'c': {'d': 2, 'e': {'f': 3}}})),
+            ("a", MappingConfigData({'b': 1, 'c': {'d': 2, 'e': {'f': 3}}})),
             (r"\\.\[\]", None),
         ]),
         ({"return_raw_value": True}, [
@@ -468,7 +512,7 @@ class TestMappingConfigData:
 
     @staticmethod
     @mark.parametrize(*ItemsTests)
-    def test_items(data, kwargs, items):
+    def test_items(data: M_MCD, kwargs: dict[str, Any], items: list[tuple[str, Any]]) -> None:
         assert list(data.items(**kwargs)) == items
 
     @staticmethod
@@ -476,8 +520,8 @@ class TestMappingConfigData:
             {123: {"abc", "zzz"}},
             {"key": "value"},
     ))
-    def test_clear(data):
-        data = ConfigData(data)
+    def test_clear(data: dict[Any, Any]) -> None:
+        data = MappingConfigData(data)
         data.clear()
         assert not data
 
@@ -486,8 +530,8 @@ class TestMappingConfigData:
             {"a": 1, "b": 2},
             {"a": 1, "b": 2, "c": 3},
     ))
-    def test_popitem(data):
-        data = ConfigData(data)
+    def test_popitem(data: dict[Any, Any]) -> None:
+        data = MappingConfigData(data)
         items = data.items()
         popped = data.popitem()
         assert popped in items
@@ -499,8 +543,8 @@ class TestMappingConfigData:
             ({"a": 1, "b": 2}, "b", 2, ()),
             ({"a": 1}, "b", Unset, (RequiredPathNotFoundError,)),
     ))
-    def test_pop(dct, key, result, ignore_excs):
-        data = ConfigData(dct)
+    def test_pop(dct: dict[Any, Any], key: str, result: Any, ignore_excs: EE) -> None:
+        data = MappingConfigData(dct)
         with safe_raises(ignore_excs) as info:
             assert data.pop(key) == result
         if info:
@@ -514,8 +558,8 @@ class TestMappingConfigData:
             ({"a": 1}, "b", 2, 2, ()),
             ({"a": 1}, "c", 5, 5, ()),
     ))
-    def test_pop_default(dct, key, default, result, ignore_excs):
-        data = ConfigData(dct)
+    def test_pop_default(dct: dict[str, Any], key: str, default: Any, result: Any, ignore_excs: EE) -> None:
+        data = MappingConfigData(dct)
         with safe_raises(ignore_excs) as info:
             assert data.pop(key, default) == result
         if info:
@@ -528,21 +572,21 @@ class TestMappingConfigData:
             ({"a": 1}, {"b": 2}, {"a": 1, "b": 2}),
             ({"a": 1, "d": 4}, {"a": 2, "b": 3}, {"a": 2, "b": 3, "d": 4}),
     ))
-    def test_update(data, mapping, result):
-        data = ConfigData(data)
+    def test_update(data: dict[str, Any], mapping: Mapping[str, Any], result: Any) -> None:
+        data = MappingConfigData(data)
         data.update(mapping)
-        assert data == ConfigData(result)
+        assert data == MappingConfigData(result)
 
     @staticmethod
-    def test_repr(data):
+    def test_repr(data: M_MCD) -> None:
         assert repr(data.data) in repr(data)
-        assert repr({"a": 1, "b": 2}) in repr(ConfigData({"a": 1, "b": 2}))
+        assert repr({"a": 1, "b": 2}) in repr(MappingConfigData({"a": 1, "b": 2}))
 
     @staticmethod
-    def test_format():
-        assert repr(ConfigData({"a": 1, "b": 2})) == format(ConfigData({"a": 1, "b": 2}), 'r')
+    def test_format() -> None:
+        assert repr(MappingConfigData({"a": 1, "b": 2})) == format(MappingConfigData({"a": 1, "b": 2}), 'r')
         with raises(TypeError):
-            format(ConfigData({"a": 1, "b": 2}), 'not exists')
+            format(MappingConfigData({"a": 1, "b": 2}), 'not exists')
 
     MergeTests = (
         ({"a": 1, "b": 2}, {"a": -1, "b": 3}),
@@ -551,10 +595,15 @@ class TestMappingConfigData:
     )
 
 
+type SCD = SequenceConfigData[Sequence[Any]]
+# noinspection SpellCheckingInspection
+type RSCD = SequenceConfigData[tuple[Any, ...]]
+
+
 class TestSequenceConfigData:
     @staticmethod
     @fixture
-    def sequence() -> list:
+    def sequence() -> list[Any]:
         return [
             1,
             2,
@@ -570,40 +619,40 @@ class TestSequenceConfigData:
 
     @staticmethod
     @fixture
-    def readonly_sequence(sequence) -> tuple:
+    def readonly_sequence(sequence: list[Any]) -> tuple[Any, ...]:
         return tuple(sequence)
 
     @staticmethod
     @fixture
-    def data(sequence) -> SequenceConfigData[list]:
-        return ConfigData(sequence)
+    def data(sequence: list[Any]) -> SCD:
+        return SequenceConfigData(sequence)
 
     @staticmethod
     @fixture
-    def readonly_data(readonly_sequence) -> SequenceConfigData[tuple]:
-        return ConfigData(readonly_sequence)
+    def readonly_data(readonly_sequence: tuple[Any, ...]) -> RSCD:
+        return SequenceConfigData(readonly_sequence)
 
     # noinspection PyTestUnpassedFixture
     @staticmethod
-    def test_init(sequence, readonly_sequence):
-        data = ConfigData(sequence)
+    def test_init(sequence: SCD, readonly_sequence: RSCD) -> None:
+        data = SequenceConfigData(sequence)
         assert data.data is not sequence
         assert data.data == sequence
 
         assert SequenceConfigData().data == list()
 
-        readonly_data = ConfigData(readonly_sequence)
+        readonly_data = SequenceConfigData(readonly_sequence)
         assert readonly_data.data is not readonly_sequence
         assert readonly_data.data == readonly_sequence
 
-    RetrieveTests = (
+    RetrieveTests: tuple[str, tuple[tuple[str, Any, EE, dict[str, Any]], ...]] = (
         "path,           value,                        ignore_excs,                  kwargs", (  # @formatter:off # noqa: E122, E501
         (r"\[0\]",       1,                            (),                           {}),  # noqa: E122
         (r"\[0\]",       1,                            (),                           {"return_raw_value": True}),  # noqa: E122, E501
         (r"\[1\]",       2,                            (),                           {}),  # noqa: E122
-        (r"\[2\]\.a",    ConfigData([3, 4]),           (),                           {}),  # noqa: E122
+        (r"\[2\]\.a",    SequenceConfigData([3, 4]),           (),                           {}),  # noqa: E122
         (r"\[2\]\.a",    [3, 4],                       (),                           {"return_raw_value": True}),  # noqa: E122, E501
-        (r"\[2\]\.b",    ConfigData({"c": 5, "d": 6}), (),                           {}),  # noqa: E122
+        (r"\[2\]\.b",    MappingConfigData({"c": 5, "d": 6}), (),                           {}),  # noqa: E122
         (r"\[2\]\.b",    pmap({"c": 5, "d": 6}),       (),                           {"return_raw_value": True}),  # noqa: E122, E501
         (r"\[2\]\.b\.c", 5,                            (),                           {}),  # noqa: E122
         (r"\[2\]\.b\.c", 5,                            (),                           {}),  # noqa: E122
@@ -617,14 +666,14 @@ class TestSequenceConfigData:
 
     @staticmethod
     @mark.parametrize(*RetrieveTests)
-    def test_retrieve(data: SequenceConfigData, path, value, ignore_excs, kwargs):
+    def test_retrieve(data: SCD, path: str, value: Any, ignore_excs: EE, kwargs: dict[str, Any]) -> None:
         if kwargs is None:
             kwargs = {}
 
         with safe_raises(ignore_excs):
             assert data.retrieve(path, **kwargs) == value
 
-    ModifyTests = (
+    ModifyTests: tuple[str, tuple[tuple[str, Any, EE, dict[str, Any]], ...]] = (
         "path,         value,        ignore_excs,                  kwargs", (  # @formatter:off # noqa: E122
         (r"\[0\]",      99,           (),                           {}),  # noqa: E122
         (r"\[2\]",      {"z": 9},     (),                           {}),  # noqa: E122
@@ -637,7 +686,7 @@ class TestSequenceConfigData:
 
     @staticmethod
     @mark.parametrize(*ModifyTests)
-    def test_modify(data: SequenceConfigData, path, value, ignore_excs, kwargs):
+    def test_modify(data: SCD, path: str, value: Any, ignore_excs: EE, kwargs: dict[str, Any]) -> None:
         if kwargs is None:
             kwargs = {}
 
@@ -645,7 +694,7 @@ class TestSequenceConfigData:
             data.modify(path, value, **kwargs)
             assert data.retrieve(path, return_raw_value=True) == value
 
-    DeleteTests = (
+    DeleteTests: tuple[str, tuple[tuple[str, EE], ...]] = (
         "path,             ignore_excs", (  # @formatter:off # noqa: E122
         (r"\[0\]",         ()),  # noqa: E122
         (r"\[1\]",         ()),  # noqa: E122
@@ -664,20 +713,25 @@ class TestSequenceConfigData:
 
     @staticmethod
     @mark.parametrize(*DeleteTests)
-    def test_delete(data: SequenceConfigData, path, ignore_excs):
+    def test_delete(data: SCD, path: str, ignore_excs: EE) -> None:
         with safe_raises(ignore_excs):
             data.delete(path)
         assert path not in data
 
     @staticmethod
     @mark.parametrize(*DeleteTests)
-    def test_unset(data: SequenceConfigData, path, ignore_excs):
+    def test_unset(data: SCD, path: str, ignore_excs: EE) -> None:
+        if ignore_excs is None:
+            ignore_excs = ()
+        elif not isinstance(ignore_excs, Iterable):
+            ignore_excs = (ignore_excs,)
+
         ignore_excs = tuple(exc for exc in ignore_excs if not issubclass(exc, RequiredPathNotFoundError))
         with safe_raises(ignore_excs):
             data.unset(path)
         assert path not in data
 
-    ExistsTests = (
+    ExistsTests: tuple[str, tuple[tuple[str, bool | None, EE, dict[str, Any]], ...]] = (
         "path,              is_exist, ignore_excs,            kwargs", (  # @formatter:off # noqa: E122
         (r"\[0\]",          True,     (),                     {}),  # noqa: E122
         (r"\[2\]",          True,     (),                     {}),  # noqa: E122
@@ -697,7 +751,7 @@ class TestSequenceConfigData:
 
     @staticmethod
     @mark.parametrize(*ExistsTests)
-    def test_exists(data, path, is_exist, ignore_excs, kwargs):
+    def test_exists(data: SCD, path: str, is_exist: bool, ignore_excs: EE, kwargs: dict[str, Any]) -> None:
         with safe_raises(ignore_excs):
             assert data.exists(path, **kwargs) is is_exist
 
@@ -714,7 +768,12 @@ class TestSequenceConfigData:
 
     @staticmethod
     @mark.parametrize(*GetTests)
-    def test_get(data, path, value, ignore_excs, kwargs):
+    def test_get(data: SCD, path: str, value: Any, ignore_excs: EE, kwargs: dict[str, Any]) -> None:
+        if ignore_excs is None:
+            ignore_excs = ()
+        elif not isinstance(ignore_excs, Iterable):
+            ignore_excs = (ignore_excs,)
+
         if kwargs is None:
             kwargs = {}
 
@@ -737,9 +796,14 @@ class TestSequenceConfigData:
     )
 
     @staticmethod
-    @mark.parametrize(*GetTests)
-    def test_set_default(data, path, value, ignore_excs, kwargs):
-        has_index_key = any(isinstance(k, IndexKey) for k in Path.from_str(path))
+    @mark.parametrize(*SetDefaultTests)
+    def test_set_default(data: SCD, path: str, value: Any, ignore_excs: EE, kwargs: dict[str, Any]) -> None:
+        if ignore_excs is None:
+            ignore_excs = ()
+        elif not isinstance(ignore_excs, Iterable):
+            ignore_excs = (ignore_excs,)
+
+        has_index_key = any(isinstance(k, IndexKey) for k in DPath.from_str(path))
         ignore_config_data_type_error = any(issubclass(exc, ConfigDataTypeError) for exc in ignore_excs)
 
         if has_index_key and (not data.exists(path, ignore_wrong_type=ignore_config_data_type_error)):
@@ -760,53 +824,56 @@ class TestSequenceConfigData:
             assert data.exists(path)
             assert data.retrieve(path) in value
 
-    GetItemTests = (
-        "path, value", (
+    GetItemTests: tuple[str, tuple[tuple[int, Any], ...]] = (
+        "index, value", (
             (1, 2),
-            (2, ConfigData({
+            (2, MappingConfigData({
                 "a": [3, 4],
                 "b": {
                     "c": 5,
                     "d": 6,
                 },
             })),
-            (3, ConfigData([7, 8])),
+            (3, SequenceConfigData([7, 8])),
         ))
 
     @staticmethod
     @mark.parametrize(*GetItemTests)
-    def test_getitem(data, path, value):
-        assert data[path] == value
+    def test_getitem(data: SCD, index: int, value: Any) -> None:
+        assert data[index] == value
 
     @staticmethod
-    @mark.parametrize("path, new_value", (
+    @mark.parametrize("index, new_value", (
             (0, 456),
             (1, {"test": "value"}),
             (2, 789),
             (3, 101112),
     ))
-    def test_setitem(data, path, new_value):
-        data[path] = new_value
-        assert data[path].data == new_value if isinstance(data[path], ConfigData) else data[path] == new_value
+    def test_setitem(data: SCD, index: int, new_value: Any) -> None:
+        data[index] = new_value
+        assert (
+            cast(SequenceConfigData[Any], data[index]).data == new_value
+            if isinstance(data[index], ConfigData) else data[index] == new_value
+        )
 
     @staticmethod
-    @mark.parametrize("path, ignore_excs", (
+    @mark.parametrize("index, ignore_excs", (
             (1, ()),
             (2, ()),
             (3, ()),
             (4, (IndexError,)),
             (5, (IndexError,)),
     ))
-    def test_delitem(data: SequenceConfigData, path, ignore_excs):
+    def test_delitem(data: SCD, index: int, ignore_excs: EE) -> None:
         with safe_raises(ignore_excs):
-            last = data[path]
-            del data[path]
+            last = data[index]
+            del data[index]
 
         with suppress(IndexError):
-            assert last != data[path]
+            assert last != data[index]
 
     @staticmethod
-    @mark.parametrize("path, is_exist", (
+    @mark.parametrize("item, is_exist", (
             (1, True),
             (888, False),
             (2, True),
@@ -815,10 +882,10 @@ class TestSequenceConfigData:
             (r"\[0\]", False),
             ("bar", False),
     ))
-    def test_contains(data, path, is_exist):
-        assert (path in data) == is_exist
+    def test_contains(data: SCD, item: Any, is_exist: bool) -> None:
+        assert (item in data) == is_exist
 
-    IterTests = ("raw_sequence", (
+    IterTests: tuple[str, tuple[list[Any], ...]] = ("raw_sequence", (
         [],
         [1, 2, 3],
         [1, {2: [3, 4]}, 5],
@@ -828,29 +895,29 @@ class TestSequenceConfigData:
 
     @staticmethod
     @mark.parametrize(*IterTests)
-    def test_iter(raw_sequence):
-        assert list(iter(ConfigData(raw_sequence))) == list(iter(raw_sequence))
+    def test_iter(raw_sequence: list[Any]) -> None:
+        assert list(iter(SequenceConfigData(raw_sequence))) == list(iter(raw_sequence))
 
     @staticmethod
     @mark.parametrize(*IterTests)
-    def test_str(raw_sequence):
-        assert str(ConfigData(raw_sequence)) == str(raw_sequence)
+    def test_str(raw_sequence: list[Any]) -> None:
+        assert str(SequenceConfigData(raw_sequence)) == str(raw_sequence)
 
     @staticmethod
-    def test_data_readonly_attr(data, readonly_data):
+    def test_data_readonly_attr(data: SCD, readonly_data: RSCD) -> None:
         assert readonly_data.data_read_only
         assert not data.data_read_only
 
         with raises(AttributeError):
             # noinspection PyPropertyAccess
-            data.data_read_only = None
+            data.data_read_only = None  # type: ignore[misc, assignment]
 
         with raises(AttributeError):
             # noinspection PyPropertyAccess
-            readonly_data.data_read_only = None
+            readonly_data.data_read_only = None  # type: ignore[misc, assignment]
 
     @staticmethod
-    def test_readonly_attr(data, readonly_data):
+    def test_readonly_attr(data: SCD, readonly_data: RSCD) -> None:
         assert readonly_data.read_only
         with raises(ConfigDataReadOnlyError):
             readonly_data.read_only = False
@@ -862,18 +929,25 @@ class TestSequenceConfigData:
             data.modify(r"\[0\]", 123)
 
     @staticmethod
-    def test_data_attr(data):
+    def test_data_attr(data: SCD) -> None:
         last_data = data.data
         data[0] = 456
         assert last_data != data.data
 
         with raises(AttributeError):
             # noinspection PyPropertyAccess
-            data.data = {}
+            data.data = {}  # type: ignore[assignment]
 
     @classmethod
     @mark.parametrize(*RetrieveTests)
-    def test_readonly_retrieve(cls, readonly_data, path, value, ignore_excs, kwargs):
+    def test_readonly_retrieve(
+            cls,
+            readonly_data: RSCD,
+            path: str,
+            value: Any,
+            ignore_excs: EE,
+            kwargs: dict[str, Any],
+    ) -> None:
         cls.test_retrieve(readonly_data, path, value, ignore_excs, kwargs)
 
     ReadOnlyModifyTests = (
@@ -883,7 +957,7 @@ class TestSequenceConfigData:
 
     @classmethod
     @mark.parametrize(*ReadOnlyModifyTests)
-    def test_readonly_modify(cls, readonly_data, path, value, kwargs):
+    def test_readonly_modify(cls, readonly_data: RSCD, path: str, value: Any, kwargs: dict[str, Any]) -> None:
         cls.test_modify(readonly_data, path, value, ConfigDataReadOnlyError, kwargs)
 
     ReadOnlyDeleteTests = (
@@ -893,13 +967,13 @@ class TestSequenceConfigData:
 
     @classmethod
     @mark.parametrize(*ReadOnlyDeleteTests)
-    def test_readonly_delete(cls, readonly_data, path):
-        cls.test_delete(readonly_data, path, ConfigDataReadOnlyError)
+    def test_readonly_delete(cls, readonly_data: RSCD, path: str) -> None:
+        cls.test_delete(cast(SCD, readonly_data), path, ConfigDataReadOnlyError)
 
     @classmethod
     @mark.parametrize(*ReadOnlyDeleteTests)
-    def test_readonly_unset(cls, readonly_data, path):
-        cls.test_unset(readonly_data, path, (ConfigDataReadOnlyError,))
+    def test_readonly_unset(cls, readonly_data: RSCD, path: str) -> None:
+        cls.test_unset(cast(SCD, readonly_data), path, (ConfigDataReadOnlyError,))
 
     @staticmethod
     @mark.parametrize("method, data, args, readonly", (
@@ -932,8 +1006,8 @@ class TestSequenceConfigData:
             ("reverse", [1, 2, 3], (), False),
             ("reverse", (1, 2, 3), (), True),
     ))
-    def test_methods(method, data, args, readonly):
-        cfg = ConfigData(deepcopy(data))
+    def test_methods(method: str, data: SCD, args: tuple[Any, ...], readonly: RSCD) -> None:
+        cfg = SequenceConfigData(deepcopy(data))
 
         excs = (ConfigDataReadOnlyError,) if readonly else ()
         with safe_raises(excs) as info:
@@ -944,18 +1018,18 @@ class TestSequenceConfigData:
         assert cfg.data == data
 
     @staticmethod
-    def test_reversed(data, readonly_data):
+    def test_reversed(data: SCD, readonly_data: RSCD) -> None:
         assert list(reversed(data)) == list(reversed(data))
 
     @staticmethod
-    def test_eq(data, readonly_data):
+    def test_eq(data: SCD, readonly_data: RSCD) -> None:
         assert data == data
         assert data == deepcopy(data)
         assert readonly_data == readonly_data
         assert readonly_data == deepcopy(readonly_data)
 
     @staticmethod
-    def test_deepcopy(data):
+    def test_deepcopy(data: SCD) -> None:
         last_data = deepcopy(data)
         data[0] = 456
         assert last_data != data
@@ -973,9 +1047,9 @@ class TestSequenceConfigData:
     )
 
     @staticmethod
-    def test_repr(data):
+    def test_repr(data: SCD) -> None:
         assert repr(data.data) in repr(data)
-        assert repr({"a": 1, "b": 2}) in repr(ConfigData({"a": 1, "b": 2}))
+        assert repr({"a": 1, "b": 2}) in repr(MappingConfigData({"a": 1, "b": 2}))
 
 
 class TestNumberConfigData:
@@ -986,18 +1060,21 @@ class TestNumberConfigData:
 
     @staticmethod
     @fixture
-    def data(number) -> NumberConfigData[int]:
-        return ConfigData(number)
+    def data[N: Number](number: N) -> NumberConfigData[N]:
+        return NumberConfigData(number)
 
     @staticmethod
     @fixture
-    def readonly_data(number) -> NumberConfigData[int]:
-        cfg = ConfigData(number)
+    def readonly_data[N: Number](number: N) -> NumberConfigData[N]:
+        cfg = NumberConfigData(number)
         cfg.freeze()
         return cfg
 
     @staticmethod
-    def test_freeze(data, readonly_data):
+    def test_freeze(
+            data: NumberConfigData[int],  # type: ignore[type-var]
+            readonly_data: NumberConfigData[int]  # type: ignore[type-var]
+    ) -> None:
         data.freeze()
         readonly_data.freeze()
         assert data.read_only is True
@@ -1012,7 +1089,7 @@ class TestNumberConfigData:
         assert readonly_data.read_only is False
 
     @staticmethod
-    def test_init(data, readonly_data):
+    def test_init(data: NumberConfigData[int], readonly_data: NumberConfigData[int]) -> None:  # type: ignore[type-var]
         assert data.data == 0
         assert data.read_only is False
 
@@ -1026,16 +1103,16 @@ class TestNumberConfigData:
             0,
             0.,
     ))
-    def test_int(number):
-        assert int(ConfigData(number)) == 0
+    def test_int(number: Number) -> None:
+        assert int(NumberConfigData(number)) == 0
 
     @staticmethod
     @mark.parametrize("number", (
             0,
             0.,
     ))
-    def test_float(number):
-        assert float(ConfigData(number)) == 0.
+    def test_float(number: Number) -> None:
+        assert float(NumberConfigData(number)) == 0.
 
     @staticmethod
     @mark.parametrize("number, value", (
@@ -1048,8 +1125,8 @@ class TestNumberConfigData:
             (0.j, False),
             (.1j, True),
     ))
-    def test_bool(number, value):
-        assert bool(ConfigData(number)) == value
+    def test_bool(number: Number, value: bool) -> None:
+        assert bool(NumberConfigData(number)) == value
 
     InvertTests = (
         (0,),
@@ -1092,19 +1169,19 @@ class TestNumberConfigData:
             (math.floor, 1.5, ()),
             (math.floor, 1.4, ()),
     ))
-    def test_protocol(func, number, args):
-        assert func(ConfigData(number), *args) == func(number, *args)
+    def test_protocol(func: Callable[..., Any], number: Number, args: Any) -> None:
+        assert func(NumberConfigData(number), *args) == func(number, *args)
 
 
 class TestBoolConfigData:
     @staticmethod
-    def test_init():
+    def test_init() -> None:
         assert BoolConfigData().data is bool()
 
 
 class TestStringConfigData:
     @staticmethod
-    def test_init():
+    def test_init() -> None:
         assert StringConfigData().data == str()
 
     @staticmethod
@@ -1113,8 +1190,8 @@ class TestStringConfigData:
             ("test", ">9"),
             ("test", "^7"),
     ))
-    def test_format(string, format_spec):
-        assert format(ConfigData(string), format_spec) == format(string, format_spec)
+    def test_format(string: str, format_spec: str) -> None:
+        assert format(StringConfigData(string), format_spec) == format(string, format_spec)
 
     @staticmethod
     @mark.parametrize("string, slice_obj", (
@@ -1124,19 +1201,19 @@ class TestStringConfigData:
             ("test", slice(None, -2)),
             ("test", slice(None, None, 2)),
     ))
-    def test_slice(string, slice_obj):
-        assert ConfigData(string)[slice_obj] == string[slice_obj]
-        cfg, cs = ConfigData(string), deepcopy(string)
+    def test_slice(string: str, slice_obj: slice) -> None:
+        assert StringConfigData(string)[slice_obj] == string[slice_obj]
+        cfg, cs = StringConfigData(string), deepcopy(string)
+
         with raises(TypeError):
-            # noinspection PyUnresolvedReferences
-            cs[slice_obj] = "X"
+            cs[slice_obj] = "X"  # type: ignore[index]
+        with raises(TypeError):
+            del cs[slice_obj]  # type: ignore[attr-defined]
+
         with raises(TypeError):
             cfg[slice_obj] = "X"
         with raises(TypeError):
             del cfg[slice_obj]
-        with raises(TypeError):
-            # noinspection PyUnresolvedReferences
-            del cs[slice_obj]
 
     @staticmethod
     @mark.parametrize("string", (
@@ -1144,8 +1221,8 @@ class TestStringConfigData:
             "abba",
             "abcd",
     ))
-    def test_reversed(string):
-        assert list(reversed(ConfigData(string))) == list(reversed(string))
+    def test_reversed(string: str) -> None:
+        assert list(reversed(StringConfigData(string))) == list(reversed(string))
 
     @staticmethod
     @mark.parametrize("data, string, result", (
@@ -1154,8 +1231,8 @@ class TestStringConfigData:
             ("test", "t", True),
             ("aabb", "ab", True),
     ))
-    def test_contains(data, string, result):
-        data = ConfigData(data)
+    def test_contains(data: str, string: str, result: bool) -> None:
+        data = StringConfigData(data)
         assert (string in data) is result
 
     @staticmethod
@@ -1163,8 +1240,8 @@ class TestStringConfigData:
             "123456",
             "aabbcc",
     ))
-    def test_iter(string):
-        data = ConfigData(string)
+    def test_iter(string: str) -> None:
+        data = StringConfigData(string)
         assert list(data) == list(string)
 
     @staticmethod
@@ -1172,12 +1249,12 @@ class TestStringConfigData:
             "123456",
             "aabb",
     ))
-    def test_len(string):
-        data = ConfigData(string)
+    def test_len(string: str) -> None:
+        data = StringConfigData(string)
         assert len(data) == len(string)
 
 
-def test_object_config_data():
+def test_object_config_data() -> None:
     class MyClass:
         ...
 
@@ -1188,16 +1265,21 @@ def test_object_config_data():
     assert data.data_read_only is False
 
 
-def _ccd_from_members(members: dict[str, MappingConfigData]) -> ComponentConfigData:
+type D_MCD = MappingConfigData[dict[Any, Any]]
+type M = dict[str, ABCIndexedConfigData[Any]]
+type CCD = ComponentConfigData[ABCIndexedConfigData[dict[Any, Any]], ComponentMeta[D_MCD]]
+
+
+def _ccd_from_members(members: M) -> CCD:
     return ComponentConfigData(
         meta=ComponentMeta(members=[ComponentMember(fn) for fn in members.keys()]),
         members=members,
     )
 
 
-def _ccd_from_meta(meta: dict[str, Any], members: dict[str, MappingConfigData]) -> ComponentConfigData:
+def _ccd_from_meta(meta: dict[str, Any], members: M) -> CCD:
     return ComponentConfigData(
-        ComponentMetaParser().convert_config2meta(ConfigData(meta)),
+        ComponentMetaParser().convert_config2meta(MappingConfigData(meta)),  # type: ignore[arg-type]
         members
     )
 
@@ -1205,19 +1287,19 @@ def _ccd_from_meta(meta: dict[str, Any], members: dict[str, MappingConfigData]) 
 class TestComponentConfigData:
     @staticmethod
     @fixture
-    def empty_data() -> ComponentConfigData:
+    def empty_data() -> CCD:
         return ComponentConfigData()
 
     @staticmethod
     @fixture
-    def meta() -> ComponentMeta:
+    def meta() -> ComponentMeta[Any]:
         return ComponentMeta(members=[ComponentMember("foo.json", alias="f"), ComponentMember("bar.json", alias="b")])
 
     @staticmethod
     @fixture
-    def members() -> dict[str, MappingConfigData]:
+    def members() -> M:
         return {
-            "foo.json": ConfigData({
+            "foo.json": MappingConfigData({
                 "key": {
                     "value": "foo",
                 },
@@ -1225,7 +1307,7 @@ class TestComponentConfigData:
                     "second": 3,
                 },
             }),
-            "bar.json": ConfigData({
+            "bar.json": MappingConfigData({
                 "key": {
                     "value": "bar",
                     "extra": 0
@@ -1235,11 +1317,11 @@ class TestComponentConfigData:
 
     @staticmethod
     @fixture
-    def data(meta, members) -> ComponentConfigData:
+    def data(meta: ComponentMeta[D_MCD], members: M) -> CCD:
         return ComponentConfigData(meta, members)
 
     @staticmethod
-    def test_empty_init(empty_data):
+    def test_empty_init(empty_data: CCD) -> None:
         assert not empty_data.members
         assert not empty_data.meta.config
         assert not empty_data.meta.members
@@ -1249,7 +1331,7 @@ class TestComponentConfigData:
         assert not empty_data.meta.orders.delete
 
     @staticmethod
-    def test_wrong_init():
+    def test_wrong_init() -> None:
         ccd = ComponentConfigData
         with raises(ValueError, match="repeat"):
             ccd(ComponentMeta(members=[*([ComponentMember("repeat")] * 3)]))
@@ -1258,75 +1340,81 @@ class TestComponentConfigData:
             ccd(ComponentMeta(members=[ComponentMember("same", alias="same")]))
 
         with raises(ValueError, match="members"):
-            ccd(members={"not in meta": ConfigData()})
+            ccd(members={"not in meta": MappingConfigData()})
 
         with raises(ValueError, match="members"):
             ccd(meta=ComponentMeta(members=[ComponentMember("not in members")]))
 
     @staticmethod
-    def test_readonly_attr(empty_data):
+    def test_readonly_attr(empty_data: CCD) -> None:
         for attr in {"meta", "members", "filename2meta", "alias2filename"}:
             getattr(empty_data, attr)
             with raises(AttributeError):
                 setattr(empty_data, attr, None)
 
-    RetrieveTests = (
+    RetrieveTests: tuple[str, tuple[tuple[CCD, str, Any, EE, dict[str, Any]], ...]] = (
         "data, path, value, ignore_excs, kwargs", (
             (_ccd_from_meta(
                 {"members": ["a", "b", "c"]},
-                {"a": ConfigData({}), "b": ConfigData({}), "c": ConfigData({"key": "value"})},
+                {"a": MappingConfigData(), "b": MappingConfigData(), "c": MappingConfigData({"key": "value"})},
             ), "key", "value", (), {}),
             (_ccd_from_meta(
                 {"members": ["a", "b", "c"]},
-                {"a": ConfigData({"foo": {"bar": "value"}}), "b": ConfigData({}), "c": ConfigData({})},
+                {"a": MappingConfigData({"foo": {"bar": "value"}}), "b": MappingConfigData(),
+                 "c": MappingConfigData()},
             ), "foo\\.bar", "value", (), {}),
             (_ccd_from_meta(
                 {"members": ["a", "b", "c"]},
-                {"a": ConfigData({}), "b": ConfigData({"foo": {"bar": "value"}}), "c": ConfigData({})},
+                {"a": MappingConfigData(), "b": MappingConfigData({"foo": {"bar": "value"}}),
+                 "c": MappingConfigData()},
             ), "foo\\.bar", "value", (), {}),
             (_ccd_from_meta(
                 {"members": ["a", "b", "c"]},
-                {"a": ConfigData({}), "b": ConfigData({}), "c": ConfigData({"foo": {"bar": "value"}})},
+                {"a": MappingConfigData(), "b": MappingConfigData(),
+                 "c": MappingConfigData({"foo": {"bar": "value"}})},
             ), "foo\\.bar", "value", (), {}),
             (_ccd_from_meta(
                 {"members": ["b", "a", "c"]},
-                {"a": ConfigData({}), "b": ConfigData({}), "c": ConfigData({"foo": {"bar": "value"}})},
+                {"a": MappingConfigData(), "b": MappingConfigData(),
+                 "c": MappingConfigData({"foo": {"bar": "value"}})},
             ), "foo", {"bar": "value"}, (), dict(return_raw_value=True)),
             (_ccd_from_meta(
                 {"members": ["a", "c", "b"]},
-                {"a": ConfigData({}), "b": ConfigData({"key": True}), "c": ConfigData({"key": "value"})},
+                {"a": MappingConfigData(), "b": MappingConfigData({"key": True}),
+                 "c": MappingConfigData({"key": "value"})},
             ), "key", "value", (), {}),
             (_ccd_from_meta(
                 {"members": ["a", "c", "b"]},
                 {
-                    "a": ConfigData(pmap()),
-                    "b": ConfigData(pmap({"key": True})),
-                    "c": ConfigData(pmap({"key": "value"}))
+                    "a": MappingConfigData(pmap()),
+                    "b": MappingConfigData(pmap({"key": True})),
+                    "c": MappingConfigData(pmap({"key": "value"}))
                 },
             ), "key", "value", (), {}),
             (_ccd_from_meta(
                 {"members": [dict(filename="a", alias="c"), "b"], "order": ["c"]},
-                {"a": ConfigData({"a": "value"}), "b": ConfigData({"b": True})},
+                {"a": MappingConfigData({"a": "value"}), "b": MappingConfigData({"b": True})},
             ), "a", "value", (), {}),
             (_ccd_from_meta(
                 {"members": ["a", "b"]},
-                {"a": ConfigData([{"key": False}]), "b": ConfigData([{"key": True}])},
+                {"a": SequenceConfigData([{"key": False}]), "b": SequenceConfigData([{"key": True}])},
             ), "\\[0\\]\\.key", False, (), {}),
             (_ccd_from_meta(
                 {"members": ["a", "b"]},
-                {"a": ConfigData([{"key": False}]), "b": ConfigData([{"key": True}])},
+                {"a": SequenceConfigData([{"key": False}]), "b": SequenceConfigData([{"key": True}])},
             ), "\\{b\\}\\[0\\]\\.key", True, (), {}),
             (_ccd_from_meta(
                 {"members": ["a", "b", "c"]},
-                {"a": ConfigData({}), "b": ConfigData({"key": False}), "c": ConfigData({"key": None})},
+                {"a": MappingConfigData(), "b": MappingConfigData({"key": False}),
+                 "c": MappingConfigData({"key": None})},
             ), "\\{c\\}\\.key", None, (), {}),
             (_ccd_from_meta(
                 {"members": ["b", dict(filename="a", alias="c")]},
-                {"a": ConfigData({"key": False}), "b": ConfigData({"key": None})},
+                {"a": MappingConfigData({"key": False}), "b": MappingConfigData({"key": None})},
             ), "\\{c\\}\\.key", False, (), {}),
             (_ccd_from_meta(
                 {"members": ["b", dict(filename="a", alias="c")]},
-                {"a": ConfigData({"key": False}), "b": ConfigData({"key": None})},
+                {"a": MappingConfigData({"key": False}), "b": MappingConfigData({"key": None})},
             ), "\\{z\\}\\.key", None, (RequiredPathNotFoundError,), {}),
             (_ccd_from_meta(
                 {"order": ["z"]},
@@ -1335,223 +1423,232 @@ class TestComponentConfigData:
             (_ccd_from_meta(
                 {"members": ["a", "c", "b"]},
                 {
-                    "a": ConfigData({"foo": "value"}),
-                    "b": ConfigData({"foo": {"bar": "value"}}),
-                    "c": ConfigData({"foo": {"bar": {"baz": "value"}}}),
+                    "a": MappingConfigData({"foo": "value"}),
+                    "b": MappingConfigData({"foo": {"bar": "value"}}),
+                    "c": MappingConfigData({"foo": {"bar": {"baz": "value"}}}),
                 },
             ), "foo\\.bar\\.baz\\.qux", None, (ConfigDataTypeError,), {}),
             (_ccd_from_meta(
                 {"members": ["a", "b"]},
-                {"a": ConfigData({"a": "value"}), "b": ConfigData({"b": True})},
+                {"a": MappingConfigData({"a": "value"}), "b": MappingConfigData({"b": True})},
             ), "key", None, (RequiredPathNotFoundError,), {}),
             (_ccd_from_meta(
                 {"members": ["a"], "order": []},
-                {"a": ConfigData()},
+                {"a": NoneConfigData()},  # type: ignore[dict-item]
             ), "", None, (RequiredPathNotFoundError,), {}),
         )
     )
 
     @staticmethod
     @mark.parametrize(*RetrieveTests)
-    def test_retrieve(data, path, value, ignore_excs, kwargs):
+    def test_retrieve(data: CCD, path: str, value: Any, ignore_excs: EE, kwargs: dict[str, Any]) -> None:
         with safe_raises(ignore_excs):
             assert data.retrieve(path, **kwargs) == value
 
-    ModifyTests = (
+    ModifyTests: tuple[str, tuple[tuple[CCD, str, Any, EE, dict[str, Any]], ...]] = (
         "data, path, value, ignore_excs, kwargs", (
             (_ccd_from_meta(
                 {"members": [dict(filename="a", alias="c"), "b"], "order": ["c"]},
-                {"a": ConfigData({"key": "value"}), "b": ConfigData({})},
+                {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData()},
             ), "key", True, (), {}),
             (_ccd_from_meta(
                 {"members": ["a", "b"]},
-                {"a": ConfigData({"key": "value"}), "b": ConfigData({})},
+                {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData()},
             ), "key", True, (), {}),
             (_ccd_from_meta(
                 {"members": ["b", "a"]},
-                {"a": ConfigData({"key": "value"}), "b": ConfigData({})},
+                {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData()},
             ), "key", True, (), {}),
             (_ccd_from_meta(
                 {"members": ["a", "b"], "orders": {"read": ["a", "b"], "update": ["b", "a"]}},
-                {"a": ConfigData({"key": "value"}), "b": ConfigData({})},
+                {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData()},
             ), "key", "value", (), {}),
             (_ccd_from_meta(
                 {"members": ["b", "a"]},
-                {"a": ConfigData({"key": "value"}), "b": ConfigData({"key": None})},
+                {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData({"key": None})},
             ), "key", True, (), {}),
             (_ccd_from_meta(
                 {"members": ["b", "a"]},
-                {"a": ConfigData({"foo": {"bar": "value"}}), "b": ConfigData({"foo": {"bar": None}})},
+                {"a": MappingConfigData({"foo": {"bar": "value"}}), "b": MappingConfigData({"foo": {"bar": None}})},
             ), "foo\\.bar", True, (), {}),
             (_ccd_from_meta(
                 {"members": ["b", "a"]},
-                {"a": ConfigData([{"foo": {"bar": "value"}}]), "b": ConfigData([{"foo": {"bar": None}}])},
+                {"a": SequenceConfigData([{"foo": {"bar": "value"}}]),
+                 "b": SequenceConfigData([{"foo": {"bar": None}}])},
             ), "\\[0\\]\\.foo\\.bar", True, (), {}),
             (_ccd_from_meta(
                 {"members": ["b", "a"]},
-                {"a": ConfigData([{"foo": {"bar": "value"}}]), "b": ConfigData([{"foo": {"bar": None}}])},
+                {"a": SequenceConfigData([{"foo": {"bar": "value"}}]),
+                 "b": SequenceConfigData([{"foo": {"bar": None}}])},
             ), "\\{a\\}\\[0\\]\\.foo\\.bar", True, (), {}),
             (_ccd_from_meta(
                 {"members": ["b", "a"]},
-                {"a": ConfigData({"foo": {"bar": "value"}}), "b": ConfigData({"foo": {"bar": None}})},
+                {"a": MappingConfigData({"foo": {"bar": "value"}}), "b": MappingConfigData({"foo": {"bar": None}})},
             ), "foo", {"bar": True}, (), dict(allow_create=False)),
             (_ccd_from_meta(
                 {"members": ["c", "b", "a"]},
-                {"a": ConfigData({}), "b": ConfigData({"key": False}), "c": ConfigData({"key": None})},
+                {"a": MappingConfigData(), "b": MappingConfigData({"key": False}),
+                 "c": MappingConfigData({"key": None})},
             ), "\\{a\\}\\.key", True, (), {}),
             (_ccd_from_meta(
                 {"members": ["b", dict(filename="a", alias="c")]},
-                {"a": ConfigData({"key": False}), "b": ConfigData({"key": None})},
+                {"a": MappingConfigData({"key": False}), "b": MappingConfigData({"key": None})},
             ), "\\{c\\}\\.key", True, (), {}),
             (_ccd_from_meta(
                 {"members": ["b", dict(filename="a", alias="c")]},
-                {"a": ConfigData({"key": False}), "b": ConfigData({"key": None})},
+                {"a": MappingConfigData({"key": False}), "b": MappingConfigData({"key": None})},
             ), "\\{z\\}\\.key", None, (RequiredPathNotFoundError,), {}),
             (_ccd_from_meta(
                 {"members": ["b", "a"]},
-                {"a": ConfigData({"foo": {"bar": "value"}}), "b": ConfigData({"foo": {"bar": None}})},
+                {"a": MappingConfigData({"foo": {"bar": "value"}}), "b": MappingConfigData({"foo": {"bar": None}})},
             ), "quz", {"value": True}, (RequiredPathNotFoundError,), dict(allow_create=False)),
         )
     )
 
     @staticmethod
     @mark.parametrize(*ModifyTests)
-    def test_modify(data, path, value, ignore_excs, kwargs):
+    def test_modify(data: CCD, path: str, value: Any, ignore_excs: EE, kwargs: dict[str, Any]) -> None:
         with safe_raises(ignore_excs) as info:
             data.modify(path, value, **kwargs)
         if info:
             return
         assert data.retrieve(path, return_raw_value=True) == value
 
-    DeleteTests = (
+    DeleteTests: tuple[str, tuple[tuple[CCD, str, Any, EE, dict[str, Any]], ...]] = (
         "data, path, value, ignore_excs, kwargs", (
             (_ccd_from_meta(
                 {"members": ["a", "b"]},
-                {"a": ConfigData({"foo": {"bar": "value"}}), "b": ConfigData({"foo": {"bar": False}})},
+                {"a": MappingConfigData({"foo": {"bar": "value"}}), "b": MappingConfigData({"foo": {"bar": False}})},
             ), "foo\\.bar", False, (), {}),
             (_ccd_from_meta(
                 {"members": [dict(filename="a", alias="c"), "b"], "order": ["c"]},
-                {"a": ConfigData({"key": "value"}), "b": ConfigData({"key": "value"})},
+                {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData({"key": "value"})},
             ), "key", Unset, (), {}),
             (_ccd_from_meta(
                 {"members": ["a", "b"], "orders": {"delete": ["b", "a"], "read": ["a", "b"]}},
-                {"a": ConfigData({"key": "value"}), "b": ConfigData({"key": "value"})},
+                {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData({"key": "value"})},
             ), "key", "value", (), {}),
             (_ccd_from_meta(
                 {"members": ["a", "b", "c"]},
-                {"a": ConfigData({}), "b": ConfigData({"key": False}), "c": ConfigData({"key": None})},
+                {
+                    "a": MappingConfigData(),
+                    "b": MappingConfigData({"key": False}),
+                    "c": MappingConfigData({"key": None})},
             ), "\\{c\\}\\.key", False, (), {}),
             (_ccd_from_meta(
                 {"members": ["b", dict(filename="a", alias="c")]},
-                {"a": ConfigData({"key": False}), "b": ConfigData({"key": True})},
+                {"a": MappingConfigData({"key": False}), "b": MappingConfigData({"key": True})},
             ), "\\{c\\}\\.key", True, (), {}),
             (_ccd_from_meta(
                 {"members": ["b", "a"]},
-                {"a": ConfigData([{"key": False}]), "b": ConfigData([{"key": True}])},
+                {"a": SequenceConfigData([{"key": False}]), "b": SequenceConfigData([{"key": True}])},
             ), "\\[0\\]\\.key", False, (), {}),
             (_ccd_from_meta(
                 {"members": ["b", "a"]},
-                {"a": ConfigData([{"key": False}]), "b": ConfigData([{"key": True}])},
+                {"a": SequenceConfigData([{"key": False}]), "b": SequenceConfigData([{"key": True}])},
             ), "\\{a\\}\\[0\\]\\.key", Unset, (), {}),
             (_ccd_from_meta(
                 {"members": ["b", dict(filename="a", alias="c")]},
-                {"a": ConfigData({"key": False}), "b": ConfigData({"key": None})},
+                {"a": MappingConfigData({"key": False}), "b": MappingConfigData({"key": None})},
             ), "\\{z\\}\\.key", Unset, (RequiredPathNotFoundError,), {}),
             (_ccd_from_meta(
                 {"members": ["a", "b"], "order": []},
-                {"a": ConfigData({"key": "value"}), "b": ConfigData({"key": "value"})},
+                {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData({"key": "value"})},
             ), "key", Unset, (RequiredPathNotFoundError,), {}),
             (_ccd_from_meta(
                 {"members": ["a", "b"]},
-                {"a": ConfigData({}), "b": ConfigData({})},
+                {"a": MappingConfigData(), "b": MappingConfigData()},
             ), "key", Unset, (RequiredPathNotFoundError,), {}),
         )
     )
 
     @staticmethod
     @mark.parametrize(*DeleteTests)
-    def test_delete(data, path, value, ignore_excs, kwargs):
+    def test_delete(data: CCD, path: str, value: Any, ignore_excs: EE, kwargs: dict[str, Any]) -> None:
         with safe_raises(ignore_excs) as info:
             data.delete(path, **kwargs)
         if info:
             return
         assert data.get(path, value) == value
 
-    UnsetTests = (
+    UnsetTests: tuple[str, tuple[tuple[CCD, str, Any, EE, dict[str, Any]], ...]] = (
         "data, path, value, ignore_excs, kwargs", (
             (_ccd_from_meta(
                 {"members": ["a", "b"]},
-                {"a": ConfigData({"foo": {"bar": "value"}}), "b": ConfigData({"foo": {"bar": False}})},
+                {"a": MappingConfigData({"foo": {"bar": "value"}}), "b": MappingConfigData({"foo": {"bar": False}})},
             ), "foo\\.bar", False, (), {}),
             (_ccd_from_meta(
                 {"members": [dict(filename="a", alias="c"), "b"], "order": ["c"]},
-                {"a": ConfigData({"key": "value"}), "b": ConfigData({"key": "value"})},
+                {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData({"key": "value"})},
             ), "key", Unset, (), {}),
             (_ccd_from_meta(
                 {"members": ["a", "b"], "orders": {"delete": ["b", "a"], "read": ["a", "b"]}},
-                {"a": ConfigData({"key": "value"}), "b": ConfigData({"key": "value"})},
+                {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData({"key": "value"})},
             ), "key", "value", (), {}),
             (_ccd_from_meta(
                 {"members": ["a", "b"], "order": []},
-                {"a": ConfigData({"key": "value"}), "b": ConfigData({"key": "value"})},
+                {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData({"key": "value"})},
             ), "key", "value", (), {}),
             (_ccd_from_meta(
                 {"members": ["a", "b"]},
-                {"a": ConfigData({}), "b": ConfigData({})},
+                {"a": MappingConfigData(), "b": MappingConfigData()},
             ), "key", "value", (), {}),
             (_ccd_from_meta(
                 {"members": ["a", "b", "c"]},
-                {"a": ConfigData({}), "b": ConfigData({"key": False}), "c": ConfigData({"key": None})},
+                {"a": MappingConfigData(), "b": MappingConfigData({"key": False}),
+                 "c": MappingConfigData({"key": None})},
             ), "\\{c\\}\\.key", False, (), {}),
             (_ccd_from_meta(
                 {"members": ["b", dict(filename="a", alias="c")]},
-                {"a": ConfigData({"key": False}), "b": ConfigData({"key": True})},
+                {"a": MappingConfigData({"key": False}), "b": MappingConfigData({"key": True})},
             ), "\\{c\\}\\.key", True, (), {}),
             (_ccd_from_meta(
                 {"members": ["b", dict(filename="a", alias="c")]},
-                {"a": ConfigData({"key": False}), "b": ConfigData({"key": None})},
+                {"a": MappingConfigData({"key": False}), "b": MappingConfigData({"key": None})},
             ), "\\{z\\}\\.key", Unset, (), {}),
         )
     )
 
     @staticmethod
     @mark.parametrize(*UnsetTests)
-    def test_unset(data, path, value, ignore_excs, kwargs):
+    def test_unset(data: CCD, path: str, value: Any, ignore_excs: EE, kwargs: dict[str, Any]) -> None:
         with safe_raises(ignore_excs) as info:
             data.unset(path, **kwargs)
         if info:
             return
         assert data.get(path, value) == value
 
-    ExistsTests = (
+    ExistsTests: tuple[str, tuple[tuple[CCD, str, bool, EE, dict[str, Any]], ...]] = (
         "data, path, is_exists, ignore_excs, kwargs", (
             (_ccd_from_meta(
                 {"members": ["a", "b"]},
-                {"a": ConfigData({"foo": {"bar": None}}), "b": ConfigData({"foo": {"bar": {"quz": None}}})},
+                {"a": MappingConfigData({"foo": {"bar": None}}),
+                 "b": MappingConfigData({"foo": {"bar": {"quz": None}}})},
             ), "foo\\.bar\\.quz", True, (), {}),
             (_ccd_from_meta(
                 {"members": ["b", "a"]},
-                {"a": ConfigData({"foo": {"bar": None}}), "b": ConfigData({"foo": {"bar": {"quz": None}}})},
+                {"a": MappingConfigData({"foo": {"bar": None}}),
+                 "b": MappingConfigData({"foo": {"bar": {"quz": None}}})},
             ), "foo\\.bar\\.quz", True, (), {}),
             (_ccd_from_meta(
                 {"members": ["a", "b"]},
-                {"a": ConfigData({}), "b": ConfigData({})},
+                {"a": MappingConfigData(), "b": MappingConfigData()},
             ), "key", False, (), {}),
             (_ccd_from_meta(
                 {"members": ["a", "b"]},
-                {"a": ConfigData({"key": "value"}), "b": ConfigData({})},
+                {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData()},
             ), "key", True, (), {}),
             (_ccd_from_meta(
                 {"members": ["b", "a"]},
-                {"a": ConfigData({"key": "value"}), "b": ConfigData({})},
+                {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData()},
             ), "key", False, (), {}),
             (_ccd_from_meta(
                 {"members": ["b", "a"]},
-                {"a": ConfigData([{"key": "value"}]), "b": ConfigData([{}])},
+                {"a": SequenceConfigData([{"key": "value"}]), "b": SequenceConfigData([{}])},
             ), "\\[0\\]\\.key", False, (), {}),
             (_ccd_from_meta(
                 {"members": ["b", "a"]},
-                {"a": ConfigData([{"key": "value"}]), "b": ConfigData([{}])},
+                {"a": SequenceConfigData([{"key": "value"}]), "b": SequenceConfigData([{}])},
             ), "\\{a\\}\\[0\\]\\.key", True, (), {}),
             (_ccd_from_meta(
                 {},
@@ -1559,34 +1656,42 @@ class TestComponentConfigData:
             ), "key", False, (), {}),
             (_ccd_from_meta(
                 {"members": ["a", "b", "c"]},
-                {"a": ConfigData({}), "b": ConfigData({"key": False}), "c": ConfigData({"key": None})},
+                {
+                    "a": MappingConfigData(),
+                    "b": MappingConfigData({"key": False}),
+                    "c": MappingConfigData({"key": None})
+                },
             ), "\\{c\\}\\.key", True, (), {}),
             (_ccd_from_meta(
                 {"members": ["a", "b", "c"]},
-                {"a": ConfigData({"key": False}), "b": ConfigData({}), "c": ConfigData({"key": None})},
+                {
+                    "a": MappingConfigData({"key": False}),
+                    "b": MappingConfigData(),
+                    "c": MappingConfigData({"key": None})
+                },
             ), "\\{b\\}\\.key", False, (), {}),
             (_ccd_from_meta(
                 {"members": ["b", dict(filename="a", alias="c")]},
-                {"a": ConfigData({"key": False}), "b": ConfigData({"key": True})},
+                {"a": MappingConfigData({"key": False}), "b": MappingConfigData({"key": True})},
             ), "\\{c\\}\\.key", True, (), {}),
             (_ccd_from_meta(
                 {"members": ["b", dict(filename="a", alias="c")]},
-                {"a": ConfigData({"key": False}), "b": ConfigData({"key": True})},
+                {"a": MappingConfigData({"key": False}), "b": MappingConfigData({"key": True})},
             ), "\\{c\\}\\.any", False, (), {}),
             (_ccd_from_meta(
                 {"members": ["b", dict(filename="a", alias="c")]},
-                {"a": ConfigData({"key": False}), "b": ConfigData({"key": None})},
+                {"a": MappingConfigData({"key": False}), "b": MappingConfigData({"key": None})},
             ), "\\{z\\}\\.key", False, (), {}),
         )
     )
 
     @staticmethod
     @mark.parametrize(*ExistsTests)
-    def test_exists(data, path, is_exists, ignore_excs, kwargs):
+    def test_exists(data: CCD, path: str, is_exists: bool, ignore_excs: EE, kwargs: dict[str, Any]) -> None:
         with safe_raises(ignore_excs):
             assert data.exists(path, **kwargs) is is_exists
 
-    GetTests = (
+    GetTests: tuple[str, tuple[tuple[CCD, str, Any, EE, dict[str, Any]], ...]] = (
         "data, path, value, ignore_excs, kwargs", (
             (_ccd_from_meta(
                 {},
@@ -1594,11 +1699,17 @@ class TestComponentConfigData:
             ), "value", None, (), {}),
             (_ccd_from_meta(
                 {"members": ["a", "b"]},
-                {"a": ConfigData({"foo": {"bar": True}}), "b": ConfigData({"foo": {"bar": False}})},
+                {
+                    "a": MappingConfigData({"foo": {"bar": True}}),
+                    "b": MappingConfigData({"foo": {"bar": False}})
+                },
             ), "foo\\.bar", True, (), {}),
             (_ccd_from_meta(
                 {"members": ["b", "a"]},
-                {"a": ConfigData({"foo": {"bar": True}}), "b": ConfigData({"foo": {"bar": False}})},
+                {
+                    "a": MappingConfigData({"foo": {"bar": True}}),
+                    "b": MappingConfigData({"foo": {"bar": False}})
+                },
             ), "foo\\.bar", False, (), {}),
             (_ccd_from_meta(
                 {},
@@ -1609,23 +1720,23 @@ class TestComponentConfigData:
 
     @staticmethod
     @mark.parametrize(*GetTests)
-    def test_get(data, path, value, ignore_excs, kwargs):
+    def test_get(data: CCD, path: str, value: Any, ignore_excs: EE, kwargs: dict[str, Any]) -> None:
         with safe_raises(ignore_excs):
             assert data.get(path, value, **kwargs) == value
 
-    SetDefaultTests = (
+    SetDefaultTests: tuple[str, tuple[tuple[CCD, str, Any, EE, dict[str, Any]], ...]] = (
         "data, path, value, ignore_excs, kwargs", (
             (_ccd_from_meta(
                 {"members": ["a", "b"]},
-                {"a": ConfigData({}), "b": ConfigData({})}
+                {"a": MappingConfigData(), "b": MappingConfigData()}
             ), "test\\.path", None, (), {}),
             (_ccd_from_meta(
                 {"members": ["a", "b"], "orders": {"create": ["b", "a"], "read": ["a", "b"]}},
-                {"a": ConfigData({}), "b": ConfigData({})}
+                {"a": MappingConfigData(), "b": MappingConfigData()}
             ), "test\\.path", True, (), {}),
             (_ccd_from_meta(
                 {"members": ["a", "b"], "orders": {"create": ["b", "a"], "read": ["a", "b"]}},
-                {"a": ConfigData({}), "b": ConfigData({"test": {"path": None}})}
+                {"a": MappingConfigData(), "b": MappingConfigData({"test": {"path": None}})}
             ), "test\\.path", False, (AssertionError,), {}),
             (_ccd_from_meta(
                 {},
@@ -1636,7 +1747,7 @@ class TestComponentConfigData:
 
     @staticmethod
     @mark.parametrize(*SetDefaultTests)
-    def test_set_default(data, path, value, ignore_excs, kwargs):
+    def test_set_default(data: CCD, path: str, value: Any, ignore_excs: EE, kwargs: dict[str, Any]) -> None:
         with safe_raises(ignore_excs) as info:
             assert data.setdefault(path, value, **kwargs) == value
         if info:
@@ -1663,7 +1774,7 @@ class TestComponentConfigData:
                     {"a": MappingConfigData({"foo": "bar"}), "b": MappingConfigData({"foo": "quz"})},
             ),
     ))
-    def test_eq(a, b):
+    def test_eq(a: M, b: M) -> None:
         is_eq = a == b
         a, b = _ccd_from_members(a), _ccd_from_members(b)
 
@@ -1678,7 +1789,7 @@ class TestComponentConfigData:
             {"a": MappingConfigData()},
             {"a": MappingConfigData({"foo": "bar"}), "b": MappingConfigData({"foo": "quz"})},
     ))
-    def test_str(members):
+    def test_str(members: M) -> None:
         assert str(members) in str(_ccd_from_members(members))
 
     @staticmethod
@@ -1687,7 +1798,7 @@ class TestComponentConfigData:
             {"a": MappingConfigData()},
             {"a": MappingConfigData({"foo": "bar"}), "b": MappingConfigData({"foo": "quz"})},
     ))
-    def test_repr(members):
+    def test_repr(members: M) -> None:
         ccd = _ccd_from_members(members)
         assert repr(members) in repr(ccd)
 
@@ -1697,7 +1808,7 @@ class TestComponentConfigData:
             {"a": MappingConfigData()},
             {"a": MappingConfigData({"foo": "bar"}), "b": MappingConfigData({"foo": "quz"})},
     ))
-    def test_deepcopy(members):
+    def test_deepcopy(members: M) -> None:
         ccd = _ccd_from_members(members)
         copied = deepcopy(ccd)
 
@@ -1710,7 +1821,7 @@ class TestComponentConfigData:
             ({"a": MappingConfigData()}, "b"),
             ({"a": MappingConfigData({"foo": "bar"}), "b": MappingConfigData({"foo": "quz"})}, "b"),
     ))
-    def test_contains(members, key):
+    def test_contains(members: M, key: str) -> None:
         assert (key in _ccd_from_members(members)) is (key in members)
 
     @staticmethod
@@ -1719,7 +1830,7 @@ class TestComponentConfigData:
             {"a": MappingConfigData({"foo": "bar"}), "b": MappingConfigData({"foo": "quz"})},
             {"a": MappingConfigData({"foo": {"extra": "value"}}), "b": MappingConfigData({"foo": {"key": "value"}})},
     ))
-    def test_iter(members):
+    def test_iter(members: M) -> None:
         assert list(_ccd_from_members(members)) == list(members.keys())
 
     @staticmethod
@@ -1729,7 +1840,7 @@ class TestComponentConfigData:
             {"a": MappingConfigData(), "b": MappingConfigData()},
             {"a": MappingConfigData(), "b": MappingConfigData(), "c": MappingConfigData()},
     ))
-    def test_len(members):
+    def test_len(members: M) -> None:
         assert len(_ccd_from_members(members)) == len(members)
 
     @staticmethod
@@ -1738,7 +1849,7 @@ class TestComponentConfigData:
             ({"a": MappingConfigData({"key": "a"})}, "a"),
             ({"a": MappingConfigData({"key": "a"}), "b": MappingConfigData({"key": "b"})}, "b"),
     ))
-    def test_getitem(members, key):
+    def test_getitem(members: M, key: str) -> None:
         ignore_excs = []
         if key not in members:
             ignore_excs.append(KeyError)
@@ -1748,11 +1859,11 @@ class TestComponentConfigData:
 
     @staticmethod
     @mark.parametrize("members, key, value", (
-            ({}, 'key', MappingConfigData()),
+            ({}, "key", MappingConfigData()),
             ({"a": MappingConfigData()}, "a", MappingConfigData({"key": "value"})),
             ({"a": MappingConfigData()}, "b", MappingConfigData()),
     ))
-    def test_setitem(members, key, value):
+    def test_setitem(members: M, key: str, value: MappingConfigData[dict[Any, Any]]) -> None:
         ccd = _ccd_from_members(members)
         ccd[key] = value
         assert ccd[key] == value
@@ -1763,7 +1874,7 @@ class TestComponentConfigData:
             ({"a": MappingConfigData()}, "a"),
             ({"a": MappingConfigData(), "b": MappingConfigData()}, "a"),
     ))
-    def test_delitem(members, key):
+    def test_delitem(members: M, key: str) -> None:
         ccd = _ccd_from_members(members)
         ignore_excs = []
         if key not in members:
@@ -1774,7 +1885,12 @@ class TestComponentConfigData:
         assert key not in ccd
 
 
-def _insert_operator(tests, op, iop: Optional[Callable] = None, *ext):
+def _insert_operator(
+        tests: tuple[Any, ...],
+        op: Callable[[Any], Any] | Callable[[Any, Any], Any],
+        iop: Optional[Callable[[Any], Any] | Callable[[Any, Any], Any]] = None,
+        *ext: Any
+) -> Iterable[tuple[Any, Any, Any]]:
     yield from ((*test, *((op,) if iop is None else (op, iop)), *ext) for test in tests)
 
 
@@ -1791,13 +1907,13 @@ UnaryOperatorTests = (
 
 
 @mark.parametrize(*UnaryOperatorTests)
-def test_unary_operator(a, op):
+def test_unary_operator(a: Any, op: Callable[[Any], Any]) -> None:
     assert (op(ConfigData(a)) == op(a)
             ), f"op({ConfigData(a):r}) != {op(a)}"
 
 
 DyadicOperatorTests = (
-    "a, b, op, iop, inplace_reverse_raw", (
+    "a, b, op, iop, convert_raw", (
         *_insert_operator(TestMappingConfigData.MergeTests, operator.or_, operator.ior, True),
         *_insert_operator(TestSequenceConfigData.RepeatTests, operator.mul, operator.imul, False),
         *_insert_operator(TestSequenceConfigData.ExtendTests, operator.add, operator.iadd, False),
@@ -1806,8 +1922,14 @@ DyadicOperatorTests = (
 
 
 @mark.parametrize(*DyadicOperatorTests)
-def test_dyadic_operator(a, b, op, iop, inplace_reverse_raw):
-    inplace_reverse_raw = (lambda _: _) if inplace_reverse_raw else ConfigData
+def test_dyadic_operator(
+        a: ConfigData,
+        b: ConfigData,
+        op: Callable[[Any, Any], Any],
+        iop: Callable[[Any, Any], Any],
+        convert_raw: bool,
+) -> None:
+    converter: Callable[[Any], Any] = (lambda _: _) if convert_raw else ConfigData
     assert (op(ConfigData(a), ConfigData(b)) == ConfigData(op(a, b))
             ), f"op({ConfigData(a):r}, {ConfigData(b):r}) != {ConfigData(op(a, b)):r}"
     assert (op(a, ConfigData(b)) == ConfigData(op(a, b))
@@ -1824,57 +1946,60 @@ def test_dyadic_operator(a, b, op, iop, inplace_reverse_raw):
 
     assert (iop(ConfigData(deepcopy(a)), ConfigData(b)) == ConfigData(iop(deepcopy(a), b))
             ), f"iop({ConfigData(deepcopy(a)):r}, {ConfigData(b):r}) != {ConfigData(iop(deepcopy(a), b)):r}"
-    assert (iop(deepcopy(a), ConfigData(b)) == inplace_reverse_raw(iop(deepcopy(a), b))
-            ), f"iop({deepcopy(a)}, {ConfigData(b):r}) != {inplace_reverse_raw(iop(deepcopy(a), b)):r}"
+    assert (iop(deepcopy(a), ConfigData(b)) == converter(iop(deepcopy(a), b))
+            ), f"iop({deepcopy(a)}, {ConfigData(b):r}) != {converter(iop(deepcopy(a), b)):r}"
     assert (iop(ConfigData(deepcopy(a)), b) == ConfigData(iop(deepcopy(a), b))
             ), f"iop({ConfigData(deepcopy(a)):r}, {b}) != {ConfigData(iop(deepcopy(a), b)):r}"
 
 
-def test_wrong_type_config_data():
+def test_wrong_type_config_data() -> None:
     class EmptyTypesConfigData(ConfigData):
-        TYPES = {}
+        TYPES: ClassVar[OrderedDict[tuple[type, ...], Callable[[Any], Any] | type]] = OrderedDict()
 
     with raises(TypeError, match="Unsupported type"):
         EmptyTypesConfigData(type)
 
 
+type P = ConfigPool
+
+
 class TestConfigFile:
     @staticmethod
     @fixture
-    def data():
-        return ConfigData({
+    def data() -> D_MCD:
+        return cast(D_MCD, MappingConfigData({
             "foo": {
                 "bar": 123
             },
             "foo1": 114,
             "foo2": ["bar"]
-        })
+        }))
 
     @staticmethod
     @fixture
-    def file(data):
+    def file(data: D_MCD) -> ConfigFile[D_MCD]:
         return ConfigFile(data, config_format="json")
 
     @staticmethod
     @fixture
-    def pool(tmpdir):
-        return ConfigPool(root_path=tmpdir)
+    def pool(tmpdir: FPath) -> P:
+        return cast(P, ConfigPool(root_path=str(tmpdir)))
 
     @staticmethod
-    def test_attr_readonly(file, data):
+    def test_attr_readonly(file: ConfigFile[D_MCD], data: D_MCD) -> None:
         assert file.config == data
         with raises(AttributeError):
             # noinspection PyPropertyAccess
-            file.config = None
+            file.config = None  # type: ignore[misc, assignment]
 
         assert file.config_format == "json"
         with raises(AttributeError):
             # noinspection PyPropertyAccess
-            file.config_format = None
+            file.config_format = None  # type: ignore[misc]
 
     @staticmethod
-    def test_wrong_save(data, pool):
-        file = ConfigFile(data)
+    def test_wrong_save(data: D_MCD, pool: P) -> None:
+        file: ConfigFile[D_MCD] = ConfigFile(data)
         with raises(UnsupportedConfigFormatError, match="Unsupported config format: Unknown"):
             file.save(pool, '', ".json")
 
@@ -1882,12 +2007,12 @@ class TestConfigFile:
             file.save(pool, '', ".json", config_format="json")
 
     @staticmethod
-    def test_wrong_load(file, pool):
+    def test_wrong_load(file: ConfigFile[D_MCD], pool: P) -> None:
         with raises(UnsupportedConfigFormatError, match="Unsupported config format: json"):
             file.load(pool, '', ".json", config_format="json")
 
     @staticmethod
-    def test_wrong_initialize(file, pool):
+    def test_wrong_initialize(file: ConfigFile[D_MCD], pool: P) -> None:
         with raises(UnsupportedConfigFormatError, match="Unsupported config format: json"):
             file.initialize(pool, '', ".json", config_format="json")
 
@@ -1895,7 +2020,7 @@ class TestConfigFile:
         {"config_format": "json"},
     )
 
-    CombExtraKwargs = []
+    CombExtraKwargs: list[dict[str, str]] = []
     for i in range(1, len(ExtraKwargs) + 1):
         CombExtraKwargs.extend(
             functools.reduce(
@@ -1904,7 +2029,15 @@ class TestConfigFile:
             ) for kwargs_tuple in itertools.combinations(ExtraKwargs, i)
         )
 
-    CombEQKwargs = tuple(d[0] | k for d, k in itertools.product(
+    CombEQKwargs: tuple[
+        dict[
+            str,
+            dict[
+                str,
+                dict[str, int]
+            ] | str
+        ], ...,
+    ] = tuple(d[0] | k for d, k in itertools.product(
         itertools.product((
             {"initial_config": {"foo": {"bar": 123}}},
             {"initial_config": {"foo": {"bar": 456}}},
@@ -1912,17 +2045,25 @@ class TestConfigFile:
         CombExtraKwargs
     ))
 
-    EQTests = ("a, b, is_eq", tuple(
-        ((ConfigFile(**a), ConfigFile(**b), a == b) for a, b in itertools.product(CombEQKwargs, CombEQKwargs))
-    ))
+    EQTests: tuple[
+        str,
+        tuple[tuple[
+            ConfigFile[D_MCD],
+            ConfigFile[D_MCD],
+            bool
+        ], ...]
+    ] = ("a, b, is_eq", tuple(((
+        ConfigFile(**cast(dict[str, Any], a)), ConfigFile(**cast(dict[str, Any], b)), a == b
+    ) for a, b in itertools.product(CombEQKwargs, CombEQKwargs)
+    )))
 
     @staticmethod
     @mark.parametrize(*EQTests)
-    def test_eq(a: ConfigFile, b: ConfigFile, is_eq: bool):
+    def test_eq(a: ConfigFile[D_MCD], b: ConfigFile[D_MCD], is_eq: bool) -> None:
         assert (a == b) is is_eq
 
     @staticmethod
-    def test_eq_diff_type(file):
+    def test_eq_diff_type(file: ConfigFile[D_MCD]) -> None:
         assert file != NotImplemented
 
     @staticmethod
@@ -1930,10 +2071,10 @@ class TestConfigFile:
             ({}, True),
             ({"foo": 123}, False),
     ))
-    def test_bool(raw_data, is_empty):
+    def test_bool(raw_data: D_MCD, is_empty: bool) -> None:
         assert bool(ConfigFile(ConfigData(raw_data))) is not is_empty
 
     @staticmethod
-    def test_repr(file, data):
+    def test_repr(file: ConfigFile[D_MCD], data: D_MCD) -> None:
         assert repr(file.config) in repr(file)
         assert repr(data) in repr(ConfigFile(data))

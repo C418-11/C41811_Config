@@ -6,7 +6,9 @@
 .. versionadded:: 0.2.0
 """
 
+from typing import Any
 from typing import TextIO
+from typing import cast
 from typing import override
 
 from .._protocols import SupportsWrite
@@ -38,10 +40,10 @@ class PlainTextSL(BasicLocalFileConfigSL):
     @override
     def save_file(
             self,
-            config_file: ABCConfigFile[StringConfigData | SequenceConfigData],
+            config_file: ABCConfigFile[StringConfigData[Any] | SequenceConfigData[Any]],
             target_file: SupportsWrite[str],
-            *merged_args,
-            **merged_kwargs
+            *merged_args: Any,
+            **merged_kwargs: Any
     ) -> None:
         if isinstance(config_file.config, StringConfigData):
             with self.raises():
@@ -60,20 +62,23 @@ class PlainTextSL(BasicLocalFileConfigSL):
     def load_file(
             self,
             source_file: TextIO,
-            *merged_args,
-            **merged_kwargs
-    ) -> ConfigFile[StringConfigData[str] | SequenceConfigData[list]]:
+            *merged_args: Any,
+            **merged_kwargs: Any
+    ) -> ConfigFile[StringConfigData[str] | SequenceConfigData[list[str]]]:
         if merged_kwargs.get("split_line"):
             with self.raises():
-                content = source_file.readlines()
+                content: list[str] = source_file.readlines()
             if merged_kwargs.get("remove_linesep"):
                 for i, line in enumerate(content):
-                    content[i] = line.removesuffix(merged_kwargs.get("remove_linesep"))
+                    content[i] = line.removesuffix(merged_kwargs.get("remove_linesep", ''))
         else:
             with self.raises():
-                content = source_file.read()
+                content: str = source_file.read()  # type: ignore[no-redef]
 
-        return ConfigFile(ConfigData(content), config_format=self.processor_reg_name)
+        return ConfigFile(
+            cast(StringConfigData[str] | SequenceConfigData[list[Any]], ConfigData(content)),
+            config_format=self.processor_reg_name
+        )
 
 
 __all__ = (

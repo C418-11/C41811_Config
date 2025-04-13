@@ -13,8 +13,10 @@ from functools import lru_cache
 from typing import Any
 from typing import Optional
 from typing import Self
+from typing import cast
 from typing import override
 
+from ._protocols import Indexed
 from .abc import ABCKey
 from .abc import ABCPath
 from .errors import ConfigDataPathSyntaxException
@@ -22,7 +24,7 @@ from .errors import TokenInfo
 from .errors import UnknownTokenTypeError
 
 
-class IndexMixin(ABCKey, ABC):
+class IndexMixin[K, D: Indexed[Any, Any]](ABCKey[K, D], ABC):
     """
     混入类，提供对Index操作的支持
 
@@ -31,19 +33,19 @@ class IndexMixin(ABCKey, ABC):
     """
 
     @override
-    def __get_inner_element__[T: Any](self, data: T) -> T:
-        return data[self._key]
+    def __get_inner_element__(self, data: D) -> D:
+        return cast(D, data[self._key])
 
     @override
-    def __set_inner_element__(self, data: Any, value: Any) -> None:
-        data[self._key] = value
+    def __set_inner_element__(self, data: D, value: Any) -> None:
+        data[self._key] = value  # type: ignore[index]
 
     @override
-    def __delete_inner_element__(self, data: Any) -> None:
-        del data[self._key]
+    def __delete_inner_element__(self, data: D) -> None:
+        del data[self._key]  # type: ignore[attr-defined]
 
 
-class AttrKey(IndexMixin, ABCKey):
+class AttrKey(IndexMixin[str, Mapping[str, Any]], ABCKey[str, Mapping[str, Any]]):
     """
     属性键
     """
@@ -63,15 +65,15 @@ class AttrKey(IndexMixin, ABCKey):
         super().__init__(key, meta)
 
     @override
-    def __contains_inner_element__(self, data: Mapping) -> bool:
+    def __contains_inner_element__(self, data: Mapping[Any, Any]) -> bool:
         return self._key in data
 
     @override
-    def __supports__(self, data: Any) -> tuple:
+    def __supports__(self, data: Any) -> tuple[Any, ...]:
         return () if isinstance(data, Mapping) else (Mapping,)
 
     @override
-    def __supports_modify__(self, data: Any) -> tuple:
+    def __supports_modify__(self, data: Any) -> tuple[Any, ...]:
         return () if isinstance(data, MutableMapping) else (MutableMapping,)
 
     @override
@@ -79,19 +81,19 @@ class AttrKey(IndexMixin, ABCKey):
         meta = '' if self._meta is None else f"\\{{{self._meta.replace('\\', "\\\\")}\\}}"
         return f"{meta}\\.{self._key.replace('\\', "\\\\")}"
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._key)
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if isinstance(other, str):
             return self._key == other
         return super().__eq__(other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return super().__hash__()
 
 
-class IndexKey(IndexMixin, ABCKey):
+class IndexKey(IndexMixin[int, Sequence[Any]], ABCKey[int, Sequence[Any]]):
     """
     下标键
     """
@@ -111,7 +113,7 @@ class IndexKey(IndexMixin, ABCKey):
         super().__init__(key, meta)
 
     @override
-    def __contains_inner_element__(self, data: Sequence) -> bool:
+    def __contains_inner_element__(self, data: Sequence[Any]) -> bool:
         try:
             data[self._key]
         except IndexError:
@@ -119,11 +121,11 @@ class IndexKey(IndexMixin, ABCKey):
         return True
 
     @override
-    def __supports__(self, data: Any) -> tuple:
+    def __supports__(self, data: Any) -> tuple[Any, ...]:
         return () if isinstance(data, Sequence) else (Sequence,)
 
     @override
-    def __supports_modify__(self, data: Any) -> tuple:
+    def __supports_modify__(self, data: Any) -> tuple[Any, ...]:
         return () if isinstance(data, MutableSequence) else (MutableSequence,)
 
     @override
@@ -132,7 +134,7 @@ class IndexKey(IndexMixin, ABCKey):
         return f"{meta}\\[{self._key}\\]"
 
 
-class Path(ABCPath):
+class Path(ABCPath[AttrKey | IndexKey]):
     @classmethod
     def from_str(cls, string: str) -> Self:
         """
@@ -157,7 +159,7 @@ class Path(ABCPath):
         :return: 解析后的路径
         :rtype: Path
         """
-        keys: list[ABCKey] = []
+        keys: list[AttrKey | IndexKey] = []
         for loc in locate:
             if isinstance(loc, int):
                 keys.append(IndexKey(loc))
@@ -225,6 +227,7 @@ class PathSyntaxParser:
 
            添加缓存
         """
+        # 开头默认为AttrKey
         if not string.startswith((r"\.", r"\[", r"\{")):
             string = rf"\.{string}"
 
@@ -250,7 +253,7 @@ class PathSyntaxParser:
             if index_safe and (tokens[-1][1] not in {'.', '[', ']', '{', '}'}):
                 token += tokens.pop()
 
-            # 将r"\\]"后面紧随的字符单独切割出来
+            # 将r"\]"，r"\}"后面紧随的字符单独切割出来
             if token.startswith((']', '}')) and token[1:]:
                 tokens.append(token[1:])
                 token = token[:1]
@@ -264,7 +267,7 @@ class PathSyntaxParser:
         return tuple(tokens)
 
     @classmethod
-    def parse(cls, string: str) -> list[ABCKey]:  # noqa: C901 (ignore complexity)
+    def parse(cls, string: str) -> list[AttrKey | IndexKey]:  # noqa: C901 (ignore complexity)
         """
         解析字符串为键列表
 
@@ -274,7 +277,7 @@ class PathSyntaxParser:
         :return: 键列表
         :rtype: list[ABCKey]
         """
-        path: list[ABCKey] = []
+        path: list[AttrKey | IndexKey] = []
         item: None | str = None
         meta: None | str = None
         token_stack: list[str] = []
@@ -287,35 +290,27 @@ class PathSyntaxParser:
             token_type = token[1]
             content = token[2:].replace("\\\\", '\\')
 
-            if token_type == '}':
+            def _token_closed(tk_typ: str, tk_close: str) -> None:
                 try:
                     top = token_stack.pop()
                 except IndexError:
                     raise ConfigDataPathSyntaxException(
                         TokenInfo(tokenized_path, token, i),
-                        "unmatched '}': "
+                        f"unmatched '{tk_close}': "
                     ) from None
-                if top != '{':
+                if top != tk_typ:
                     raise ConfigDataPathSyntaxException(
                         TokenInfo(tokenized_path, token, i),
-                        f"closing parenthesis '}}' does not match opening parenthesis '{top}': "
+                        f"closing parenthesis '{tk_close}' does not match opening parenthesis '{top}': "
                     )
+
+            if token_type == '}':
+                _token_closed('{', '}')
                 continue
             if token_type == ']':
+                _token_closed('[', ']')
                 try:
-                    top = token_stack.pop()
-                except IndexError:
-                    raise ConfigDataPathSyntaxException(
-                        TokenInfo(tokenized_path, token, i),
-                        "unmatched ']': "
-                    ) from None
-                if top != '[':
-                    raise ConfigDataPathSyntaxException(
-                        TokenInfo(tokenized_path, token, i),
-                        f"closing parenthesis ']' does not match opening parenthesis '{top}': "
-                    )
-                try:
-                    path.append(IndexKey(int(item), meta))
+                    path.append(IndexKey(int(cast(str, item)), meta))
                 except ValueError:
                     raise ValueError("index key must be int")
                 item = None

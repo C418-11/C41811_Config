@@ -34,6 +34,7 @@ dependencies = [
     "wrapt~=1.17.2",
     "pyrsistent~=0.20.0",
     "portalocker~=3.1.1",
+    "mypy-extensions~=1.0.0",
 ]
 
 [project.urls]
@@ -66,6 +67,15 @@ flake8 = [
     "flake8~=7.2.0",
     "flake8-html~=0.4.3",
 ]
+mypy = [
+    "mypy~=1.15.0",
+    "lxml~=5.3.2",
+    "types-PyYAML",
+    "types-toml",
+    "types-setuptools",
+    "pytest~=8.3.5",
+    "cython~=3.1.0b1",
+]
 PyYamlSL = ["PyYAML~=6.0.2"]
 RuamelYamlSL = ["ruamel.yaml~=0.18.10"]
 TomlSL = ["toml~=0.10.2"]
@@ -79,18 +89,20 @@ version_scheme = "release-branch-semver"
 local_scheme = "node-and-date"
 fallback_version = "0.0+UNKNOWN"
 
-[tool.yapf]
-based_on_style = "pep8"
-column_limit = 120
-indent_width = 4
-use_tabs = false
+[tool.pytest.ini_options]
+addopts = "-v --doctest-modules --ignore-glob=docs/conf.py"
 
 [tool.flake8]
-max-line-length = 120
+max-line-length = 120  # flake8暂时不支持pyproject.toml中的配置
 show-source = true
 doctests = true
 max-complexity = 10
 statistics = true
+
+[tool.mypy]
+strict = true
+pretty = true
+allow_redefinition = true
 
 [tool.coverage.run]
 omit = [
@@ -103,20 +115,20 @@ omit = [
 #]
 
 [tool.tox]
-envlist = ["py312", "py313", "flake8"]
+envlist = ["py312", "py313", "flake8", "mypy"]
 
 [tool.tox.env_run_base]
 skip_install = true
 commands_pre = [
-    ["pip", "install", "-e", ".[dev,test]"],
+    ["pip", "install", "--force-reinstall", "-e", ".[dev,test]"],
 ]
 commands = [
-    ["pytest", "-v", "--doctest-modules", "--ignore-glob=docs/conf.py", ],
+    ["pytest"],
 ]
 
 [tool.tox.env.flake8]
 commands_pre = [
-    ["pip", "install", "-e", ".[flake8]"],
+    ["pip", "install", "--force-reinstall", "-e", ".[flake8]"],
 ]
 commands = [
     ["flake8",
@@ -126,18 +138,27 @@ commands = [
     ],
 ]
 
+[tool.tox.env.mypy]
+commands_pre = [
+    ["pip", "install", "--force-reinstall", "-e", ".[dev,mypy]"],
+]
+commands = [
+    ["mypy", "tests"],
+    ["pip", "uninstall", "-y", "C41811.Config"],
+    ["mypy", "src"],
+]
+
 [tool.tox.env.prepare-doc]
 base_python = ["py313"]
 allowlist_externals = ["npm", "lessc"]
 commands_pre = [
-    ["pip", "install", "-e", ".[dev,test,flake8]"],
+    ["pip", "install", "--force-reinstall", "-e", ".[dev,test,flake8]"],
     ["npm", "install", "-g", "less"],
 ]
 commands = [
     ["lessc", "./docs/_static/pygments_darcula.less", "./docs/_static/pygments_darcula.css"],
     ["-",
-        "pytest", "-v",
-        "--doctest-modules", "--ignore-glob=docs/conf.py",
+        "pytest",
         "--html=./docs/_static/_pytest/index.html",
         "--cov=src", "--cov-report=term-missing", "--cov-report=html:docs/_static/_coverage"
     ],

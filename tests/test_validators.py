@@ -16,15 +16,15 @@ from C41811.Config.validators import SkipMissing
 from C41811.Config.validators import SkipMissingType
 
 
-def test_field_definition():
+def test_field_definition() -> None:
     FieldDefinition(str, "default")
     FieldDefinition(str | list, default_factory=list)
     with raises(ValueError):
         # noinspection PyArgumentList
-        FieldDefinition(str | list, "default", default_factory=list)
+        FieldDefinition(str | list, "default", default_factory=list)  # type: ignore[call-overload]
 
 
-def test_skip_missing():
+def test_skip_missing() -> None:
     assert SkipMissingType() is SkipMissing
 
     str(SkipMissing)

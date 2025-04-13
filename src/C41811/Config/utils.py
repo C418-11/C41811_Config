@@ -7,31 +7,32 @@
 
 from contextlib import suppress
 from typing import Any
+from typing import cast
 
 
-def singleton(cls):
+def singleton[C: Any](target_cls: type[C], /) -> type[C]:
     """
     单例模式类装饰器
     """
 
-    def __new__(c, *args, **kwargs):
-        if not hasattr(c, "__singleton_instance__"):
-            c.__singleton_instance__ = c.__singleton_new__(c, *args, **kwargs)
+    def __new__(cls: type[C], /, *args: Any, **kwargs: Any) -> C:
+        if not hasattr(cls, "__singleton_instance__"):
+            cls.__singleton_instance__ = cls.__singleton_new__(cls, *args, **kwargs)
 
         # noinspection PyProtectedMember
-        return c.__singleton_instance__
+        return cast(C, cls.__singleton_instance__)
 
-    __new__.__name__ = cls.__new__.__name__
-    __new__.__qualname__ = cls.__new__.__qualname__
-    __new__.__doc__ = cls.__new__.__doc__
-    __new__.__module__ = cls.__new__.__module__
+    __new__.__name__ = target_cls.__new__.__name__
+    __new__.__qualname__ = target_cls.__new__.__qualname__
+    __new__.__doc__ = target_cls.__new__.__doc__
+    __new__.__module__ = target_cls.__new__.__module__
     with suppress(AttributeError):
-        __new__.__annotations__ = cls.__new__.__annotations__
+        __new__.__annotations__ = target_cls.__new__.__annotations__
 
-    cls.__singleton_new__ = cls.__new__
-    cls.__new__ = __new__
+    target_cls.__singleton_new__ = target_cls.__new__
+    target_cls.__new__ = staticmethod(__new__)  # type: ignore[assignment]
 
-    return cls
+    return target_cls
 
 
 @singleton
@@ -40,10 +41,10 @@ class UnsetType:
     用于填充默认值的特殊值
     """
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "<Unset Argument>"
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return False
 
 
@@ -53,7 +54,7 @@ Unset = UnsetType()
 """
 
 
-class CellType[C: Any]:
+class CellType[C]:
     """
     间接持有对象引用
     """
@@ -61,7 +62,7 @@ class CellType[C: Any]:
     def __init__(self, contents: C):
         self.cell_contents = contents
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<{type(self).__name__} ({self.cell_contents!r})>"
 
 

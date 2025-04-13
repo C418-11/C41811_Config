@@ -33,19 +33,19 @@ class Indexed(Protocol[_T_contra, _T_co]):
        重命名 ``SupportsIndex`` 为 ``Indexed``
     """
 
-    def __getitem__(self, __key: _T_contra) -> _T_co: ...
+    def __getitem__(self, __index: _T_contra) -> _T_co: ...
 
 
-class MutableIndexed(Indexed):
+class MutableIndexed(Indexed[_T_contra, _T_co]):
     # noinspection GrazieInspection
     """
     .. versionchanged:: 0.2.0
        重命名 ``SupportsWriteIndex`` 为 ``MutableIndexed``
     """
 
-    def __setitem__(self, __key: _T_contra, __value: _T_contra) -> None: ...
+    def __setitem__(self, __index: _T_contra, __value: _T_contra) -> None: ...
 
-    def __delitem__(self, __key: _T_contra) -> None: ...
+    def __delitem__(self, __index: _T_contra) -> None: ...
 
 
 __all__ = (
