@@ -69,12 +69,11 @@ flake8 = [
 ]
 mypy = [
     "mypy~=1.15.0",
-    "lxml~=5.3.2",
+    "pytest~=8.3.5",
+    "ruamel.yaml~=0.18.10",
     "types-PyYAML",
     "types-toml",
     "types-setuptools",
-    "pytest~=8.3.5",
-    "cython~=3.1.0b1",
 ]
 PyYamlSL = ["PyYAML~=6.0.2"]
 RuamelYamlSL = ["ruamel.yaml~=0.18.10"]
@@ -140,7 +139,7 @@ commands = [
 
 [tool.tox.env.mypy]
 commands_pre = [
-    ["pip", "install", "--force-reinstall", "-e", ".[dev,mypy]"],
+    ["pip", "install", "--force-reinstall", "-e", ".[mypy]"],
 ]
 commands = [
     ["mypy", "tests"],
