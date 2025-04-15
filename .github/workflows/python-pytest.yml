@@ -31,14 +31,14 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest --cov --junitxml=junit.xml -o junit_family=legacy
+          pytest --cov --junitxml=junit-py${{ matrix.python-version }}-${{ matrix.os }}.xml -o junit_family=legacy
 
       - name: Upload test results
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
           name: junit-report
-          path: junit.xml
+          path: junit-py${{ matrix.python-version }}-${{ matrix.os }}.xml
 
   codecov:
     name: Upload results to Codecov

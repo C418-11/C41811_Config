@@ -545,8 +545,8 @@ class TestMappingConfigData:
             assert set(data.keys(**kwargs)) == keys
 
     @staticmethod
-    def test_keys_with_wrong_data():
-        data = MappingConfigData({123: {}})
+    def test_keys_with_wrong_data() -> None:
+        data: MappingConfigData[Any] = MappingConfigData({123: {}})
         with raises(TypeError):
             data.keys(recursive=True)
 
