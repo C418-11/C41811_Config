@@ -72,8 +72,6 @@ type AIO = IO[Any]
 
 
 def _path2str(x: PathLike) -> str:  # pragma: no cover
-    if hasattr(x, "decode"):
-        return x.decode(sys.getfilesystemencoding())
     if isinstance(x, Path):
         return str(x)
     return x
@@ -84,7 +82,7 @@ _proper_fsync = os.fsync
 if sys.platform != "win32":  # pragma: no cover  # noqa: C901 (ignore complexity)
     # noinspection SpellCheckingInspection
     if hasattr(fcntl, "F_FULLFSYNC"):
-        def _proper_fsync(fd: int) -> None:  # noqa: F811, E303  # type: ignore[misc]
+        def _proper_fsync(fd: int) -> None:  # type: ignore[misc]  # noqa: F811, E303
             # https://lists.apple.com/archives/darwin-dev/2005/Feb/msg00072.html
             # https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man2/fsync.2.html
             # https://github.com/untitaker/python-atomicwrites/issues/6
