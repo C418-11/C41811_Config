@@ -255,7 +255,7 @@ class ABCConfigData[D](ABC):
               instance.from_data(data)
 
         .. versionchanged:: 0.2.0
-           现在会自适应参数数量
+           现在会自适应初始化参数
         """
         # noinspection PyArgumentList
         return cls(*args, **kwargs)
