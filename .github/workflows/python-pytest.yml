@@ -37,7 +37,7 @@ jobs:
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
-          name: junit-report
+          name: junit-report-py${{ matrix.python-version }}-${{ matrix.os }}
           path: junit-py${{ matrix.python-version }}-${{ matrix.os }}.xml
 
   codecov:
@@ -53,8 +53,9 @@ jobs:
       - name: Download test results
         uses: actions/download-artifact@v4
         with:
-          name: junit-report
+          pattern: junit-report-*
           path: .
+          merge-multiple: true
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5

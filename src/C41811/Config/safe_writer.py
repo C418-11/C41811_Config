@@ -67,11 +67,11 @@ try:
 except ImportError:  # pragma: no cover
     fspath = None  # type: ignore[assignment]
 
-type PathLike = str | bytes | Path
+type PathLike = str | Path
 type AIO = IO[Any]
 
 
-def _path2str(x: PathLike) -> str | bytes:  # pragma: no cover
+def _path2str(x: PathLike) -> str:  # pragma: no cover
     if hasattr(x, "decode"):
         return x.decode(sys.getfilesystemencoding())
     if isinstance(x, Path):
@@ -84,11 +84,11 @@ _proper_fsync = os.fsync
 if sys.platform != "win32":  # pragma: no cover  # noqa: C901 (ignore complexity)
     # noinspection SpellCheckingInspection
     if hasattr(fcntl, "F_FULLFSYNC"):
-        def _proper_fsync(fd: int) -> None:  # noqa: F811, E303
+        def _proper_fsync(fd: int) -> None:  # noqa: F811, E303  # type: ignore[misc]
             # https://lists.apple.com/archives/darwin-dev/2005/Feb/msg00072.html
             # https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man2/fsync.2.html
             # https://github.com/untitaker/python-atomicwrites/issues/6
-            fcntl.fcntl(fd, fcntl.F_FULLFSYNC)
+            fcntl.fcntl(fd, fcntl.F_FULLFSYNC)  # type: ignore[attr-defined]
 
 
     def _sync_directory(directory: str) -> None:  # noqa: E303
@@ -149,9 +149,9 @@ def replace_atomic(src: PathLike, dst: PathLike) -> None:
     两个路径必须位于同一个文件系统上，这样操作才能是原子的。
 
     :param src: 源
-    :type src: str | bytes
+    :type src: str
     :param dst: 目标
-    :type dst: str | bytes
+    :type dst: str
     """
     _replace_atomic(src, dst)
 
@@ -163,9 +163,9 @@ def move_atomic(src: PathLike, dst: PathLike) -> None:  # pragma: no cover
     两个路径必须位于同一个文件系统上，这样操作才能是原子的。
 
     :param src: 源
-    :type src: str | bytes
+    :type src: str
     :param dst: 目标
-    :type dst: str | bytes
+    :type dst: str
     """
     _move_atomic(src, dst)
 
@@ -302,7 +302,7 @@ class LockFlags(IntEnum):
     SHARED = portalocker.LOCK_SH | portalocker.LOCK_NB
 
 
-FileLocks: WeakValueDictionary[str | bytes, Lock] = WeakValueDictionary()
+FileLocks: WeakValueDictionary[str, Lock] = WeakValueDictionary()
 """
 存储文件名对应的锁
 """
