@@ -224,7 +224,7 @@ class ConfigRequirementDecorator:
         self._config_file: ABCConfigFile[Any] = config
         self._required = required
         self._filter_kwargs = filter_kwargs
-        self._cache_config: Callable[[Callable[..., D], VarArg(), KwArg()], D] = (cast(
+        self._config_cacher: Callable[[Callable[..., D], VarArg(), KwArg()], D] = (cast(
             Callable[[Callable[..., D], VarArg(), KwArg()], D],
             lambda func, *args, **kwargs: func(*args, **kwargs)
         ) if config_cacher is None else config_cacher)
@@ -268,7 +268,7 @@ class ConfigRequirementDecorator:
     def _wrapped_filter(self, **kwargs: Any) -> ABCConfigData[Any]:
         cell = CellType(self._config_file.config)
 
-        result = self._cache_config(self._required.filter, cell, **kwargs)
+        result = self._config_cacher(self._required.filter, cell, **kwargs)
         self._config_file._config = cell.cell_contents
         return result
 
