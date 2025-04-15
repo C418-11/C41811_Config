@@ -50,10 +50,12 @@ from .abc import PathLike
 from .errors import ConfigDataReadOnlyError
 from .errors import ConfigDataTypeError
 from .errors import ConfigOperate
+from .errors import CyclicReferenceError
 from .errors import FailedProcessConfigFileError
 from .errors import KeyInfo
 from .errors import RequiredPathNotFoundError
 from .errors import UnsupportedConfigFormatError
+from .path import AttrKey
 from .path import Path
 from .utils import Unset
 
@@ -449,6 +451,66 @@ class NoneConfigData(BasicSingleConfigData[None]):
         return False
 
 
+def _keys_recursive(
+        data: Mapping[Any, Any],
+        seen: Optional[set[int]] = None,
+        *,
+        strict: bool,
+        end_point_only: bool,
+) -> Generator[str, None, None]:
+    """
+    递归获取配置的键
+
+    :param data: 配置数据
+    :type data: Mapping
+    :param seen: 已访问的配置数据的id
+    :type seen: Optional[set[int]]
+    :param strict: 是否严格模式，如果为 True，则当遇到循环引用时，会抛出异常
+    :type strict: bool
+    :param end_point_only: 是否只返回叶子节点的键
+    :type end_point_only: bool
+
+    :return: 获取的生成器
+    :rtype: Generator[str, None, None]
+
+    :raises CyclicReferenceError: 当遇到循环引用时，如果 strict 为 True，则抛出此异常
+    :raises TypeError: 递归获取时键不为str时抛出
+
+    .. versionadded:: 0.2.0
+    """
+    if seen is None:
+        seen = set()
+
+    if id(data) in seen:
+        if strict:
+            # noinspection PyTypeChecker
+            raise CyclicReferenceError(key_info=KeyInfo(Path([]), None, -1))
+        return
+    seen.add(id(data))
+
+    for k, v in data.items():
+        if not isinstance(k, str):
+            raise TypeError(f"key must be str, not {type(k).__name__}")
+        k = k.replace('\\', "\\\\")
+        if isinstance(v, Mapping):
+            try:
+                yield from (
+                    f"{k}\\.{x}" for x in _keys_recursive(v, seen, strict=strict, end_point_only=end_point_only)
+                )
+            except CyclicReferenceError as err:
+                key_info = err.key_info
+                key = AttrKey(k)
+
+                key_info.path = Path((key, *key_info.path))
+                key_info.current_key = key if key_info.current_key is None else key_info.current_key
+                key_info.index += 1
+                raise
+            if end_point_only:
+                continue
+        yield k
+    seen.remove(id(data))
+
+
 @_generate_operators
 class MappingConfigData[D: Mapping[Any, Any]](BasicIndexedConfigData[D], MutableMapping[Any, Any]):
     """
@@ -469,17 +531,26 @@ class MappingConfigData[D: Mapping[Any, Any]](BasicIndexedConfigData[D], Mutable
     def data_read_only(self) -> bool:
         return not isinstance(self._data, MutableMapping)
 
-    def keys(self, *, recursive: bool = False, end_point_only: bool = False) -> KeysView[str]:
+    def keys(self, *, recursive: bool = False, strict: bool = True, end_point_only: bool = False) -> KeysView[Any]:
+        # noinspection GrazieInspection
         r"""
         获取所有键
 
+        不为 :py:class:`Mapping` 默认行为时键必须为 :py:class:`str` 且返回值会被转换为
+        :ref:`配置数据路径字符串 <term-config-data-path-syntax>`
+
         :param recursive: 是否递归获取
         :type recursive: bool
+        :param strict: 是否严格检查循环引用数据，为真时提前抛出错误，否则静默忽略
+        :type strict: bool
         :param end_point_only: 是否只获取叶子节点
         :type end_point_only: bool
 
         :return: 所有键
         :rtype: KeysView[str]
+
+        :raise TypeError: 递归获取时键不为str时抛出
+        :raise CyclicReferenceError: 严格检查循环引用数据时发现循环引用抛出
 
         例子
         ----
@@ -514,27 +585,37 @@ class MappingConfigData[D: Mapping[Any, Any]](BasicIndexedConfigData[D], Mutable
 
            >>> data.keys(recursive=True, end_point_only=True)
            odict_keys(['foo\\.bar\\.baz', 'foo\\.bar1', 'foo1'])
+
+           为严格模式时会检查循环引用并提前引发错误
+
+           >>> cyclic = {
+           ...     "cyclic": None,
+           ...     "key": "value"
+           ... }
+           >>> cyclic["cyclic"] = cyclic
+           >>> cyclic = ConfigData(cyclic)
+
+           >>> cyclic.keys(recursive=True)  # 默认为严格模式
+           Traceback (most recent call last):
+               ...
+           C41811.Config.errors.CyclicReferenceError: Cyclic reference detected at \.cyclic -> \.cyclic (1/1)
+
+           否则静默跳过循环引用
+
+           >>> cyclic.keys(recursive=True, strict=False)
+           odict_keys(['cyclic', 'key'])
+
+           >>> cyclic.keys(recursive=True, strict=False, end_point_only=True)
+           odict_keys(['key'])
+
+        .. versionchanged:: 0.2.0
+           添加 ``strict`` 参数
         """
 
-        def _recursive(data: Mapping[str, Any], seen: Optional[set[int]] = None) -> Generator[str, None, None]:
-            if seen is None:
-                seen = set()
-
-            if id(data) in seen:
-                return  # todo 可选行为，严格：抛出错误，宽松：跳过循环引用
-            seen.add(id(data))
-
-            for k, v in data.items():
-                k = k.replace('\\', "\\\\")
-                if isinstance(v, Mapping):
-                    yield from (f"{k}\\.{x}" for x in _recursive(v, seen))
-                    if end_point_only:
-                        continue
-                yield k
-            seen.remove(id(data))
-
         if recursive:
-            return OrderedDict.fromkeys(x for x in _recursive(self._data)).keys()
+            return OrderedDict.fromkeys(
+                x for x in _keys_recursive(self._data, strict=strict, end_point_only=end_point_only)
+            ).keys()
 
         if end_point_only:
             return OrderedDict.fromkeys(
@@ -839,7 +920,7 @@ class BoolConfigData[D: bool](NumberConfigData[D]):  # type: ignore[type-var]  #
     _data: D
     data: D
 
-    def __init__(self, data: Optional[D] = None) -> None:
+    def __init__(self, data: Optional[D] = None):
         super().__init__(cast(D, bool(data)))
 
 
@@ -851,7 +932,7 @@ class StringConfigData[D: str | bytes](BasicSingleConfigData[D]):
     _data: D
     data: D
 
-    def __init__(self, data: Optional[D] = None) -> None:
+    def __init__(self, data: Optional[D] = None):
         if data is None:
             data = str()  # type: ignore[assignment]
         super().__init__(cast(D, data))
@@ -1459,7 +1540,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
        重命名 ``BaseConfigPool`` 为 ``BasicConfigPool``
     """
 
-    def __init__(self, root_path: str = "./.config") -> None:
+    def __init__(self, root_path: str = "./.config"):
         super().__init__(root_path)
         self._configs: dict[str, dict[str, ABCConfigFile[Any]]] = {}
         self._helper = PHelper()

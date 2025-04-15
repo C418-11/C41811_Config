@@ -206,6 +206,26 @@ class ConfigDataTypeError(ValueError):
         )
 
 
+class CyclicReferenceError(ValueError):
+    """
+    配置数据存在循环引用错误
+
+    .. versionadded:: 0.2.0
+    """
+
+    def __init__(self, key_info: KeyInfo[Any]):
+        """
+        :param key_info: 检测到循环引用的键信息
+        """
+        self.key_info = key_info
+
+    def __str__(self) -> str:
+        return (
+            f"Cyclic reference detected at {self.key_info.path.unparse()} -> {self.key_info.current_key.unparse()}"
+            f" ({self.key_info.index + 1}/{len(self.key_info.path)})"
+        )
+
+
 class UnknownErrorDuringValidateError(Exception):
     # noinspection GrazieInspection
     """
@@ -215,7 +235,7 @@ class UnknownErrorDuringValidateError(Exception):
        重命名 ``UnknownErrorDuringValidate`` 为 ``UnknownErrorDuringValidateError``
     """
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any):
         """
         :param args: 未知错误信息
         :param kwargs: 未知错误信息
@@ -303,6 +323,7 @@ __all__ = (
     "RequiredPathNotFoundError",
     "ConfigDataReadOnlyError",
     "ConfigDataTypeError",
+    "CyclicReferenceError",
     "UnsupportedConfigFormatError",
     "FailedProcessConfigFileError",
     "UnknownErrorDuringValidateError"

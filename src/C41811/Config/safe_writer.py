@@ -221,7 +221,7 @@ class TempTextIOManager[F: TextIO](ABCTempIOManager[F]):
     管理 ``TextIO`` 对象。
     """
 
-    def __init__(self, prefix: str = '', suffix: str = ".tmp", **open_kwargs: Any) -> None:
+    def __init__(self, prefix: str = '', suffix: str = ".tmp", **open_kwargs: Any):
         """
         :param prefix: 临时文件前缀
         :type prefix: str

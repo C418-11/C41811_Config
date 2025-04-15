@@ -98,6 +98,15 @@ class TestPath:
             assert path == path.from_locate(path.to_locate())
 
     @staticmethod
+    @mark.parametrize("path, keys", (
+            (Path.from_locate(["aaa", 0, "bbb"]), (AttrKey("aaa"), IndexKey(0), AttrKey("bbb"))),
+            (Path.from_locate([2, "aaa"]), (IndexKey(2), AttrKey("aaa"))),
+            (Path.from_locate([4, 2, "aaa"]), (IndexKey(4), IndexKey(2), AttrKey("aaa"))),
+    ))
+    def test_keys(path: Path, keys: tuple[AttrKey | IndexKey, ...]) -> None:
+        assert path.keys == keys
+
+    @staticmethod
     @mark.parametrize("index, value", (
             (0, AttrKey("aaa")),
             (1, AttrKey("bbb")),

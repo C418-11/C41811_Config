@@ -44,6 +44,7 @@ from C41811.Config import StringConfigData
 from C41811.Config.abc import ABCIndexedConfigData
 from C41811.Config.errors import ConfigDataReadOnlyError
 from C41811.Config.errors import ConfigDataTypeError
+from C41811.Config.errors import CyclicReferenceError
 from C41811.Config.errors import RequiredPathNotFoundError
 from C41811.Config.errors import UnsupportedConfigFormatError
 from C41811.Config.processor.Component import ComponentMetaParser
@@ -472,6 +473,82 @@ class TestMappingConfigData:
     @mark.parametrize(*KeysTests)
     def test_keys(data: M_MCD, kwargs: dict[str, Any], keys: set[str]) -> None:
         assert set(data.keys(**kwargs)) == keys
+
+    @staticmethod
+    def cyclic_reference_datas() -> tuple[dict[str, Any], ...]:
+        c: dict[str, Any] = {"A": None}
+        b = {"C": c}
+        d = {"C": c}
+        a = {"B": b, "D": d}
+        c["A"] = a
+        return a, b, c, d
+
+    CyclicReferenceTests: tuple[
+        str,
+        tuple[tuple[
+            dict[Any, Any],
+            dict[str, Any],
+            set[str] | None,
+            EE,
+        ], ...]
+    ] = ("data, kwargs, keys, ignore_excs", (
+        (cyclic_reference_datas()[0],
+         {}, {"B", "D"}, ()),
+        (cyclic_reference_datas()[1],
+         {}, {"C"}, ()),
+        (cyclic_reference_datas()[2],
+         {}, {"A"}, ()),
+        (cyclic_reference_datas()[3],
+         {}, {"C"}, ()),
+        (cyclic_reference_datas()[0],
+         {"end_point_only": True}, set(), ()),
+        (cyclic_reference_datas()[0],
+         {"recursive": True, "strict": False},
+         {r"D\.C", r"D\.C\.A", r"B\.C", "D", "B", r"B\.C\.A"},
+         ()),
+        (cyclic_reference_datas()[1],
+         {"recursive": True, "strict": False},
+         {r"C\.A", "C", r"C\.A\.D\.C", r"C\.A\.B", r"C\.A\.D"},
+         ()),
+        (cyclic_reference_datas()[2],
+         {"recursive": True, "strict": False},
+         {r"A\.B\.C", r"A\.D", r"A\.B", r"A\.D\.C", "A"},
+         ()),
+        (cyclic_reference_datas()[3],
+         {"recursive": True, "strict": False},
+         {r"C\.A", "C", r"C\.A\.B\.C", r"C\.A\.B", r"C\.A\.D"},
+         ()),
+        (cyclic_reference_datas()[0],
+         {"recursive": True, "strict": True}, None, (CyclicReferenceError,)),
+        (cyclic_reference_datas()[0],
+         {"recursive": True, "end_point_only": True}, None, (CyclicReferenceError,)),
+        (cyclic_reference_datas()[0],
+         {"recursive": True}, None, (CyclicReferenceError,)),
+        (cyclic_reference_datas()[1],
+         {"recursive": True}, None, (CyclicReferenceError,)),
+        (cyclic_reference_datas()[2],
+         {"recursive": True}, None, (CyclicReferenceError,)),
+        (cyclic_reference_datas()[3],
+         {"recursive": True}, None, (CyclicReferenceError,)),
+    ))
+
+    @staticmethod
+    @mark.parametrize(*CyclicReferenceTests)
+    def test_cyclic_reference_keys(
+            data: dict[str, Any],
+            kwargs: dict[str, Any],
+            keys: set[str],
+            ignore_excs: EE
+    ) -> None:
+        data = MappingConfigData(data)
+        with safe_raises(ignore_excs):
+            assert set(data.keys(**kwargs)) == keys
+
+    @staticmethod
+    def test_keys_with_wrong_data():
+        data = MappingConfigData({123: {}})
+        with raises(TypeError):
+            data.keys(recursive=True)
 
     ValuesTests: tuple[str, tuple[tuple[dict[Any, Any], list[Any]], ...]] = (
         "kwargs, values",

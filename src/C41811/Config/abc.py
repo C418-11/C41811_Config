@@ -175,6 +175,13 @@ class ABCPath[K: AnyKey](ABC, Iterable[K]):
     def __init__(self, keys: Iterable[K]):
         self._keys = deepcopy(tuple(keys))
 
+    @property
+    def keys(self) -> tuple[K, ...]:
+        """
+        .. versionadded:: 0.2.0
+        """
+        return deepcopy(self._keys)
+
     @abstractmethod
     def unparse(self) -> str:
         """
