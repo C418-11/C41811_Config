@@ -13,6 +13,9 @@ jobs:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
         python-version: [ '3.12', '3.13' ]
 
+    environment:
+      name: codecov
+
     name: PyTest py${{ matrix.python-version }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
@@ -31,37 +34,10 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest --cov --junitxml=junit-py${{ matrix.python-version }}-${{ matrix.os }}.xml -o junit_family=legacy
-
-      - name: Upload test results
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: junit-report-py${{ matrix.python-version }}-${{ matrix.os }}
-          path: junit.xml
-
-  codecov:
-    strategy:
-      matrix:
-        os: [ ubuntu-latest, macos-latest, windows-latest ]
-        python-version: [ '3.12', '3.13' ]
-
-    name: Upload py${{ matrix.python-version }} on ${{ matrix.os }} to Codecov
-    runs-on: ubuntu-latest
-    if: ${{ !cancelled() }}
-    needs: test
-
-    environment:
-      name: codecov
-
-    steps:
-      - name: Download test results
-        uses: actions/download-artifact@v4
-        with:
-          name: junit-report-py${{ matrix.python-version }}-${{ matrix.os }}
-          path: .
+          pytest --cov --junitxml=junit.xml -o junit_family=legacy
 
       - name: Upload coverage to Codecov
+        if: ${{ !cancelled() }}
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
