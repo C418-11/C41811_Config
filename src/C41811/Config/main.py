@@ -798,7 +798,7 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
 
         config_pool.save(namespace, file_name, config=config_file, *args, **kwargs)  # type: ignore[misc]
         if self._cleanup_registry:
-            config_pool.unset(namespace, file_name)
+            config_pool.discard(namespace, file_name)
 
     def load_file(
             self,
@@ -824,7 +824,7 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
 
         cfg_file = config_pool.load(namespace, file_name, *args, **kwargs)
         if self._cleanup_registry:
-            config_pool.unset(namespace, file_name)
+            config_pool.discard(namespace, file_name)
         return cfg_file
 
     def before_load(

@@ -979,9 +979,9 @@ class ABCConfigPool(ABCSLProcessorPool):
         """
 
     @abstractmethod
-    def unset(self, namespace: str, file_name: Optional[str] = None) -> Self:
+    def discard(self, namespace: str, file_name: Optional[str] = None) -> Self:
         """
-        确保配置文件不存在与配置池
+        确保配置文件不存在于配置池
 
         :param namespace: 命名空间
         :type namespace: str

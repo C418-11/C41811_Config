@@ -764,7 +764,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
             del self._configs[namespace]
         return self
 
-    def unset(self, namespace: str, file_name: Optional[str] = None) -> Self:
+    def discard(self, namespace: str, file_name: Optional[str] = None) -> Self:
         with suppress(KeyError):
             self.remove(namespace, file_name)
         return self

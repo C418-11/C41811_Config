@@ -612,7 +612,7 @@ def test_component_wrong_config_data(pool: ConfigPool) -> None:
             '', file_name,
             config=ConfigFile(ConfigData([])),
         )
-    pool.unset('', file_name)
+    pool.discard('', file_name)
     pool.save(
         comp_sl.namespace_formatter('', file_name), comp_sl.initial_file + json_sl.supported_file_patterns[0],
         config=ConfigFile(ConfigData([])),
@@ -678,7 +678,7 @@ def test_python(pool: ConfigPool) -> None:
             """
         )), config_formats={"plaintext"})
 
-    pool.unset('', "test-python.py")
+    pool.discard('', "test-python.py")
     cfg: MappingConfigData[Any] = pool.load('', "test-python.py").config
 
     assert cfg["key"] == "value"
