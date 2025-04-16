@@ -38,10 +38,15 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: junit-report-py${{ matrix.python-version }}-${{ matrix.os }}
-          path: junit-py${{ matrix.python-version }}-${{ matrix.os }}.xml
+          path: junit.xml
 
   codecov:
-    name: Upload results to Codecov
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        python-version: [ '3.12', '3.13' ]
+
+    name: Upload py${{ matrix.python-version }} on ${{ matrix.os }} to Codecov
     runs-on: ubuntu-latest
     if: ${{ !cancelled() }}
     needs: test
@@ -53,9 +58,8 @@ jobs:
       - name: Download test results
         uses: actions/download-artifact@v4
         with:
-          pattern: junit-report-*
+          name: junit-report-py${{ matrix.python-version }}-${{ matrix.os }}
           path: .
-          merge-multiple: true
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
