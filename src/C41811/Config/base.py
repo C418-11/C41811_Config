@@ -1591,7 +1591,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
         self._configs[namespace][file_name] = config
         return self
 
-    def _calc_formats(
+    def _get_formats(
             self,
             file_name: str,
             config_formats: Optional[str | Iterable[str]],
@@ -1660,7 +1660,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
 
         return OrderedDict.fromkeys(result_formats)
 
-    def _test_all_sl[R](
+    def _try_sl_processors[R](
             self,
             namespace: str,
             file_name: str,
@@ -1695,12 +1695,12 @@ class BasicConfigPool(ABCConfigPool, ABC):
         .. seealso::
            格式计算优先级
 
-           :py:meth:`_calc_formats`
+           :py:meth:`_get_formats`
 
         .. versionadded:: 0.1.2
 
         .. versionchanged:: 0.2.0
-           将格式计算部分提取到单独的函数 :py:meth:`_calc_formats`
+           将格式计算部分提取到单独的函数 :py:meth:`_get_formats`
         """
 
         def callback_wrapper(cfg_fmt: str) -> R:
@@ -1708,7 +1708,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
 
         # 尝试从多个SL加载器中找到能正确加载的那一个
         errors: dict[str, FailedProcessConfigFileError[Any] | UnsupportedConfigFormatError] = {}
-        for config_format in self._calc_formats(file_name, config_formats, file_config_format):
+        for config_format in self._get_formats(file_name, config_formats, file_config_format):
             if config_format not in self.SLProcessors:
                 errors[config_format] = UnsupportedConfigFormatError(config_format)
                 continue
@@ -1742,7 +1742,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
         def processor(pool: Self, ns: str, fn: str, cf: str) -> None:
             file.save(pool, ns, fn, cf, *args, **kwargs)
 
-        self._test_all_sl(namespace, file_name, config_formats, processor, file_config_format=file.config_format)
+        self._try_sl_processors(namespace, file_name, config_formats, processor, file_config_format=file.config_format)
         return self
 
     @override
@@ -1779,7 +1779,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
             pool.set(namespace, file_name, result)
             return result
 
-        return self._test_all_sl(namespace, file_name, config_formats, processor)
+        return self._try_sl_processors(namespace, file_name, config_formats, processor)
 
     @override
     def load(
@@ -1831,7 +1831,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
             pool.set(namespace, file_name, result)
             return result
 
-        return self._test_all_sl(namespace, file_name, config_formats, processor)
+        return self._try_sl_processors(namespace, file_name, config_formats, processor)
 
     def delete(self, namespace: str, file_name: Optional[str] = None) -> Self:
         if file_name is None:
