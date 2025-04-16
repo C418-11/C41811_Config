@@ -373,7 +373,7 @@ def test_local_file_sl_processors(
         pool.save('', file_name, config=file)
     if info:
         return
-    pool.delete('', file_name)
+    pool.remove('', file_name)
     with safe_raises(ignore_excs[1]) as info:
         loaded_file = pool.load('', file_name)
     if info:
@@ -484,7 +484,7 @@ def test_compressed_file_sl_processors(
         pool.save('', file_name, config=file)
     if info:
         return
-    pool.delete('', file_name)
+    pool.remove('', file_name)
     with safe_raises(ignore_excs[1]) as info:
         loaded_file = pool.load('', file_name)
     if info:
@@ -570,7 +570,7 @@ def test_component_file_sl_processor(
         pool.save('', file_name, config=file)
     if info:
         return
-    pool.delete('', file_name)
+    pool.remove('', file_name)
     with safe_raises(ignore_excs[2]) as info:
         loaded_data: ComponentConfigData[Any, Any] = pool.load('', file_name).config
     if info:
@@ -651,7 +651,7 @@ def test_compressed_component(pool: ConfigPool) -> None:
     assert cfg.retrieve(fr"\{{{fn_b}\}}\.key") is True
     assert cfg.retrieve(fr"\{{{fn_c}\}}\.key") is False
     pool.save_all()
-    pool.delete('', file_name)
+    pool.remove('', file_name)
     cfg = pool.load('', file_name).config
     assert cfg.retrieve(fr"\{{{fn_a}\}}\.key") is None
     assert cfg.retrieve(fr"\{{{fn_b}\}}\.key") is True

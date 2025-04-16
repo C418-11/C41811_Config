@@ -960,9 +960,9 @@ class ABCConfigPool(ABCSLProcessorPool):
         """
 
     @abstractmethod
-    def delete(self, namespace: str, file_name: str) -> Self:
+    def remove(self, namespace: str, file_name: Optional[str] = None) -> Self:
         """
-        删除配置文件
+        从配置池移除配置文件
 
         :param namespace: 命名空间
         :type namespace: str
@@ -974,12 +974,14 @@ class ABCConfigPool(ABCSLProcessorPool):
 
         .. versionchanged:: 0.2.0
            返回当前实例便于链式调用
+
+           重命名 ``delete`` 为 ``remove``
         """
 
     @abstractmethod
     def unset(self, namespace: str, file_name: Optional[str] = None) -> Self:
         """
-        确保配置文件不存在
+        确保配置文件不存在与配置池
 
         :param namespace: 命名空间
         :type namespace: str

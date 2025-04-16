@@ -1833,7 +1833,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
 
         return self._try_sl_processors(namespace, file_name, config_formats, processor)
 
-    def delete(self, namespace: str, file_name: Optional[str] = None) -> Self:
+    def remove(self, namespace: str, file_name: Optional[str] = None) -> Self:
         if file_name is None:
             del self._configs[namespace]
             return self
@@ -1845,7 +1845,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
 
     def unset(self, namespace: str, file_name: Optional[str] = None) -> Self:
         with suppress(KeyError):
-            self.delete(namespace, file_name)
+            self.remove(namespace, file_name)
         return self
 
     def __getitem__(self, item: str | tuple[str, str]) -> dict[str, ABCConfigFile[Any]] | ABCConfigFile[Any]:

@@ -72,17 +72,17 @@ class TestConfigPool:
         return ConfigFile(data)
 
     @staticmethod
-    def test_set_get_delete(pool: ConfigPool, file: ConfigFile[MCD]) -> None:
+    def test_set_get_remove(pool: ConfigPool, file: ConfigFile[MCD]) -> None:
         pool.set('', "test", deepcopy(file))
         assert pool.get("not", "exists") is None
         assert pool.get('', "not exists") is None
         assert pool.get('', "test") == file
         assert pool.get('') == {"test": file}
-        pool.delete('', "test")
-        assert pool.get('', "test") is None, "File should be deleted"
+        pool.remove('', "test")
+        assert pool.get('', "test") is None, "File should be removed"
         pool.set('', "test", deepcopy(file))
-        pool.delete('')
-        assert pool.get('', "test") is None, "All files should be deleted"
+        pool.remove('', )
+        assert pool.get('', "test") is None, "All files should be removed"
 
     @staticmethod
     def test_save_load(pool: ConfigPool, file: ConfigFile[MCD]) -> None:
