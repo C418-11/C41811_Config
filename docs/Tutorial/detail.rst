@@ -542,8 +542,9 @@ Mapping[str | ABCPath, Any]
 键为组件成员文件名，值为成员对应的验证器，组件成员文件名为None则为元配置信息验证器
 
 .. danger::
-   永远不应该尝试验证 :py:class:`~Config.base.NoneConfigData` ，这将创建一个 :py:attr:`~Config.base.ComponentMeta.parser` 为
-   :py:const:`None` 的 :py:class:`~Config.base.ComponentMeta`，如果你没有在
+   永远不应该尝试验证 :py:class:`~Config.base.object.NoneConfigData` ，这将创建一个
+   :py:attr:`~Config.base.component.ComponentMeta.parser` 为
+   :py:const:`None` 的 :py:class:`~Config.base.component.ComponentMeta`，如果你没有在
    :py:class:`额外验证器工厂配置参数 <Config.validators.ComponentValidatorFactory>` 传入新的
    `组件元数据验证器` 这将可能导致(至少目前默认情况下会)无法将组件元配置同步到组件元信息，最终导致元信息和组件成员不匹配抛出错误
 
@@ -572,28 +573,28 @@ ConfigData
      - 原样返回
 
    * - :py:class:`types.NoneType`
-     - :py:class:`~Config.base.NoneConfigData`
+     - :py:class:`~Config.base.object.NoneConfigData`
 
    * - :py:class:`~collections.abc.Mapping`
-     - :py:class:`~Config.base.MappingConfigData`
+     - :py:class:`~Config.base.mapping.MappingConfigData`
 
    * - :py:class:`str` , :py:class:`bytes`
-     - :py:class:`~Config.base.StringConfigData`
+     - :py:class:`~Config.base.sequence.StringConfigData`
 
    * - :py:class:`~collections.abc.Sequence`
-     - :py:class:`~Config.base.SequenceConfigData`
+     - :py:class:`~Config.base.sequence.SequenceConfigData`
 
    * - :py:class:`bool`
-     - :py:class:`~Config.base.BoolConfigData`
+     - :py:class:`~Config.base.number.BoolConfigData`
 
    * - :py:class:`numbers.Number`
-     - :py:class:`~Config.base.NumberConfigData`
+     - :py:class:`~Config.base.number.NumberConfigData`
 
    * - :py:class:`object`
-     - :py:class:`~Config.base.ObjectConfigData`
+     - :py:class:`~Config.base.object.ObjectConfigData`
 
 .. note::
-   是的， :py:class:`~Config.base.ComponentConfigData` 不在这里面，仅由
+   是的， :py:class:`~Config.base.component.ComponentConfigData` 不在这里面，仅由
    :py:class:`~Config.processor.ComponentSL` 或
    :py:class:`~Config.validators.ComponentValidatorFactory` 创建
 
@@ -617,8 +618,8 @@ ConfigData
      - 支持复杂嵌套数据的抽象基类，提供了 :py:meth:`~Config.abc.ABCIndexedConfigData.retrieve`
        :py:meth:`~Config.abc.ABCIndexedConfigData.modify` 等高级嵌套数据访问方法
 
-   * - :py:class:`~Config.base.BasicSingleConfigData`
-     - 单文件配置数据的基类，提供的单文件配置数据的基本实现，如 :py:attr:`~Config.base.BasicSingleConfigData.data`
+   * - :py:class:`~Config.base,core.BasicSingleConfigData`
+     - 单文件配置数据的基类，提供的单文件配置数据的基本实现，如 :py:attr:`~Config.base.core.BasicSingleConfigData.data`
 
 NoneConfigData
 ^^^^^^^^^^^^^^^^^^
@@ -634,7 +635,7 @@ MappingConfigData
 
 :py:meth:`~Config.abc.ABCIndexedConfigData.retrieve` 等高级方法当返回值为 :py:class:`~collections.abc.Mapping` 或
 :py:class:`~collections.abc.Sequence` 时， :py:meth:`~Config.abc.ABCIndexedConfigData.retrieve` 会返回
-:py:class:`~Config.base.MappingConfigData` 或 :py:class:`~Config.base.SequenceConfigData`
+:py:class:`~Config.base.mapping.MappingConfigData` 或 :py:class:`~Config.base.sequence.SequenceConfigData`
 
 SequenceConfigData
 ^^^^^^^^^^^^^^^^^^^
@@ -643,7 +644,7 @@ SequenceConfigData
 
 :py:meth:`~Config.abc.ABCIndexedConfigData.retrieve` 等高级方法当返回值为 :py:class:`~collections.abc.Mapping` 或
 :py:class:`~collections.abc.Sequence` 时， :py:meth:`~Config.abc.ABCIndexedConfigData.retrieve` 会返回
-:py:class:`~Config.base.MappingConfigData` 或 :py:class:`~Config.base.SequenceConfigData`
+:py:class:`~Config.base.mapping.MappingConfigData` 或 :py:class:`~Config.base.sequence.SequenceConfigData`
 
 StringConfigData
 ^^^^^^^^^^^^^^^^^^^
@@ -660,7 +661,7 @@ NumberConfigData
 BoolConfigData
 ^^^^^^^^^^^^^^^^^^^
 
-继承自 :py:class:`~Config.base.NumberConfigData` ，提供了 :py:class:`bool` 的实现
+继承自 :py:class:`~Config.base.number.NumberConfigData` ，提供了 :py:class:`bool` 的实现
 
 ComponentConfigData
 ^^^^^^^^^^^^^^^^^^^^
@@ -676,7 +677,7 @@ ComponentConfigData
 :ref:`component-meta-parser` 几部分必须的值。
 
 .. seealso::
-   :py:class:`~Config.base.ComponentMeta`
+   :py:class:`~Config.base.component.ComponentMeta`
 
 .. rubric:: 元配置
    :name: term-component-meta-config
@@ -686,7 +687,7 @@ ComponentConfigData
 .. attention::
    原始配置数据结构完全由 :ref:`component-meta-parser` 定义，除非是处理额外附加数据，否则不应该直接对其进行操作
 
-以 :py:class:`~Config.base.MappingConfigData` 存储
+以 :py:class:`~Config.base.mapping.MappingConfigData` 存储
 
 .. rubric:: 成员定义
    :name: component-meta-member
@@ -700,7 +701,7 @@ ComponentConfigData
 `配置格式` 会在保存加载期间优先使用
 
 .. seealso::
-   :py:class:`~Config.base.ComponentMember`
+   :py:class:`~Config.base.component.ComponentMember`
 
 .. rubric:: 处理顺序
    :name: component-meta-order
@@ -708,7 +709,7 @@ ComponentConfigData
 :py:meth:`~Config.base.ComponentConfigData.retrieve` 等方法从成员的搜索顺序
 
 .. seealso::
-   :py:class:`~Config.base.ComponentOrder`
+   :py:class:`~Config.base.component.ComponentOrder`
 
 .. rubric:: 解析器
    :name: component-meta-parser
@@ -826,7 +827,7 @@ SL处理器
      - :py:class:`~Config.processor.Component.ComponentSL`
      - component
      - .component .comp
-     - 组合多个 :py:class:`~Config.abc.ABCIndexedConfigData` 为一个 :py:class:`~Config.base.ComponentConfigData`
+     - 组合多个 :py:class:`~Config.abc.ABCIndexedConfigData` 为一个 :py:class:`~Config.base.component.ComponentConfigData`
 
 ComponentMetaParser
 --------------------

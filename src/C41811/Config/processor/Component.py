@@ -50,10 +50,10 @@ class ComponentMetaParser[D: MappingConfigData[Any]](ABCMetaParser[D, ComponentM
         解析元配置
 
         :param meta_config: 元配置
-        :type meta_config: base.MappingConfigData
+        :type meta_config: base.mapping.MappingConfigData
 
         :return: 元数据
-        :rtype: base.ComponentMeta
+        :rtype: base.mapping.ComponentMeta
         """
         meta = self._validator.filter(CellType(meta_config))
 
@@ -90,10 +90,10 @@ class ComponentMetaParser[D: MappingConfigData[Any]](ABCMetaParser[D, ComponentM
         解析元数据
 
         :param meta: 元数据
-        :type meta: base.ComponentMeta
+        :type meta: base.mapping.ComponentMeta
 
         :return: 元配置
-        :rtype: base.MappingConfigData
+        :rtype: base.mapping.MappingConfigData
         """
         return meta.config
 

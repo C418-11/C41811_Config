@@ -17,9 +17,9 @@ except ImportError:  # pragma: no cover
     __version__ = ''
     __version_tuple__ = ()
 
-import sys as _sys
+import sys as __sys
 
-if _sys.version_info < (3, 12):  # pragma: no cover
+if __sys.version_info < (3, 12):  # pragma: no cover
     raise RuntimeError("Python version must be >= 3.12")
 
 from .base import *  # noqa: F401, F403
