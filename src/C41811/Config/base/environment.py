@@ -7,7 +7,11 @@
 """
 
 from collections.abc import Callable
+from collections.abc import Iterable
 from collections.abc import MutableMapping
+from dataclasses import dataclass
+from dataclasses import field
+from types import NotImplementedType
 from typing import Any
 from typing import Optional
 from typing import Self
@@ -19,6 +23,51 @@ import wrapt  # type: ignore[import-untyped]
 from .mapping import MappingConfigData
 from ..abc import PathLike
 from ..utils import Unset
+
+
+@dataclass
+class Difference:
+    """
+    与初始化数据的差异
+    """
+
+    updated: set[str] = field(default_factory=set)
+    """
+    修改/新增的键
+
+    .. note::
+       为了 `性能/内存` 所以实现的不是很完美，如果一个键更改为了另一个值再改回来仍然会被认为是被修改过的键
+    """
+    removed: set[str] = field(default_factory=set)
+    """
+    删除的键
+    """
+
+    def clear(self) -> None:
+        """
+        清空差异
+        """
+        self.updated.clear()
+        self.removed.clear()
+
+    def __iadd__(self, other: Any) -> Self | NotImplementedType:
+        if not isinstance(other, Iterable):
+            return NotImplemented
+        other = set(other)
+        self.updated |= other
+        self.removed -= other
+        return self
+
+    def __isub__(self, other: Any) -> Self | NotImplementedType:
+        if not isinstance(other, Iterable):
+            return NotImplemented
+        other = set(other)
+        self.updated -= other
+        self.removed |= other
+        return self
+
+    def __bool__(self) -> bool:
+        return bool(self.updated and self.removed)
 
 
 def diff_keys[F: Callable[..., Any]](func: F) -> F:
@@ -35,7 +84,7 @@ def diff_keys[F: Callable[..., Any]](func: F) -> F:
             )
 
         before = set(instance.keys())
-        before_never_changed = before - instance.updated_keys - instance.removed_keys
+        before_never_changed = before - instance.difference.updated - instance.difference.removed
         may_change = {k: instance[k] for k in before_never_changed}
 
         result = wrapped(*args, **kwargs)
@@ -44,15 +93,13 @@ def diff_keys[F: Callable[..., Any]](func: F) -> F:
         added = after - before
         deleted = before - after
 
-        instance.updated_keys -= deleted
-        instance.removed_keys -= added
-        instance.updated_keys |= added
-        instance.removed_keys |= deleted
+        instance.difference += added
+        instance.difference -= deleted
 
         current_never_changed = before_never_changed - added - deleted
         for may_changed in current_never_changed:
             if may_change[may_changed] != instance[may_changed]:
-                instance.updated_keys.add(may_changed)
+                instance.difference += {may_changed}
 
         return result
 
@@ -60,10 +107,18 @@ def diff_keys[F: Callable[..., Any]](func: F) -> F:
 
 
 class EnvironmentConfigData(MappingConfigData[MutableMapping[str, str]]):
+    """
+    环境变量配置数据
+
+    内部维护了与初始化参数的键差异
+
+    .. note::
+       :py:class:`~Config.processor.OSEnv.OSEnvSL` 在保存时会重置差异数据
+    """
+
     def __init__(self, data: Optional[MutableMapping[str, str]] = None):
         super().__init__(data)
-        self.updated_keys: set[str] = set()
-        self.removed_keys: set[str] = set()
+        self.difference = Difference()
 
     @diff_keys
     @override
@@ -121,5 +176,6 @@ class EnvironmentConfigData(MappingConfigData[MutableMapping[str, str]]):
 
 
 __all__ = (
+    "Difference",
     "EnvironmentConfigData",
 )

@@ -742,6 +742,14 @@ ComponentConfigData
 
 具体来说，会读取 ``path[0].meta`` ，所以只有第一个键的元信息起到作用
 
+EnvironmentConfigData
+^^^^^^^^^^^^^^^^^^^^^^^
+
+继承自 :py:class:`~Config.base.mapping.MappingConfigData` ，内部维护了与初始化参数的键差异
+
+.. seealso::
+   :py:class:`~Config.base.environment.Difference`
+
 SL处理器
 -------------
 
@@ -828,6 +836,12 @@ SL处理器
      - component
      - .component .comp
      - 组合多个 :py:class:`~Config.abc.ABCIndexedConfigData` 为一个 :py:class:`~Config.base.component.ComponentConfigData`
+
+   * - OSEnv
+     - :py:class:`~Config.processor.OSEnv.OSEnvSL`
+     - os.environ
+     - .os.env .os.environ
+     - 基于内置 :py:data:`os.environ`
 
 ComponentMetaParser
 --------------------

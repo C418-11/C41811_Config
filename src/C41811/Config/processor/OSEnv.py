@@ -48,12 +48,13 @@ class OSEnvSL(BasicConfigSL):
             **kwargs: Any
     ) -> None:
         cfg: EnvironmentConfigData = config_file.config
-        for updated in deepcopy(cfg.updated_keys):
-            cfg.updated_keys.remove(updated)
+        diff = cfg.difference
+        for updated in deepcopy(diff.updated):
             os.environ[updated] = cfg[updated]
-        for removed in deepcopy(cfg.removed_keys):
-            cfg.removed_keys.remove(removed)
+            diff.updated.add(updated)
+        for removed in deepcopy(diff.removed):
             del os.environ[removed]
+            diff.removed.remove(removed)
 
     @override
     def load(
