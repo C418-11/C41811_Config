@@ -63,17 +63,17 @@ C41811.Config 的文档
           :alt: CodeCov
    * - 代码质量-开发分支
      -
-       .. image:: https://img.shields.io/github/actions/workflow/status/C418-11/C41811_Config/python-pytest.yml?branch=develop&logo=github&label=pytest-dev
+       .. image:: https://img.shields.io/github/actions/workflow/status/C418-11/C41811_Config/python-pytest.yml?branch=develop&logo=github&label=pytest
           :target: https://github.com/C418-11/C41811_Config/actions/workflows/python-pytest.yml
-          :alt: pytest-dev
+          :alt: pytest
 
-       .. image:: https://img.shields.io/github/actions/workflow/status/C418-11/C41811_Config/python-flake8.yml?branch=develop&logo=github&label=flake8-dev
+       .. image:: https://img.shields.io/github/actions/workflow/status/C418-11/C41811_Config/python-flake8.yml?branch=develop&logo=github&label=flake8
           :target: https://github.com/C418-11/C41811_Config/actions/workflows/python-flake8.yml
-          :alt: flake8-dev
+          :alt: flake8
 
        .. image:: https://codecov.io/gh/C418-11/C41811_Config/branch/develop/graph/badge.svg
           :target: https://codecov.io/gh/C418-11/C41811_Config
-          :alt: CodeCov-dev
+          :alt: CodeCov
 
 .. toctree::
    :maxdepth: 2
