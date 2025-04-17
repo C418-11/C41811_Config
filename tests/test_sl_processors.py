@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
+import os
 import re
 from collections import OrderedDict
 from collections.abc import Generator
@@ -22,8 +23,10 @@ from C41811.Config import ComponentSL  # type: ignore[attr-defined]
 from C41811.Config import ConfigData
 from C41811.Config import ConfigFile
 from C41811.Config import ConfigPool
+from C41811.Config import EnvironmentConfigData
 from C41811.Config import JsonSL  # type: ignore[attr-defined]
 from C41811.Config import MappingConfigData
+from C41811.Config import OSEnvSL  # type: ignore[attr-defined]
 from C41811.Config import PickleSL  # type: ignore[attr-defined]
 from C41811.Config import PlainTextSL  # type: ignore[attr-defined]
 from C41811.Config import PythonLiteralSL  # type: ignore[attr-defined]
@@ -687,6 +690,31 @@ def test_python(pool: ConfigPool) -> None:
     assert isinstance(cfg["datetime"], datetime)
 
 
+def test_os_env(pool: ConfigPool) -> None:
+    OSEnvSL().register_to(pool)
+
+    environ: EnvironmentConfigData = pool.load('', "snapshot.os.env").config
+    assert dict(environ) == dict(os.environ)
+    environ.unset("TEST_ENV_VAR")  # 预准备，确保该环境变量不存在
+    pool.save('', "snapshot.os.env")
+    assert "TEST_ENV_VAR" not in os.environ
+
+    # save操作会重置environ内部维护的diff,所以不用担心这里再加回去会被认为还原刚刚的修改
+    environ["TEST_ENV_VAR"] = "test"  # 检测同步新增键
+    assert "TEST_ENV_VAR" not in os.environ  # 确保不会直接同步修改到环境变量，变更仅内存
+    pool.save('', "snapshot.os.env")  # 同步修改到环境变量
+    assert "TEST_ENV_VAR" in os.environ
+    assert os.environ["TEST_ENV_VAR"] == "test"
+
+    environ["TEST_ENV_VAR"] = "value"
+    pool.save('', "snapshot.os.env")
+    assert os.environ["TEST_ENV_VAR"] == "value"
+
+    environ.unset("TEST_ENV_VAR")
+    pool.save('', "snapshot.os.env")
+    assert "TEST_ENV_VAR" not in os.environ
+
+
 def test_wrong_sl_arguments() -> None:
     with raises(TypeError):
         JsonSL(NotImplemented)
@@ -704,6 +732,7 @@ SLProcessors = (
     ComponentSL,
     PythonSL,
     PlainTextSL,
+    OSEnvSL,
 )
 
 

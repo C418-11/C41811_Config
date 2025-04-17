@@ -7,7 +7,6 @@
    重构拆分 ``base.py`` 为多个文件
 """
 
-
 import builtins
 from collections import OrderedDict as __OrderedDict
 from collections.abc import Mapping as __Mapping
@@ -26,6 +25,7 @@ from .core import BasicSingleConfigData
 from .core import ConfigData
 from .core import ConfigFile
 from .core import PHelper
+from .environment import EnvironmentConfigData
 from .mapping import MappingConfigData
 from .number import BoolConfigData
 from .number import NumberConfigData
@@ -81,6 +81,8 @@ __all__ = (
     "ConfigData",
     "ConfigFile",
     "PHelper",
+
+    "EnvironmentConfigData",
 
     "MappingConfigData",
 

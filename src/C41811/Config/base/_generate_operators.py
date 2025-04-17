@@ -6,7 +6,6 @@
 .. versionadded:: 0.2.0
 """
 
-
 from collections.abc import Callable
 from textwrap import dedent
 from typing import Any
