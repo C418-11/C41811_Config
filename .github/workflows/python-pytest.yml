@@ -34,7 +34,7 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest --cov --junitxml=junit.xml -o junit_family=legacy
+          pytest --cov=src --junitxml=junit.xml -o junit_family=legacy
 
       - name: Upload coverage to Codecov
         if: ${{ !cancelled() }}
