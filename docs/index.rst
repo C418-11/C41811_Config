@@ -58,7 +58,7 @@ C41811.Config 的文档
           :target: https://github.com/C418-11/C41811_Config/actions/workflows/python-flake8.yml
           :alt: flake8
 
-      .. image:: https://codecov.io/gh/C418-11/C41811_Config/branch/main/graph/badge.svg
+       .. image:: https://codecov.io/gh/C418-11/C41811_Config/branch/main/graph/badge.svg
           :target: https://codecov.io/gh/C418-11/C41811_Config
           :alt: CodeCov
    * - 代码质量-开发分支
