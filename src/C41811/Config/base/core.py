@@ -303,7 +303,7 @@ class BasicIndexedConfigData[D: Indexed[Any, Any]](
         return len(self._data)  # type: ignore[arg-type]
 
     @override
-    def __getitem__(self, index: Any) -> D | Self:
+    def __getitem__(self, index: Any) -> Any:
         data = self._data[index]
         is_sequence = isinstance(data, Sequence) and not isinstance(data, (str, bytes))
         if isinstance(data, Mapping) or is_sequence:

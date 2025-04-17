@@ -247,12 +247,12 @@ class ConfigRequirementDecorator:
             return result
         return self._wrapped_filter(**kwargs)
 
-    def __call__[*P](self, func: Callable[[ABCConfigData[Any], *P], Any]) -> Callable[[*P], Any]:
+    def __call__(self, func: Callable[[ABCConfigData[Any], Any], Any]) -> Callable[..., Any]:
         @wrapt.decorator  # type: ignore[misc]
         def wrapper(
-                wrapped: Callable[[ABCConfigData[Any], *P], Any],
+                wrapped: Callable[..., Any],
                 _instance: object | None,
-                args: tuple[*P],
+                args: tuple[Any, ...],
                 kwargs: dict[str, Any],
         ) -> Any:
             config_data = self._wrapped_filter(**self._filter_kwargs)
@@ -263,7 +263,7 @@ class ConfigRequirementDecorator:
                 **kwargs
             )
 
-        return cast(Callable[[*P], Any], wrapper(func))
+        return cast(Callable[..., Any], wrapper(func))
 
     def _wrapped_filter(self, **kwargs: Any) -> ABCConfigData[Any]:
         cell = CellType(self._config_file.config)
@@ -912,6 +912,7 @@ __all__ = (
     "RequiredPath",
     "ConfigPool",
     "ConfigRequirementDecorator",
+    "raises",
     "BasicConfigSL",
     "BasicLocalFileConfigSL",
     "BasicChainConfigSL",

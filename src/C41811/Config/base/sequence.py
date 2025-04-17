@@ -26,7 +26,7 @@ from .utils import check_read_only
 
 
 @generate
-class SequenceConfigData[D: Sequence[Any]](  # type: ignore[misc]
+class SequenceConfigData[D: Sequence[Any]](
     BasicIndexedConfigData[D],
     MutableSequence[Any]
 ):

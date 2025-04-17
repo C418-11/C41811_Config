@@ -617,9 +617,13 @@ class TestMappingConfigData:
             ({"a": 1, "d": 4}, {"a": 2, "b": 3}, {"a": 2, "b": 3, "d": 4}),
     ))
     def test_update(data: dict[str, Any], mapping: Mapping[str, Any], result: Any) -> None:
-        data = MappingConfigData(data)
-        data.update(mapping)
-        assert data == MappingConfigData(result)
+        cfg = MappingConfigData(data)
+        cfg.update(**mapping)
+        assert cfg == MappingConfigData(result)
+
+        cfg = MappingConfigData(data)
+        cfg.update(mapping)
+        assert cfg == MappingConfigData(result)
 
     @staticmethod
     def test_repr(data: M_MCD) -> None:

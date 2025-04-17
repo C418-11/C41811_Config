@@ -26,6 +26,7 @@ from ._generate_operators import operate
 from .core import BasicIndexedConfigData
 from .utils import check_read_only
 from .utils import fmt_path
+from ..abc import PathLike
 from ..errors import CyclicReferenceError
 from ..errors import KeyInfo
 from ..errors import RequiredPathNotFoundError
@@ -253,7 +254,7 @@ class MappingConfigData[D: Mapping[Any, Any]](BasicIndexedConfigData[D], Mutable
 
     @override
     @check_read_only
-    def pop(self, path: str | Path, /, default: Any = Unset) -> Any:
+    def pop(self, path: PathLike, /, default: Any = Unset) -> Any:
         path = fmt_path(path)
         try:
             result = self.retrieve(path)
@@ -271,8 +272,11 @@ class MappingConfigData[D: Mapping[Any, Any]](BasicIndexedConfigData[D], Mutable
 
     @override
     @check_read_only
-    def update(self, m: Any, /, **kwargs: Any) -> None:  # type: ignore[override]
-        self._data.update(m, **kwargs)  # type: ignore[attr-defined]
+    def update(self, m: Any = None, /, **kwargs: Any) -> None:
+        if m is not None:
+            self._data.update(m)  # type: ignore[attr-defined]
+            return
+        self._data.update(**kwargs)  # type: ignore[attr-defined]
 
     def __getattr__(self, item: Any) -> Self | Any:
         try:
