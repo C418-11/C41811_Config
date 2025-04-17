@@ -48,8 +48,7 @@ C41811.Config 的文档
        .. image:: https://img.shields.io/github/actions/workflow/status/C418-11/C41811_Config/python-publish.yml?logo=github&label=Pubilsh
           :target: https://github.com/C418-11/C41811_Config/actions/workflows/python-publish.yml
           :alt: Publish
-
-   * - 代码质量
+   * - 代码质量-主分支
      -
        .. image:: https://img.shields.io/github/actions/workflow/status/C418-11/C41811_Config/python-pytest.yml?logo=github&label=pytest
           :target: https://github.com/C418-11/C41811_Config/actions/workflows/python-pytest.yml
@@ -59,6 +58,11 @@ C41811.Config 的文档
           :target: https://github.com/C418-11/C41811_Config/actions/workflows/python-flake8.yml
           :alt: flake8
 
+      .. image:: https://codecov.io/gh/C418-11/C41811_Config/branch/main/graph/badge.svg
+          :target: https://codecov.io/gh/C418-11/C41811_Config
+          :alt: CodeCov
+   * - 代码质量-开发分支
+     -
        .. image:: https://img.shields.io/github/actions/workflow/status/C418-11/C41811_Config/python-pytest.yml?branch=develop&logo=github&label=pytest-dev
           :target: https://github.com/C418-11/C41811_Config/actions/workflows/python-pytest.yml
           :alt: pytest-dev
@@ -67,6 +71,9 @@ C41811.Config 的文档
           :target: https://github.com/C418-11/C41811_Config/actions/workflows/python-flake8.yml
           :alt: flake8-dev
 
+       .. image:: https://codecov.io/gh/C418-11/C41811_Config/branch/develop/graph/badge.svg
+          :target: https://codecov.io/gh/C418-11/C41811_Config
+          :alt: CodeCov-dev
 
 .. toctree::
    :maxdepth: 2
