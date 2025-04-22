@@ -19,13 +19,13 @@ C41811.Config 的文档
           :target: ./index.html
           :alt: Documentation Status
 
+       .. image:: https://img.shields.io/badge/%E6%96%B0%E6%89%8B-%E6%95%99%E7%A8%8B-green?logo=googledocs&logoColor=white
+          :target: ./Tutorial/get-start.rst
+          :alt: Get Start
+
        .. image:: https://img.shields.io/badge/%E5%B8%B8%E8%A7%81-%E9%97%AE%E9%A2%98-green?logo=googledocs&logoColor=white
           :target: ./Tutorial/faq.html
           :alt: FAQ
-
-       .. image:: https://img.shields.io/badge/Made%20with-Sphinx-1f425f.svg
-          :target: https://www.sphinx-doc.org/
-          :alt: made-with-sphinx-doc
    * - PyPI
      -
        .. image:: https://img.shields.io/pypi/v/C41811.Config
