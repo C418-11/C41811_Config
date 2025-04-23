@@ -6,7 +6,10 @@
 配置数据路径语法
 -----------------
 
-由三种类型组成
+一种简便的配置数据访问路径表示方法，
+在一些高级方法如 :py:func:`~Config.abc.ABCIndexedConfigData.retrieve` 中使用
+
+由三种语法组成
 
 .. rubric:: 属性键
    :name: term-attr-key
@@ -17,6 +20,19 @@
    :caption: 例
 
    r"\.key1\.key2\.key3"
+
+.. tip::
+
+   如果路径字符串以 :ref:`term-attr-key` 开头可以省略 ``\.``
+
+   .. code-block:: python
+      :caption: 例
+
+      r"key1\.key2\.key3"
+
+      # 这将被视为
+
+      r"\.key1\.key2\.key3"
 
 .. rubric:: 索引键
 
@@ -42,17 +58,6 @@
    # 这相当于
 
    [AttrKey("key", meta="meta 1"), IndexKey(0, meta="meta 2")]
-
-如果路径字符串以 :ref:`term-attr-key` 开头可以省略 ``\.``
-
-.. code-block:: python
-   :caption: 例
-
-   r"key1\.key2\.key3"
-
-   # 这将被视为
-
-   r"\.key1\.key2\.key3"
 
 .. rubric:: 转义
 
@@ -876,7 +881,7 @@ ComponentMetaParser
            "read": ["filename.json", "my-member.pickle"],  # retrieve等方法仅按照此顺序读取配置数据
            "modify": ["filename.json", "na"],  # 显然这是针对modify一类方法的
            "delete": ["filename.json", "my-member.pickle", "na"],  # delete,unset一类涉及删除路径的操作
-           # 注意，当最终得到的orders其中某项未空时(例如"delete": [])
+           # 注意，当unset等方法最终得到的orders其中某项为空时(例如"delete": [])
            # 会抛出RequiredPathNotFoundError且未找到路径一定为根键
        },
    }
