@@ -59,7 +59,7 @@ C41811.Config 的文档
           :alt: flake8
 
        .. image:: https://codecov.io/gh/C418-11/C41811_Config/branch/main/graph/badge.svg
-          :target: https://codecov.io/gh/C418-11/C41811_Config
+          :target: https://codecov.io/gh/C418-11/C41811_Config/tree/main
           :alt: CodeCov
    * - 代码质量-开发分支
      -
@@ -72,7 +72,7 @@ C41811.Config 的文档
           :alt: flake8
 
        .. image:: https://codecov.io/gh/C418-11/C41811_Config/branch/develop/graph/badge.svg
-          :target: https://codecov.io/gh/C418-11/C41811_Config
+          :target: https://codecov.io/gh/C418-11/C41811_Config/tree/develop
           :alt: CodeCov
 
 .. toctree::
