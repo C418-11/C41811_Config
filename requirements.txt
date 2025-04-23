@@ -2,7 +2,7 @@ pydantic~=2.11.1
 wrapt~=1.17.2
 pyrsistent~=0.20.0
 portalocker~=3.1.1
-mypy-extensions~=1.0.0
+mypy-extensions>=1.0,<1.2
 
 tox~=4.25.0
 # 测试对应SL处理器的依赖
