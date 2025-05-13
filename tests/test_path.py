@@ -216,6 +216,7 @@ class TestPathSyntaxParser:
             (r"abc\[e\]", [r"\.abc", r"\[e", r"\]"], ()),
             (r"abc", [r"\.abc"], ()),
             (r"\{meta info\}\.abc", [r"\{meta info", r"\}", r"\.abc"], ()),
+            (r"\{meta info\}abc", [r"\{meta info", r"\}", r"abc"], ()),
             (r"\\abc", [r"\.\\abc"], ()),
             (r"\.\a", [r"\.\a"], (SyntaxWarning,)),
             (r"\a\a", [r"\.\a\a"], (SyntaxWarning,)),
@@ -271,6 +272,7 @@ class TestPathSyntaxParser:
             (r"\[4\]abc\[9\]", None, (UnknownTokenTypeError,), ()),
             (r"\[5\]abc", None, (UnknownTokenTypeError,), ()),
             (r"\[5\]\abc", None, (UnknownTokenTypeError,), (SyntaxWarning,)),
+            (r"\{meta\}aaa", None, (UnknownTokenTypeError,), ()),
         )
     )
 
