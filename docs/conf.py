@@ -36,6 +36,10 @@ add_module_names = False
 
 html_theme = "furo"
 html_static_path = ["_static"]
+# noinspection SpellCheckingInspection
+html_extra_path = [
+    "baidu_verify_codeva-HBK22hkhYO.html"  # 百度验证码
+]
 html_css_files = [
     "pygments_darcula.css",
 ]
