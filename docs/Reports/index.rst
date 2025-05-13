@@ -6,7 +6,7 @@
 
    * - `覆盖率 <#coverage>`_
      - `📊 <../_static/_coverage/index.html>`_
-   * - `PyTest - Python 3.13 <#pytest>`_
+   * - `PyTest <#pytest>`_
      - `🛠️ <../_static/_pytest/index.html>`_
    * - `Flake8 <#flake8>`_
      - `⚙️ <../_static/_flake8/index.html>`_
@@ -21,7 +21,7 @@
     </iframe>
 
 
-PyTest - Python 3.13
+PyTest
 -----------------------
 
 .. raw:: html
