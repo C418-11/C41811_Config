@@ -155,7 +155,7 @@ commands_pre = [
     ["npm", "install", "-g", "less"],
 ]
 commands = [
-    ["lessc", "./docs/_static/pygments_darcula.less", "./docs/_static/pygments_darcula.css"],
+    ["lessc", "./docs/_static/.pygments_darcula.less", "./docs/_static/pygments_darcula.css"],
     ["-",
         "pytest",
         "--html=./docs/_static/_pytest/index.html",
