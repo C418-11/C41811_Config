@@ -31,6 +31,7 @@
     .. versionchanged:: {x.x.x}
        {变更类型}：{具体变更描述}
        示例格式：
+       - 添加参数 ``{arg_name}``
        - 重命名 ``{old_name}`` 为 ``{new_name}``
        - 重命名参数 ``{old_arg}`` 为 ``{new_arg}``
        - 删除参数 ``{arg_name}``
