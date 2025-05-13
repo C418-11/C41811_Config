@@ -11,8 +11,11 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment:
+      name: sync-gitee
     steps:
       - name: Sync to Gitee
+        # noinspection SpellCheckingInspection
         uses: wearerequired/git-mirror-action@master
         env:
           SSH_PRIVATE_KEY: ${{ secrets.GITEE_PRIVATE_KEY }}
