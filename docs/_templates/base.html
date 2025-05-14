@@ -1,12 +1,14 @@
 {% extends "!base.html" %}
 {% block site_meta %}
     <!-- 百度统计 -->
-    <script>
+    <script type="text/javascript">
         var _hmt = _hmt || [];
         (function() {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?fae432ce07e9d917d81467cbd2576755";
         var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+        })();
     </script>
     <!-- Generated -->
     {{ super() }}
