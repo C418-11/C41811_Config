@@ -20,7 +20,8 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
-        python-version: [ '3.12', '3.13', '3.14.0-beta.1' ]
+        python-version: [ '3.12', '3.13' ]
+#        python-version: [ '3.12', '3.13', '3.14.0-beta.1' ]  # todo uncomment when pydantic supports 3.14
       fail-fast: false
 
     environment:

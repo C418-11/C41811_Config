@@ -114,7 +114,8 @@ omit = [
 #]
 
 [tool.tox]
-envlist = ["py312", "py313", "py314", "flake8", "mypy"]
+envlist = ["py312", "py313", "flake8", "mypy"]
+#envlist = ["py312", "py313", "py314", "flake8", "mypy"]  # uncomment when pydantic supports 3.14
 
 [tool.tox.env_run_base]
 skip_install = true
