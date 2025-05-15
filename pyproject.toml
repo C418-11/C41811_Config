@@ -55,6 +55,9 @@ dev = [
     "ruamel.yaml~=0.18.10",
     "toml~=0.10.2",
 ]
+tox = [
+    "tox~=4.25.0",
+]
 test = [
     "pytest~=8.3.5",
     "pytest-html~=4.1.1",
