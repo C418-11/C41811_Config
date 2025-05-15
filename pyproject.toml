@@ -55,9 +55,6 @@ dev = [
     "ruamel.yaml~=0.18.10",
     "toml~=0.10.2",
 ]
-tox = [
-    "tox~=4.25.0",
-]
 test = [
     "pytest~=8.3.5",
     "pytest-html~=4.1.1",
@@ -115,21 +112,17 @@ omit = [
 
 [tool.tox]
 envlist = ["py312", "py313", "flake8", "mypy"]
-#envlist = ["py312", "py313", "py314", "flake8", "mypy"]  # uncomment when pydantic supports 3.14
+#envlist = ["py312", "py313", "py314", "flake8", "mypy"]  # todo uncomment when pydantic supports 3.14
 
 [tool.tox.env_run_base]
-skip_install = true
-commands_pre = [
-    ["pip", "install", "--force-reinstall", "-e", ".[dev,test]"],
-]
+use_develop = true
+extras = ["dev", "test"]
 commands = [
     ["pytest"],
 ]
 
 [tool.tox.env.flake8]
-commands_pre = [
-    ["pip", "install", "--force-reinstall", "-e", ".[flake8]"],
-]
+extras = ["flake8"]
 commands = [
     ["flake8",
         "--doctests", "--max-line-length=120", "--max-complexity=10",
@@ -139,9 +132,7 @@ commands = [
 ]
 
 [tool.tox.env.mypy]
-commands_pre = [
-    ["pip", "install", "--force-reinstall", "-e", ".[mypy]"],
-]
+extras = ["mypy"]
 commands = [
     ["mypy", "tests"],
     ["pip", "uninstall", "-y", "C41811.Config"],
@@ -151,8 +142,8 @@ commands = [
 [tool.tox.env.prepare-doc]
 base_python = ["py313"]
 allowlist_externals = ["npm", "lessc"]
+extras = ["dev", "test", "flake8"]
 commands_pre = [
-    ["pip", "install", "--force-reinstall", "-e", ".[dev,test,flake8]"],
     ["npm", "install", "-g", "less"],
 ]
 commands = [
@@ -172,10 +163,8 @@ commands = [
 ]
 
 [tool.tox.env.doc]
-commands_pre = [
-    ["pip", "install", "-e", ".[docs,tox]"],
-    ["pip", "uninstall", "-y", "C41811.Config"],
-]
+extras = ["docs"]
+allowlist_externals = ["tox"]
 commands = [
     ["tox", "-e", "prepare-doc"],
     ["sphinx-build", "-b", "html", "./docs", "./docs/_build"],
