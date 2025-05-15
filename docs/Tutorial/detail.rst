@@ -237,6 +237,8 @@ Pydantic验证器工厂
 Iterable[str]
 .................
 
+一组需求的 :ref:`配置数据路径 <term-config-data-path-syntax>` ，会检查路径存在与否，不会校验数据类型
+
 .. code-block:: python
     :caption: 例
     :linenos:
@@ -264,6 +266,8 @@ Iterable[str]
 
 Mapping[str | ABCPath, Any]
 .............................
+
+键为 :ref:`配置数据路径 <term-config-data-path-syntax>` ，值为需求的数据类型，会检查路径存在与否，并校验数据类型
 
 .. tip::
     :collapsible:
