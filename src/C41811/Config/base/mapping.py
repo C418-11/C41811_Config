@@ -172,7 +172,7 @@ class MappingConfigData[D: Mapping[Any, Any]](BasicIndexedConfigData[D], Mutable
 
            为严格模式时会检查循环引用并提前引发错误
 
-           >>> cyclic = {
+           >>> cyclic: dict[str, Any] = {
            ...     "cyclic": None,
            ...     "key": "value"
            ... }
