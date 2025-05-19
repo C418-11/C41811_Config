@@ -13,8 +13,8 @@ from typing import override
 from .._protocols import SupportsReadAndReadline
 from .._protocols import SupportsWrite
 from ..abc import ABCConfigFile
-from ..base import ConfigFile
-from ..base import MappingConfigData
+from ..basic import ConfigFile
+from ..basic import MappingConfigData
 from ..main import BasicLocalFileConfigSL
 
 

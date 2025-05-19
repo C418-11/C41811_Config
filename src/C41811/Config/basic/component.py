@@ -162,7 +162,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](B
         :type member: str
 
         :return: 成员数据
-        :rtype: base.mapping.MappingConfigData
+        :rtype: basic.mapping.MappingConfigData
         """
         try:
             return self._members[member]
@@ -182,7 +182,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](B
         :param order: 成员处理顺序
         :type order: list[str]
         :param processor: 成员处理函数
-        :type processor: Callable[[ABCPath, base.mapping.MappingConfigData], Any]
+        :type processor: Callable[[ABCPath, basic.mapping.MappingConfigData], Any]
         :param exception: 顺序为空抛出的错误
         :type exception: Exception
 

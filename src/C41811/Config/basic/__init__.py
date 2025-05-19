@@ -5,6 +5,9 @@
 """
 .. versionchanged:: 0.2.0
    重构拆分 ``base.py`` 为多个文件
+
+.. versionchanged:: 0.3.0
+   重命名 ``base`` 为 ``basic``
 """
 
 import builtins

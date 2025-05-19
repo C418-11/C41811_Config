@@ -13,10 +13,10 @@ from typing import override
 
 from .._protocols import SupportsWrite
 from ..abc import ABCConfigFile
-from ..base import ConfigData
-from ..base import ConfigFile
-from ..base import SequenceConfigData
-from ..base import StringConfigData
+from ..basic import ConfigData
+from ..basic import ConfigFile
+from ..basic import SequenceConfigData
+from ..basic import StringConfigData
 from ..main import BasicLocalFileConfigSL
 
 
