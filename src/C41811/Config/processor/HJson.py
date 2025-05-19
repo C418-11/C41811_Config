@@ -2,6 +2,10 @@
 # cython: language_level = 3
 
 
+"""
+.. versionadded:: 0.3.0
+"""
+
 from typing import Any
 from typing import override
 
