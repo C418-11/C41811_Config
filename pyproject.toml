@@ -54,6 +54,7 @@ dev = [
     "PyYAML~=6.0.2",
     "ruamel.yaml~=0.18.10",
     "toml~=0.10.2",
+    "hjson~=3.1.0"
 ]
 tox = [
     "tox~=4.25.0",
@@ -78,6 +79,7 @@ mypy = [
 PyYamlSL = ["PyYAML~=6.0.2"]
 RuamelYamlSL = ["ruamel.yaml~=0.18.10"]
 TomlSL = ["toml~=0.10.2"]
+HJsonSL = ["hjson~=3.1.0"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -37,6 +37,7 @@ from C41811.Config.abc import ABCConfigSL
 from C41811.Config.errors import FailedProcessConfigFileError
 from C41811.Config.main import BasicCompressedConfigSL
 from C41811.Config.processor.Component import ComponentMetaParser
+from C41811.Config.processor.HJson import HJsonSL
 from C41811.Config.processor.PyYaml import PyYamlSL
 from C41811.Config.processor.RuamelYaml import RuamelYamlSL
 from C41811.Config.processor.TarFile import TarCompressionTypes
@@ -45,7 +46,7 @@ from C41811.Config.processor.ZipFile import ZipCompressionTypes
 from utils import EE
 from utils import safe_raises
 
-JsonSLTests: tuple[tuple[Any, tuple[EE, ...], tuple[dict[str, Any], ...]], ...] = (
+JsonTests: tuple[tuple[Any, tuple[EE, ...], tuple[dict[str, Any], ...]], ...] = (
     (
         {"a": 1, "b": {"c": 2}},
         (), ()
@@ -55,7 +56,7 @@ JsonSLTests: tuple[tuple[Any, tuple[EE, ...], tuple[dict[str, Any], ...]], ...] 
         (), ({"indent": 4}, {})
     ),
     (
-        OrderedDict((('b', 2), ('a', 1))),
+        OrderedDict((('a', 1), ('b', 2))),
         (), ({"indent": 4, "sort_keys": True}, {})
     ),
     (
@@ -91,8 +92,9 @@ JsonSLTests: tuple[tuple[Any, tuple[EE, ...], tuple[dict[str, Any], ...]], ...] 
         ((), (FailedProcessConfigFileError,)), ({}, {"param not exist": None})
     ),
 )
+HJsonTests = JsonTests
 
-PickleSLTests: tuple[tuple[Any, tuple[EE, ...], tuple[Any, ...]], ...] = (
+PickleTests: tuple[tuple[Any, tuple[EE, ...], tuple[Any, ...]], ...] = (
     (
         {"a": 1, "b": 2},
         (), ()
@@ -339,8 +341,9 @@ def _insert_sl_cls(
 LocalFileTests = (
     "sl_cls, raw_data, ignore_excs, sl_args",
     (
-        *_insert_sl_cls(JsonSL, JsonSLTests),
-        *_insert_sl_cls(PickleSL, PickleSLTests),
+        *_insert_sl_cls(JsonSL, JsonTests),
+        *_insert_sl_cls(HJsonSL, HJsonTests),
+        *_insert_sl_cls(PickleSL, PickleTests),
         *_insert_sl_cls(PyYamlSL, PyYamlTests),
         *_insert_sl_cls(RuamelYamlSL, RuamelYamlTests),
         *_insert_sl_cls(TomlSL, TOMLTests),
@@ -528,7 +531,7 @@ ComponentTests: tuple[
          {"test.json": ConfigData({"test": "test"})},
          ((ValueError,), (), ()), {}),
         ((
-             JsonSL(s_arg=dict(indent=2)),  # 爷真是个天才，这都能一遍过正常跑👍
+             JsonSL(s_arg=dict(indent=2)),
              PythonLiteralSL(),
              ZipFileSL(compress_level=9),
              TarFileSL(compression=TarCompressionTypes.GZIP)
@@ -721,18 +724,19 @@ def test_wrong_sl_arguments() -> None:
 
 
 SLProcessors = (
+    ComponentSL,
+    HJsonSL,
     JsonSL,
+    OSEnvSL,
     PickleSL,
+    PlainTextSL,
     PythonLiteralSL,
+    PythonSL,
     PyYamlSL,
     RuamelYamlSL,
-    TomlSL,
     TarFileSL,
+    TomlSL,
     ZipFileSL,
-    ComponentSL,
-    PythonSL,
-    PlainTextSL,
-    OSEnvSL,
 )
 
 
