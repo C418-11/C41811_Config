@@ -6,6 +6,7 @@ mypy-extensions>=1.0,<1.2
 
 tox~=4.26.0
 # 测试对应SL处理器的依赖
-PyYAML~=6.0.2        # PyYamlSL
+PyYAML~=6.0.2         # PyYamlSL
 ruamel.yaml~=0.18.10  # RuamelYamlSL
-toml~=0.10.2         # TomlSL
+toml~=0.10.2          # TomlSL
+hjson~=3.1.0          # HJsonSL
