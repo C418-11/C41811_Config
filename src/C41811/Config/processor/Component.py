@@ -27,7 +27,7 @@ from ..basic import NoneConfigData
 from ..basic import SequenceConfigData
 from ..main import BasicChainConfigSL
 from ..main import RequiredPath
-from ..utils import CellType
+from ..utils import Ref
 from ..validators import ValidatorFactoryConfig
 
 
@@ -55,7 +55,7 @@ class ComponentMetaParser[D: MappingConfigData[Any]](ABCMetaParser[D, ComponentM
         :return: 元数据
         :rtype: basic.mapping.ComponentMeta
         """
-        meta = self._validator.filter(CellType(meta_config))
+        meta = self._validator.filter(Ref(meta_config))
 
         members = meta.get("members", SequenceConfigData()).data
         for i, member in enumerate(members):

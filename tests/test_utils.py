@@ -5,7 +5,7 @@ from typing import cast
 
 from pytest import mark
 
-from C41811.Config.utils import CellType
+from C41811.Config.utils import Ref
 from C41811.Config.utils import Unset
 from C41811.Config.utils import UnsetType
 from C41811.Config.utils import singleton
@@ -32,8 +32,8 @@ def test_unset_type() -> None:
     str(Unset)
 
 
-def test_cell_type() -> None:
-    cell = CellType("abc")
-    assert "abc" in repr(cell)
-    cell.cell_contents = 321  # type: ignore[assignment]
-    assert "321" in repr(cell)
+def test_ref() -> None:
+    ref = Ref("abc")
+    assert "abc" in repr(ref)
+    ref.value = 321  # type: ignore[assignment]
+    assert "321" in repr(ref)
