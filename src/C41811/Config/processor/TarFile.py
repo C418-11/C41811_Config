@@ -19,7 +19,7 @@ from typing import Optional
 from typing import cast
 from typing import override
 
-from ..base import ConfigFile
+from ..basic import ConfigFile
 from ..main import BasicCompressedConfigSL
 from ..safe_writer import safe_open
 

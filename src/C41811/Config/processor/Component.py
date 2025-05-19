@@ -17,14 +17,14 @@ from ..abc import ABCConfigFile
 from ..abc import ABCConfigPool
 from ..abc import ABCMetaParser
 from ..abc import ABCSLProcessorPool
-from ..base import ComponentConfigData
-from ..base import ComponentMember
-from ..base import ComponentMeta
-from ..base import ComponentOrders
-from ..base import ConfigFile
-from ..base import MappingConfigData
-from ..base import NoneConfigData
-from ..base import SequenceConfigData
+from ..basic import ComponentConfigData
+from ..basic import ComponentMember
+from ..basic import ComponentMeta
+from ..basic import ComponentOrders
+from ..basic import ConfigFile
+from ..basic import MappingConfigData
+from ..basic import NoneConfigData
+from ..basic import SequenceConfigData
 from ..main import BasicChainConfigSL
 from ..main import RequiredPath
 from ..utils import CellType
@@ -50,10 +50,10 @@ class ComponentMetaParser[D: MappingConfigData[Any]](ABCMetaParser[D, ComponentM
         解析元配置
 
         :param meta_config: 元配置
-        :type meta_config: base.mapping.MappingConfigData
+        :type meta_config: basic.mapping.MappingConfigData
 
         :return: 元数据
-        :rtype: base.mapping.ComponentMeta
+        :rtype: basic.mapping.ComponentMeta
         """
         meta = self._validator.filter(CellType(meta_config))
 
@@ -90,10 +90,10 @@ class ComponentMetaParser[D: MappingConfigData[Any]](ABCMetaParser[D, ComponentM
         解析元数据
 
         :param meta: 元数据
-        :type meta: base.mapping.ComponentMeta
+        :type meta: basic.mapping.ComponentMeta
 
         :return: 元配置
-        :rtype: base.mapping.MappingConfigData
+        :rtype: basic.mapping.MappingConfigData
         """
         return meta.config
 

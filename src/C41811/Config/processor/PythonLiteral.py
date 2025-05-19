@@ -10,7 +10,7 @@ from typing import override
 from .._protocols import SupportsReadAndReadline
 from .._protocols import SupportsWrite
 from ..abc import ABCConfigFile
-from ..base import ConfigFile
+from ..basic import ConfigFile
 from ..main import BasicLocalFileConfigSL
 
 

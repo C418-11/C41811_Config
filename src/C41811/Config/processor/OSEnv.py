@@ -14,8 +14,8 @@ from typing import override
 
 from ..abc import ABCConfigFile
 from ..abc import ABCSLProcessorPool
-from ..base import ConfigFile
-from ..base import EnvironmentConfigData
+from ..basic import ConfigFile
+from ..basic import EnvironmentConfigData
 from ..main import BasicConfigSL
 
 

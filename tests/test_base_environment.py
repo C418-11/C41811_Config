@@ -7,7 +7,7 @@ from pytest import mark
 
 from C41811.Config import EnvironmentConfigData
 from C41811.Config import MappingConfigData
-from C41811.Config.base.environment import Difference
+from C41811.Config.basic.environment import Difference
 from utils import EE
 from utils import safe_raises
 
