@@ -22,6 +22,7 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.doctest",
     "sphinx_copybutton",
+    "autoapi.extension",
 ]
 
 templates_path = ["_templates"]
@@ -54,7 +55,6 @@ intersphinx_mapping = {
 
 # -- AutoAPI Configuration ---------------------------------------------------
 # https://sphinx-autoapi.readthedocs.io/en/latest/reference/config.html
-extensions.append("autoapi.extension")
 
 autoapi_dirs = ["../src/"]
 autoapi_member_order = "groupwise"
