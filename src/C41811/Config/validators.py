@@ -30,7 +30,6 @@ from pydantic_core import core_schema
 
 from .abc import ABCPath
 from .basic import ComponentConfigData
-from .basic import ConfigData
 from .basic import MappingConfigData
 from .basic import NoneConfigData
 from .errors import ConfigDataTypeError
@@ -41,7 +40,7 @@ from .errors import UnknownErrorDuringValidateError
 from .path import AttrKey
 from .path import IndexKey
 from .path import Path
-from .utils import CellType
+from .utils import Ref
 from .utils import Unset
 from .utils import UnsetType
 from .utils import singleton
@@ -93,14 +92,31 @@ class ValidatorFactoryConfig:
 type MCD = MappingConfigData[Any]
 
 
-def _fill_not_exits(raw_obj: MCD, obj: MCD) -> None:
+def _fill_not_exits(from_obj: MCD, to_obj: MCD) -> None:
+    """
+    填充不存在的路径
+
+    :param to_obj: 被填充的对象
+    :type to_obj: MappingConfigData[Any]
+    :param from_obj: 提供填充值的对象
+    :type from_obj: MappingConfigData[Any]
+    """
     all_leaf = dict(recursive=True, end_point_only=True)
-    diff_keys = obj.keys(**all_leaf) - raw_obj.keys(**all_leaf)
+    diff_keys = from_obj.keys(**all_leaf) - to_obj.keys(**all_leaf)
     for key in diff_keys:
-        raw_obj.modify(key, obj.retrieve(key, return_raw_value=True))
+        to_obj.modify(key, from_obj.retrieve(key, return_raw_value=True))
 
 
 def _process_pydantic_exceptions(err: ValidationError) -> Exception:
+    """
+    转换包装 pydantic 的异常
+
+    :param err: pydantic 的异常
+    :type err: ValidationError
+
+    :return: 转换后的异常
+    :rtype: Exception
+    """
     e = err.errors()[0]
 
     locate = list(e["loc"])
@@ -184,7 +200,7 @@ class SkipMissingType:
 
     @staticmethod
     def __get_pydantic_core_schema__(*_: Any) -> core_schema.ChainSchema:
-        # 构造一个永远无法匹配的schema, 使 SkipMissing | int 可以正常工作
+        # 构造一个永远无法匹配的schema，使 SkipMissing | int 可以正常工作，即被pydantic视为：int
         return core_schema.chain_schema(
             [core_schema.none_schema(), core_schema.is_subclass_schema(type)]
         )
@@ -270,9 +286,6 @@ class FieldDefinition[T: type | types.UnionType | types.EllipsisType | types.Gen
 
 class MappingType(BaseModel):
     value: type[Mapping]  # type: ignore[type-arg]
-    # pydantic.errors.PydanticUserError:
-    #     Subscripting `type[]` with an already parametrized type is not supported.
-    #     Instead of using type[collections.abc.Mapping[typing.Any, typing.Any]], use type[Mapping].
 
 
 class RecursiveMapping(BaseModel):
@@ -280,6 +293,9 @@ class RecursiveMapping(BaseModel):
 
 
 def _is_mapping(typ: Any) -> bool:
+    """
+    判断是否为 Mapping 类型
+    """
     if typ is Any:
         return True
     try:
@@ -290,6 +306,9 @@ def _is_mapping(typ: Any) -> bool:
 
 
 def _allow_recursive(typ: Any) -> bool:
+    """
+    判断是否允许递归处理字段值（键全为字符串则视为允许）
+    """
     try:
         RecursiveMapping(value=typ)
         return True
@@ -367,6 +386,9 @@ class DefaultValidatorFactory[D: MCD | NoneConfigData]:
         value: Any = None
 
         def _next() -> bool:
+            """
+            获取下一个键值对
+            """
             nonlocal key, value
             try:
                 key, value = next(iterator)
@@ -377,10 +399,7 @@ class DefaultValidatorFactory[D: MCD | NoneConfigData]:
         if _next():
             return {}, set()
 
-        fmt_data: MappingConfigData[OrderedDict[str, Any]] = cast(
-            MappingConfigData[OrderedDict[Any, Any]],
-            ConfigData(OrderedDict())
-        )
+        fmt_data: MappingConfigData[OrderedDict[str, Any]] = MappingConfigData(OrderedDict())
         father_set: set[str | ABCPath[Any]] = set()
         while True:
             # 如果传入了任意路径的父路径那就检查新值和旧值是否都为Mapping
@@ -480,13 +499,10 @@ class DefaultValidatorFactory[D: MCD | NoneConfigData]:
 
             fmt_data[key] = (definition.annotation, definition.value)
 
-        return cast(
-            type[BaseModel],
-            create_model(
-                f"{type(self).__name__}.RuntimeTemplate",
-                __config__=cast(ConfigDict, model_config.get(self.model_config_key, {})),
-                **fmt_data,
-            ),
+        return create_model(
+            f"{type(self).__name__}.RuntimeTemplate",
+            __config__=cast(ConfigDict, model_config.get(self.model_config_key, {})),
+            **fmt_data,
         )
 
     def _compile(self) -> None:
@@ -501,10 +517,10 @@ class DefaultValidatorFactory[D: MCD | NoneConfigData]:
 
         self.model = self._mapping2model(fmt_validator, model_config.data)
 
-    def __call__(self, cell: CellType[D]) -> D:
-        if isinstance(cell.cell_contents, NoneConfigData):
-            cell.cell_contents = MappingConfigData()  # type: ignore[assignment]
-        data: MCD = cell.cell_contents  # type: ignore[assignment]
+    def __call__(self, config_ref: Ref[D]) -> D:
+        if isinstance(config_ref.value, NoneConfigData):
+            config_ref.value = MappingConfigData()  # type: ignore[assignment]
+        data: MCD = config_ref.value  # type: ignore[assignment]
 
         try:
             dict_obj = self.model(**data.data).model_dump()
@@ -519,13 +535,13 @@ class DefaultValidatorFactory[D: MCD | NoneConfigData]:
                     config_obj.delete(key)
 
         if self.validator_config.allow_modify:
-            _fill_not_exits(data, config_obj)
+            _fill_not_exits(config_obj, data)
         return cast(D, config_obj)
 
 
 def pydantic_validator[D: MCD | NoneConfigData](
         validator: type[BaseModel], cfg: ValidatorFactoryConfig
-) -> Callable[[CellType[D]], D]:
+) -> Callable[[Ref[D]], D]:
     """
     验证器工厂配置 ``skip_missing`` 无效
 
@@ -539,10 +555,10 @@ def pydantic_validator[D: MCD | NoneConfigData](
     if cfg.skip_missing:
         warnings.warn("skip_missing is not supported in pydantic validator")
 
-    def _builder(cell: CellType[D]) -> D:
-        if isinstance(cell.cell_contents, NoneConfigData):
-            cell.cell_contents = MappingConfigData()  # type: ignore[assignment]
-        data: MCD = cell.cell_contents  # type: ignore[assignment]
+    def _builder(config_ref: Ref[D]) -> D:
+        if isinstance(config_ref.value, NoneConfigData):
+            config_ref.value = MappingConfigData()  # type: ignore[assignment]
+        data: MCD = config_ref.value  # type: ignore[assignment]
 
         try:
             dict_obj = validator(**data).model_dump()
@@ -552,7 +568,7 @@ def pydantic_validator[D: MCD | NoneConfigData](
         # noinspection PyTypeChecker
         config_obj: MCD = data.from_data(dict_obj)
         if cfg.allow_modify:
-            _fill_not_exits(data, config_obj)
+            _fill_not_exits(config_obj, data)
         return cast(D, config_obj)
 
     return _builder
@@ -602,7 +618,7 @@ class ComponentValidatorFactory[D: ComponentConfigData[Any, Any] | NoneConfigDat
         self.validator_factory = validator_config.extra.get("validator_factory", DefaultValidatorFactory)
         self.validators: MutableMapping[
             str | None,
-            Callable[[CellType[MCD]], MCD]
+            Callable[[Ref[MCD]], MCD]
         ] = {}
 
         self._compile()
@@ -611,39 +627,39 @@ class ComponentValidatorFactory[D: ComponentConfigData[Any, Any] | NoneConfigDat
         for member, validator in self.validator.items():
             self.validators[member] = self.validator_factory(validator, self.validator_config)
 
-    def __call__(self, raw_cell: CellType[D]) -> D:
-        if isinstance(raw_cell.cell_contents, NoneConfigData):
-            raw_cell.cell_contents = ComponentConfigData()  # type: ignore[assignment]
+    def __call__(self, config_ref: Ref[D]) -> D:
+        if isinstance(config_ref.value, NoneConfigData):
+            config_ref.value = ComponentConfigData()  # type: ignore[assignment]
 
-        cell = cast(CellType[ComponentConfigData[Any, Any]], raw_cell)
-        data = cell.cell_contents
+        component_ref: Ref[ComponentConfigData[Any, Any]] = config_ref  # type: ignore[assignment]
+        component_data = component_ref.value
 
-        validation_meta: bool = False
-        members: dict[str | None, MCD] = {}
+        should_validate_meta: bool = False
+        validated_members: dict[str | None, MCD] = {}
         for member, validator in self.validators.items():
             if member is None:
-                validation_meta = True
+                should_validate_meta = True
                 continue
 
-            if (member not in data) and self.validator_config.extra.get("allow_initialize", True):
-                data[member] = MappingConfigData()
-            data_cell = CellType(data[member])
-            members[member] = validator(data_cell)
+            if member not in component_data and self.validator_config.extra.get("allow_initialize", True):
+                component_data[member] = MappingConfigData()
+            member_data_ref = Ref(component_data[member])
+            validated_members[member] = validator(member_data_ref)
             if self.validator_config.allow_modify:
-                cell.cell_contents[member] = data_cell.cell_contents
+                component_ref.value[member] = member_data_ref.value
 
-        meta = deepcopy(data.meta)
-        if validation_meta:
-            meta.config = self.validators[None](CellType(meta.config))
+        meta = deepcopy(component_data.meta)
+        if should_validate_meta:
+            meta.config = self.validators[None](Ref(meta.config))
 
             meta_validator = None if meta.parser is None else meta.parser.validator
             meta_validator = self.validator_config.extra.get("meta_validator", meta_validator)
             if meta_validator is not None:
                 meta = meta_validator(meta, self.validator_config)
         if self.validator_config.allow_modify:
-            cell.cell_contents._meta = meta
+            component_ref.value._meta = meta
 
-        return cast(D, data.from_data(meta, members))
+        return cast(D, component_data.from_data(meta, validated_members))
 
 
 __all__ = (

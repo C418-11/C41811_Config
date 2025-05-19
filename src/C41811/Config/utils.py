@@ -54,21 +54,26 @@ Unset = UnsetType()
 """
 
 
-class CellType[C]:
+class Ref[T]:
     """
-    间接持有对象引用
+    间接持有对象引用的容器
+
+    .. versionchanged:: 0.3.0
+       重命名 ``CellType`` 为 ``Ref``
+
+       重命名字段 ``cell_contents`` 为 ``value``
     """
 
-    def __init__(self, contents: C):
-        self.cell_contents = contents
+    def __init__(self, value: T):
+        self.value = value
 
     def __repr__(self) -> str:
-        return f"<{type(self).__name__} ({self.cell_contents!r})>"
+        return f"<{type(self).__name__} ({self.value!r})>"
 
 
 __all__ = (
     "singleton",
     "UnsetType",
     "Unset",
-    "CellType",
+    "Ref",
 )

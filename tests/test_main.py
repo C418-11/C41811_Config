@@ -257,7 +257,7 @@ class TestRequiredPath:
     ))
     def test_no_validation(data: MCD, kwargs: dict[str, Any]) -> None:
         assert RequiredPath(
-            lambda _: _.cell_contents, "no-validation"
+            lambda _: _.value, "no-validation"
         ).filter(deepcopy(data), **kwargs) == data  # type: ignore[arg-type]
 
     PydanticTests: tuple[

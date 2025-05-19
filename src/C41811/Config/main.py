@@ -36,7 +36,7 @@ from .basic import ConfigData
 from .basic import ConfigFile
 from .errors import FailedProcessConfigFileError
 from .safe_writer import safe_open
-from .utils import CellType
+from .utils import Ref
 from .validators import ComponentValidatorFactory
 from .validators import DefaultValidatorFactory
 from .validators import ValidatorFactoryConfig
@@ -45,7 +45,7 @@ from .validators import pydantic_validator
 
 type VALIDATOR_FACTORY[V, D: ABCConfigData[Any]] = Callable[
     [V, ValidatorFactoryConfig],
-    Callable[[CellType[D]], D]
+    Callable[[Ref[D]], D]
 ]
 
 
@@ -72,7 +72,7 @@ class RequiredPath[V, D: ABCConfigData[Any]]:
             Optional[
             Callable[
             [Any, validators.ValidatorFactoryConfig],
-            Callable[[CellType[ABCConfigData]], ABCConfigData]
+            Callable[[Ref[ABCConfigData]], ABCConfigData]
             ] | validators.ValidatorTypes | Literal["ignore", "pydantic", "component"]
             ]
         :param static_config: 静态配置
@@ -90,8 +90,8 @@ class RequiredPath[V, D: ABCConfigData[Any]]:
         self._validator = deepcopy(validator)
         self._validator_factory: VALIDATOR_FACTORY[V, D] = validator_factory
         if static_config is not None:
-            self._static_validator: Optional[Callable[[CellType[D]], D]] = self._validator_factory(self._validator,
-                                                                                                   static_config)
+            self._static_validator: Optional[Callable[[Ref[D]], D]] = self._validator_factory(self._validator,
+                                                                                              static_config)
         else:
             self._static_validator = None
 
@@ -108,12 +108,12 @@ class RequiredPath[V, D: ABCConfigData[Any]]:
     验证器工厂注册表
 
     .. versionchanged:: 0.2.0
-       现在待验证的配置数据必须由 :py:class:`~Config.utils.CellType` 包装后传入
+       现在待验证的配置数据必须由 :py:class:`~Config.utils.Ref` 包装后传入
     """
 
     def filter(
             self,
-            data: D | CellType[D],
+            data: D | Ref[D],
             *,
             allow_modify: Optional[bool] = None,
             skip_missing: Optional[bool] = None,
@@ -123,7 +123,7 @@ class RequiredPath[V, D: ABCConfigData[Any]]:
         检查过滤需求的键
 
         :param data: 要过滤的原始数据
-        :type data: CellType[ABCConfigData] | ABCConfigData
+        :type data: Ref[ABCConfigData] | ABCConfigData
         :param allow_modify: 是否允许值不存在时修改data参数对象填充默认值(即使为False仍然会在结果中填充默认值,但不会修改data参数对象)
         :type allow_modify: Optional[bool]
         :param skip_missing: 忽略丢失的键
@@ -149,7 +149,7 @@ class RequiredPath[V, D: ABCConfigData[Any]]:
         .. versionchanged:: 0.2.0
            重命名参数 ``ignore_missing`` 为 ``skip_missing``
 
-           ``data`` 参数支持 :py:class:`CellType`
+           ``data`` 参数支持 :py:class:`Ref`
         """
         config_kwargs: dict[str, Any] = {}
         if allow_modify is not None:
@@ -159,13 +159,13 @@ class RequiredPath[V, D: ABCConfigData[Any]]:
         if extra:
             config_kwargs["extra"] = extra
 
-        if not isinstance(data, CellType):
-            data = CellType(data)
+        if not isinstance(data, Ref):
+            data = Ref(data)
 
         if (self._static_validator is None) or config_kwargs:
             config = ValidatorFactoryConfig(**config_kwargs)
             validator: Callable[
-                [CellType[D]], D
+                [Ref[D]], D
             ] = self._validator_factory(self._validator, config)
         else:
             validator = self._static_validator
@@ -240,10 +240,10 @@ class ConfigRequirementDecorator:
         :rtype: Any
         """
         kwargs = self._filter_kwargs | filter_kwargs
-        cell = CellType(self._config_file.config)
+        config_ref = Ref(self._config_file.config)
         if ignore_cache:
-            result = self._required.filter(cell, **kwargs)
-            self._config_file._config = cell.cell_contents
+            result = self._required.filter(config_ref, **kwargs)
+            self._config_file._config = config_ref.value
             return result
         return self._wrapped_filter(**kwargs)
 
@@ -266,10 +266,10 @@ class ConfigRequirementDecorator:
         return cast(Callable[..., Any], wrapper(func))
 
     def _wrapped_filter(self, **kwargs: Any) -> ABCConfigData[Any]:
-        cell = CellType(self._config_file.config)
+        config_ref = Ref(self._config_file.config)
 
-        result = self._config_cacher(self._required.filter, cell, **kwargs)
-        self._config_file._config = cell.cell_contents
+        result = self._config_cacher(self._required.filter, config_ref, **kwargs)
+        self._config_file._config = config_ref.value
         return result
 
 
