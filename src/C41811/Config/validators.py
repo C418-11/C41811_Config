@@ -17,6 +17,7 @@ from enum import Enum
 from typing import Any
 from typing import NamedTuple
 from typing import Never
+from typing import TypeAliasType
 from typing import cast
 from typing import overload
 
@@ -210,12 +211,15 @@ SkipMissing = SkipMissingType()
 
 
 @dataclass(init=False)
-class FieldDefinition[T: type | types.UnionType | types.EllipsisType | types.GenericAlias]:
+class FieldDefinition[T: type | types.UnionType | types.EllipsisType | types.GenericAlias | TypeAliasType]:
     """
     字段定义，包含类型注解和默认值
 
     .. versionchanged:: 0.1.4
        新增 ``allow_recursive`` 字段
+
+    .. versionchanged:: 0.3.0
+       新增对 :py:class:`TypeAliasType` 支持
     """
 
     @overload  # @formatter:off
@@ -363,7 +367,7 @@ class DefaultValidatorFactory[D: MCD | NoneConfigData]:
         self.validator = validator
         self.validator_config = validator_config
 
-        self.typehint_types = (type, types.GenericAlias, types.UnionType, types.EllipsisType)
+        self.typehint_types = (type, types.UnionType, types.EllipsisType, types.GenericAlias, TypeAliasType)
         self.model_config_key = validator_config.extra.get("model_config_key", ".__model_config__")
         self._compile()
         self.model: type[BaseModel]
