@@ -8,7 +8,9 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "daily"
+      time: "00:00"
+      timezone: "Asia/Shanghai"
     target-branch: "develop"
     groups:
       github-actions:
@@ -18,7 +20,9 @@ updates:
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "daily"
+      time: "00:00"
+      timezone: "Asia/Shanghai"
     target-branch: "develop"
     groups:
       python-requirements:
