@@ -8,7 +8,6 @@
 
 from typing import Literal
 from typing import Optional
-from typing import cast
 from typing import override
 
 from .core import BasicSingleConfigData
@@ -50,7 +49,7 @@ class ObjectConfigData[D: object](BasicSingleConfigData[D]):
         .. caution::
            未默认做深拷贝，可能导致非预期行为
         """
-        super().__init__(cast(D, None))
+        super().__init__(None)  # type: ignore[arg-type]
 
         self._data: D = data
 

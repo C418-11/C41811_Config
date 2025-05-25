@@ -16,7 +16,6 @@ from types import NotImplementedType
 from typing import Any
 from typing import Optional
 from typing import Self
-from typing import cast
 from typing import overload
 
 from ._protocols import Indexed
@@ -198,10 +197,10 @@ class ABCPath[K: AnyKey](ABC, Iterable[K]):
     #  @formatter:on
 
     def __getitem__(self, item: Any) -> K | Self:
-        items = self._keys[item]
-        if isinstance(items, ABCKey):
-            return cast(K, items)
-        return type(self)(items)
+        items: K | tuple[K, ...] = self._keys[item]
+        if isinstance(items, tuple):
+            return type(self)(items)
+        return items
 
     def __contains__(self, item: Any) -> bool:
         return item in self._keys
