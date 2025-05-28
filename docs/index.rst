@@ -78,8 +78,9 @@ C41811.Config 的文档
 .. toctree::
    :maxdepth: 2
 
-   /Reports/index
    /Tutorial/index
+   project-specification
+   reports
 
 索引和表
 ========

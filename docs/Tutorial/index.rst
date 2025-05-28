@@ -8,4 +8,3 @@
    detail
    example
    faq
-   project-specification
