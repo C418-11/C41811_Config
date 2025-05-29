@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import os
 import re
@@ -16,8 +15,8 @@ from pytest import skip
 import C41811.Config
 
 try:
-    from setuptools import setup
     from setuptools import Extension
+    from setuptools import setup
 except ImportError:
     importorskip("setuptools")
     raise
@@ -106,11 +105,11 @@ def test_compile(tmpdir: Path, files: dict[str, str]) -> None:
 
     compiler = _cython_compiler
     with open_code(file_path) as f:
-        if any((re.search(
+        if any(re.search(
                 r"([a-zA-Z_][a-zA-Z0-9_]*\[[a-zA-Z_].*]\()"
                 r"|(\[[a-zA-Z_][a-zA-Z0-9_]*:\s[^]]+])"
                 r"|(type\s[a-zA-Z_][a-zA-Z0-9_]*\s=\s.+)",
-                s.decode()) for s in f)):
+                s.decode()) for s in f):
             # def func[T](arg: T) -> T: ...
             #         ^^^
             # def func[T: ...](arg: T) -> T: ...

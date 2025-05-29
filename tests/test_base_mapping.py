@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 
 from collections import OrderedDict
@@ -14,6 +13,8 @@ from pyrsistent import pmap
 from pytest import fixture
 from pytest import mark
 from pytest import raises
+from utils import EE
+from utils import safe_raises
 
 from C41811.Config import ConfigData
 from C41811.Config import IndexKey
@@ -25,8 +26,6 @@ from C41811.Config.errors import ConfigDataTypeError
 from C41811.Config.errors import CyclicReferenceError
 from C41811.Config.errors import RequiredPathNotFoundError
 from C41811.Config.utils import Unset
-from utils import EE
-from utils import safe_raises
 
 type OD = OrderedDict[str, Any]
 type ROD = PMap[str, Any]

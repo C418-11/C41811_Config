@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 
 from typing import cast
@@ -19,7 +18,7 @@ def test_singleton(cls: type) -> None:
     assert type(cls())() is cls()
 
     assert hasattr(cls, "__singleton_instance__")
-    assert cls() is getattr(cls, "__singleton_instance__")
+    assert cls() is cls.__singleton_instance__
 
 
 def test_unset_type() -> None:

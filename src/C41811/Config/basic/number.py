@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level = 3
 
 
@@ -11,7 +10,6 @@ import operator
 from numbers import Number
 from typing import Any
 from typing import Literal
-from typing import Optional
 from typing import Self
 from typing import cast
 from typing import override
@@ -31,9 +29,9 @@ class NumberConfigData[D: Number](BasicSingleConfigData[D]):
     _data: D
     data: D
 
-    def __init__(self, data: Optional[D] = None):
+    def __init__(self, data: D | None = None):
         if data is None:
-            data = int()  # type: ignore[assignment]
+            data = 0  # type: ignore[assignment]
         super().__init__(cast(D, data))
 
     @property
@@ -183,7 +181,7 @@ class BoolConfigData[D: bool](NumberConfigData[D]):  # type: ignore[type-var]  #
     _data: D
     data: D
 
-    def __init__(self, data: Optional[D] = None):
+    def __init__(self, data: D | None = None):
         super().__init__(cast(D, bool(data)))
 
 

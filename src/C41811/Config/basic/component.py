@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level = 3
 
 
@@ -16,7 +15,6 @@ from dataclasses import dataclass
 from dataclasses import field
 from types import NotImplementedType
 from typing import Any
-from typing import Optional
 from typing import Self
 from typing import cast
 from typing import override
@@ -74,7 +72,7 @@ class ComponentMeta[D: ABCConfigData[Any]]:
     config: D = cast(D, field(default_factory=ConfigData))
     orders: ComponentOrders = field(default_factory=ComponentOrders)
     members: list[ComponentMember] = field(default_factory=list)
-    parser: Optional[ABCMetaParser[Any, Any]] = field(default=None)
+    parser: ABCMetaParser[Any, Any] | None = field(default=None)
 
 
 class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](BasicConfigData[D],
@@ -85,7 +83,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](B
     .. versionadded:: 0.2.0
     """
 
-    def __init__(self, meta: Optional[M] = None, members: Optional[MutableMapping[str, D]] = None):
+    def __init__(self, meta: M | None = None, members: MutableMapping[str, D] | None = None):
         """
         :param meta: 组件元数据
         :type meta: Optional[ComponentMeta]

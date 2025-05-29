@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level = 3
 
 
@@ -7,7 +6,6 @@
 """
 
 from typing import Literal
-from typing import Optional
 from typing import override
 
 from .core import BasicSingleConfigData
@@ -20,7 +18,7 @@ class NoneConfigData(BasicSingleConfigData[None]):
     .. versionadded:: 0.2.0
     """
 
-    def __init__(self, data: Optional[None] = None):
+    def __init__(self, data: None = None):
         """
         :param data: 配置的原始数据
         :type data: None

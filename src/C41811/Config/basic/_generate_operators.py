@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level = 3
 
 
@@ -21,7 +20,7 @@ def generate[C](cls: type[C]) -> type[C]:
     for name, func in dict(vars(cls)).items():
         if not hasattr(func, "__generate_operators__"):
             continue
-        operator_funcs = getattr(func, "__generate_operators__")
+        operator_funcs = func.__generate_operators__
         delattr(func, "__generate_operators__")
 
         i_name = f"__i{name[2:-2]}__"

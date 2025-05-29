@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level = 3
 
 
@@ -45,10 +44,9 @@ from enum import IntEnum
 from numbers import Real
 from pathlib import Path
 from threading import Lock
+from typing import IO
 from typing import Any
 from typing import ContextManager
-from typing import IO
-from typing import Optional
 from typing import TextIO
 from typing import cast
 from typing import override
@@ -79,17 +77,17 @@ def _path2str(x: PathLike) -> str:  # pragma: no cover
 
 _proper_fsync = os.fsync
 
-if sys.platform != "win32":  # pragma: no cover  # noqa: C901 (ignore complexity)
+if sys.platform != "win32":  # pragma: no cover
     # noinspection SpellCheckingInspection
     if hasattr(fcntl, "F_FULLFSYNC"):
-        def _proper_fsync(fd: int) -> None:  # type: ignore[misc]  # noqa: F811, E303
+        def _proper_fsync(fd: int) -> None:  # type: ignore[misc]
             # https://lists.apple.com/archives/darwin-dev/2005/Feb/msg00072.html
             # https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man2/fsync.2.html
             # https://github.com/untitaker/python-atomicwrites/issues/6
             fcntl.fcntl(fd, fcntl.F_FULLFSYNC)  # type: ignore[attr-defined]
 
 
-    def _sync_directory(directory: str) -> None:  # noqa: E303
+    def _sync_directory(directory: str) -> None:
         # Ensure that filenames are written to disk
         fd = os.open(directory, 0)
         try:
@@ -98,12 +96,12 @@ if sys.platform != "win32":  # pragma: no cover  # noqa: C901 (ignore complexity
             os.close(fd)
 
 
-    def _replace_atomic(src: PathLike, dst: PathLike) -> None:  # noqa: E303
+    def _replace_atomic(src: PathLike, dst: PathLike) -> None:
         os.rename(src, dst)
         _sync_directory(os.path.normpath(os.path.dirname(dst)))
 
 
-    def _move_atomic(src: PathLike, dst: PathLike) -> None:  # noqa: E303
+    def _move_atomic(src: PathLike, dst: PathLike) -> None:
         os.link(src, dst)
         os.unlink(src)
 
@@ -121,19 +119,19 @@ else:  # pragma: no cover
     _windows_default_flags = _MOVEFILE_WRITE_THROUGH
 
 
-    def _handle_errors(rv: Any) -> None:  # noqa: E303
+    def _handle_errors(rv: Any) -> None:
         if not rv:
             raise WinError()
 
 
-    def _replace_atomic(src: PathLike, dst: PathLike) -> None:  # noqa: E303
+    def _replace_atomic(src: PathLike, dst: PathLike) -> None:
         _handle_errors(windll.kernel32.MoveFileExW(
             _path2str(src), _path2str(dst),
             _windows_default_flags | _MOVEFILE_REPLACE_EXISTING
         ))
 
 
-    def _move_atomic(src: PathLike, dst: PathLike) -> None:  # noqa: E303
+    def _move_atomic(src: PathLike, dst: PathLike) -> None:
         _handle_errors(windll.kernel32.MoveFileExW(
             _path2str(src), _path2str(dst),
             _windows_default_flags
@@ -318,7 +316,7 @@ class SafeOpen[F: AIO]:
     def __init__(
             self,
             io_manager: ABCTempIOManager[Any],
-            timeout: Optional[float] = 1,
+            timeout: float | None = 1,
             flag: LockFlags = LockFlags.EXCLUSIVE
     ) -> None:
         """
@@ -351,7 +349,7 @@ class SafeOpen[F: AIO]:
         if not lock.acquire(timeout=-1 if self._timeout is None else self._timeout):  # pragma: no cover
             raise TimeoutError("Timeout waiting for file lock")
 
-        f: Optional[F] = None
+        f: F | None = None
         try:
             f = self._manager.from_path(path, mode)
             acquire_lock(cast(AIO, f), self._flag, timeout=cast(Real | None, self._timeout))
@@ -388,7 +386,7 @@ class SafeOpen[F: AIO]:
             raise TimeoutError("Timeout waiting for file lock")
 
         acquire_lock(file, self._flag, timeout=cast(Real | None, self._timeout), immediately_release=True)
-        f: Optional[F] = None
+        f: F | None = None
         try:
             f = self._manager.from_file(file)
             acquire_lock(file, self._flag, timeout=cast(Real | None, self._timeout))
@@ -411,7 +409,7 @@ class SafeOpen[F: AIO]:
 
 
 def _timeout_checker(
-        timeout: Optional[Real] = None,
+        timeout: Real | None = None,
         interval_increase_speed: Real = .03,  # type: ignore[assignment]
         max_interval: Real = .5,  # type: ignore[assignment]
 ) -> Generator[None, Any, Any]:  # pragma: no cover # 除了windows其他平台压根不会触发timeout
@@ -443,7 +441,7 @@ def acquire_lock(
         file: AIO,
         flags: LockFlags,
         *,
-        timeout: Optional[Real] = 1,  # type: ignore[assignment]
+        timeout: Real | None = 1,  # type: ignore[assignment]
         immediately_release: bool = False
 ) -> None:
     """
@@ -480,9 +478,9 @@ def safe_open(
         path: str | Path,
         mode: str,
         *,
-        timeout: Optional[float] = 1,
+        timeout: float | None = 1,
         flag: LockFlags = LockFlags.EXCLUSIVE,
-        io_manager: Optional[ABCTempIOManager[Any]] = None,
+        io_manager: ABCTempIOManager[Any] | None = None,
         **manager_kwargs: Any
 ) -> ContextManager[AIO | TextIO]:
     """

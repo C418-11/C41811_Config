@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 
 import time
@@ -13,11 +12,16 @@ from typing import cast
 
 from pydantic import BaseModel
 from pydantic import Field
+
 # noinspection PyProtectedMember
 from pydantic.fields import FieldInfo
 from pytest import fixture
 from pytest import mark
 from pytest import raises
+from utils import EE
+from utils import EW
+from utils import safe_raises
+from utils import safe_warns
 
 from C41811.Config import ComponentConfigData
 from C41811.Config import ComponentMember
@@ -38,10 +42,6 @@ from C41811.Config.errors import ConfigDataTypeError
 from C41811.Config.errors import RequiredPathNotFoundError
 from C41811.Config.errors import UnsupportedConfigFormatError
 from C41811.Config.processor.Component import ComponentMetaParser
-from utils import EE
-from utils import EW
-from utils import safe_raises
-from utils import safe_warns
 
 type MCD = MappingConfigData[Mapping[Any, Any]]
 
@@ -412,7 +412,7 @@ class TestRequiredPath:
         if info:
             return
 
-        for path, value in zip(paths, values):
+        for path, value in zip(paths, values, strict=False):
             if isinstance(value, float) and value == float("-inf"):
                 assert path not in data
                 continue

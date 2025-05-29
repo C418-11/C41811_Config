@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 
 import operator
@@ -6,7 +5,6 @@ from collections.abc import Callable
 from collections.abc import Iterable
 from copy import deepcopy
 from typing import Any
-from typing import Optional
 
 from pytest import mark
 
@@ -62,7 +60,7 @@ class TestSequenceConfigData:
 def _insert_operator(
         tests: tuple[Any, ...],
         op: Callable[[Any], Any] | Callable[[Any, Any], Any],
-        iop: Optional[Callable[[Any], Any] | Callable[[Any, Any], Any]] = None,
+        iop: Callable[[Any], Any] | Callable[[Any, Any], Any] | None = None,
         *ext: Any
 ) -> Iterable[tuple[Any, Any, Any]]:
     yield from ((*test, *((op,) if iop is None else (op, iop)), *ext) for test in tests)

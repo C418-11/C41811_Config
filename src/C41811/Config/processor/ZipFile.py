@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level = 3
 
 
@@ -12,7 +11,6 @@ import zipfile
 from dataclasses import dataclass
 from enum import ReprEnum
 from typing import Literal
-from typing import Optional
 from typing import cast
 from typing import override
 
@@ -48,10 +46,10 @@ class ZipFileSL(BasicCompressedConfigSL):
     def __init__(
             self,
             *,
-            reg_alias: Optional[str] = None,
+            reg_alias: str | None = None,
             create_dir: bool = True,
             compression: ZipCompressionTypes | str | int | None = ZipCompressionTypes.ONLY_STORAGE,
-            compress_level: Optional[Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9] | int] = None,
+            compress_level: Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9] | int | None = None,
     ):
         """
         :param reg_alias: sl处理器注册别名

@@ -100,6 +100,46 @@ doctests = true
 max-complexity = 10
 statistics = true
 
+[tool.ruff]
+line-length = 120
+format.docstring-code-format = true
+
+[tool.ruff.lint]
+isort.force-single-line = true
+isort.relative-imports-order = "closest-to-furthest"
+select = [
+    "A",      # flake8-builtins
+    "B",      # flake8-bugbear
+    "E",      # pycodestyle (error)
+    "W",      # pycodestyle (warning)
+    "F",      # flake8
+    "I",      # isort
+    "N",      # pep8-naming
+    "EM",     # flake8-errmsg
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
+    "PLC",    # pylint (convention)
+    "PLE",    # pylint (error)
+    "PLW",    # pylint (warning)
+    "C90",    # mccabe
+    "YTT",    # flake8-2020
+    "PGH",    # pygrep-hooks
+    "PIE",    # flake8-pie
+    "TRY",    # tryceratops
+    "SIM",    # flake8-simplify
+    "RSE",    # flake8-raise
+    "RET",    # flake8-return
+    "FURB",   # refurb
+    "ISC001", # 单行字符串隐式链接
+    "RUF100", # 未使用的noqa
+]
+ignore = [  # ruff推荐忽略以避免和formatter冲突
+    "W191", # tab-indentation
+    "E111", # indentation-with-invalid-multiples
+    "E114", # indentation-with-invalid-multiple-comment
+    "E117", # over-indented
+]
+
 [tool.mypy]
 strict = true
 pretty = true

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level = 3
 
 
@@ -30,7 +29,7 @@ def check_read_only[F: Callable[..., Any]](func: F) -> F:
     def wrapper(wrapped: F, instance: ABCConfigData[Any] | None, args: tuple[Any, ...], kwargs: dict[str, Any]) -> Any:
         if instance is None:
             raise TypeError("must be called from an instance")  # pragma: no cover
-        elif instance.read_only:
+        if instance.read_only:
             raise ConfigDataReadOnlyError
         return wrapped(*args, **kwargs)
 

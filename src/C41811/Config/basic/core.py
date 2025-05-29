@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level = 3
 
 
@@ -20,7 +19,6 @@ from types import NotImplementedType
 from typing import Any
 from typing import ClassVar
 from typing import Literal
-from typing import Optional
 from typing import Self
 from typing import cast
 from typing import overload
@@ -279,14 +277,14 @@ class BasicIndexedConfigData[D: Indexed[Any, Any]](
         return cast(bool, self._process_path(path, checker, lambda *_: True))
 
     @override
-    def get(self, path: PathLike, default: Optional[Any] = None, *, return_raw_value: bool = False) -> Any:
+    def get(self, path: PathLike, default: Any | None = None, *, return_raw_value: bool = False) -> Any:
         try:
             return self.retrieve(path, return_raw_value=return_raw_value)
         except RequiredPathNotFoundError:
             return default
 
     @override
-    def setdefault(self, path: PathLike, default: Optional[Any] = None, *, return_raw_value: bool = False) -> Any:
+    def setdefault(self, path: PathLike, default: Any | None = None, *, return_raw_value: bool = False) -> Any:
         try:
             return self.retrieve(path)
         except RequiredPathNotFoundError:
@@ -356,7 +354,7 @@ class ConfigFile[D: ABCConfigData[Any]](ABCConfigFile[D]):
             self,
             initial_config: D | Any,
             *,
-            config_format: Optional[str] = None
+            config_format: str | None = None
     ) -> None:
         """
         :param initial_config: 配置数据
@@ -489,7 +487,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
     def get(
             self,
             namespace: str,
-            file_name: Optional[str] = None,
+            file_name: str | None = None,
     ) -> dict[str, ABCConfigFile[Any]] | ABCConfigFile[Any] | None:
         ...
 
@@ -497,7 +495,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
     def get(
             self,
             namespace: str,
-            file_name: Optional[str] = None,
+            file_name: str | None = None,
     ) -> dict[str, ABCConfigFile[Any]] | ABCConfigFile[Any] | None:
         if namespace not in self._configs:
             return None
@@ -522,8 +520,8 @@ class BasicConfigPool(ABCConfigPool, ABC):
     def _get_formats(
             self,
             file_name: str,
-            config_formats: Optional[str | Iterable[str]],
-            configfile_format: Optional[str] = None,
+            config_formats: str | Iterable[str] | None,
+            configfile_format: str | None = None,
     ) -> Iterable[str]:
         """
         从给定参数计算所有可能的配置格式
@@ -592,9 +590,9 @@ class BasicConfigPool(ABCConfigPool, ABC):
             self,
             namespace: str,
             file_name: str,
-            config_formats: Optional[str | Iterable[str]],
+            config_formats: str | Iterable[str] | None,
             processor: Callable[[Self, str, str, str], R],
-            file_config_format: Optional[str] = None,
+            file_config_format: str | None = None,
     ) -> R:
         """
         自动尝试推断ABCConfigFile所支持的config_format
@@ -658,8 +656,8 @@ class BasicConfigPool(ABCConfigPool, ABC):
             self,
             namespace: str,
             file_name: str,
-            config_formats: Optional[str | Iterable[str]] = None,
-            config: Optional[ABCConfigFile[Any]] = None,
+            config_formats: str | Iterable[str] | None = None,
+            config: ABCConfigFile[Any] | None = None,
             *args: Any, **kwargs: Any,
     ) -> Self:
         if config is not None:
@@ -697,7 +695,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
             namespace: str,
             file_name: str,
             *args: Any,
-            config_formats: Optional[str | Iterable[str]] = None,
+            config_formats: str | Iterable[str] | None = None,
             **kwargs: Any,
     ) -> ABCConfigFile[Any]:
         def processor(pool: Self, ns: str, fn: str, cf: str) -> ABCConfigFile[Any]:
@@ -715,7 +713,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
             namespace: str,
             file_name: str,
             *args: Any,
-            config_formats: Optional[str | Iterable[str]] = None,
+            config_formats: str | Iterable[str] | None = None,
             allow_initialize: bool = False,
             **kwargs: Any,
     ) -> ABCConfigFile[Any]:
@@ -762,7 +760,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
         return self._try_sl_processors(namespace, file_name, config_formats, processor)
 
     @override
-    def remove(self, namespace: str, file_name: Optional[str] = None) -> Self:
+    def remove(self, namespace: str, file_name: str | None = None) -> Self:
         if file_name is None:
             del self._configs[namespace]
             return self
@@ -773,7 +771,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
         return self
 
     @override
-    def discard(self, namespace: str, file_name: Optional[str] = None) -> Self:
+    def discard(self, namespace: str, file_name: str | None = None) -> Self:
         with suppress(KeyError):
             self.remove(namespace, file_name)
         return self

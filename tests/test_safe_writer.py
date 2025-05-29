@@ -1,14 +1,13 @@
-# -*- coding: utf-8 -*-
 
 
 import os
+from collections.abc import Generator
 from contextlib import contextmanager
 from contextlib import suppress
 from numbers import Real
 from pathlib import Path
-from typing import Any
-from typing import Generator
 from typing import IO
+from typing import Any
 
 from pytest import mark
 from pytest import raises

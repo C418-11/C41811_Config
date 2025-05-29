@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level = 3
 
 
@@ -26,6 +25,7 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import ValidationError
 from pydantic import create_model
+
 # noinspection PyProtectedMember
 from pydantic.fields import FieldInfo
 from pydantic_core import core_schema
@@ -423,10 +423,10 @@ class DefaultValidatorFactory[D: MCD | NoneConfigData]:
                         break
                     continue
 
-                warnings.warn((
+                warnings.warn(
                     f"Overwriting exists validator path with unexpected type"
                     f" '{value}'(new) and '{target_value}'(exists)"
-                ))
+                )
 
             if _allow_recursive(value):
                 value, sub_fpath = self._fmt_mapping_key(value)

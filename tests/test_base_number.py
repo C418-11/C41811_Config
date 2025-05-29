@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 
 import math
@@ -54,7 +53,7 @@ class TestNumberConfigData:
         assert data.data == 0
         assert data.read_only is False
 
-        assert NumberConfigData().data == int()
+        assert NumberConfigData().data == 0
 
         assert readonly_data.data == 0
         assert readonly_data.read_only is True
@@ -115,4 +114,4 @@ class TestNumberConfigData:
 class TestBoolConfigData:
     @staticmethod
     def test_init() -> None:
-        assert BoolConfigData().data is bool()
+        assert BoolConfigData().data is False

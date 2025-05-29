@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 
 from copy import deepcopy
@@ -7,6 +6,10 @@ from typing import Any
 from pytest import fixture
 from pytest import mark
 from pytest import raises
+from utils import EE
+from utils import EW
+from utils import safe_raises
+from utils import safe_warns
 
 from C41811.Config import AttrKey
 from C41811.Config import IndexKey
@@ -15,10 +18,6 @@ from C41811.Config import PathSyntaxParser
 from C41811.Config.abc import AnyKey
 from C41811.Config.errors import ConfigDataPathSyntaxException
 from C41811.Config.errors import UnknownTokenTypeError
-from utils import EE
-from utils import EW
-from utils import safe_raises
-from utils import safe_warns
 
 
 class TestKey:

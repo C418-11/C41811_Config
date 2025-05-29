@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level = 3
 
 
@@ -13,7 +12,6 @@ from dataclasses import dataclass
 from dataclasses import field
 from types import NotImplementedType
 from typing import Any
-from typing import Optional
 from typing import Self
 from typing import cast
 from typing import override
@@ -116,7 +114,7 @@ class EnvironmentConfigData(MappingConfigData[MutableMapping[str, str]]):
        :py:class:`~Config.processor.OSEnv.OSEnvSL` 在保存时会重置差异数据
     """
 
-    def __init__(self, data: Optional[MutableMapping[str, str]] = None):
+    def __init__(self, data: MutableMapping[str, str] | None = None):
         super().__init__(data)
         self.difference = Difference()
 
@@ -137,7 +135,7 @@ class EnvironmentConfigData(MappingConfigData[MutableMapping[str, str]]):
 
     @diff_keys
     @override
-    def setdefault(self, path: PathLike, default: Optional[Any] = None, *, return_raw_value: bool = False) -> Any:
+    def setdefault(self, path: PathLike, default: Any | None = None, *, return_raw_value: bool = False) -> Any:
         return super().setdefault(path, default, return_raw_value=return_raw_value)
 
     @diff_keys
@@ -157,7 +155,7 @@ class EnvironmentConfigData(MappingConfigData[MutableMapping[str, str]]):
 
     @diff_keys
     @override
-    def update(self, m: Optional[Any] = None, /, **kwargs: str) -> None:
+    def update(self, m: Any | None = None, /, **kwargs: str) -> None:
         super().update(m, **kwargs)
 
     @diff_keys

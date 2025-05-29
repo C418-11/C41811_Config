@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level = 3
 
 
@@ -14,7 +13,6 @@ from copy import deepcopy
 from re import Pattern
 from types import NotImplementedType
 from typing import Any
-from typing import Optional
 from typing import Self
 from typing import overload
 from typing import override
@@ -33,7 +31,7 @@ class ABCKey[K, D](ABC):
     用于获取配置的键
     """
 
-    def __init__(self, key: K, meta: Optional[str] = None):
+    def __init__(self, key: K, meta: str | None = None):
         """
         :param key: 键名
         :type key: str
@@ -310,7 +308,7 @@ class ABCConfigData[D](ABC):
         :raise ConfigDataReadOnlyError: 配置数据为只读
         """
 
-    def freeze(self, freeze: Optional[bool] = None) -> Self:
+    def freeze(self, freeze: bool | None = None) -> Self:
         """
         冻结配置数据 (切换只读模式)
 
@@ -585,7 +583,7 @@ class ABCProcessorHelper(ABC):
     def calc_path(
             root_path: str,
             namespace: str,
-            file_name: Optional[str] = None,
+            file_name: str | None = None,
     ) -> str:
         """
         处理配置文件对应的文件路径
@@ -669,7 +667,7 @@ class ABCConfigFile[D: ABCConfigData[Any]](ABC):
             self,
             initial_config: D,
             *,
-            config_format: Optional[str] = None
+            config_format: str | None = None
     ) -> None:
         """
         :param initial_config: 配置数据
@@ -711,7 +709,7 @@ class ABCConfigFile[D: ABCConfigData[Any]](ABC):
             processor_pool: ABCSLProcessorPool,
             namespace: str,
             file_name: str,
-            config_format: Optional[str] = None,
+            config_format: str | None = None,
             *processor_args: Any,
             **processor_kwargs: Any,
     ) -> None:
@@ -840,7 +838,7 @@ class ABCConfigPool(ABCSLProcessorPool):
     def get(
             self,
             namespace: str,
-            file_name: Optional[str] = None,
+            file_name: str | None = None,
     ) -> dict[str, ABCConfigFile[Any]] | ABCConfigFile[Any] | None:
         ...
 
@@ -848,7 +846,7 @@ class ABCConfigPool(ABCSLProcessorPool):
     def get(
             self,
             namespace: str,
-            file_name: Optional[str] = None,
+            file_name: str | None = None,
     ) -> dict[str, ABCConfigFile[Any]] | ABCConfigFile[Any] | None:
         """
         获取配置
@@ -888,8 +886,8 @@ class ABCConfigPool(ABCSLProcessorPool):
             self,
             namespace: str,
             file_name: str,
-            config_formats: Optional[str | Iterable[str]] = None,
-            config: Optional[ABCConfigFile[Any]] = None,
+            config_formats: str | Iterable[str] | None = None,
+            config: ABCConfigFile[Any] | None = None,
             *args: Any, **kwargs: Any,
     ) -> Self:
         """
@@ -932,7 +930,7 @@ class ABCConfigPool(ABCSLProcessorPool):
             namespace: str,
             file_name: str,
             *args: Any,
-            config_formats: Optional[str | Iterable[str]] = None,
+            config_formats: str | Iterable[str] | None = None,
             **kwargs: Any,
     ) -> ABCConfigFile[Any]:
         """
@@ -957,7 +955,7 @@ class ABCConfigPool(ABCSLProcessorPool):
             namespace: str,
             file_name: str,
             *args: Any,
-            config_formats: Optional[str | Iterable[str]] = None,
+            config_formats: str | Iterable[str] | None = None,
             allow_initialize: bool = False,
             **kwargs: Any,
     ) -> ABCConfigFile[Any]:
@@ -985,7 +983,7 @@ class ABCConfigPool(ABCSLProcessorPool):
         """
 
     @abstractmethod
-    def remove(self, namespace: str, file_name: Optional[str] = None) -> Self:
+    def remove(self, namespace: str, file_name: str | None = None) -> Self:
         """
         从配置池移除配置文件
 
@@ -1004,7 +1002,7 @@ class ABCConfigPool(ABCSLProcessorPool):
         """
 
     @abstractmethod
-    def discard(self, namespace: str, file_name: Optional[str] = None) -> Self:
+    def discard(self, namespace: str, file_name: str | None = None) -> Self:
         """
         确保配置文件不存在于配置池
 
@@ -1020,7 +1018,7 @@ class ABCConfigPool(ABCSLProcessorPool):
         """
 
 
-type SLArgument = Optional[Sequence[Any] | Mapping[str, Any] | tuple[Sequence[Any], Mapping[str, Any]]]
+type SLArgument = Sequence[Any] | Mapping[str, Any] | tuple[Sequence[Any], Mapping[str, Any]] | None
 
 
 class ABCConfigSL(ABC):
@@ -1034,13 +1032,13 @@ class ABCConfigSL(ABC):
     def __init__(
             self,
             *,
-            reg_alias: Optional[str] = None,
+            reg_alias: str | None = None,
     ):
         """
         :param reg_alias: sl处理器注册别名
         :type reg_alias: Optional[str]
         """
-        self._reg_alias: Optional[str] = reg_alias
+        self._reg_alias: str | None = reg_alias
 
     @property
     @abstractmethod

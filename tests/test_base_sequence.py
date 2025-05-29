@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 
 from collections.abc import Iterable
@@ -12,6 +11,8 @@ from pyrsistent import pmap
 from pytest import fixture
 from pytest import mark
 from pytest import raises
+from utils import EE
+from utils import safe_raises
 
 from C41811.Config import ConfigData
 from C41811.Config import IndexKey
@@ -22,8 +23,6 @@ from C41811.Config import StringConfigData
 from C41811.Config.errors import ConfigDataReadOnlyError
 from C41811.Config.errors import ConfigDataTypeError
 from C41811.Config.errors import RequiredPathNotFoundError
-from utils import EE
-from utils import safe_raises
 
 type SCD = SequenceConfigData[Sequence[Any]]
 # noinspection SpellCheckingInspection
@@ -473,7 +472,7 @@ class TestSequenceConfigData:
 class TestStringConfigData:
     @staticmethod
     def test_init() -> None:
-        assert StringConfigData().data == str()
+        assert StringConfigData().data == ""
 
     @staticmethod
     @mark.parametrize("string, format_spec", (

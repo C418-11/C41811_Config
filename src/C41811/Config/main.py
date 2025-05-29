@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level = 3
 
 
@@ -15,7 +14,6 @@ from contextlib import contextmanager
 from copy import deepcopy
 from typing import Any
 from typing import Literal
-from typing import Optional
 from typing import cast
 from typing import override
 
@@ -57,12 +55,8 @@ class RequiredPath[V, D: ABCConfigData[Any]]:
     def __init__(
             self,
             validator: V,
-            validator_factory: Optional[
-                VALIDATOR_FACTORY[V, D]
-                | ValidatorTypes
-                | Literal["no-validation", "pydantic", "component"]
-                ] = ValidatorTypes.DEFAULT,
-            static_config: Optional[ValidatorFactoryConfig] = None
+            validator_factory: VALIDATOR_FACTORY[V, D] | ValidatorTypes | Literal["no-validation", "pydantic", "component"] | None = ValidatorTypes.DEFAULT,
+            static_config: ValidatorFactoryConfig | None = None
     ):
         """
         :param validator: 数据验证器
@@ -90,7 +84,7 @@ class RequiredPath[V, D: ABCConfigData[Any]]:
         self._validator = deepcopy(validator)
         self._validator_factory: VALIDATOR_FACTORY[V, D] = validator_factory
         if static_config is not None:
-            self._static_validator: Optional[Callable[[Ref[D]], D]] = self._validator_factory(self._validator,
+            self._static_validator: Callable[[Ref[D]], D] | None = self._validator_factory(self._validator,
                                                                                               static_config)
         else:
             self._static_validator = None
@@ -115,8 +109,8 @@ class RequiredPath[V, D: ABCConfigData[Any]]:
             self,
             data: D | Ref[D],
             *,
-            allow_modify: Optional[bool] = None,
-            skip_missing: Optional[bool] = None,
+            allow_modify: bool | None = None,
+            skip_missing: bool | None = None,
             **extra: Any
     ) -> D:
         """
@@ -188,10 +182,10 @@ class ConfigRequirementDecorator:
             file_name: str,
             required: RequiredPath[Any, D],
             *,
-            config_formats: Optional[str | Iterable[str]] = None,
+            config_formats: str | Iterable[str] | None = None,
             allow_initialize: bool = True,
-            config_cacher: Optional[Callable[[Callable[..., D], VarArg(), KwArg()], D]] = None,
-            filter_kwargs: Optional[dict[str, Any]] = None
+            config_cacher: Callable[[Callable[..., D], VarArg(), KwArg()], D] | None = None,
+            filter_kwargs: dict[str, Any] | None = None
     ):
         # noinspection GrazieInspection
         """
@@ -284,7 +278,7 @@ class ConfigPool(BasicConfigPool):
             file_name: str,
             validator: Any,
             validator_factory: Any = ValidatorTypes.DEFAULT,
-            static_config: Optional[Any] = None,
+            static_config: Any | None = None,
             **kwargs: Any,
     ) -> ConfigRequirementDecorator:
         # noinspection GrazieInspection
@@ -350,7 +344,7 @@ class BasicConfigSL(ABCConfigSL, ABC):
     """
 
     @override
-    def register_to(self, config_pool: Optional[ABCSLProcessorPool] = None) -> None:
+    def register_to(self, config_pool: ABCSLProcessorPool | None = None) -> None:
         """
         注册到配置池中
 
@@ -443,7 +437,7 @@ class BasicLocalFileConfigSL(BasicConfigSL, ABC):
             s_arg: SLArgument = None,
             l_arg: SLArgument = None,
             *,
-            reg_alias: Optional[str] = None,
+            reg_alias: str | None = None,
             create_dir: bool = True
     ):
         # noinspection GrazieInspection
@@ -663,7 +657,7 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
     .. versionadded:: 0.2.0
     """
 
-    def __init__(self, *, reg_alias: Optional[str] = None, create_dir: bool = True):
+    def __init__(self, *, reg_alias: str | None = None, create_dir: bool = True):
         """
         :param reg_alias: sl处理器注册别名
         :type reg_alias: Optional[str]

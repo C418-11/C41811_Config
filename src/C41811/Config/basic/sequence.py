@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level = 3
 
 
@@ -13,7 +12,6 @@ from collections.abc import MutableSequence
 from collections.abc import Sequence
 from typing import Any
 from typing import Literal
-from typing import Optional
 from typing import Self
 from typing import cast
 from typing import override
@@ -38,7 +36,7 @@ class SequenceConfigData[D: Sequence[Any]](
     _data: D
     data: D
 
-    def __init__(self, data: Optional[D] = None):
+    def __init__(self, data: D | None = None):
         if data is None:
             data = list()  # type: ignore[assignment]
         super().__init__(cast(D, data))
@@ -118,9 +116,9 @@ class StringConfigData[D: str | bytes](BasicSingleConfigData[D]):
     _data: D
     data: D
 
-    def __init__(self, data: Optional[D] = None):
+    def __init__(self, data: D | None = None):
         if data is None:
-            data = str()  # type: ignore[assignment]
+            data = ""  # type: ignore[assignment]
         super().__init__(cast(D, data))
 
     @property

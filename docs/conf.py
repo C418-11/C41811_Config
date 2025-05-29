@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Configuration file for the Sphinx documentation builder.
 
 
@@ -6,7 +5,7 @@ from setuptools_scm import get_version
 
 project = "C41811.Config"
 # noinspection PyShadowingBuiltins
-copyright = "2024, C418____11"
+copyright = "2024, C418____11"  # noqa: A001
 author = "C418____11"
 release = get_version(
     fallback_version="0.0+UNKNOWN",

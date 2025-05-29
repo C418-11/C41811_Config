@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level = 3
 
 
@@ -9,7 +8,6 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any
-from typing import Optional
 from typing import Self
 from typing import cast
 from typing import override
@@ -48,7 +46,7 @@ class ConfigDataPathSyntaxException(Exception):
 
     msg: str
 
-    def __init__(self, token_info: TokenInfo, msg: Optional[str] = None):
+    def __init__(self, token_info: TokenInfo, msg: str | None = None):
         """
         :param token_info: token相关信息
         :type token_info: TokenInfo
@@ -161,7 +159,7 @@ class ConfigDataReadOnlyError(TypeError):
     .. versionadded:: 0.1.3
     """
 
-    def __init__(self, msg: Optional[str] = None):
+    def __init__(self, msg: str | None = None):
         """
         :param msg: 错误信息
         :type msg: Optional[str]

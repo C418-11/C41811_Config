@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 
 import os
@@ -9,12 +8,13 @@ from datetime import datetime
 from pathlib import Path
 from textwrap import dedent
 from typing import Any
-from typing import Optional
 from typing import override
 
 from pytest import fixture
 from pytest import mark
 from pytest import raises
+from utils import EE
+from utils import safe_raises
 
 from C41811.Config import BasicConfigSL
 from C41811.Config import BasicLocalFileConfigSL
@@ -44,8 +44,6 @@ from C41811.Config.processor.RuamelYaml import RuamelYamlSL
 from C41811.Config.processor.TarFile import TarCompressionTypes
 from C41811.Config.processor.Toml import TomlSL
 from C41811.Config.processor.ZipFile import ZipCompressionTypes
-from utils import EE
-from utils import safe_raises
 
 JsonTests: tuple[tuple[Any, tuple[EE, ...], tuple[dict[str, Any], ...]], ...] = (
     (
@@ -549,8 +547,8 @@ ComponentTests: tuple[
 def test_component_file_sl_processor(
         pool: ConfigPool,
         sl_clss: list[ABCConfigSL],
-        meta: Optional[dict[str | None, MappingConfigData[Any]]] | ComponentMeta[Any],
-        members: Optional[dict[str, Any]],
+        meta: dict[str | None, MappingConfigData[Any]] | None | ComponentMeta[Any],
+        members: dict[str, Any] | None,
         ignore_excs: tuple[EE, EE, EE],
         init_arguments: dict[str, Any],
 ) -> None:

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level = 3
 
 
@@ -10,7 +9,6 @@ import os
 from copy import deepcopy
 from typing import Any
 from typing import Literal
-from typing import Optional
 from typing import override
 
 from ..abc import ABCConfigFile
@@ -72,12 +70,12 @@ class ComponentMetaParser[D: MappingConfigData[Any]](ABCMetaParser[D, ComponentM
         if not isinstance(order, list):
             order = order.data
         for name in order:
-            for attr in getattr(orders, "__dataclass_fields__"):
+            for attr in orders.__dataclass_fields__:
                 if name in getattr(orders, attr):
                     continue
                 getattr(orders, attr).append(name)
 
-        for attr in getattr(orders, "__dataclass_fields__"):
+        for attr in orders.__dataclass_fields__:
             o = getattr(orders, attr)
             if len(set(o)) != len(o):
                 raise ValueError(f"name(s) repeated in {attr} order")
@@ -110,9 +108,9 @@ class ComponentSL(BasicChainConfigSL):
     def __init__(
             self,
             *,
-            reg_alias: Optional[str] = None,
+            reg_alias: str | None = None,
             create_dir: bool = True,
-            meta_parser: Optional[ABCMetaParser[Any, ComponentMeta[Any]]] = None
+            meta_parser: ABCMetaParser[Any, ComponentMeta[Any]] | None = None
     ):
         super().__init__(reg_alias=reg_alias, create_dir=create_dir)
 

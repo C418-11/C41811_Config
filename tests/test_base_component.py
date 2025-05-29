@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 
 from copy import deepcopy
@@ -8,6 +7,8 @@ from pyrsistent import pmap
 from pytest import fixture
 from pytest import mark
 from pytest import raises
+from utils import EE
+from utils import safe_raises
 
 from C41811.Config import ComponentConfigData
 from C41811.Config import ComponentMember
@@ -20,8 +21,6 @@ from C41811.Config.errors import ConfigDataTypeError
 from C41811.Config.errors import RequiredPathNotFoundError
 from C41811.Config.processor.Component import ComponentMetaParser
 from C41811.Config.utils import Unset
-from utils import EE
-from utils import safe_raises
 
 type D_MCD = MappingConfigData[dict[Any, Any]]
 type M = dict[str, ABCIndexedConfigData[Any]]
@@ -105,7 +104,7 @@ class TestComponentConfigData:
 
     @staticmethod
     def test_readonly_attr(empty_data: CCD) -> None:
-        for attr in {"meta", "members", "filename2meta", "alias2filename"}:
+        for attr in ("meta", "members", "filename2meta", "alias2filename"):
             getattr(empty_data, attr)
             with raises(AttributeError):
                 setattr(empty_data, attr, None)

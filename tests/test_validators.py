@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 """
 大多数测试经过 :py:class:`RequiredPath` 包装后测试
@@ -10,8 +9,10 @@
 from pytest import raises
 
 from C41811.Config import FieldDefinition
+
 # noinspection PyProtectedMember
 from C41811.Config.validators import SkipMissing
+
 # noinspection PyProtectedMember
 from C41811.Config.validators import SkipMissingType
 

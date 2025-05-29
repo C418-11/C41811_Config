@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level = 3
 
 
@@ -11,7 +10,6 @@ from collections.abc import MutableSequence
 from collections.abc import Sequence
 from functools import lru_cache
 from typing import Any
-from typing import Optional
 from typing import Self
 from typing import cast
 from typing import override
@@ -51,7 +49,7 @@ class AttrKey(IndexMixin[str, Mapping[str, Any]], ABCKey[str, Mapping[str, Any]]
     """
     _key: str
 
-    def __init__(self, key: str, meta: Optional[str] = None):
+    def __init__(self, key: str, meta: str | None = None):
         """
         :param key: 键名
         :type key: str
@@ -101,7 +99,7 @@ class IndexKey(IndexMixin[int, Sequence[Any]], ABCKey[int, Sequence[Any]]):
     """
     _key: int
 
-    def __init__(self, key: int, meta: Optional[str] = None):
+    def __init__(self, key: int, meta: str | None = None):
         """
         :param key: 索引值
         :type key: int

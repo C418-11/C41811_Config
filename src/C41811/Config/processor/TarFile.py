@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level = 3
 
 
@@ -12,10 +11,9 @@ import tarfile
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import ReprEnum
-from typing import Any
 from typing import IO
+from typing import Any
 from typing import Literal
-from typing import Optional
 from typing import cast
 from typing import override
 
@@ -54,11 +52,11 @@ class TarFileSL(BasicCompressedConfigSL):
     def __init__(
             self,
             *,
-            reg_alias: Optional[str] = None,
+            reg_alias: str | None = None,
             create_dir: bool = True,
             compression: TarCompressionTypes | str | None = TarCompressionTypes.ONLY_STORAGE,
-            compress_level: Optional[Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9] | int] = None,
-            extraction_filter: Optional[ExtractionFilter] = "data",
+            compress_level: Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9] | int | None = None,
+            extraction_filter: ExtractionFilter | None = "data",
     ):
         """
         :param reg_alias: sl处理器注册别名

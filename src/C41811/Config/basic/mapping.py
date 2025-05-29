@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level = 3
 
 
@@ -16,7 +15,6 @@ from collections.abc import MutableMapping
 from collections.abc import ValuesView
 from copy import deepcopy
 from typing import Any
-from typing import Optional
 from typing import Self
 from typing import cast
 from typing import override
@@ -37,7 +35,7 @@ from ..utils import Unset
 
 def _keys_recursive(
         data: Mapping[Any, Any],
-        seen: Optional[set[int]] = None,
+        seen: set[int] | None = None,
         *,
         strict: bool,
         end_point_only: bool,
@@ -105,7 +103,7 @@ class MappingConfigData[D: Mapping[Any, Any]](BasicIndexedConfigData[D], Mutable
     _data: D
     data: D
 
-    def __init__(self, data: Optional[D] = None):
+    def __init__(self, data: D | None = None):
         if data is None:
             data = dict()  # type: ignore[assignment]
         super().__init__(cast(D, data))

@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
 
 
 import contextlib
 from collections.abc import Generator
 from typing import Any
-from typing import Optional
 
 # noinspection PyProtectedMember
 from _pytest._code import ExceptionInfo
@@ -12,8 +10,8 @@ from _pytest.recwarn import WarningsChecker
 from pytest import raises
 from pytest import warns
 
-type EE = Optional[type[BaseException] | tuple[type[BaseException], ...]]
-type EW = Optional[type[Warning] | tuple[type[Warning], ...]]
+type EE = type[BaseException] | tuple[type[BaseException], ...] | None
+type EW = type[Warning] | tuple[type[Warning], ...] | None
 
 
 @contextlib.contextmanager

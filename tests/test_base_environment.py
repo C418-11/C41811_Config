@@ -1,15 +1,14 @@
-# -*- coding: utf-8 -*-
 
 from typing import Any
 
 from pytest import fixture
 from pytest import mark
+from utils import EE
+from utils import safe_raises
 
 from C41811.Config import EnvironmentConfigData
 from C41811.Config import MappingConfigData
 from C41811.Config.basic.environment import Difference
-from utils import EE
-from utils import safe_raises
 
 type ECD = EnvironmentConfigData
 type DIFF = tuple[set[str], set[str]]

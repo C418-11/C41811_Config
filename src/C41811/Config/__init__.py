@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level = 3
 
 """
@@ -12,18 +11,14 @@ C41811.Config 旨在通过提供一套简洁的 API 和灵活的配置处理机�
 __author__ = "C418____11 <C418-11@qq.com>"
 
 try:
-    from ._version import __version__, __version_tuple__
+    from ._version import __version__
+    from ._version import __version_tuple__
 except ImportError:  # pragma: no cover
     __version__ = ''
     __version_tuple__ = ()
 
-import sys as __sys
-
-if __sys.version_info < (3, 12):  # pragma: no cover
-    raise RuntimeError("Python version must be >= 3.12")
-
-from .basic import *  # noqa: F401, F403
-from .main import *  # noqa: F401, F403
-from .path import *  # noqa: F401, F403
-from .validators import *  # noqa: F401, F403
-from .processor import *  # noqa: F401, F403
+from .basic import *  # noqa: F403
+from .main import *  # noqa: F403
+from .path import *  # noqa: F403
+from .processor import *  # noqa: F403
+from .validators import *  # noqa: F403
