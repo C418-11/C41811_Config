@@ -631,6 +631,7 @@ class BasicLocalFileConfigSL(BasicConfigSL, ABC):
            更改 ``source_file`` 参数类型为 ``Any``
         """
 
+    @override
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, type(self)):
             return NotImplemented
@@ -643,6 +644,7 @@ class BasicLocalFileConfigSL(BasicConfigSL, ABC):
             loader_args_eq
         ))
 
+    @override
     def __hash__(self) -> int:
         return hash((
             super().__hash__(),
@@ -716,6 +718,7 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
                 return match.sub(file_name, '')
         return file_name  # 不好测试 # pragma: no cover
 
+    @override
     def save(
             self,
             processor_pool: ABCSLProcessorPool,
@@ -736,6 +739,7 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
         self.save_file(config_pool, config_file, formatted_namespace, formatted_filename, *args, **kwargs)
         self.after_save(config_pool, config_file, file_path, root_path, formatted_namespace, formatted_filename)
 
+    @override
     def load(
             self,
             processor_pool: ABCSLProcessorPool,
@@ -755,6 +759,7 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
         self.before_load(config_pool, file_path, root_path, formatted_namespace, formatted_filename)
         return self.load_file(config_pool, formatted_namespace, formatted_filename, *args, **kwargs)
 
+    @override
     def initialize(
             self,
             processor_pool: ABCSLProcessorPool,
@@ -833,8 +838,9 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
             file_path: str,
             root_path: str,
             namespace: str,
-            file_name: str,  # @formatter:off
-    ) -> None: ...
+            file_name: str,
+    ) -> None:
+        ...
 
     def after_save(
             self,
@@ -844,8 +850,8 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
             root_path: str,
             namespace: str,
             file_name: str,
-    ) -> None: ...
-    # @formatter:on
+    ) -> None:
+        ...
 
 
 class BasicCachedConfigSL(BasicChainConfigSL, ABC):
@@ -860,6 +866,7 @@ class BasicCachedConfigSL(BasicChainConfigSL, ABC):
         """
         return "$temporary~"
 
+    @override
     def namespace_formatter(self, namespace: str, file_name: str) -> str:
         return os.path.normpath(os.path.join(namespace, self.namespace_suffix, file_name))
 
@@ -872,6 +879,7 @@ class BasicCompressedConfigSL(BasicCachedConfigSL, ABC):
     """
 
     @property
+    @override
     def namespace_suffix(self) -> str:
         return super().namespace_suffix
 
@@ -900,12 +908,13 @@ class BasicCompressedConfigSL(BasicCachedConfigSL, ABC):
         extract_dir = config_pool.helper.calc_path(root_path, namespace)
         self.extract_file(file_path, extract_dir)
 
-    @abstractmethod  # @formatter:off
-    def compress_file(self, file_path: str, extract_dir: str) -> None: ...
+    @abstractmethod
+    def compress_file(self, file_path: str, extract_dir: str) -> None:
+        ...
 
     @abstractmethod
-    def extract_file(self, file_path: str, extract_dir: str) -> None: ...
-    # @formatter:on
+    def extract_file(self, file_path: str, extract_dir: str) -> None:
+        ...
 
 
 __all__ = (

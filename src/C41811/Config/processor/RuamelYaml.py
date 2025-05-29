@@ -38,6 +38,7 @@ class RuamelYamlSL(BasicLocalFileConfigSL):
 
     supported_file_classes = [ConfigFile]
 
+    @override
     def save_file(
             self,
             config_file: ABCConfigFile[Any],

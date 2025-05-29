@@ -110,11 +110,12 @@ class MappingConfigData[D: Mapping[Any, Any]](BasicIndexedConfigData[D], Mutable
             data = dict()  # type: ignore[assignment]
         super().__init__(cast(D, data))
 
-    @override
     @property
+    @override
     def data_read_only(self) -> bool:
         return not isinstance(self._data, MutableMapping)
 
+    @override
     def keys(self, *, recursive: bool = False, strict: bool = True, end_point_only: bool = False) -> KeysView[Any]:
         # noinspection GrazieInspection
         r"""
@@ -208,6 +209,7 @@ class MappingConfigData[D: Mapping[Any, Any]](BasicIndexedConfigData[D], Mutable
 
         return self._data.keys()
 
+    @override
     def values(self, return_raw_value: bool = False) -> ValuesView[Any]:
         """
         获取所有值
@@ -228,6 +230,7 @@ class MappingConfigData[D: Mapping[Any, Any]](BasicIndexedConfigData[D], Mutable
             (k, self.from_data(v) if isinstance(v, Mapping) else deepcopy(v)) for k, v in self._data.items()
         ).values()
 
+    @override
     def items(self, *, return_raw_value: bool = False) -> ItemsView[str, Any]:
         """
         获取所有键值对
@@ -284,11 +287,12 @@ class MappingConfigData[D: Mapping[Any, Any]](BasicIndexedConfigData[D], Mutable
         except KeyError:
             raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{item}'")
 
-    @operate(operator.or_, operator.ior)  # @formatter:off
-    def __or__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
+    @operate(operator.or_, operator.ior)
+    def __or__(self, other: Any) -> Self:  # type: ignore[empty-body]
+        ...
 
-    def __ror__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
-    # @formatter:on
+    def __ror__(self, other: Any) -> Self:  # type: ignore[empty-body]
+        ...
 
 
 __all__ = (

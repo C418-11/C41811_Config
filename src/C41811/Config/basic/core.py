@@ -60,12 +60,12 @@ class BasicConfigData[D](ABCConfigData[D], ABC):
 
     _read_only: bool | None = False
 
-    @override
     @property
+    @override
     def data_read_only(self) -> bool | None:
         return True  # 全被子类复写了，测不到 # pragma: no cover
 
-    @property
+    @property  # type: ignore[explicit-override]  # mypy抽风
     @override
     def read_only(self) -> bool | None:
         return super().read_only or self._read_only
@@ -103,14 +103,17 @@ class BasicSingleConfigData[D](BasicConfigData[D], ABC):
         """
         return deepcopy(self._data)
 
+    @override
     def __eq__(self, other: Any) -> bool | NotImplementedType:
         if not isinstance(other, type(self)):
             return NotImplemented
         return self._data == other._data
 
+    @override
     def __str__(self) -> str:
         return str(self._data)
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self._data!r})"
 
@@ -448,7 +451,8 @@ class ConfigFile[D: ABCConfigData[Any]](ABCConfigFile[D]):
         )
 
 
-class PHelper(ABCProcessorHelper): ...  # noqa: E701
+class PHelper(ABCProcessorHelper):
+    ...
 
 
 class BasicConfigPool(ABCConfigPool, ABC):
@@ -467,24 +471,27 @@ class BasicConfigPool(ABCConfigPool, ABC):
         self._helper = PHelper()
 
     @property
+    @override
     def helper(self) -> ABCProcessorHelper:
         return self._helper
 
     # noinspection PyMethodOverriding
-    @overload  # 咱也不知道为什么mypy只有这样检查会通过而pycharm会报错  # @formatter:off
-    def get(self, namespace: str) -> dict[str, ABCConfigFile[Any]] | None: ...
+    @overload  # 咱也不知道为什么mypy只有这样检查会通过而pycharm会报错
+    def get(self, namespace: str) -> dict[str, ABCConfigFile[Any]] | None:
+        ...
 
     # noinspection PyMethodOverriding
     @overload
-    def get(self, namespace: str, file_name: str) -> ABCConfigFile[Any] | None: ...
+    def get(self, namespace: str, file_name: str) -> ABCConfigFile[Any] | None:
+        ...
 
     @overload
     def get(
             self,
             namespace: str,
             file_name: Optional[str] = None,
-    ) -> dict[str, ABCConfigFile[Any]] | ABCConfigFile[Any] | None: ...
-    # @formatter:on
+    ) -> dict[str, ABCConfigFile[Any]] | ABCConfigFile[Any] | None:
+        ...
 
     @override
     def get(
@@ -754,6 +761,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
 
         return self._try_sl_processors(namespace, file_name, config_formats, processor)
 
+    @override
     def remove(self, namespace: str, file_name: Optional[str] = None) -> Self:
         if file_name is None:
             del self._configs[namespace]
@@ -764,6 +772,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
             del self._configs[namespace]
         return self
 
+    @override
     def discard(self, namespace: str, file_name: Optional[str] = None) -> Self:
         with suppress(KeyError):
             self.remove(namespace, file_name)
@@ -800,6 +809,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
     def configs(self) -> dict[str, dict[str, ABCConfigFile[Any]]]:
         return deepcopy(self._configs)
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.configs!r})"
 

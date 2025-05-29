@@ -76,23 +76,23 @@ class TestSequenceConfigData:
         assert readonly_data.data == readonly_sequence
 
     RetrieveTests: tuple[str, tuple[tuple[str, Any, EE, dict[str, Any]], ...]] = (
-        "path,           value,                        ignore_excs,                  kwargs", (  # @formatter:off # noqa: E122, E501
-        (r"\[0\]",       1,                            (),                           {}),  # noqa: E122
-        (r"\[0\]",       1,                            (),                           {"return_raw_value": True}),  # noqa: E122, E501
-        (r"\[1\]",       2,                            (),                           {}),  # noqa: E122
-        (r"\[2\]\.a",    SequenceConfigData([3, 4]),           (),                           {}),  # noqa: E122
-        (r"\[2\]\.a",    [3, 4],                       (),                           {"return_raw_value": True}),  # noqa: E122, E501
-        (r"\[2\]\.b",    MappingConfigData({"c": 5, "d": 6}), (),                           {}),  # noqa: E122
-        (r"\[2\]\.b",    pmap({"c": 5, "d": 6}),       (),                           {"return_raw_value": True}),  # noqa: E122, E501
-        (r"\[2\]\.b\.c", 5,                            (),                           {}),  # noqa: E122
-        (r"\[2\]\.b\.c", 5,                            (),                           {}),  # noqa: E122
-        (r"\[3\]\[0\]",  7,                            (),                           {}),  # noqa: E122
-        (r"\[0\]\.bar",  None,                         (ConfigDataTypeError, ),      {}),  # noqa: E122
-        (r"\[4\]",       None,                         (RequiredPathNotFoundError,), {}),  # noqa: E122
-        (r"\[3\]\[2\]",  None,                         (RequiredPathNotFoundError,), {}),  # noqa: E122
-        (r"\[3\]\.0",    None,                         (ConfigDataTypeError,),       {}),  # noqa: E122
-        (r"bar",         None,                         (ConfigDataTypeError,),       {}),  # noqa: E122
-    ))  # @formatter:on # noqa: E122
+        "path,           value,                        ignore_excs,                  kwargs", (
+        (r"\[0\]", 1, (), {}),
+        (r"\[0\]", 1, (), {"return_raw_value": True}),
+        (r"\[1\]", 2, (), {}),
+        (r"\[2\]\.a", SequenceConfigData([3, 4]), (), {}),
+        (r"\[2\]\.a", [3, 4], (), {"return_raw_value": True}),
+        (r"\[2\]\.b", MappingConfigData({"c": 5, "d": 6}), (), {}),
+        (r"\[2\]\.b", pmap({"c": 5, "d": 6}), (), {"return_raw_value": True}),
+        (r"\[2\]\.b\.c", 5, (), {}),
+        (r"\[2\]\.b\.c", 5, (), {}),
+        (r"\[3\]\[0\]", 7, (), {}),
+        (r"\[0\]\.bar", None, (ConfigDataTypeError,), {}),
+        (r"\[4\]", None, (RequiredPathNotFoundError,), {}),
+        (r"\[3\]\[2\]", None, (RequiredPathNotFoundError,), {}),
+        (r"\[3\]\.0", None, (ConfigDataTypeError,), {}),
+        (r"bar", None, (ConfigDataTypeError,), {}),
+    ))
 
     @staticmethod
     @mark.parametrize(*RetrieveTests)
@@ -104,15 +104,15 @@ class TestSequenceConfigData:
             assert data.retrieve(path, **kwargs) == value
 
     ModifyTests: tuple[str, tuple[tuple[str, Any, EE, dict[str, Any]], ...]] = (
-        "path,         value,        ignore_excs,                  kwargs", (  # @formatter:off # noqa: E122
-        (r"\[0\]",      99,           (),                           {}),  # noqa: E122
-        (r"\[2\]",      {"z": 9},     (),                           {}),  # noqa: E122
-        (r"\[1\]",      88,           (),                           {}),  # noqa: E122
-        (r"\[2\]\.a",   [9, 0],       (),                           {}),  # noqa: E122
-        ("bar",         None,         (ConfigDataTypeError,),       {}),  # noqa: E122
-        (r"\[3\]",      None,         (),                           {}),  # noqa: E122
-        (r"\[4\]",      None,         (RequiredPathNotFoundError,), {"allow_create": False}, ),  # noqa: E122
-    ))  # @formatter:on # noqa: E122
+        "path, value, ignore_excs, kwargs", (
+        (r"\[0\]", 99, (), {}),
+        (r"\[2\]", {"z": 9}, (), {}),
+        (r"\[1\]", 88, (), {}),
+        (r"\[2\]\.a", [9, 0], (), {}),
+        ("bar", None, (ConfigDataTypeError,), {}),
+        (r"\[3\]", None, (), {}),
+        (r"\[4\]", None, (RequiredPathNotFoundError,), {"allow_create": False},),
+    ))
 
     @staticmethod
     @mark.parametrize(*ModifyTests)
@@ -125,21 +125,21 @@ class TestSequenceConfigData:
             assert data.retrieve(path, return_raw_value=True) == value
 
     DeleteTests: tuple[str, tuple[tuple[str, EE], ...]] = (
-        "path,             ignore_excs", (  # @formatter:off # noqa: E122
-        (r"\[0\]",         ()),  # noqa: E122
-        (r"\[1\]",         ()),  # noqa: E122
-        (r"\[2\]",         ()),  # noqa: E122
-        (r"\[2\]\.a",      ()),  # noqa: E122
-        (r"\[2\]\.a\[1\]", ()),  # noqa: E122
-        (r"\[2\]\.b\.c",   ()),  # noqa: E122
-        (r"\[3\]\[1\]",    ()),  # noqa: E122
-        ("abc",            (ConfigDataTypeError,)),  # noqa: E122
-        (r"\[0\]\.a",      (ConfigDataTypeError,)),  # noqa: E122
-        (r"\[2\]\[0\]",    (ConfigDataTypeError, )),  # noqa: E122
-        (r"\[9\]",         (RequiredPathNotFoundError,)),  # noqa: E122
-        (r"\[2\]\.z",      (RequiredPathNotFoundError,)),  # noqa: E122
-        (r"\[3\]\[-5\]",   (RequiredPathNotFoundError,)),  # noqa: E122
-    ))  # @formatter:on # noqa: E122
+        "path, ignore_excs", (
+        (r"\[0\]", ()),
+        (r"\[1\]", ()),
+        (r"\[2\]", ()),
+        (r"\[2\]\.a", ()),
+        (r"\[2\]\.a\[1\]", ()),
+        (r"\[2\]\.b\.c", ()),
+        (r"\[3\]\[1\]", ()),
+        ("abc", (ConfigDataTypeError,)),
+        (r"\[0\]\.a", (ConfigDataTypeError,)),
+        (r"\[2\]\[0\]", (ConfigDataTypeError,)),
+        (r"\[9\]", (RequiredPathNotFoundError,)),
+        (r"\[2\]\.z", (RequiredPathNotFoundError,)),
+        (r"\[3\]\[-5\]", (RequiredPathNotFoundError,)),
+    ))
 
     @staticmethod
     @mark.parametrize(*DeleteTests)
@@ -162,22 +162,22 @@ class TestSequenceConfigData:
         assert path not in data
 
     ExistsTests: tuple[str, tuple[tuple[str, bool | None, EE, dict[str, Any]], ...]] = (
-        "path,              is_exist, ignore_excs,            kwargs", (  # @formatter:off # noqa: E122
-        (r"\[0\]",          True,     (),                     {}),  # noqa: E122
-        (r"\[2\]",          True,     (),                     {}),  # noqa: E122
-        (r"\[9\]",          False,    (),                     {}),  # noqa: E122
-        (r"\[3\]",          True,     (),                     {}),  # noqa: E122
-        (r"\[3\]",          True,     (),                     {}),  # noqa: E122
-        (r"\[-6\]",         False,    (),                     {}),  # noqa: E122
-        (r"\[3\]\[1\]",     True,     (),                     {}),  # noqa: E122
-        (r"\[3\]\[4\]",     False,    (),                     {}),  # noqa: E122
-        (r"\[2\]\.b\.c",    True,     (),                     {}),  # noqa: E122
-        ("abc",             False,    (),                     {"ignore_wrong_type": True}),  # noqa: E122
-        (r"\[3\]\.abc",     False,    (),                     {"ignore_wrong_type": True}),  # noqa: E122
-        (r"\[2\]\[1\]",     None,     (ConfigDataTypeError,), {}),  # noqa: E122
-        (r"\[3\]\.abc",     False,    (ConfigDataTypeError,), {}),  # noqa: E122
-        (r"abc",            False,    (ConfigDataTypeError,), {}),  # noqa: E122
-    ))  # @formatter:on  # noqa: E122
+        "path, is_exist, ignore_excs, kwargs", (
+        (r"\[0\]", True, (), {}),
+        (r"\[2\]", True, (), {}),
+        (r"\[9\]", False, (), {}),
+        (r"\[3\]", True, (), {}),
+        (r"\[3\]", True, (), {}),
+        (r"\[-6\]", False, (), {}),
+        (r"\[3\]\[1\]", True, (), {}),
+        (r"\[3\]\[4\]", False, (), {}),
+        (r"\[2\]\.b\.c", True, (), {}),
+        ("abc", False, (), {"ignore_wrong_type": True}),
+        (r"\[3\]\.abc", False, (), {"ignore_wrong_type": True}),
+        (r"\[2\]\[1\]", None, (ConfigDataTypeError,), {}),
+        (r"\[3\]\.abc", False, (ConfigDataTypeError,), {}),
+        (r"abc", False, (ConfigDataTypeError,), {}),
+    ))
 
     @staticmethod
     @mark.parametrize(*ExistsTests)
@@ -188,12 +188,12 @@ class TestSequenceConfigData:
     GetTests = (
         RetrieveTests[0],
         (
-            *RetrieveTests[1],  # @formatter:off
-            # path               value            ignore_excs             kwargs
-            (r"\[10\]",           "default value", (),                     {"default": "default value"}),
-            (r"\[3\]\[20\]",      "default value", (),                     {"default": "default value"}),
+            *RetrieveTests[1],
+            # path value ignore_excs kwargs
+            (r"\[10\]", "default value", (), {"default": "default value"}),
+            (r"\[3\]\[20\]", "default value", (), {"default": "default value"}),
             (r"foo2\\.not exist", "default value", (ConfigDataTypeError,), {"default": "default value"}),
-        )  # @formatter:on
+        )
     )
 
     @staticmethod
@@ -217,12 +217,12 @@ class TestSequenceConfigData:
     SetDefaultTests = (
         RetrieveTests[0],
         (
-            *((*x[:3], x[3] | {"return_raw_value": True}) for x in RetrieveTests[1]),  # @formatter:off
+            *((*x[:3], x[3] | {"return_raw_value": True}) for x in RetrieveTests[1]),
             # path               value            ignore_excs             kwargs
-            (r"\[10\]",           "default value", (),                     {"default": "default value"}),
-            (r"\[3\]\[20\]",      "default value", (),                     {"default": "default value"}),
+            (r"\[10\]", "default value", (), {"default": "default value"}),
+            (r"\[3\]\[20\]", "default value", (), {"default": "default value"}),
             (r"foo2\\.not exist", "default value", (ConfigDataTypeError,), {"default": "default value"}),
-        )  # @formatter:on
+        )
     )
 
     @staticmethod
@@ -256,16 +256,16 @@ class TestSequenceConfigData:
 
     GetItemTests: tuple[str, tuple[tuple[int, Any], ...]] = (
         "index, value", (
-            (1, 2),
-            (2, MappingConfigData({
-                "a": [3, 4],
-                "b": {
-                    "c": 5,
-                    "d": 6,
-                },
-            })),
-            (3, SequenceConfigData([7, 8])),
-        ))
+        (1, 2),
+        (2, MappingConfigData({
+            "a": [3, 4],
+            "b": {
+                "c": 5,
+                "d": 6,
+            },
+        })),
+        (3, SequenceConfigData([7, 8])),
+    ))
 
     @staticmethod
     @mark.parametrize(*GetItemTests)

@@ -86,19 +86,19 @@ class TestMappingConfigData:
         assert readonly_data.data == readonly_odict
 
     RetrieveTests: tuple[str, tuple[tuple[str, Any, EE, dict[str, Any]], ...]] = (
-        "path,          value,                    ignore_excs,                  kwargs", (  # @formatter:off # noqa: E122, E501
-        ("foo",         MappingConfigData({"bar": 123}), (),                           {}),  # noqa: E122
-        ("foo",         {"bar": 123},             (),                           {"return_raw_value": True}),  # noqa: E122, E501
-        ("foo\\.bar",   123,                      (),                           {}),  # noqa: E122
-        ("foo1",        114,                      (),                           {}),  # noqa: E122
-        ("foo2",        ["bar"],                  (),                           {"return_raw_value": True}),  # noqa: E122, E501
-        ("foo2\\[0\\]", "bar",                    (),                           {}),  # noqa: E122
-        ("foo2\\.bar",  None,                     (ConfigDataTypeError, ),      {}),  # noqa: E122
-        ("foo3",        None,                     (RequiredPathNotFoundError,), {}),  # noqa: E122
-        ("foo2\\[1\\]", None,                     (RequiredPathNotFoundError,), {}),  # noqa: E122
-        ("foo\\[0\\]",  None,                     (ConfigDataTypeError,),       {}),  # noqa: E122
-        ("\\[0\\]",     None,                     (ConfigDataTypeError,),       {}),  # noqa: E122
-    ))  # @formatter:on # noqa: E122
+        "path, value, ignore_excs, kwargs", (
+        ("foo", MappingConfigData({"bar": 123}), (), {}),
+        ("foo", {"bar": 123}, (), {"return_raw_value": True}),
+        ("foo\\.bar", 123, (), {}),
+        ("foo1", 114, (), {}),
+        ("foo2", ["bar"], (), {"return_raw_value": True}),
+        ("foo2\\[0\\]", "bar", (), {}),
+        ("foo2\\.bar", None, (ConfigDataTypeError,), {}),
+        ("foo3", None, (RequiredPathNotFoundError,), {}),
+        ("foo2\\[1\\]", None, (RequiredPathNotFoundError,), {}),
+        ("foo\\[0\\]", None, (ConfigDataTypeError,), {}),
+        ("\\[0\\]", None, (ConfigDataTypeError,), {}),
+    ))
 
     @staticmethod
     @mark.parametrize(*RetrieveTests)
@@ -110,15 +110,15 @@ class TestMappingConfigData:
             assert data.retrieve(path, **kwargs) == value
 
     ModifyTests: tuple[str, tuple[tuple[str, Any, EE, dict[str, Any]], ...]] = (
-        "path,         value,        ignore_excs,                  kwargs", (  # @formatter:off # noqa: E122
-        ("foo",        {"bar": 456}, (),                           {}),  # noqa: E122
-        ("foo\\.bar",  123,          (),                           {}),  # noqa: E122
-        ("foo1",       114,          (),                           {}),  # noqa: E122
-        ("foo2",       ["bar"],      (),                           {}),  # noqa: E122
-        ("foo2\\.bar", None,         (ConfigDataTypeError,),       {}),  # noqa: E122
-        ("foo3",       None,         (),                           {}),  # noqa: E122
-        ("foo3",       None,         (RequiredPathNotFoundError,), {"allow_create": False}, ),  # noqa: E122
-    ))  # @formatter:on # noqa: E122
+        "path, value, ignore_excs, kwargs", (
+        ("foo", {"bar": 456}, (), {}),
+        ("foo\\.bar", 123, (), {}),
+        ("foo1", 114, (), {}),
+        ("foo2", ["bar"], (), {}),
+        ("foo2\\.bar", None, (ConfigDataTypeError,), {}),
+        ("foo3", None, (), {}),
+        ("foo3", None, (RequiredPathNotFoundError,), {"allow_create": False},),
+    ))
 
     @staticmethod
     @mark.parametrize(*ModifyTests)
@@ -133,19 +133,19 @@ class TestMappingConfigData:
         assert data.retrieve(path, return_raw_value=True) == value
 
     DeleteTests: tuple[str, tuple[tuple[str, EE], ...]] = (
-        "path,           ignore_excs", (  # @formatter:off # noqa: E122
-        ("foo\\.bar",    ()),  # noqa: E122
-        ("foo1",         ()),  # noqa: E122
-        ("foo2",         ()),  # noqa: E122
-        ("foo2\\[0\\]",  ()),  # noqa: E122
-        ("foo2\\[-1\\]", ()),  # noqa: E122
-        ("\\[0\\]",      (ConfigDataTypeError,)),  # noqa: E122
-        ("foo\\[0\\]",   (ConfigDataTypeError,)),  # noqa: E122
-        ("foo2\\.bar",   (ConfigDataTypeError, )),  # noqa: E122
-        ("foo2\\[1\\]",  (RequiredPathNotFoundError,)),  # noqa: E122
-        ("foo2\\[-2\\]", (RequiredPathNotFoundError,)),  # noqa: E122
-        ("foo3",         (RequiredPathNotFoundError,)),  # noqa: E122
-    ))  # @formatter:on # noqa: E122
+        "path, ignore_excs", (
+        ("foo\\.bar", ()),
+        ("foo1", ()),
+        ("foo2", ()),
+        ("foo2\\[0\\]", ()),
+        ("foo2\\[-1\\]", ()),
+        ("\\[0\\]", (ConfigDataTypeError,)),
+        ("foo\\[0\\]", (ConfigDataTypeError,)),
+        ("foo2\\.bar", (ConfigDataTypeError,)),
+        ("foo2\\[1\\]", (RequiredPathNotFoundError,)),
+        ("foo2\\[-2\\]", (RequiredPathNotFoundError,)),
+        ("foo3", (RequiredPathNotFoundError,)),
+    ))
 
     @staticmethod
     @mark.parametrize(*DeleteTests)
@@ -168,22 +168,22 @@ class TestMappingConfigData:
         assert path not in data
 
     ExistsTests: tuple[str, tuple[tuple[str, bool | None, EE, dict[str, Any]], ...]] = (
-        "path,              is_exist, ignore_excs,            kwargs", (  # @formatter:off # noqa: E122
-        ("foo",             True,     (),                     {}),  # noqa: E122
-        ("foo\\.bar",       True,     (),                     {}),  # noqa: E122
-        ("foo\\.not exist", False,    (),                     {}),  # noqa: E122
-        ("foo1",            True,     (),                     {}),  # noqa: E122
-        ("foo2",            True,     (),                     {}),  # noqa: E122
-        ("foo3",            False,    (),                     {}),  # noqa: E122
-        ("foo2\\[0\\]",     True,     (),                     {}),  # noqa: E122
-        ("foo2\\[1\\]",     False,    (),                     {}),  # noqa: E122
-        ("foo2\\[-1\\]",    True,     (),                     {}),  # noqa: E122
-        ("foo2\\.bar",      False,    (),                     {"ignore_wrong_type": True}),  # noqa: E122
-        ("\\[0\\]",         False,    (),                     {"ignore_wrong_type": True}),  # noqa: E122
-        ("foo2\\.bar",      None,     (ConfigDataTypeError,), {}),  # noqa: E122
-        ("foo\\[0\\]",      False,    (ConfigDataTypeError,), {}),  # noqa: E122
-        ("\\[0\\]",         False,    (ConfigDataTypeError,), {}),  # noqa: E122
-    ))  # @formatter:on  # noqa: E122
+        "path, is_exist, ignore_excs, kwargs", (
+        ("foo", True, (), {}),
+        ("foo\\.bar", True, (), {}),
+        ("foo\\.not exist", False, (), {}),
+        ("foo1", True, (), {}),
+        ("foo2", True, (), {}),
+        ("foo3", False, (), {}),
+        ("foo2\\[0\\]", True, (), {}),
+        ("foo2\\[1\\]", False, (), {}),
+        ("foo2\\[-1\\]", True, (), {}),
+        ("foo2\\.bar", False, (), {"ignore_wrong_type": True}),
+        ("\\[0\\]", False, (), {"ignore_wrong_type": True}),
+        ("foo2\\.bar", None, (ConfigDataTypeError,), {}),
+        ("foo\\[0\\]", False, (ConfigDataTypeError,), {}),
+        ("\\[0\\]", False, (ConfigDataTypeError,), {}),
+    ))
 
     @staticmethod
     @mark.parametrize(*ExistsTests)
@@ -194,12 +194,12 @@ class TestMappingConfigData:
     GetTests: tuple[str, tuple[tuple[str, Any, EE, dict[str, Any]], ...]] = (
         RetrieveTests[0],
         (
-            *RetrieveTests[1],  # @formatter:off
+            *RetrieveTests[1],
             # path               value            ignore_excs             kwargs
-            ("not exist",        "default value", (),                     {"default": "default value"}),
-            ("foo.not exist",    "default value", (),                     {"default": "default value"}),
+            ("not exist", "default value", (), {"default": "default value"}),
+            ("foo.not exist", "default value", (), {"default": "default value"}),
             ("foo2\\.not exist", "default value", (ConfigDataTypeError,), {"default": "default value"}),
-        )  # @formatter:on
+        )
     )
 
     @staticmethod
@@ -223,12 +223,12 @@ class TestMappingConfigData:
     SetDefaultTests: tuple[str, tuple[tuple[str, Any, EE, dict[str, Any]], ...]] = (
         RetrieveTests[0],
         (
-            *((*x[:3], x[3] | {"return_raw_value": True}) for x in RetrieveTests[1]),  # @formatter:off
+            *((*x[:3], x[3] | {"return_raw_value": True}) for x in RetrieveTests[1]),
             # path               value            ignore_excs             kwargs
-            ("not exist",        "default value", (),                     {"default": "default value"}),
-            ("foo\\.not exist",  "default value", (),                     {"default": "default value"}),
+            ("not exist", "default value", (), {"default": "default value"}),
+            ("foo\\.not exist", "default value", (), {"default": "default value"}),
             ("foo2\\.not exist", "default value", (ConfigDataTypeError,), {"default": "default value"}),
-        )  # @formatter:on
+        )
     )
 
     @staticmethod
@@ -262,10 +262,10 @@ class TestMappingConfigData:
 
     GetItemTests = (
         "path, value", (
-            ("foo", MappingConfigData({"bar": 123}),),
-            ("foo1", 114,),
-            ("foo2", SequenceConfigData(["bar"]),),
-        ))
+        ("foo", MappingConfigData({"bar": 123}),),
+        ("foo1", 114,),
+        ("foo2", SequenceConfigData(["bar"]),),
+    ))
 
     @staticmethod
     @mark.parametrize(*GetItemTests)

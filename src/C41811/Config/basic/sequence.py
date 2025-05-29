@@ -43,8 +43,8 @@ class SequenceConfigData[D: Sequence[Any]](
             data = list()  # type: ignore[assignment]
         super().__init__(cast(D, data))
 
-    @override
     @property
+    @override
     def data_read_only(self) -> bool:
         return not isinstance(self._data, MutableSequence)
 
@@ -91,18 +91,23 @@ class SequenceConfigData[D: Sequence[Any]](
     def reverse(self) -> None:
         self._data.reverse()  # type: ignore[attr-defined]
 
+    @override
     def __reversed__(self) -> Iterator[D]:
         return reversed(self._data)
 
     @operate(operator.mul, operator.imul)
-    def __mul__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
+    def __mul__(self, other: Any) -> Self:  # type: ignore[empty-body]
+        ...
 
     @operate(operator.add, operator.iadd)
-    def __add__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
+    def __add__(self, other: Any) -> Self:  # type: ignore[empty-body]
+        ...
 
-    def __rmul__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
+    def __rmul__(self, other: Any) -> Self:  # type: ignore[empty-body]
+        ...
 
-    def __radd__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
+    def __radd__(self, other: Any) -> Self:  # type: ignore[empty-body]
+        ...
 
 
 @generate
@@ -118,19 +123,22 @@ class StringConfigData[D: str | bytes](BasicSingleConfigData[D]):
             data = str()  # type: ignore[assignment]
         super().__init__(cast(D, data))
 
-    @override
     @property
+    @override
     def data_read_only(self) -> Literal[False]:
         return False
 
+    @override
     def __format__(self, format_spec: str) -> str:
         return self._data.__format__(format_spec)
 
     @operate(operator.add, operator.iadd)
-    def __add__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
+    def __add__(self, other: Any) -> Self:  # type: ignore[empty-body]
+        ...
 
     @operate(operator.mul, operator.imul)
-    def __mul__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
+    def __mul__(self, other: Any) -> Self:  # type: ignore[empty-body]
+        ...
 
     def __contains__(self, key: Any) -> bool:
         return key in self._data

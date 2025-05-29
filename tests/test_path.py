@@ -203,24 +203,24 @@ class TestPathSyntaxParser:
 
     TokenizeTests: tuple[str, tuple[tuple[str, list[str], EW], ...]] = (
         "string, result, ignore_warns", (
-            (
-                r"\.a.a\\.a\.b\[c\]\[2\]\.e",
-                [r"\.a.a\\.a", r"\.b", r"\[c", r"\]", r"\[2", r"\]", r"\.e"],
-                ()
-            ),
-            (r"\\\\", [r"\.\\\\"], ()),
-            (r"\[c\]\[d\]", [r"\[c", r"\]", r"\[d", r"\]"], ()),
-            (r"\[c\]abc\[4\]", [r"\[c", r"\]", "abc", r"\[4", r"\]"], ()),
-            (r"\[d\]abc", [r"\[d", r"\]", "abc"], ()),
-            (r"\[d\]\abc", [r"\[d", r"\]", r"\abc"], (SyntaxWarning,)),
-            (r"abc\[e\]", [r"\.abc", r"\[e", r"\]"], ()),
-            (r"abc", [r"\.abc"], ()),
-            (r"\{meta info\}\.abc", [r"\{meta info", r"\}", r"\.abc"], ()),
-            (r"\{meta info\}abc", [r"\{meta info", r"\}", r"abc"], ()),
-            (r"\\abc", [r"\.\\abc"], ()),
-            (r"\.\a", [r"\.\a"], (SyntaxWarning,)),
-            (r"\a\a", [r"\.\a\a"], (SyntaxWarning,)),
-        )
+        (
+            r"\.a.a\\.a\.b\[c\]\[2\]\.e",
+            [r"\.a.a\\.a", r"\.b", r"\[c", r"\]", r"\[2", r"\]", r"\.e"],
+            ()
+        ),
+        (r"\\\\", [r"\.\\\\"], ()),
+        (r"\[c\]\[d\]", [r"\[c", r"\]", r"\[d", r"\]"], ()),
+        (r"\[c\]abc\[4\]", [r"\[c", r"\]", "abc", r"\[4", r"\]"], ()),
+        (r"\[d\]abc", [r"\[d", r"\]", "abc"], ()),
+        (r"\[d\]\abc", [r"\[d", r"\]", r"\abc"], (SyntaxWarning,)),
+        (r"abc\[e\]", [r"\.abc", r"\[e", r"\]"], ()),
+        (r"abc", [r"\.abc"], ()),
+        (r"\{meta info\}\.abc", [r"\{meta info", r"\}", r"\.abc"], ()),
+        (r"\{meta info\}abc", [r"\{meta info", r"\}", r"abc"], ()),
+        (r"\\abc", [r"\.\\abc"], ()),
+        (r"\.\a", [r"\.\a"], (SyntaxWarning,)),
+        (r"\a\a", [r"\.\a\a"], (SyntaxWarning,)),
+    )
     )
 
     @staticmethod
@@ -238,42 +238,42 @@ class TestPathSyntaxParser:
         ], ...]
     ] = (
         "string, path_obj, ignore_excs, ignore_warns", (
-            (
-                r"\.a.a\\.a\.b\[18\]\[07\]\.e",
-                [AttrKey(r"a.a\.a"), AttrKey('b'), IndexKey(18), IndexKey(7), AttrKey('e')],
-                (), ()
-            ),
-            (r"abc\[2\]", [AttrKey("abc"), IndexKey(2)], (), ()),
-            (r"\.abc\[2\]", [AttrKey("abc"), IndexKey(2)], (), ()),
-            (r"\{meta\}\.aaa\{meta\}\[0\]", [AttrKey("aaa", "meta"), IndexKey(0, "meta")], (), ()),
-            (r"abc", [AttrKey("abc")], (), ()),
-            (r"\\abc", [AttrKey(r"\abc")], (), ()),
-            (r"\.abc", [AttrKey("abc")], (), ()),
-            (r"\[2\]\[3\]", [IndexKey(2), IndexKey(3)], (), ()),
-            (r"[2]\[3\]", [AttrKey(r"[2]"), IndexKey(3)], (), ()),
-            (r"\.a\[2\]\.b\[3\]", [AttrKey('a'), IndexKey(2), AttrKey('b'), IndexKey(3)], (), ()),
-            (r"\{any thing\}", [], (), ()),
-            (r"\.\a", [AttrKey(r"\a")], (), (SyntaxWarning,)),
-            (r"\a", [AttrKey(r"\a")], (), (SyntaxWarning,)),
-            (r"\a\a", [AttrKey(r"\a\a")], (), (SyntaxWarning,)),
-            (r"\{", None, (ConfigDataPathSyntaxException,), ()),
-            (r"\{\{", None, (ConfigDataPathSyntaxException,), ()),
-            (r"\{\[", None, (ConfigDataPathSyntaxException,), ()),
-            (r"\[\{", None, (ConfigDataPathSyntaxException,), ()),
-            (r"\[\}", None, (ConfigDataPathSyntaxException,), ()),
-            (r"\{\]", None, (ConfigDataPathSyntaxException,), ()),
-            (r"\}", None, (ConfigDataPathSyntaxException,), ()),
-            (r"[2\]\[3\]", None, (ConfigDataPathSyntaxException,), ()),
-            (r"\[2\[3\]", None, (ConfigDataPathSyntaxException,), ()),
-            (r"\[2\]\.3\]", None, (ConfigDataPathSyntaxException,), ()),
-            (r"\[2\.3", None, (ConfigDataPathSyntaxException,), ()),
-            (r"\[2", None, (ConfigDataPathSyntaxException,), ()),
-            (r"\[a\]", None, (ValueError,), ()),
-            (r"\[4\]abc\[9\]", None, (UnknownTokenTypeError,), ()),
-            (r"\[5\]abc", None, (UnknownTokenTypeError,), ()),
-            (r"\[5\]\abc", None, (UnknownTokenTypeError,), (SyntaxWarning,)),
-            (r"\{meta\}aaa", None, (UnknownTokenTypeError,), ()),
-        )
+        (
+            r"\.a.a\\.a\.b\[18\]\[07\]\.e",
+            [AttrKey(r"a.a\.a"), AttrKey('b'), IndexKey(18), IndexKey(7), AttrKey('e')],
+            (), ()
+        ),
+        (r"abc\[2\]", [AttrKey("abc"), IndexKey(2)], (), ()),
+        (r"\.abc\[2\]", [AttrKey("abc"), IndexKey(2)], (), ()),
+        (r"\{meta\}\.aaa\{meta\}\[0\]", [AttrKey("aaa", "meta"), IndexKey(0, "meta")], (), ()),
+        (r"abc", [AttrKey("abc")], (), ()),
+        (r"\\abc", [AttrKey(r"\abc")], (), ()),
+        (r"\.abc", [AttrKey("abc")], (), ()),
+        (r"\[2\]\[3\]", [IndexKey(2), IndexKey(3)], (), ()),
+        (r"[2]\[3\]", [AttrKey(r"[2]"), IndexKey(3)], (), ()),
+        (r"\.a\[2\]\.b\[3\]", [AttrKey('a'), IndexKey(2), AttrKey('b'), IndexKey(3)], (), ()),
+        (r"\{any thing\}", [], (), ()),
+        (r"\.\a", [AttrKey(r"\a")], (), (SyntaxWarning,)),
+        (r"\a", [AttrKey(r"\a")], (), (SyntaxWarning,)),
+        (r"\a\a", [AttrKey(r"\a\a")], (), (SyntaxWarning,)),
+        (r"\{", None, (ConfigDataPathSyntaxException,), ()),
+        (r"\{\{", None, (ConfigDataPathSyntaxException,), ()),
+        (r"\{\[", None, (ConfigDataPathSyntaxException,), ()),
+        (r"\[\{", None, (ConfigDataPathSyntaxException,), ()),
+        (r"\[\}", None, (ConfigDataPathSyntaxException,), ()),
+        (r"\{\]", None, (ConfigDataPathSyntaxException,), ()),
+        (r"\}", None, (ConfigDataPathSyntaxException,), ()),
+        (r"[2\]\[3\]", None, (ConfigDataPathSyntaxException,), ()),
+        (r"\[2\[3\]", None, (ConfigDataPathSyntaxException,), ()),
+        (r"\[2\]\.3\]", None, (ConfigDataPathSyntaxException,), ()),
+        (r"\[2\.3", None, (ConfigDataPathSyntaxException,), ()),
+        (r"\[2", None, (ConfigDataPathSyntaxException,), ()),
+        (r"\[a\]", None, (ValueError,), ()),
+        (r"\[4\]abc\[9\]", None, (UnknownTokenTypeError,), ()),
+        (r"\[5\]abc", None, (UnknownTokenTypeError,), ()),
+        (r"\[5\]\abc", None, (UnknownTokenTypeError,), (SyntaxWarning,)),
+        (r"\{meta\}aaa", None, (UnknownTokenTypeError,), ()),
+    )
     )
 
     @staticmethod

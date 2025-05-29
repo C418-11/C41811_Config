@@ -12,6 +12,7 @@ from typing import Any
 from typing import Optional
 from typing import Self
 from typing import cast
+from typing import override
 
 from .abc import ABCPath
 from .abc import AnyKey
@@ -45,6 +46,8 @@ class ConfigDataPathSyntaxException(Exception):
     配置数据检索路径语法错误
     """
 
+    msg: str
+
     def __init__(self, token_info: TokenInfo, msg: Optional[str] = None):
         """
         :param token_info: token相关信息
@@ -62,8 +65,9 @@ class ConfigDataPathSyntaxException(Exception):
         self.token_info = token_info
 
         if not (msg is None and hasattr(self, "msg")):
-            self.msg = msg
+            self.msg = msg  # type: ignore[assignment]
 
+    @override
     def __str__(self) -> str:
         return (
             f"{self.msg}"
@@ -139,6 +143,7 @@ class RequiredPathNotFoundError(LookupError):
         self.key_info = key_info
         self.operate = ConfigOperate(operate)
 
+    @override
     def __str__(self) -> str:
         string = (
             f"{self.key_info.path.unparse()} -> {self.key_info.current_key.unparse()}"
@@ -219,6 +224,7 @@ class CyclicReferenceError(ValueError):
         """
         self.key_info = key_info
 
+    @override
     def __str__(self) -> str:
         return (
             f"Cyclic reference detected at {self.key_info.path.unparse()} -> {self.key_info.current_key.unparse()}"
@@ -256,6 +262,7 @@ class UnsupportedConfigFormatError(Exception):
         super().__init__(f"Unsupported config format: {format_}")
         self.format = format_
 
+    @override
     def __eq__(self, other: Any) -> bool:
         return isinstance(other, UnsupportedConfigFormatError) and self.format == other.format
 

@@ -8,6 +8,7 @@
 from contextlib import suppress
 from typing import Any
 from typing import cast
+from typing import override
 
 
 def singleton[C: Any](target_cls: type[C], /) -> type[C]:
@@ -41,6 +42,7 @@ class UnsetType:
     用于填充默认值的特殊值
     """
 
+    @override
     def __str__(self) -> str:
         return "<Unset Argument>"
 
@@ -67,6 +69,7 @@ class Ref[T]:
     def __init__(self, value: T):
         self.value = value
 
+    @override
     def __repr__(self) -> str:
         return f"<{type(self).__name__} ({self.value!r})>"
 

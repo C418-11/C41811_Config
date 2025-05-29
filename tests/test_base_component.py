@@ -112,89 +112,89 @@ class TestComponentConfigData:
 
     RetrieveTests: tuple[str, tuple[tuple[CCD, str, Any, EE, dict[str, Any]], ...]] = (
         "data, path, value, ignore_excs, kwargs", (
-            (_ccd_from_meta(
-                {"members": ["a", "b", "c"]},
-                {"a": MappingConfigData(), "b": MappingConfigData(), "c": MappingConfigData({"key": "value"})},
-            ), "key", "value", (), {}),
-            (_ccd_from_meta(
-                {"members": ["a", "b", "c"]},
-                {"a": MappingConfigData({"foo": {"bar": "value"}}), "b": MappingConfigData(),
-                 "c": MappingConfigData()},
-            ), "foo\\.bar", "value", (), {}),
-            (_ccd_from_meta(
-                {"members": ["a", "b", "c"]},
-                {"a": MappingConfigData(), "b": MappingConfigData({"foo": {"bar": "value"}}),
-                 "c": MappingConfigData()},
-            ), "foo\\.bar", "value", (), {}),
-            (_ccd_from_meta(
-                {"members": ["a", "b", "c"]},
-                {"a": MappingConfigData(), "b": MappingConfigData(),
-                 "c": MappingConfigData({"foo": {"bar": "value"}})},
-            ), "foo\\.bar", "value", (), {}),
-            (_ccd_from_meta(
-                {"members": ["b", "a", "c"]},
-                {"a": MappingConfigData(), "b": MappingConfigData(),
-                 "c": MappingConfigData({"foo": {"bar": "value"}})},
-            ), "foo", {"bar": "value"}, (), dict(return_raw_value=True)),
-            (_ccd_from_meta(
-                {"members": ["a", "c", "b"]},
-                {"a": MappingConfigData(), "b": MappingConfigData({"key": True}),
-                 "c": MappingConfigData({"key": "value"})},
-            ), "key", "value", (), {}),
-            (_ccd_from_meta(
-                {"members": ["a", "c", "b"]},
-                {
-                    "a": MappingConfigData(pmap()),
-                    "b": MappingConfigData(pmap({"key": True})),
-                    "c": MappingConfigData(pmap({"key": "value"}))
-                },
-            ), "key", "value", (), {}),
-            (_ccd_from_meta(
-                {"members": [dict(filename="a", alias="c"), "b"], "order": ["c"]},
-                {"a": MappingConfigData({"a": "value"}), "b": MappingConfigData({"b": True})},
-            ), "a", "value", (), {}),
-            (_ccd_from_meta(
-                {"members": ["a", "b"]},
-                {"a": SequenceConfigData([{"key": False}]), "b": SequenceConfigData([{"key": True}])},
-            ), "\\[0\\]\\.key", False, (), {}),
-            (_ccd_from_meta(
-                {"members": ["a", "b"]},
-                {"a": SequenceConfigData([{"key": False}]), "b": SequenceConfigData([{"key": True}])},
-            ), "\\{b\\}\\[0\\]\\.key", True, (), {}),
-            (_ccd_from_meta(
-                {"members": ["a", "b", "c"]},
-                {"a": MappingConfigData(), "b": MappingConfigData({"key": False}),
-                 "c": MappingConfigData({"key": None})},
-            ), "\\{c\\}\\.key", None, (), {}),
-            (_ccd_from_meta(
-                {"members": ["b", dict(filename="a", alias="c")]},
-                {"a": MappingConfigData({"key": False}), "b": MappingConfigData({"key": None})},
-            ), "\\{c\\}\\.key", False, (), {}),
-            (_ccd_from_meta(
-                {"members": ["b", dict(filename="a", alias="c")]},
-                {"a": MappingConfigData({"key": False}), "b": MappingConfigData({"key": None})},
-            ), "\\{z\\}\\.key", None, (RequiredPathNotFoundError,), {}),
-            (_ccd_from_meta(
-                {"order": ["z"]},
-                {},
-            ), "", None, (KeyError,), {}),
-            (_ccd_from_meta(
-                {"members": ["a", "c", "b"]},
-                {
-                    "a": MappingConfigData({"foo": "value"}),
-                    "b": MappingConfigData({"foo": {"bar": "value"}}),
-                    "c": MappingConfigData({"foo": {"bar": {"baz": "value"}}}),
-                },
-            ), "foo\\.bar\\.baz\\.qux", None, (ConfigDataTypeError,), {}),
-            (_ccd_from_meta(
-                {"members": ["a", "b"]},
-                {"a": MappingConfigData({"a": "value"}), "b": MappingConfigData({"b": True})},
-            ), "key", None, (RequiredPathNotFoundError,), {}),
-            (_ccd_from_meta(
-                {"members": ["a"], "order": []},
-                {"a": NoneConfigData()},  # type: ignore[dict-item]
-            ), "", None, (RequiredPathNotFoundError,), {}),
-        )
+        (_ccd_from_meta(
+            {"members": ["a", "b", "c"]},
+            {"a": MappingConfigData(), "b": MappingConfigData(), "c": MappingConfigData({"key": "value"})},
+        ), "key", "value", (), {}),
+        (_ccd_from_meta(
+            {"members": ["a", "b", "c"]},
+            {"a": MappingConfigData({"foo": {"bar": "value"}}), "b": MappingConfigData(),
+             "c": MappingConfigData()},
+        ), "foo\\.bar", "value", (), {}),
+        (_ccd_from_meta(
+            {"members": ["a", "b", "c"]},
+            {"a": MappingConfigData(), "b": MappingConfigData({"foo": {"bar": "value"}}),
+             "c": MappingConfigData()},
+        ), "foo\\.bar", "value", (), {}),
+        (_ccd_from_meta(
+            {"members": ["a", "b", "c"]},
+            {"a": MappingConfigData(), "b": MappingConfigData(),
+             "c": MappingConfigData({"foo": {"bar": "value"}})},
+        ), "foo\\.bar", "value", (), {}),
+        (_ccd_from_meta(
+            {"members": ["b", "a", "c"]},
+            {"a": MappingConfigData(), "b": MappingConfigData(),
+             "c": MappingConfigData({"foo": {"bar": "value"}})},
+        ), "foo", {"bar": "value"}, (), dict(return_raw_value=True)),
+        (_ccd_from_meta(
+            {"members": ["a", "c", "b"]},
+            {"a": MappingConfigData(), "b": MappingConfigData({"key": True}),
+             "c": MappingConfigData({"key": "value"})},
+        ), "key", "value", (), {}),
+        (_ccd_from_meta(
+            {"members": ["a", "c", "b"]},
+            {
+                "a": MappingConfigData(pmap()),
+                "b": MappingConfigData(pmap({"key": True})),
+                "c": MappingConfigData(pmap({"key": "value"}))
+            },
+        ), "key", "value", (), {}),
+        (_ccd_from_meta(
+            {"members": [dict(filename="a", alias="c"), "b"], "order": ["c"]},
+            {"a": MappingConfigData({"a": "value"}), "b": MappingConfigData({"b": True})},
+        ), "a", "value", (), {}),
+        (_ccd_from_meta(
+            {"members": ["a", "b"]},
+            {"a": SequenceConfigData([{"key": False}]), "b": SequenceConfigData([{"key": True}])},
+        ), "\\[0\\]\\.key", False, (), {}),
+        (_ccd_from_meta(
+            {"members": ["a", "b"]},
+            {"a": SequenceConfigData([{"key": False}]), "b": SequenceConfigData([{"key": True}])},
+        ), "\\{b\\}\\[0\\]\\.key", True, (), {}),
+        (_ccd_from_meta(
+            {"members": ["a", "b", "c"]},
+            {"a": MappingConfigData(), "b": MappingConfigData({"key": False}),
+             "c": MappingConfigData({"key": None})},
+        ), "\\{c\\}\\.key", None, (), {}),
+        (_ccd_from_meta(
+            {"members": ["b", dict(filename="a", alias="c")]},
+            {"a": MappingConfigData({"key": False}), "b": MappingConfigData({"key": None})},
+        ), "\\{c\\}\\.key", False, (), {}),
+        (_ccd_from_meta(
+            {"members": ["b", dict(filename="a", alias="c")]},
+            {"a": MappingConfigData({"key": False}), "b": MappingConfigData({"key": None})},
+        ), "\\{z\\}\\.key", None, (RequiredPathNotFoundError,), {}),
+        (_ccd_from_meta(
+            {"order": ["z"]},
+            {},
+        ), "", None, (KeyError,), {}),
+        (_ccd_from_meta(
+            {"members": ["a", "c", "b"]},
+            {
+                "a": MappingConfigData({"foo": "value"}),
+                "b": MappingConfigData({"foo": {"bar": "value"}}),
+                "c": MappingConfigData({"foo": {"bar": {"baz": "value"}}}),
+            },
+        ), "foo\\.bar\\.baz\\.qux", None, (ConfigDataTypeError,), {}),
+        (_ccd_from_meta(
+            {"members": ["a", "b"]},
+            {"a": MappingConfigData({"a": "value"}), "b": MappingConfigData({"b": True})},
+        ), "key", None, (RequiredPathNotFoundError,), {}),
+        (_ccd_from_meta(
+            {"members": ["a"], "order": []},
+            {"a": NoneConfigData()},  # type: ignore[dict-item]
+        ), "", None, (RequiredPathNotFoundError,), {}),
+    )
     )
 
     @staticmethod
@@ -205,62 +205,62 @@ class TestComponentConfigData:
 
     ModifyTests: tuple[str, tuple[tuple[CCD, str, Any, EE, dict[str, Any]], ...]] = (
         "data, path, value, ignore_excs, kwargs", (
-            (_ccd_from_meta(
-                {"members": [dict(filename="a", alias="c"), "b"], "order": ["c"]},
-                {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData()},
-            ), "key", True, (), {}),
-            (_ccd_from_meta(
-                {"members": ["a", "b"]},
-                {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData()},
-            ), "key", True, (), {}),
-            (_ccd_from_meta(
-                {"members": ["b", "a"]},
-                {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData()},
-            ), "key", True, (), {}),
-            (_ccd_from_meta(
-                {"members": ["a", "b"], "orders": {"read": ["a", "b"], "update": ["b", "a"]}},
-                {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData()},
-            ), "key", "value", (), {}),
-            (_ccd_from_meta(
-                {"members": ["b", "a"]},
-                {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData({"key": None})},
-            ), "key", True, (), {}),
-            (_ccd_from_meta(
-                {"members": ["b", "a"]},
-                {"a": MappingConfigData({"foo": {"bar": "value"}}), "b": MappingConfigData({"foo": {"bar": None}})},
-            ), "foo\\.bar", True, (), {}),
-            (_ccd_from_meta(
-                {"members": ["b", "a"]},
-                {"a": SequenceConfigData([{"foo": {"bar": "value"}}]),
-                 "b": SequenceConfigData([{"foo": {"bar": None}}])},
-            ), "\\[0\\]\\.foo\\.bar", True, (), {}),
-            (_ccd_from_meta(
-                {"members": ["b", "a"]},
-                {"a": SequenceConfigData([{"foo": {"bar": "value"}}]),
-                 "b": SequenceConfigData([{"foo": {"bar": None}}])},
-            ), "\\{a\\}\\[0\\]\\.foo\\.bar", True, (), {}),
-            (_ccd_from_meta(
-                {"members": ["b", "a"]},
-                {"a": MappingConfigData({"foo": {"bar": "value"}}), "b": MappingConfigData({"foo": {"bar": None}})},
-            ), "foo", {"bar": True}, (), dict(allow_create=False)),
-            (_ccd_from_meta(
-                {"members": ["c", "b", "a"]},
-                {"a": MappingConfigData(), "b": MappingConfigData({"key": False}),
-                 "c": MappingConfigData({"key": None})},
-            ), "\\{a\\}\\.key", True, (), {}),
-            (_ccd_from_meta(
-                {"members": ["b", dict(filename="a", alias="c")]},
-                {"a": MappingConfigData({"key": False}), "b": MappingConfigData({"key": None})},
-            ), "\\{c\\}\\.key", True, (), {}),
-            (_ccd_from_meta(
-                {"members": ["b", dict(filename="a", alias="c")]},
-                {"a": MappingConfigData({"key": False}), "b": MappingConfigData({"key": None})},
-            ), "\\{z\\}\\.key", None, (RequiredPathNotFoundError,), {}),
-            (_ccd_from_meta(
-                {"members": ["b", "a"]},
-                {"a": MappingConfigData({"foo": {"bar": "value"}}), "b": MappingConfigData({"foo": {"bar": None}})},
-            ), "quz", {"value": True}, (RequiredPathNotFoundError,), dict(allow_create=False)),
-        )
+        (_ccd_from_meta(
+            {"members": [dict(filename="a", alias="c"), "b"], "order": ["c"]},
+            {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData()},
+        ), "key", True, (), {}),
+        (_ccd_from_meta(
+            {"members": ["a", "b"]},
+            {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData()},
+        ), "key", True, (), {}),
+        (_ccd_from_meta(
+            {"members": ["b", "a"]},
+            {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData()},
+        ), "key", True, (), {}),
+        (_ccd_from_meta(
+            {"members": ["a", "b"], "orders": {"read": ["a", "b"], "update": ["b", "a"]}},
+            {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData()},
+        ), "key", "value", (), {}),
+        (_ccd_from_meta(
+            {"members": ["b", "a"]},
+            {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData({"key": None})},
+        ), "key", True, (), {}),
+        (_ccd_from_meta(
+            {"members": ["b", "a"]},
+            {"a": MappingConfigData({"foo": {"bar": "value"}}), "b": MappingConfigData({"foo": {"bar": None}})},
+        ), "foo\\.bar", True, (), {}),
+        (_ccd_from_meta(
+            {"members": ["b", "a"]},
+            {"a": SequenceConfigData([{"foo": {"bar": "value"}}]),
+             "b": SequenceConfigData([{"foo": {"bar": None}}])},
+        ), "\\[0\\]\\.foo\\.bar", True, (), {}),
+        (_ccd_from_meta(
+            {"members": ["b", "a"]},
+            {"a": SequenceConfigData([{"foo": {"bar": "value"}}]),
+             "b": SequenceConfigData([{"foo": {"bar": None}}])},
+        ), "\\{a\\}\\[0\\]\\.foo\\.bar", True, (), {}),
+        (_ccd_from_meta(
+            {"members": ["b", "a"]},
+            {"a": MappingConfigData({"foo": {"bar": "value"}}), "b": MappingConfigData({"foo": {"bar": None}})},
+        ), "foo", {"bar": True}, (), dict(allow_create=False)),
+        (_ccd_from_meta(
+            {"members": ["c", "b", "a"]},
+            {"a": MappingConfigData(), "b": MappingConfigData({"key": False}),
+             "c": MappingConfigData({"key": None})},
+        ), "\\{a\\}\\.key", True, (), {}),
+        (_ccd_from_meta(
+            {"members": ["b", dict(filename="a", alias="c")]},
+            {"a": MappingConfigData({"key": False}), "b": MappingConfigData({"key": None})},
+        ), "\\{c\\}\\.key", True, (), {}),
+        (_ccd_from_meta(
+            {"members": ["b", dict(filename="a", alias="c")]},
+            {"a": MappingConfigData({"key": False}), "b": MappingConfigData({"key": None})},
+        ), "\\{z\\}\\.key", None, (RequiredPathNotFoundError,), {}),
+        (_ccd_from_meta(
+            {"members": ["b", "a"]},
+            {"a": MappingConfigData({"foo": {"bar": "value"}}), "b": MappingConfigData({"foo": {"bar": None}})},
+        ), "quz", {"value": True}, (RequiredPathNotFoundError,), dict(allow_create=False)),
+    )
     )
 
     @staticmethod
@@ -274,50 +274,50 @@ class TestComponentConfigData:
 
     DeleteTests: tuple[str, tuple[tuple[CCD, str, Any, EE, dict[str, Any]], ...]] = (
         "data, path, value, ignore_excs, kwargs", (
-            (_ccd_from_meta(
-                {"members": ["a", "b"]},
-                {"a": MappingConfigData({"foo": {"bar": "value"}}), "b": MappingConfigData({"foo": {"bar": False}})},
-            ), "foo\\.bar", False, (), {}),
-            (_ccd_from_meta(
-                {"members": [dict(filename="a", alias="c"), "b"], "order": ["c"]},
-                {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData({"key": "value"})},
-            ), "key", Unset, (), {}),
-            (_ccd_from_meta(
-                {"members": ["a", "b"], "orders": {"delete": ["b", "a"], "read": ["a", "b"]}},
-                {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData({"key": "value"})},
-            ), "key", "value", (), {}),
-            (_ccd_from_meta(
-                {"members": ["a", "b", "c"]},
-                {
-                    "a": MappingConfigData(),
-                    "b": MappingConfigData({"key": False}),
-                    "c": MappingConfigData({"key": None})},
-            ), "\\{c\\}\\.key", False, (), {}),
-            (_ccd_from_meta(
-                {"members": ["b", dict(filename="a", alias="c")]},
-                {"a": MappingConfigData({"key": False}), "b": MappingConfigData({"key": True})},
-            ), "\\{c\\}\\.key", True, (), {}),
-            (_ccd_from_meta(
-                {"members": ["b", "a"]},
-                {"a": SequenceConfigData([{"key": False}]), "b": SequenceConfigData([{"key": True}])},
-            ), "\\[0\\]\\.key", False, (), {}),
-            (_ccd_from_meta(
-                {"members": ["b", "a"]},
-                {"a": SequenceConfigData([{"key": False}]), "b": SequenceConfigData([{"key": True}])},
-            ), "\\{a\\}\\[0\\]\\.key", Unset, (), {}),
-            (_ccd_from_meta(
-                {"members": ["b", dict(filename="a", alias="c")]},
-                {"a": MappingConfigData({"key": False}), "b": MappingConfigData({"key": None})},
-            ), "\\{z\\}\\.key", Unset, (RequiredPathNotFoundError,), {}),
-            (_ccd_from_meta(
-                {"members": ["a", "b"], "order": []},
-                {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData({"key": "value"})},
-            ), "key", Unset, (RequiredPathNotFoundError,), {}),
-            (_ccd_from_meta(
-                {"members": ["a", "b"]},
-                {"a": MappingConfigData(), "b": MappingConfigData()},
-            ), "key", Unset, (RequiredPathNotFoundError,), {}),
-        )
+        (_ccd_from_meta(
+            {"members": ["a", "b"]},
+            {"a": MappingConfigData({"foo": {"bar": "value"}}), "b": MappingConfigData({"foo": {"bar": False}})},
+        ), "foo\\.bar", False, (), {}),
+        (_ccd_from_meta(
+            {"members": [dict(filename="a", alias="c"), "b"], "order": ["c"]},
+            {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData({"key": "value"})},
+        ), "key", Unset, (), {}),
+        (_ccd_from_meta(
+            {"members": ["a", "b"], "orders": {"delete": ["b", "a"], "read": ["a", "b"]}},
+            {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData({"key": "value"})},
+        ), "key", "value", (), {}),
+        (_ccd_from_meta(
+            {"members": ["a", "b", "c"]},
+            {
+                "a": MappingConfigData(),
+                "b": MappingConfigData({"key": False}),
+                "c": MappingConfigData({"key": None})},
+        ), "\\{c\\}\\.key", False, (), {}),
+        (_ccd_from_meta(
+            {"members": ["b", dict(filename="a", alias="c")]},
+            {"a": MappingConfigData({"key": False}), "b": MappingConfigData({"key": True})},
+        ), "\\{c\\}\\.key", True, (), {}),
+        (_ccd_from_meta(
+            {"members": ["b", "a"]},
+            {"a": SequenceConfigData([{"key": False}]), "b": SequenceConfigData([{"key": True}])},
+        ), "\\[0\\]\\.key", False, (), {}),
+        (_ccd_from_meta(
+            {"members": ["b", "a"]},
+            {"a": SequenceConfigData([{"key": False}]), "b": SequenceConfigData([{"key": True}])},
+        ), "\\{a\\}\\[0\\]\\.key", Unset, (), {}),
+        (_ccd_from_meta(
+            {"members": ["b", dict(filename="a", alias="c")]},
+            {"a": MappingConfigData({"key": False}), "b": MappingConfigData({"key": None})},
+        ), "\\{z\\}\\.key", Unset, (RequiredPathNotFoundError,), {}),
+        (_ccd_from_meta(
+            {"members": ["a", "b"], "order": []},
+            {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData({"key": "value"})},
+        ), "key", Unset, (RequiredPathNotFoundError,), {}),
+        (_ccd_from_meta(
+            {"members": ["a", "b"]},
+            {"a": MappingConfigData(), "b": MappingConfigData()},
+        ), "key", Unset, (RequiredPathNotFoundError,), {}),
+    )
     )
 
     @staticmethod
@@ -331,40 +331,40 @@ class TestComponentConfigData:
 
     UnsetTests: tuple[str, tuple[tuple[CCD, str, Any, EE, dict[str, Any]], ...]] = (
         "data, path, value, ignore_excs, kwargs", (
-            (_ccd_from_meta(
-                {"members": ["a", "b"]},
-                {"a": MappingConfigData({"foo": {"bar": "value"}}), "b": MappingConfigData({"foo": {"bar": False}})},
-            ), "foo\\.bar", False, (), {}),
-            (_ccd_from_meta(
-                {"members": [dict(filename="a", alias="c"), "b"], "order": ["c"]},
-                {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData({"key": "value"})},
-            ), "key", Unset, (), {}),
-            (_ccd_from_meta(
-                {"members": ["a", "b"], "orders": {"delete": ["b", "a"], "read": ["a", "b"]}},
-                {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData({"key": "value"})},
-            ), "key", "value", (), {}),
-            (_ccd_from_meta(
-                {"members": ["a", "b"], "order": []},
-                {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData({"key": "value"})},
-            ), "key", "value", (), {}),
-            (_ccd_from_meta(
-                {"members": ["a", "b"]},
-                {"a": MappingConfigData(), "b": MappingConfigData()},
-            ), "key", "value", (), {}),
-            (_ccd_from_meta(
-                {"members": ["a", "b", "c"]},
-                {"a": MappingConfigData(), "b": MappingConfigData({"key": False}),
-                 "c": MappingConfigData({"key": None})},
-            ), "\\{c\\}\\.key", False, (), {}),
-            (_ccd_from_meta(
-                {"members": ["b", dict(filename="a", alias="c")]},
-                {"a": MappingConfigData({"key": False}), "b": MappingConfigData({"key": True})},
-            ), "\\{c\\}\\.key", True, (), {}),
-            (_ccd_from_meta(
-                {"members": ["b", dict(filename="a", alias="c")]},
-                {"a": MappingConfigData({"key": False}), "b": MappingConfigData({"key": None})},
-            ), "\\{z\\}\\.key", Unset, (), {}),
-        )
+        (_ccd_from_meta(
+            {"members": ["a", "b"]},
+            {"a": MappingConfigData({"foo": {"bar": "value"}}), "b": MappingConfigData({"foo": {"bar": False}})},
+        ), "foo\\.bar", False, (), {}),
+        (_ccd_from_meta(
+            {"members": [dict(filename="a", alias="c"), "b"], "order": ["c"]},
+            {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData({"key": "value"})},
+        ), "key", Unset, (), {}),
+        (_ccd_from_meta(
+            {"members": ["a", "b"], "orders": {"delete": ["b", "a"], "read": ["a", "b"]}},
+            {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData({"key": "value"})},
+        ), "key", "value", (), {}),
+        (_ccd_from_meta(
+            {"members": ["a", "b"], "order": []},
+            {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData({"key": "value"})},
+        ), "key", "value", (), {}),
+        (_ccd_from_meta(
+            {"members": ["a", "b"]},
+            {"a": MappingConfigData(), "b": MappingConfigData()},
+        ), "key", "value", (), {}),
+        (_ccd_from_meta(
+            {"members": ["a", "b", "c"]},
+            {"a": MappingConfigData(), "b": MappingConfigData({"key": False}),
+             "c": MappingConfigData({"key": None})},
+        ), "\\{c\\}\\.key", False, (), {}),
+        (_ccd_from_meta(
+            {"members": ["b", dict(filename="a", alias="c")]},
+            {"a": MappingConfigData({"key": False}), "b": MappingConfigData({"key": True})},
+        ), "\\{c\\}\\.key", True, (), {}),
+        (_ccd_from_meta(
+            {"members": ["b", dict(filename="a", alias="c")]},
+            {"a": MappingConfigData({"key": False}), "b": MappingConfigData({"key": None})},
+        ), "\\{z\\}\\.key", Unset, (), {}),
+    )
     )
 
     @staticmethod
@@ -378,69 +378,69 @@ class TestComponentConfigData:
 
     ExistsTests: tuple[str, tuple[tuple[CCD, str, bool, EE, dict[str, Any]], ...]] = (
         "data, path, is_exists, ignore_excs, kwargs", (
-            (_ccd_from_meta(
-                {"members": ["a", "b"]},
-                {"a": MappingConfigData({"foo": {"bar": None}}),
-                 "b": MappingConfigData({"foo": {"bar": {"quz": None}}})},
-            ), "foo\\.bar\\.quz", True, (), {}),
-            (_ccd_from_meta(
-                {"members": ["b", "a"]},
-                {"a": MappingConfigData({"foo": {"bar": None}}),
-                 "b": MappingConfigData({"foo": {"bar": {"quz": None}}})},
-            ), "foo\\.bar\\.quz", True, (), {}),
-            (_ccd_from_meta(
-                {"members": ["a", "b"]},
-                {"a": MappingConfigData(), "b": MappingConfigData()},
-            ), "key", False, (), {}),
-            (_ccd_from_meta(
-                {"members": ["a", "b"]},
-                {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData()},
-            ), "key", True, (), {}),
-            (_ccd_from_meta(
-                {"members": ["b", "a"]},
-                {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData()},
-            ), "key", False, (), {}),
-            (_ccd_from_meta(
-                {"members": ["b", "a"]},
-                {"a": SequenceConfigData([{"key": "value"}]), "b": SequenceConfigData([{}])},
-            ), "\\[0\\]\\.key", False, (), {}),
-            (_ccd_from_meta(
-                {"members": ["b", "a"]},
-                {"a": SequenceConfigData([{"key": "value"}]), "b": SequenceConfigData([{}])},
-            ), "\\{a\\}\\[0\\]\\.key", True, (), {}),
-            (_ccd_from_meta(
-                {},
-                {},
-            ), "key", False, (), {}),
-            (_ccd_from_meta(
-                {"members": ["a", "b", "c"]},
-                {
-                    "a": MappingConfigData(),
-                    "b": MappingConfigData({"key": False}),
-                    "c": MappingConfigData({"key": None})
-                },
-            ), "\\{c\\}\\.key", True, (), {}),
-            (_ccd_from_meta(
-                {"members": ["a", "b", "c"]},
-                {
-                    "a": MappingConfigData({"key": False}),
-                    "b": MappingConfigData(),
-                    "c": MappingConfigData({"key": None})
-                },
-            ), "\\{b\\}\\.key", False, (), {}),
-            (_ccd_from_meta(
-                {"members": ["b", dict(filename="a", alias="c")]},
-                {"a": MappingConfigData({"key": False}), "b": MappingConfigData({"key": True})},
-            ), "\\{c\\}\\.key", True, (), {}),
-            (_ccd_from_meta(
-                {"members": ["b", dict(filename="a", alias="c")]},
-                {"a": MappingConfigData({"key": False}), "b": MappingConfigData({"key": True})},
-            ), "\\{c\\}\\.any", False, (), {}),
-            (_ccd_from_meta(
-                {"members": ["b", dict(filename="a", alias="c")]},
-                {"a": MappingConfigData({"key": False}), "b": MappingConfigData({"key": None})},
-            ), "\\{z\\}\\.key", False, (), {}),
-        )
+        (_ccd_from_meta(
+            {"members": ["a", "b"]},
+            {"a": MappingConfigData({"foo": {"bar": None}}),
+             "b": MappingConfigData({"foo": {"bar": {"quz": None}}})},
+        ), "foo\\.bar\\.quz", True, (), {}),
+        (_ccd_from_meta(
+            {"members": ["b", "a"]},
+            {"a": MappingConfigData({"foo": {"bar": None}}),
+             "b": MappingConfigData({"foo": {"bar": {"quz": None}}})},
+        ), "foo\\.bar\\.quz", True, (), {}),
+        (_ccd_from_meta(
+            {"members": ["a", "b"]},
+            {"a": MappingConfigData(), "b": MappingConfigData()},
+        ), "key", False, (), {}),
+        (_ccd_from_meta(
+            {"members": ["a", "b"]},
+            {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData()},
+        ), "key", True, (), {}),
+        (_ccd_from_meta(
+            {"members": ["b", "a"]},
+            {"a": MappingConfigData({"key": "value"}), "b": MappingConfigData()},
+        ), "key", False, (), {}),
+        (_ccd_from_meta(
+            {"members": ["b", "a"]},
+            {"a": SequenceConfigData([{"key": "value"}]), "b": SequenceConfigData([{}])},
+        ), "\\[0\\]\\.key", False, (), {}),
+        (_ccd_from_meta(
+            {"members": ["b", "a"]},
+            {"a": SequenceConfigData([{"key": "value"}]), "b": SequenceConfigData([{}])},
+        ), "\\{a\\}\\[0\\]\\.key", True, (), {}),
+        (_ccd_from_meta(
+            {},
+            {},
+        ), "key", False, (), {}),
+        (_ccd_from_meta(
+            {"members": ["a", "b", "c"]},
+            {
+                "a": MappingConfigData(),
+                "b": MappingConfigData({"key": False}),
+                "c": MappingConfigData({"key": None})
+            },
+        ), "\\{c\\}\\.key", True, (), {}),
+        (_ccd_from_meta(
+            {"members": ["a", "b", "c"]},
+            {
+                "a": MappingConfigData({"key": False}),
+                "b": MappingConfigData(),
+                "c": MappingConfigData({"key": None})
+            },
+        ), "\\{b\\}\\.key", False, (), {}),
+        (_ccd_from_meta(
+            {"members": ["b", dict(filename="a", alias="c")]},
+            {"a": MappingConfigData({"key": False}), "b": MappingConfigData({"key": True})},
+        ), "\\{c\\}\\.key", True, (), {}),
+        (_ccd_from_meta(
+            {"members": ["b", dict(filename="a", alias="c")]},
+            {"a": MappingConfigData({"key": False}), "b": MappingConfigData({"key": True})},
+        ), "\\{c\\}\\.any", False, (), {}),
+        (_ccd_from_meta(
+            {"members": ["b", dict(filename="a", alias="c")]},
+            {"a": MappingConfigData({"key": False}), "b": MappingConfigData({"key": None})},
+        ), "\\{z\\}\\.key", False, (), {}),
+    )
     )
 
     @staticmethod
@@ -451,29 +451,29 @@ class TestComponentConfigData:
 
     GetTests: tuple[str, tuple[tuple[CCD, str, Any, EE, dict[str, Any]], ...]] = (
         "data, path, value, ignore_excs, kwargs", (
-            (_ccd_from_meta(
-                {},
-                {},
-            ), "value", None, (), {}),
-            (_ccd_from_meta(
-                {"members": ["a", "b"]},
-                {
-                    "a": MappingConfigData({"foo": {"bar": True}}),
-                    "b": MappingConfigData({"foo": {"bar": False}})
-                },
-            ), "foo\\.bar", True, (), {}),
-            (_ccd_from_meta(
-                {"members": ["b", "a"]},
-                {
-                    "a": MappingConfigData({"foo": {"bar": True}}),
-                    "b": MappingConfigData({"foo": {"bar": False}})
-                },
-            ), "foo\\.bar", False, (), {}),
-            (_ccd_from_meta(
-                {},
-                {},
-            ), "value", None, (), {}),
-        )
+        (_ccd_from_meta(
+            {},
+            {},
+        ), "value", None, (), {}),
+        (_ccd_from_meta(
+            {"members": ["a", "b"]},
+            {
+                "a": MappingConfigData({"foo": {"bar": True}}),
+                "b": MappingConfigData({"foo": {"bar": False}})
+            },
+        ), "foo\\.bar", True, (), {}),
+        (_ccd_from_meta(
+            {"members": ["b", "a"]},
+            {
+                "a": MappingConfigData({"foo": {"bar": True}}),
+                "b": MappingConfigData({"foo": {"bar": False}})
+            },
+        ), "foo\\.bar", False, (), {}),
+        (_ccd_from_meta(
+            {},
+            {},
+        ), "value", None, (), {}),
+    )
     )
 
     @staticmethod
@@ -484,23 +484,23 @@ class TestComponentConfigData:
 
     SetDefaultTests: tuple[str, tuple[tuple[CCD, str, Any, EE, dict[str, Any]], ...]] = (
         "data, path, value, ignore_excs, kwargs", (
-            (_ccd_from_meta(
-                {"members": ["a", "b"]},
-                {"a": MappingConfigData(), "b": MappingConfigData()}
-            ), "test\\.path", None, (), {}),
-            (_ccd_from_meta(
-                {"members": ["a", "b"], "orders": {"create": ["b", "a"], "read": ["a", "b"]}},
-                {"a": MappingConfigData(), "b": MappingConfigData()}
-            ), "test\\.path", True, (), {}),
-            (_ccd_from_meta(
-                {"members": ["a", "b"], "orders": {"create": ["b", "a"], "read": ["a", "b"]}},
-                {"a": MappingConfigData(), "b": MappingConfigData({"test": {"path": None}})}
-            ), "test\\.path", False, (AssertionError,), {}),
-            (_ccd_from_meta(
-                {},
-                {}
-            ), "test\\.path", None, (RequiredPathNotFoundError,), {}),
-        )
+        (_ccd_from_meta(
+            {"members": ["a", "b"]},
+            {"a": MappingConfigData(), "b": MappingConfigData()}
+        ), "test\\.path", None, (), {}),
+        (_ccd_from_meta(
+            {"members": ["a", "b"], "orders": {"create": ["b", "a"], "read": ["a", "b"]}},
+            {"a": MappingConfigData(), "b": MappingConfigData()}
+        ), "test\\.path", True, (), {}),
+        (_ccd_from_meta(
+            {"members": ["a", "b"], "orders": {"create": ["b", "a"], "read": ["a", "b"]}},
+            {"a": MappingConfigData(), "b": MappingConfigData({"test": {"path": None}})}
+        ), "test\\.path", False, (AssertionError,), {}),
+        (_ccd_from_meta(
+            {},
+            {}
+        ), "test\\.path", None, (RequiredPathNotFoundError,), {}),
+    )
     )
 
     @staticmethod

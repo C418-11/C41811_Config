@@ -70,13 +70,13 @@ def _insert_operator(
 
 UnaryOperatorTests = (
     "a, op", (
-        *_insert_operator(TestNumberConfigData.InvertTests, operator.invert),
-        *_insert_operator(TestNumberConfigData.NegTests, operator.neg),
-        *_insert_operator(TestNumberConfigData.PosTests, operator.pos),
-        *_insert_operator(TestNumberConfigData.AbsTests, operator.abs),
-        *_insert_operator(TestNumberConfigData.RoundTests, round),
-        *_insert_operator(TestNumberConfigData.IndexTests, operator.index),
-    )
+    *_insert_operator(TestNumberConfigData.InvertTests, operator.invert),
+    *_insert_operator(TestNumberConfigData.NegTests, operator.neg),
+    *_insert_operator(TestNumberConfigData.PosTests, operator.pos),
+    *_insert_operator(TestNumberConfigData.AbsTests, operator.abs),
+    *_insert_operator(TestNumberConfigData.RoundTests, round),
+    *_insert_operator(TestNumberConfigData.IndexTests, operator.index),
+)
 )
 
 
@@ -88,10 +88,10 @@ def test_unary_operator(a: Any, op: Callable[[Any], Any]) -> None:
 
 DyadicOperatorTests = (
     "a, b, op, iop, convert_raw", (
-        *_insert_operator(TestMappingConfigData.MergeTests, operator.or_, operator.ior, True),
-        *_insert_operator(TestSequenceConfigData.RepeatTests, operator.mul, operator.imul, False),
-        *_insert_operator(TestSequenceConfigData.ExtendTests, operator.add, operator.iadd, False),
-    ),
+    *_insert_operator(TestMappingConfigData.MergeTests, operator.or_, operator.ior, True),
+    *_insert_operator(TestSequenceConfigData.RepeatTests, operator.mul, operator.imul, False),
+    *_insert_operator(TestSequenceConfigData.ExtendTests, operator.add, operator.iadd, False),
+),
 )
 
 

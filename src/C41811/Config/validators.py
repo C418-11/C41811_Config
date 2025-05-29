@@ -20,6 +20,7 @@ from typing import Never
 from typing import TypeAliasType
 from typing import cast
 from typing import overload
+from typing import override
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
@@ -196,6 +197,7 @@ class SkipMissingType:
        重命名 ``IgnoreMissingType`` 为 ``SkipMissingType``
     """
 
+    @override
     def __str__(self) -> str:
         return "<SkipMissing>"
 
@@ -222,12 +224,13 @@ class FieldDefinition[T: type | types.UnionType | types.EllipsisType | types.Gen
        新增对 :py:class:`TypeAliasType` 支持
     """
 
-    @overload  # @formatter:off
-    def __init__(self, annotation: T, default: Any, *, allow_recursive: bool = True): ...
+    @overload
+    def __init__(self, annotation: T, default: Any, *, allow_recursive: bool = True):
+        ...
 
     @overload
-    def __init__(self, annotation: T, *, default_factory: Callable[[], Any], allow_recursive: bool = True): ...
-    # @formatter:on
+    def __init__(self, annotation: T, *, default_factory: Callable[[], Any], allow_recursive: bool = True):
+        ...
 
     def __init__(
             self,

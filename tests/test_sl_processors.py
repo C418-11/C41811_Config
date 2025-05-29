@@ -10,6 +10,7 @@ from pathlib import Path
 from textwrap import dedent
 from typing import Any
 from typing import Optional
+from typing import override
 
 from pytest import fixture
 from pytest import mark
@@ -268,6 +269,7 @@ TOMLTests: tuple[tuple[Any, tuple[EE, ...], tuple[dict[str, Any], ...]], ...] = 
 
 
 class ErrDuringRepr:
+    @override
     def __repr__(self) -> str:
         raise Exception("repr error")
 

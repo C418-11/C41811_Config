@@ -84,11 +84,13 @@ class AttrKey(IndexMixin[str, Mapping[str, Any]], ABCKey[str, Mapping[str, Any]]
     def __len__(self) -> int:
         return len(self._key)
 
+    @override
     def __eq__(self, other: Any) -> bool:
         if isinstance(other, str):
             return self._key == other
         return super().__eq__(other)
 
+    @override
     def __hash__(self) -> int:
         return super().__hash__()
 

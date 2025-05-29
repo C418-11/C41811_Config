@@ -93,8 +93,8 @@ class TarFileSL(BasicCompressedConfigSL):
     def processor_reg_name(self) -> str:
         return f"tarfile:{self._short_name}"
 
-    @override
     @property
+    @override
     def namespace_suffix(self) -> str:
         safe_name = self.processor_reg_name.replace(':', '-')
         return os.path.join(super().namespace_suffix, f"${safe_name}~")

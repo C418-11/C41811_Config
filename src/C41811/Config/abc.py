@@ -17,6 +17,7 @@ from typing import Any
 from typing import Optional
 from typing import Self
 from typing import overload
+from typing import override
 
 from ._protocols import Indexed
 from ._protocols import MutableIndexed
@@ -141,6 +142,7 @@ class ABCKey[K, D](ABC):
         .. versionadded:: 0.1.4
         """
 
+    @override
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, type(self)):
             return NotImplemented
@@ -150,6 +152,7 @@ class ABCKey[K, D](ABC):
             self._meta == other._meta,
         ))
 
+    @override
     def __hash__(self) -> int:
         return hash((self._key, self._meta))
 
@@ -158,9 +161,11 @@ class ABCKey[K, D](ABC):
             return type(self)(self._key)
         return type(self)(self._key, self._meta)
 
+    @override
     def __str__(self) -> str:
         return str(self._key)
 
+    @override
     def __repr__(self) -> str:
         meta = '' if self._meta is None else f", meta={self._meta}"
         return f"<{type(self).__name__}(key={self._key}{meta})>"
@@ -189,12 +194,13 @@ class ABCPath[K: AnyKey](ABC, Iterable[K]):
         .. versionadded:: 0.1.1
         """
 
-    @overload  # @formatter:off
-    def __getitem__(self, item: slice) -> Self: ...
+    @overload
+    def __getitem__(self, item: slice) -> Self:
+        ...
 
     @overload
-    def __getitem__(self, item: int) -> K: ...
-    #  @formatter:on
+    def __getitem__(self, item: int) -> K:
+        ...
 
     def __getitem__(self, item: Any) -> K | Self:
         items: K | tuple[K, ...] = self._keys[item]
@@ -211,20 +217,24 @@ class ABCPath[K: AnyKey](ABC, Iterable[K]):
     def __len__(self) -> int:
         return len(self._keys)
 
+    @override
     def __iter__(self) -> Iterator[K]:
         return iter(self._keys)
 
+    @override
     def __hash__(self) -> int:
         return hash(self._keys)
 
     def __deepcopy__(self, memo: dict[Any, Any]) -> Self:
         return type(self)(self._keys)
 
+    @override
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, type(self)):
             return NotImplemented
         return self._keys == other._keys
 
+    @override
     def __repr__(self) -> str:
         return f"<{type(self).__name__}{self._keys}>"
 
@@ -317,6 +327,7 @@ class ABCConfigData[D](ABC):
         self.read_only = freeze
         return self
 
+    @override
     def __format__(self, format_spec: str) -> str:
         if format_spec == 'r':
             return repr(self)
@@ -536,22 +547,31 @@ class ABCIndexedConfigData[D: Indexed[Any, Any]](
         """
 
     @abstractmethod
-    def __contains__(self, key: Any) -> bool: ...
+    def __contains__(self, key: Any) -> bool:
+        ...
 
     @abstractmethod
-    def __iter__(self) -> Iterator[Any]: ...
+    def __iter__(self) -> Iterator[Any]:
+        ...
 
     @abstractmethod
-    def __len__(self) -> int: ...
+    def __len__(self) -> int:
+        ...
 
+    @override
     @abstractmethod
-    def __getitem__(self, index: Any) -> Any: ...
+    def __getitem__(self, index: Any) -> Any:
+        ...
 
+    @override
     @abstractmethod
-    def __setitem__(self, index: Any, value: Any) -> None: ...
+    def __setitem__(self, index: Any, value: Any) -> None:
+        ...
 
+    @override
     @abstractmethod
-    def __delitem__(self, index: Any) -> None: ...
+    def __delitem__(self, index: Any) -> None:
+        ...
 
 
 class ABCProcessorHelper(ABC):
@@ -629,7 +649,8 @@ class ABCSLProcessorPool(ABC):
 
     @property
     @abstractmethod
-    def helper(self) -> ABCProcessorHelper: ...
+    def helper(self) -> ABCProcessorHelper:
+        ...
 
     @property
     def root_path(self) -> str:
@@ -778,6 +799,7 @@ class ABCConfigFile[D: ABCConfigData[Any]](ABC):
     def __bool__(self) -> bool:
         return bool(self._config)
 
+    @override
     def __eq__(self, other: Any) -> bool | NotImplementedType:
         if not isinstance(other, type(self)):
             return NotImplemented
@@ -787,6 +809,7 @@ class ABCConfigFile[D: ABCConfigData[Any]](ABC):
                 return False
         return True
 
+    @override
     def __repr__(self) -> str:
         repr_parts: list[str] = []
         for field in ["_config_format", "_config"]:
@@ -806,17 +829,20 @@ class ABCConfigPool(ABCSLProcessorPool):
     """
 
     @overload
-    def get(self, namespace: str) -> dict[str, ABCConfigFile[Any]] | None: ...
+    def get(self, namespace: str) -> dict[str, ABCConfigFile[Any]] | None:
+        ...
 
     @overload
-    def get(self, namespace: str, file_name: str) -> ABCConfigFile[Any] | None: ...
+    def get(self, namespace: str, file_name: str) -> ABCConfigFile[Any] | None:
+        ...
 
     @overload
     def get(
             self,
             namespace: str,
             file_name: Optional[str] = None,
-    ) -> dict[str, ABCConfigFile[Any]] | ABCConfigFile[Any] | None: ...
+    ) -> dict[str, ABCConfigFile[Any]] | ABCConfigFile[Any] | None:
+        ...
 
     @abstractmethod
     def get(
@@ -1160,6 +1186,7 @@ class ABCConfigSL(ABC):
         .. versionadded:: 0.2.0
         """
 
+    @override
     def __eq__(self, other: Any) -> bool | NotImplementedType:
         if not isinstance(other, type(self)):
             return NotImplemented
@@ -1174,6 +1201,7 @@ class ABCConfigSL(ABC):
             file_match_eq,
         ))
 
+    @override
     def __hash__(self) -> int:
         return hash((
             self.processor_reg_name,

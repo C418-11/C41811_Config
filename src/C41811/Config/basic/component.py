@@ -143,6 +143,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](B
         return self._members
 
     @property
+    @override
     def data_read_only(self) -> bool | None:
         return not isinstance(self._members, MutableMapping)
 
@@ -214,6 +215,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](B
                     error = err
         raise cast(RequiredPathNotFoundError | ConfigDataTypeError, error) from None
 
+    @override
     def retrieve(self, path: PathLike, *args: Any, **kwargs: Any) -> Any:
         path = fmt_path(path)
 
@@ -233,6 +235,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](B
             )
         )
 
+    @override
     @check_read_only
     def modify(self, path: PathLike, *args: Any, **kwargs: Any) -> Self:
         path = fmt_path(path)
@@ -254,6 +257,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](B
             )
         )
 
+    @override
     @check_read_only
     def delete(self, path: PathLike, *args: Any, **kwargs: Any) -> Self:
         path = fmt_path(path)
@@ -276,6 +280,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](B
             )
         )
 
+    @override
     @check_read_only
     def unset(self, path: PathLike, *args: Any, **kwargs: Any) -> Self:
         path = fmt_path(path)
@@ -297,6 +302,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](B
             )
         return self
 
+    @override
     def exists(self, path: PathLike, *args: Any, **kwargs: Any) -> bool:
         if not self._meta.orders.read:
             return False
@@ -317,6 +323,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](B
             )
         return False
 
+    @override
     def get(self, path: PathLike, default: Any = None, *args: Any, **kwargs: Any) -> Any:
         path = fmt_path(path)
 
@@ -335,6 +342,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](B
             )
         return default
 
+    @override
     @check_read_only
     def setdefault(self, path: PathLike, default: Any = None, *args: Any, **kwargs: Any) -> Any:
         path = fmt_path(path)
@@ -367,6 +375,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](B
             ),
         )
 
+    @override
     def __eq__(self, other: Any) -> bool | NotImplementedType:
         if not isinstance(other, type(self)):
             return NotImplemented
@@ -375,9 +384,11 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](B
             self._members == other._members
         ))
 
+    @override
     def __str__(self) -> str:
         return str(self._members)
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(meta={self._meta!r}, members={self._members!r})"
 

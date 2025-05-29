@@ -38,8 +38,9 @@ jobs:
           pip install -e .[flake8]
 
       - name: Run tests
+        # todo use ruff instead
         run: >
           flake8
           --doctests --max-line-length=120 --max-complexity=10 --show-source
-          --count --statistics
+          --count --statistics --ignore=E122,E121,E126,W503,E123
           tests src

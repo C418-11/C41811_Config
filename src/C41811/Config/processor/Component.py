@@ -97,6 +97,7 @@ class ComponentMetaParser[D: MappingConfigData[Any]](ABCMetaParser[D, ComponentM
         """
         return meta.config
 
+    @override
     def validator(self, meta: ComponentMeta[D], *args: Any) -> ComponentMeta[D]:
         return self.convert_config2meta(meta.config)
 
@@ -130,6 +131,7 @@ class ComponentSL(BasicChainConfigSL):
     def supported_file_patterns(self) -> tuple[str, ...]:
         return ".component", ".comp"
 
+    @override
     def namespace_formatter(self, namespace: str, file_name: str) -> str:
         return os.path.normpath(os.path.join(namespace, self.filename_formatter(file_name)))
 
@@ -139,6 +141,7 @@ class ComponentSL(BasicChainConfigSL):
     def initial_file(self) -> str:
         return "__init__"
 
+    @override
     def save_file(
             self,
             config_pool: ABCConfigPool,
@@ -169,6 +172,7 @@ class ComponentSL(BasicChainConfigSL):
                 **kwargs,
             )
 
+    @override
     def load_file(
             self,
             config_pool: ABCConfigPool,
@@ -200,6 +204,7 @@ class ComponentSL(BasicChainConfigSL):
 
         return ConfigFile(ComponentConfigData(meta, members), config_format=self.reg_name)
 
+    @override
     def initialize(
             self,
             processor_pool: ABCSLProcessorPool,

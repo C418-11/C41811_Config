@@ -11,19 +11,24 @@ _T_contra = TypeVar("_T_contra", contravariant=True)
 
 
 class SupportsWrite(Protocol[_T_contra]):
-    def write(self, __s: _T_contra) -> object: ...
+    def write(self, __s: _T_contra) -> object:
+        ...
 
 
 class SupportsReadAndReadline(Protocol[_T_co]):
-    def read(self, __length: int = ...) -> _T_co: ...
+    def read(self, __length: int = ...) -> _T_co:
+        ...
 
     @overload
-    def readline(self) -> _T_co: ...
+    def readline(self) -> _T_co:
+        ...
 
     @overload
-    def readline(self, __length: int) -> _T_co: ...
+    def readline(self, __length: int) -> _T_co:
+        ...
 
-    def readline(self, __length: int = ...) -> _T_co: ...
+    def readline(self, __length: int = ...) -> _T_co:
+        ...
 
 
 class Indexed(Protocol[_T_contra, _T_co]):
@@ -33,7 +38,8 @@ class Indexed(Protocol[_T_contra, _T_co]):
        重命名 ``SupportsIndex`` 为 ``Indexed``
     """
 
-    def __getitem__(self, __index: _T_contra) -> _T_co: ...
+    def __getitem__(self, __index: _T_contra) -> _T_co:
+        ...
 
 
 class MutableIndexed(Indexed[_T_contra, _T_co]):
@@ -43,9 +49,11 @@ class MutableIndexed(Indexed[_T_contra, _T_co]):
        重命名 ``SupportsWriteIndex`` 为 ``MutableIndexed``
     """
 
-    def __setitem__(self, __index: _T_contra, __value: _T_contra) -> None: ...
+    def __setitem__(self, __index: _T_contra, __value: _T_contra) -> None:
+        ...
 
-    def __delitem__(self, __index: _T_contra) -> None: ...
+    def __delitem__(self, __index: _T_contra) -> None:
+        ...
 
 
 __all__ = (

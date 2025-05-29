@@ -36,8 +36,8 @@ class NumberConfigData[D: Number](BasicSingleConfigData[D]):
             data = int()  # type: ignore[assignment]
         super().__init__(cast(D, data))
 
-    @override
     @property
+    @override
     def data_read_only(self) -> Literal[False]:
         return False
 
@@ -51,69 +51,95 @@ class NumberConfigData[D: Number](BasicSingleConfigData[D]):
         return bool(self._data)
 
     @operate(operator.add, operator.iadd)
-    def __add__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
+    def __add__(self, other: Any) -> Self:  # type: ignore[empty-body]
+        ...
 
     @operate(operator.sub, operator.isub)
-    def __sub__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
+    def __sub__(self, other: Any) -> Self:  # type: ignore[empty-body]
+        ...
 
     @operate(operator.mul, operator.imul)
-    def __mul__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
+    def __mul__(self, other: Any) -> Self:  # type: ignore[empty-body]
+        ...
 
     @operate(operator.truediv, operator.itruediv)
-    def __truediv__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
+    def __truediv__(self, other: Any) -> Self:  # type: ignore[empty-body]
+        ...
 
     @operate(operator.floordiv, operator.ifloordiv)
-    def __floordiv__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
+    def __floordiv__(self, other: Any) -> Self:  # type: ignore[empty-body]
+        ...
 
     @operate(operator.mod, operator.imod)
-    def __mod__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
+    def __mod__(self, other: Any) -> Self:  # type: ignore[empty-body]
+        ...
 
     @operate(operator.pow, operator.ipow)
-    def __pow__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
+    def __pow__(self, other: Any) -> Self:  # type: ignore[empty-body]
+        ...
 
     @operate(operator.and_, operator.iand)
-    def __and__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
+    def __and__(self, other: Any) -> Self:  # type: ignore[empty-body]
+        ...
 
     @operate(operator.or_, operator.ior)
-    def __or__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
+    def __or__(self, other: Any) -> Self:  # type: ignore[empty-body]
+        ...
 
     @operate(operator.xor, operator.ixor)
-    def __xor__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
+    def __xor__(self, other: Any) -> Self:  # type: ignore[empty-body]
+        ...
 
     @operate(operator.matmul, operator.imatmul)
-    def __matmul__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
+    def __matmul__(self, other: Any) -> Self:  # type: ignore[empty-body]
+        ...
 
     @operate(operator.lshift, operator.ilshift)
-    def __lshift__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
+    def __lshift__(self, other: Any) -> Self:  # type: ignore[empty-body]
+        ...
 
     @operate(operator.rshift, operator.irshift)
-    def __rshift__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
+    def __rshift__(self, other: Any) -> Self:  # type: ignore[empty-body]
+        ...
 
-    def __radd__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
+    def __radd__(self, other: Any) -> Self:  # type: ignore[empty-body]
+        ...
 
-    def __rsub__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
+    def __rsub__(self, other: Any) -> Self:  # type: ignore[empty-body]
+        ...
 
-    def __rmul__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
+    def __rmul__(self, other: Any) -> Self:  # type: ignore[empty-body]
+        ...
 
-    def __rtruediv__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
+    def __rtruediv__(self, other: Any) -> Self:  # type: ignore[empty-body]
+        ...
 
-    def __rfloordiv__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
+    def __rfloordiv__(self, other: Any) -> Self:  # type: ignore[empty-body]
+        ...
 
-    def __rmod__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
+    def __rmod__(self, other: Any) -> Self:  # type: ignore[empty-body]
+        ...
 
-    def __rpow__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
+    def __rpow__(self, other: Any) -> Self:  # type: ignore[empty-body]
+        ...
 
-    def __rand__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
+    def __rand__(self, other: Any) -> Self:  # type: ignore[empty-body]
+        ...
 
-    def __ror__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
+    def __ror__(self, other: Any) -> Self:  # type: ignore[empty-body]
+        ...
 
-    def __rxor__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
+    def __rxor__(self, other: Any) -> Self:  # type: ignore[empty-body]
+        ...
 
-    def __rmatmul__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
+    def __rmatmul__(self, other: Any) -> Self:  # type: ignore[empty-body]
+        ...
 
-    def __rlshift__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
+    def __rlshift__(self, other: Any) -> Self:  # type: ignore[empty-body]
+        ...
 
-    def __rrshift__(self, other: Any) -> Self: ...  # type: ignore[empty-body]
+    def __rrshift__(self, other: Any) -> Self:  # type: ignore[empty-body]
+        ...
 
     def __invert__(self) -> Any:
         return ~self._data  # type: ignore[operator]

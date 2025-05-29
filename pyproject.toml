@@ -104,6 +104,12 @@ statistics = true
 strict = true
 pretty = true
 allow_redefinition = true
+enable_error_code = [
+    "ignore-without-code",
+    "explicit-override",
+    "mutable-override",
+    "truthy-iterable"
+]
 
 [tool.coverage.run]
 omit = [
@@ -111,9 +117,9 @@ omit = [
 ]
 
 [tool.coverage.report]
-#exclude_also = [
-#    "def __repr__",
-#]
+exclude_also = [
+    ":(\\s*#.*?)?\\s*[\\r\\n]+\\s+(\\.\\.\\.|pass)(\\s*#.*)?",
+]
 
 [tool.tox]
 envlist = ["py312", "py313", "flake8", "mypy"]
@@ -131,7 +137,7 @@ extras = ["flake8"]
 commands = [
     ["flake8",
         "--doctests", "--max-line-length=120", "--max-complexity=10",
-        "--show-source", "--count", "--statistics",
+        "--show-source", "--count", "--statistics", "--ignore=E122,E121,E126,W503,E123",
         "tests", "src"
     ],
 ]
@@ -161,7 +167,7 @@ commands = [
     [
         "flake8",
         "--doctests", "--max-line-length=120", "--max-complexity=10",
-        "--show-source", "--count", "--statistics",
+        "--show-source", "--count", "--statistics", "--ignore=E122,E121,E126,W503,E123",
         "--exit-zero", "--format=html", "--htmldir=./docs/_static/_flake8", "--tee",
         "tests", "src"
     ],

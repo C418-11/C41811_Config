@@ -53,13 +53,13 @@ class ObjectConfigData[D: object](BasicSingleConfigData[D]):
 
         self._data: D = data
 
-    @override
     @property
+    @override
     def data_read_only(self) -> Literal[False]:
         return False
 
-    @override
     @property
+    @override
     def data(self) -> D:
         """
         配置的原始数据
