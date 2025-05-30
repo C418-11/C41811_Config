@@ -39,27 +39,29 @@ from ..abc import ABCConfigData
 from ..abc import ABCIndexedConfigData
 
 type AnyConfigData = (
-        ABCConfigData[__Any]
-        | ABCIndexedConfigData[__Any]
-        | NoneConfigData
-        | MappingConfigData[__Any]
-        | StringConfigData[__Any]
-        | SequenceConfigData[__Any]
-        | BoolConfigData[__Any]
-        | NumberConfigData[__Any]
-        | ObjectConfigData[__Any]
+    ABCConfigData[__Any]
+    | ABCIndexedConfigData[__Any]
+    | NoneConfigData
+    | MappingConfigData[__Any]
+    | StringConfigData[__Any]
+    | SequenceConfigData[__Any]
+    | BoolConfigData[__Any]
+    | NumberConfigData[__Any]
+    | ObjectConfigData[__Any]
 )
 
-ConfigData.TYPES = __OrderedDict((
-    ((ABCConfigData,), lambda _: _),
-    ((type(None),), NoneConfigData),
-    ((__Mapping,), MappingConfigData),
-    ((str, bytes), StringConfigData),
-    ((__Sequence,), SequenceConfigData),
-    ((bool,), BoolConfigData),
-    ((__Number,), NumberConfigData),
-    ((builtins.object,), ObjectConfigData),
-))
+ConfigData.TYPES = __OrderedDict(
+    (
+        ((ABCConfigData,), lambda _: _),
+        ((type(None),), NoneConfigData),
+        ((__Mapping,), MappingConfigData),
+        ((str, bytes), StringConfigData),
+        ((__Sequence,), SequenceConfigData),
+        ((bool,), BoolConfigData),
+        ((__Number,), NumberConfigData),
+        ((builtins.object,), ObjectConfigData),
+    )
+)
 
 ConfigData.register(NoneConfigData)
 ConfigData.register(MappingConfigData)
@@ -71,29 +73,23 @@ ConfigData.register(ObjectConfigData)
 ConfigData.register(ComponentConfigData)
 
 __all__ = (
-    "ComponentConfigData",
-    "ComponentMember",
-    "ComponentMeta",
-    "ComponentOrders",
-
     "BasicConfigData",
     "BasicConfigPool",
     "BasicIndexedConfigData",
     "BasicSingleConfigData",
+    "BoolConfigData",
+    "ComponentConfigData",
+    "ComponentMember",
+    "ComponentMeta",
+    "ComponentOrders",
     "ConfigData",
     "ConfigFile",
-    "PHelper",
-
     "EnvironmentConfigData",
-
     "MappingConfigData",
-
-    "BoolConfigData",
-    "NumberConfigData",
-
     "NoneConfigData",
+    "NumberConfigData",
     "ObjectConfigData",
-
+    "PHelper",
     "SequenceConfigData",
     "StringConfigData",
 )

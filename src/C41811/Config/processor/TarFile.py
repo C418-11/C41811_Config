@@ -40,8 +40,9 @@ class TarCompressionTypes(TarCompressionType, ReprEnum):
     LZMA = ("lzma", "xz")
 
 
-type ExtractionFilter = (Literal["fully_trusted", "tar", "data"]
-                         | Callable[[tarfile.TarInfo, str], tarfile.TarInfo | None])
+type ExtractionFilter = (
+    Literal["fully_trusted", "tar", "data"] | Callable[[tarfile.TarInfo, str], tarfile.TarInfo | None]
+)
 
 
 class TarFileSL(BasicCompressedConfigSL):
@@ -50,13 +51,13 @@ class TarFileSL(BasicCompressedConfigSL):
     """
 
     def __init__(
-            self,
-            *,
-            reg_alias: str | None = None,
-            create_dir: bool = True,
-            compression: TarCompressionTypes | str | None = TarCompressionTypes.ONLY_STORAGE,
-            compress_level: Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9] | int | None = None,
-            extraction_filter: ExtractionFilter | None = "data",
+        self,
+        *,
+        reg_alias: str | None = None,
+        create_dir: bool = True,
+        compression: TarCompressionTypes | str | None = TarCompressionTypes.ONLY_STORAGE,
+        compress_level: Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9] | int | None = None,
+        extraction_filter: ExtractionFilter | None = "data",
     ):
         """
         :param reg_alias: sl处理器注册别名
@@ -84,7 +85,7 @@ class TarFileSL(BasicCompressedConfigSL):
         self._compression: TarCompressionType = cast(TarCompressionTypes, compression)
         self._compress_level: int | None = compress_level
         self._extraction_filter: ExtractionFilter | None = extraction_filter
-        self._short_name = '' if self._compression.short_name is None else self._compression.short_name
+        self._short_name = "" if self._compression.short_name is None else self._compression.short_name
 
     @property
     @override
@@ -94,14 +95,14 @@ class TarFileSL(BasicCompressedConfigSL):
     @property
     @override
     def namespace_suffix(self) -> str:
-        safe_name = self.processor_reg_name.replace(':', '-')
+        safe_name = self.processor_reg_name.replace(":", "-")
         return os.path.join(super().namespace_suffix, f"${safe_name}~")
 
     @property
     @override
     def supported_file_patterns(self) -> tuple[str, ...]:
         if self._compression.short_name is None:
-            return ".tar",
+            return (".tar",)
         return f".tar.{self._compression.short_name}", f".tar.{self._compression.full_name}"
 
     supported_file_classes = [ConfigFile]
@@ -116,8 +117,9 @@ class TarFileSL(BasicCompressedConfigSL):
             safe_open(file_path, "wb") as file,
             tarfile.open(
                 mode=cast(Literal["w:", "w:gz", "w:bz2", "w:xz"], f"w:{self._short_name}"),
-                fileobj=cast(IO[bytes], file), **kwargs
-            ) as tar
+                fileobj=cast(IO[bytes], file),
+                **kwargs,
+            ) as tar,
         ):
             for root, dirs, files in os.walk(extract_dir):
                 for item in itertools.chain(dirs, files):
@@ -130,8 +132,8 @@ class TarFileSL(BasicCompressedConfigSL):
             safe_open(file_path, "rb") as file,
             tarfile.open(
                 mode=cast(Literal["r:", "r:gz", "r:bz2", "r:xz"], f"r:{self._short_name}"),
-                fileobj=cast(IO[bytes], file)
-            ) as tar
+                fileobj=cast(IO[bytes], file),
+            ) as tar,
         ):
             # py3.12不传入filter会发出警告 https://peps.python.org/pep-0706/#defaults-and-their-configuration
             tar.extractall(extract_dir, filter=self._extraction_filter)

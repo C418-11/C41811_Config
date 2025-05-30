@@ -30,38 +30,28 @@ class PythonSL(BasicLocalFileConfigSL):
     @property
     @override
     def supported_file_patterns(self) -> tuple[str, ...]:
-        return ".py",
+        return (".py",)
 
     supported_file_classes = [ConfigFile]
 
     @override
     def save_file(
-            self,
-            config_file: ABCConfigFile[Any],
-            target_file: SupportsWrite[str],
-            *merged_args: Any,
-            **merged_kwargs: Any
+        self, config_file: ABCConfigFile[Any], target_file: SupportsWrite[str], *merged_args: Any, **merged_kwargs: Any
     ) -> None:
         with self.raises():
             raise NotImplementedError
 
     @override
     def load_file(
-            self,
-            source_file: SupportsReadAndReadline[str],
-            *merged_args: Any,
-            **merged_kwargs: Any
+        self, source_file: SupportsReadAndReadline[str], *merged_args: Any, **merged_kwargs: Any
     ) -> ConfigFile[MappingConfigData[dict[str, Any]]]:
         names: dict[str, Any] = {}
         with self.raises():
             exec(source_file.read(), {}, names)
 
         return cast(
-            ConfigFile[MappingConfigData[dict[str, Any]]],
-            ConfigFile(names, config_format=self.processor_reg_name)
+            ConfigFile[MappingConfigData[dict[str, Any]]], ConfigFile(names, config_format=self.processor_reg_name)
         )
 
 
-__all__ = (
-    "PythonSL",
-)
+__all__ = ("PythonSL",)

@@ -37,14 +37,14 @@ class OSEnvSL(BasicConfigSL):
 
     @override
     def save(
-            self,
-            processor_pool: ABCSLProcessorPool,
-            config_file: ABCConfigFile[EnvironmentConfigData],
-            root_path: str,
-            namespace: str,
-            file_name: str,
-            *args: Any,
-            **kwargs: Any
+        self,
+        processor_pool: ABCSLProcessorPool,
+        config_file: ABCConfigFile[EnvironmentConfigData],
+        root_path: str,
+        namespace: str,
+        file_name: str,
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         cfg: EnvironmentConfigData = config_file.config
         diff = cfg.difference
@@ -57,19 +57,17 @@ class OSEnvSL(BasicConfigSL):
 
     @override
     def load(
-            self,
-            processor_pool: ABCSLProcessorPool,
-            root_path: str,
-            namespace: str,
-            file_name: str,
-            *args: Any,
-            **kwargs: Any
+        self,
+        processor_pool: ABCSLProcessorPool,
+        root_path: str,
+        namespace: str,
+        file_name: str,
+        *args: Any,
+        **kwargs: Any,
     ) -> ConfigFile[EnvironmentConfigData]:
         return ConfigFile(
             initial_config=EnvironmentConfigData(deepcopy(OrderedDict(os.environ))),
         )
 
 
-__all__ = (
-    "OSEnvSL",
-)
+__all__ = ("OSEnvSL",)

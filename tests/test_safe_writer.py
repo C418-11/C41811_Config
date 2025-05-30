@@ -1,5 +1,3 @@
-
-
 import os
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -49,6 +47,7 @@ def test_acquire_lock_immediately_release(tmp_path: Path) -> None:
 
 
 if os.name == "nt":
+
     @mark.parametrize("timeout", [0, 0.05, 0.1])
     def test_acquire_timeout(tmp_path: Path, timeout: Real) -> None:
         with cleanup(open(tmp_path / "test.txt", mode="w")) as file:
@@ -66,10 +65,11 @@ class TestSafeOpen:
             assert not os.path.exists(tmp_path / "test.txt")
 
     if os.name == "nt":
+
         def test_lock(self, tmp_path: Path) -> None:
             with safe_open(tmp_path / "test.txt", mode="w") as file:
                 file.write("foo")
-                with raises(TimeoutError), safe_open(tmp_path / "test.txt", mode="w", timeout=.1) as file2:
+                with raises(TimeoutError), safe_open(tmp_path / "test.txt", mode="w", timeout=0.1) as file2:
                     file2.write("bar")
             with cleanup(file), open(tmp_path / "test.txt") as file:
                 assert file.read() == "foo"

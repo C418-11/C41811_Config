@@ -33,13 +33,14 @@ class ComponentMetaParser[D: MappingConfigData[Any]](ABCMetaParser[D, ComponentM
     """
     默认元信息解析器
     """
+
     _validator: RequiredPath[dict[str, Any], D] = RequiredPath(
         {
             "members": list[str | ComponentMember],
             "order": list[str],
-            "orders": dict[Literal["create", "read", "update", "delete"], list[str]]
+            "orders": dict[Literal["create", "read", "update", "delete"], list[str]],
         },
-        static_config=ValidatorFactoryConfig(allow_modify=True, skip_missing=True)
+        static_config=ValidatorFactoryConfig(allow_modify=True, skip_missing=True),
     )
 
     @override
@@ -63,10 +64,7 @@ class ComponentMetaParser[D: MappingConfigData[Any]](ABCMetaParser[D, ComponentM
                 members[i] = ComponentMember(**member)
 
         orders: ComponentOrders = ComponentOrders(**meta.get("orders", MappingConfigData()).data)
-        order = meta.setdefault(
-            "order",
-            [member.alias if member.alias else member.filename for member in members]
-        )
+        order = meta.setdefault("order", [member.alias if member.alias else member.filename for member in members])
         if not isinstance(order, list):
             order = order.data
         for name in order:
@@ -106,11 +104,11 @@ class ComponentSL(BasicChainConfigSL):
     """
 
     def __init__(
-            self,
-            *,
-            reg_alias: str | None = None,
-            create_dir: bool = True,
-            meta_parser: ABCMetaParser[Any, ComponentMeta[Any]] | None = None
+        self,
+        *,
+        reg_alias: str | None = None,
+        create_dir: bool = True,
+        meta_parser: ABCMetaParser[Any, ComponentMeta[Any]] | None = None,
     ):
         super().__init__(reg_alias=reg_alias, create_dir=create_dir)
 
@@ -141,12 +139,13 @@ class ComponentSL(BasicChainConfigSL):
 
     @override
     def save_file(
-            self,
-            config_pool: ABCConfigPool,
-            config_file: ABCConfigFile[ComponentConfigData[Any, Any]],
-            namespace: str,
-            file_name: str,
-            *args: Any, **kwargs: Any,
+        self,
+        config_pool: ABCConfigPool,
+        config_file: ABCConfigFile[ComponentConfigData[Any, Any]],
+        namespace: str,
+        file_name: str,
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         config_data = config_file.config
         if isinstance(config_data, NoneConfigData):
@@ -157,8 +156,9 @@ class ComponentSL(BasicChainConfigSL):
 
         meta_config = self.meta_parser.convert_meta2config(config_data.meta)
         file_name, file_ext = os.path.splitext(file_name)
-        super().save_file(config_pool, ConfigFile(meta_config), namespace, self.initial_file + file_ext,
-                          *args, **kwargs)
+        super().save_file(
+            config_pool, ConfigFile(meta_config), namespace, self.initial_file + file_ext, *args, **kwargs
+        )
 
         for member in config_data.meta.members:
             super().save_file(
@@ -172,18 +172,11 @@ class ComponentSL(BasicChainConfigSL):
 
     @override
     def load_file(
-            self,
-            config_pool: ABCConfigPool,
-            namespace: str,
-            file_name: str,
-            *args: Any,
-            **kwargs: Any
+        self, config_pool: ABCConfigPool, namespace: str, file_name: str, *args: Any, **kwargs: Any
     ) -> ConfigFile[ComponentConfigData[Any, Any]]:
         file_name, file_ext = os.path.splitext(file_name)
 
-        initial_file = super().load_file(
-            config_pool, namespace, self.initial_file + file_ext, *args, **kwargs
-        )
+        initial_file = super().load_file(config_pool, namespace, self.initial_file + file_ext, *args, **kwargs)
         initial_data = initial_file.config
 
         if not isinstance(initial_data, MappingConfigData):
@@ -196,21 +189,21 @@ class ComponentSL(BasicChainConfigSL):
             merged_kwargs = deepcopy(kwargs)
             if member.config_format is not None:
                 merged_kwargs.setdefault("config_formats", set()).add(member.config_format)
-            members[member.filename] = super().load_file(
-                config_pool, namespace, member.filename, *args, **merged_kwargs
-            ).config
+            members[member.filename] = (
+                super().load_file(config_pool, namespace, member.filename, *args, **merged_kwargs).config
+            )
 
         return ConfigFile(ComponentConfigData(meta, members), config_format=self.reg_name)
 
     @override
     def initialize(
-            self,
-            processor_pool: ABCSLProcessorPool,
-            root_path: str,
-            namespace: str,
-            file_name: str,
-            *args: Any,
-            **kwargs: Any,
+        self,
+        processor_pool: ABCSLProcessorPool,
+        root_path: str,
+        namespace: str,
+        file_name: str,
+        *args: Any,
+        **kwargs: Any,
     ) -> ConfigFile[ComponentConfigData[Any, Any]]:
         return ConfigFile(ComponentConfigData(ComponentMeta(parser=self.meta_parser)), config_format=self.reg_name)
 

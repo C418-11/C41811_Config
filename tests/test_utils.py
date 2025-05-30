@@ -1,5 +1,3 @@
-
-
 from typing import cast
 
 from pytest import mark

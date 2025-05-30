@@ -7,10 +7,7 @@ project = "C41811.Config"
 # noinspection PyShadowingBuiltins
 copyright = "2024, C418____11"  # noqa: A001
 author = "C418____11"
-release = get_version(
-    fallback_version="0.0+UNKNOWN",
-    search_parent_directories=True
-)
+release = get_version(fallback_version="0.0+UNKNOWN", search_parent_directories=True)
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

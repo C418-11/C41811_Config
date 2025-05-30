@@ -70,12 +70,7 @@ class Difference:
 
 def diff_keys[F: Callable[..., Any]](func: F) -> F:
     @wrapt.decorator  # type: ignore[misc]
-    def wrapper(
-            wrapped: F,
-            instance: Any,
-            args: tuple[Any, ...],
-            kwargs: dict[str, Any]
-    ) -> Any:
+    def wrapper(wrapped: F, instance: Any, args: tuple[Any, ...], kwargs: dict[str, Any]) -> Any:
         if not isinstance(instance, EnvironmentConfigData):
             raise TypeError(  # pragma: no cover
                 f"instance must be {EnvironmentConfigData.__name__} but got {type(instance).__name__}"

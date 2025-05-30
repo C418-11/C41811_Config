@@ -26,6 +26,7 @@ class NumberConfigData[D: Number](BasicSingleConfigData[D]):
 
     .. versionadded:: 0.1.5
     """
+
     _data: D
     data: D
 
@@ -178,6 +179,7 @@ class BoolConfigData[D: bool](NumberConfigData[D]):  # type: ignore[type-var]  #
     .. versionchanged:: 0.2.0
        直接对参数调用 :py:class:`bool`
     """
+
     _data: D
     data: D
 
@@ -186,6 +188,6 @@ class BoolConfigData[D: bool](NumberConfigData[D]):  # type: ignore[type-var]  #
 
 
 __all__ = (
-    "NumberConfigData",
     "BoolConfigData",
+    "NumberConfigData",
 )

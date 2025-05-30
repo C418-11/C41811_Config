@@ -37,6 +37,7 @@ class ObjectConfigData[D: object](BasicSingleConfigData[D]):
     """
     对象配置数据
     """
+
     _data: D
 
     def __init__(self, data: D):
@@ -67,7 +68,7 @@ class ObjectConfigData[D: object](BasicSingleConfigData[D]):
 
         .. caution::
            直接返回了原始对象，未默认进行深拷贝
-        """
+        """  # noqa: RUF002
         return self._data
 
 

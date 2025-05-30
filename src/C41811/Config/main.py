@@ -41,10 +41,7 @@ from .validators import ValidatorFactoryConfig
 from .validators import ValidatorTypes
 from .validators import pydantic_validator
 
-type VALIDATOR_FACTORY[V, D: ABCConfigData[Any]] = Callable[
-    [V, ValidatorFactoryConfig],
-    Callable[[Ref[D]], D]
-]
+type VALIDATOR_FACTORY[V, D: ABCConfigData[Any]] = Callable[[V, ValidatorFactoryConfig], Callable[[Ref[D]], D]]
 
 
 class RequiredPath[V, D: ABCConfigData[Any]]:
@@ -53,10 +50,13 @@ class RequiredPath[V, D: ABCConfigData[Any]]:
     """
 
     def __init__(
-            self,
-            validator: V,
-            validator_factory: VALIDATOR_FACTORY[V, D] | ValidatorTypes | Literal["no-validation", "pydantic", "component"] | None = ValidatorTypes.DEFAULT,
-            static_config: ValidatorFactoryConfig | None = None
+        self,
+        validator: V,
+        validator_factory: VALIDATOR_FACTORY[V, D]
+        | ValidatorTypes
+        | Literal["no-validation", "pydantic", "component"]
+        | None = ValidatorTypes.DEFAULT,
+        static_config: ValidatorFactoryConfig | None = None,
     ):
         """
         :param validator: 数据验证器
@@ -73,7 +73,7 @@ class RequiredPath[V, D: ABCConfigData[Any]]:
         :type static_config: Optional[validators.ValidatorFactoryConfig]
 
         .. tip::
-           提供 ``static_config`` 参数，可以避免在 :py:meth:`~RequiredPath.filter` 中反复调用 ``validator_factory`` 以提高性能
+           提供 ``static_config`` 参数可以避免在 :py:meth:`~RequiredPath.filter` 中反复调用 ``validator_factory`` 以提高性能
            ( :py:meth:`~RequiredPath.filter` 配置一切都为默认值的前提下)
         """
         if not callable(validator_factory):
@@ -84,15 +84,13 @@ class RequiredPath[V, D: ABCConfigData[Any]]:
         self._validator = deepcopy(validator)
         self._validator_factory: VALIDATOR_FACTORY[V, D] = validator_factory
         if static_config is not None:
-            self._static_validator: Callable[[Ref[D]], D] | None = self._validator_factory(self._validator,
-                                                                                              static_config)
+            self._static_validator: Callable[[Ref[D]], D] | None = self._validator_factory(
+                self._validator, static_config
+            )
         else:
             self._static_validator = None
 
-    ValidatorFactories: dict[
-        ValidatorTypes,
-        VALIDATOR_FACTORY[V, D]
-    ] = {
+    ValidatorFactories: dict[ValidatorTypes, VALIDATOR_FACTORY[V, D]] = {
         ValidatorTypes.DEFAULT: cast(VALIDATOR_FACTORY[V, D], DefaultValidatorFactory),
         ValidatorTypes.NO_VALIDATION: lambda v, *_: v,
         ValidatorTypes.PYDANTIC: cast(VALIDATOR_FACTORY[V, D], pydantic_validator),
@@ -106,12 +104,7 @@ class RequiredPath[V, D: ABCConfigData[Any]]:
     """
 
     def filter(
-            self,
-            data: D | Ref[D],
-            *,
-            allow_modify: bool | None = None,
-            skip_missing: bool | None = None,
-            **extra: Any
+        self, data: D | Ref[D], *, allow_modify: bool | None = None, skip_missing: bool | None = None, **extra: Any
     ) -> D:
         """
         检查过滤需求的键
@@ -158,9 +151,7 @@ class RequiredPath[V, D: ABCConfigData[Any]]:
 
         if (self._static_validator is None) or config_kwargs:
             config = ValidatorFactoryConfig(**config_kwargs)
-            validator: Callable[
-                [Ref[D]], D
-            ] = self._validator_factory(self._validator, config)
+            validator: Callable[[Ref[D]], D] = self._validator_factory(self._validator, config)
         else:
             validator = self._static_validator
 
@@ -176,16 +167,16 @@ class ConfigRequirementDecorator:
     """
 
     def __init__[D: ABCConfigData[Any]](
-            self,
-            config_pool: ABCConfigPool,
-            namespace: str,
-            file_name: str,
-            required: RequiredPath[Any, D],
-            *,
-            config_formats: str | Iterable[str] | None = None,
-            allow_initialize: bool = True,
-            config_cacher: Callable[[Callable[..., D], VarArg(), KwArg()], D] | None = None,
-            filter_kwargs: dict[str, Any] | None = None
+        self,
+        config_pool: ABCConfigPool,
+        namespace: str,
+        file_name: str,
+        required: RequiredPath[Any, D],
+        *,
+        config_formats: str | Iterable[str] | None = None,
+        allow_initialize: bool = True,
+        config_cacher: Callable[[Callable[..., D], VarArg(), KwArg()], D] | None = None,
+        filter_kwargs: dict[str, Any] | None = None,
     ):
         # noinspection GrazieInspection
         """
@@ -209,8 +200,9 @@ class ConfigRequirementDecorator:
 
            重命名参数 ``allow_create`` 为 ``allow_initialize``
         """
-        config = config_pool.load(namespace, file_name,
-                                  config_formats=config_formats, allow_initialize=allow_initialize)
+        config = config_pool.load(
+            namespace, file_name, config_formats=config_formats, allow_initialize=allow_initialize
+        )
 
         if filter_kwargs is None:
             filter_kwargs = {}
@@ -218,10 +210,13 @@ class ConfigRequirementDecorator:
         self._config_file: ABCConfigFile[Any] = config
         self._required = required
         self._filter_kwargs = filter_kwargs
-        self._config_cacher: Callable[[Callable[..., D], VarArg(), KwArg()], D] = (cast(
-            Callable[[Callable[..., D], VarArg(), KwArg()], D],
-            lambda func, *args, **kwargs: func(*args, **kwargs)
-        ) if config_cacher is None else config_cacher)
+        self._config_cacher: Callable[[Callable[..., D], VarArg(), KwArg()], D] = (
+            cast(
+                Callable[[Callable[..., D], VarArg(), KwArg()], D], lambda func, *args, **kwargs: func(*args, **kwargs)
+            )
+            if config_cacher is None
+            else config_cacher
+        )
 
     def check(self, *, ignore_cache: bool = False, **filter_kwargs: Any) -> Any:
         """
@@ -244,18 +239,14 @@ class ConfigRequirementDecorator:
     def __call__(self, func: Callable[[ABCConfigData[Any], Any], Any]) -> Callable[..., Any]:
         @wrapt.decorator  # type: ignore[misc]
         def wrapper(
-                wrapped: Callable[..., Any],
-                _instance: object | None,
-                args: tuple[Any, ...],
-                kwargs: dict[str, Any],
+            wrapped: Callable[..., Any],
+            _instance: object | None,
+            args: tuple[Any, ...],
+            kwargs: dict[str, Any],
         ) -> Any:
             config_data = self._wrapped_filter(**self._filter_kwargs)
 
-            return wrapped(
-                config_data,
-                *args,
-                **kwargs
-            )
+            return wrapped(config_data, *args, **kwargs)
 
         return cast(Callable[..., Any], wrapper(func))
 
@@ -273,13 +264,13 @@ class ConfigPool(BasicConfigPool):
     """
 
     def require(
-            self,
-            namespace: str,
-            file_name: str,
-            validator: Any,
-            validator_factory: Any = ValidatorTypes.DEFAULT,
-            static_config: Any | None = None,
-            **kwargs: Any,
+        self,
+        namespace: str,
+        file_name: str,
+        validator: Any,
+        validator_factory: Any = ValidatorTypes.DEFAULT,
+        static_config: Any | None = None,
+        **kwargs: Any,
     ) -> ConfigRequirementDecorator:
         # noinspection GrazieInspection
         """
@@ -301,8 +292,9 @@ class ConfigPool(BasicConfigPool):
         .. versionchanged:: 0.2.0
            删除声明于 ``ABCConfigPool``
         """
-        return ConfigRequirementDecorator(self, namespace, file_name,
-                                          RequiredPath(validator, validator_factory, static_config), **kwargs)
+        return ConfigRequirementDecorator(
+            self, namespace, file_name, RequiredPath(validator, validator_factory, static_config), **kwargs
+        )
 
 
 DefaultConfigPool = ConfigPool()
@@ -358,21 +350,19 @@ class BasicConfigSL(ABCConfigSL, ABC):
 
     @override
     def initialize(
-            self,
-            processor_pool: ABCSLProcessorPool,
-            root_path: str,
-            namespace: str,
-            file_name: str,
-            *args: Any,
-            **kwargs: Any,
+        self,
+        processor_pool: ABCSLProcessorPool,
+        root_path: str,
+        namespace: str,
+        file_name: str,
+        *args: Any,
+        **kwargs: Any,
     ) -> ABCConfigFile[Any]:
         return ConfigFile(ConfigData(), config_format=self.reg_name)
 
 
 def _merge_args(
-        base_arguments: tuple[tuple[Any, ...], PMap[str, Any]],
-        args: tuple[Any, ...],
-        kwargs: dict[str, Any]
+    base_arguments: tuple[tuple[Any, ...], PMap[str, Any]], args: tuple[Any, ...], kwargs: dict[str, Any]
 ) -> tuple[tuple[Any, ...], PMap[str, Any]]:
     """
     合并参数
@@ -391,7 +381,7 @@ def _merge_args(
        提取为函数
     """
     merged_args = list(deepcopy(base_arguments[0]))
-    merged_args[:len(args)] = args
+    merged_args[: len(args)] = args
 
     merged_kwargs = dict(deepcopy(base_arguments[1])) | kwargs
 
@@ -429,16 +419,16 @@ class BasicLocalFileConfigSL(BasicConfigSL, ABC):
        重命名从 ``BaseLocalFileConfigSL`` 为 ``BasicLocalFileConfigSL``
     """
 
-    _s_open_kwargs: dict[str, Any] = dict(mode='w', encoding="utf-8")
-    _l_open_kwargs: dict[str, Any] = dict(mode='r', encoding="utf-8")
+    _s_open_kwargs: dict[str, Any] = {"mode": "w", "encoding": "utf-8"}
+    _l_open_kwargs: dict[str, Any] = {"mode": "r", "encoding": "utf-8"}
 
     def __init__(
-            self,
-            s_arg: SLArgument = None,
-            l_arg: SLArgument = None,
-            *,
-            reg_alias: str | None = None,
-            create_dir: bool = True
+        self,
+        s_arg: SLArgument = None,
+        l_arg: SLArgument = None,
+        *,
+        reg_alias: str | None = None,
+        create_dir: bool = True,
     ):
         # noinspection GrazieInspection
         """
@@ -491,14 +481,14 @@ class BasicLocalFileConfigSL(BasicConfigSL, ABC):
 
     @override
     def save(
-            self,
-            processor_pool: ABCSLProcessorPool,
-            config_file: ABCConfigFile[Any],
-            root_path: str,
-            namespace: str,
-            file_name: str,
-            *args: Any,
-            **kwargs: Any,
+        self,
+        processor_pool: ABCSLProcessorPool,
+        config_file: ABCConfigFile[Any],
+        root_path: str,
+        namespace: str,
+        file_name: str,
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         """
         保存处理器 (原子操作 多线/进程安全)
@@ -533,13 +523,13 @@ class BasicLocalFileConfigSL(BasicConfigSL, ABC):
 
     @override
     def load(
-            self,
-            processor_pool: ABCSLProcessorPool,
-            root_path: str,
-            namespace: str,
-            file_name: str,
-            *args: Any,
-            **kwargs: Any,
+        self,
+        processor_pool: ABCSLProcessorPool,
+        root_path: str,
+        namespace: str,
+        file_name: str,
+        *args: Any,
+        **kwargs: Any,
     ) -> ABCConfigFile[Any]:
         """
         加载处理器
@@ -577,11 +567,11 @@ class BasicLocalFileConfigSL(BasicConfigSL, ABC):
 
     @abstractmethod
     def save_file(
-            self,
-            config_file: ABCConfigFile[Any],
-            target_file: Any,
-            *merged_args: Any,
-            **merged_kwargs: Any,
+        self,
+        config_file: ABCConfigFile[Any],
+        target_file: Any,
+        *merged_args: Any,
+        **merged_kwargs: Any,
     ) -> None:
         """
         将配置保存到文件
@@ -601,10 +591,10 @@ class BasicLocalFileConfigSL(BasicConfigSL, ABC):
 
     @abstractmethod
     def load_file(
-            self,
-            source_file: Any,
-            *merged_args: Any,
-            **merged_kwargs: Any,
+        self,
+        source_file: Any,
+        *merged_args: Any,
+        **merged_kwargs: Any,
     ) -> ABCConfigFile[Any]:
         """
         从文件加载配置
@@ -632,19 +622,11 @@ class BasicLocalFileConfigSL(BasicConfigSL, ABC):
         saver_args_eq = self._saver_args == other._saver_args
         loader_args_eq = self._loader_args == other._loader_args
 
-        return all((
-            super().__eq__(other),
-            saver_args_eq,
-            loader_args_eq
-        ))
+        return all((super().__eq__(other), saver_args_eq, loader_args_eq))
 
     @override
     def __hash__(self) -> int:
-        return hash((
-            super().__hash__(),
-            self._saver_args,
-            self._loader_args
-        ))
+        return hash((super().__hash__(), self._saver_args, self._loader_args))
 
 
 class BasicChainConfigSL(BasicConfigSL, ABC):
@@ -707,20 +689,21 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
         """
         for match in self.supported_file_patterns:
             if isinstance(match, str) and file_name.endswith(match):
-                return file_name[:-len(match)]
+                return file_name[: -len(match)]
             if isinstance(match, re.Pattern) and match.fullmatch(file_name):  # 目前没SL处理器用得上 # pragma: no cover
-                return match.sub(file_name, '')
+                return match.sub(file_name, "")
         return file_name  # 不好测试 # pragma: no cover
 
     @override
     def save(
-            self,
-            processor_pool: ABCSLProcessorPool,
-            config_file: ABCConfigFile[Any],
-            root_path: str,
-            namespace: str,
-            file_name: str,
-            *args: Any, **kwargs: Any,
+        self,
+        processor_pool: ABCSLProcessorPool,
+        config_file: ABCConfigFile[Any],
+        root_path: str,
+        namespace: str,
+        file_name: str,
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         config_pool = cast(ABCConfigPool, processor_pool)
         file_path = config_pool.helper.calc_path(root_path, namespace, file_name)
@@ -735,12 +718,13 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
 
     @override
     def load(
-            self,
-            processor_pool: ABCSLProcessorPool,
-            root_path: str,
-            namespace: str,
-            file_name: str,
-            *args: Any, **kwargs: Any,
+        self,
+        processor_pool: ABCSLProcessorPool,
+        root_path: str,
+        namespace: str,
+        file_name: str,
+        *args: Any,
+        **kwargs: Any,
     ) -> ABCConfigFile[Any]:
         config_pool = cast(ABCConfigPool, processor_pool)
         file_path = config_pool.helper.calc_path(root_path, namespace, file_name)
@@ -755,32 +739,29 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
 
     @override
     def initialize(
-            self,
-            processor_pool: ABCSLProcessorPool,
-            root_path: str,
-            namespace: str,
-            file_name: str,
-            *args: Any, **kwargs: Any
+        self,
+        processor_pool: ABCSLProcessorPool,
+        root_path: str,
+        namespace: str,
+        file_name: str,
+        *args: Any,
+        **kwargs: Any,
     ) -> ABCConfigFile[Any]:
         config_pool = cast(ABCConfigPool, processor_pool)
 
         formatted_namespace = self.namespace_formatter(namespace, file_name)
         formatted_filename = self.filename_formatter(file_name)
 
-        return config_pool.initialize(
-            formatted_namespace,
-            formatted_filename,
-            *args, **kwargs
-        )
+        return config_pool.initialize(formatted_namespace, formatted_filename, *args, **kwargs)
 
     def save_file(
-            self,
-            config_pool: ABCConfigPool,
-            config_file: ABCConfigFile[Any],
-            namespace: str,
-            file_name: str,
-            *args: Any,
-            **kwargs: Any
+        self,
+        config_pool: ABCConfigPool,
+        config_file: ABCConfigFile[Any],
+        namespace: str,
+        file_name: str,
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         """
         保存指定命名空间的配置
@@ -800,12 +781,12 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
             config_pool.discard(namespace, file_name)
 
     def load_file(
-            self,
-            config_pool: ABCConfigPool,
-            namespace: str,
-            file_name: str,
-            *args: Any,
-            **kwargs: Any,
+        self,
+        config_pool: ABCConfigPool,
+        namespace: str,
+        file_name: str,
+        *args: Any,
+        **kwargs: Any,
     ) -> ABCConfigFile[Any]:
         """
         加载指定命名空间的配置
@@ -827,25 +808,23 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
         return cfg_file
 
     def before_load(
-            self,
-            config_pool: ABCConfigPool,
-            file_path: str,
-            root_path: str,
-            namespace: str,
-            file_name: str,
-    ) -> None:
-        ...
+        self,
+        config_pool: ABCConfigPool,
+        file_path: str,
+        root_path: str,
+        namespace: str,
+        file_name: str,
+    ) -> None: ...
 
     def after_save(
-            self,
-            config_pool: ABCConfigPool,
-            config_file: ABCConfigFile[Any],
-            file_path: str,
-            root_path: str,
-            namespace: str,
-            file_name: str,
-    ) -> None:
-        ...
+        self,
+        config_pool: ABCConfigPool,
+        config_file: ABCConfigFile[Any],
+        file_path: str,
+        root_path: str,
+        namespace: str,
+        file_name: str,
+    ) -> None: ...
 
 
 class BasicCachedConfigSL(BasicChainConfigSL, ABC):
@@ -879,52 +858,50 @@ class BasicCompressedConfigSL(BasicCachedConfigSL, ABC):
 
     @override
     def after_save(
-            self,
-            config_pool: ABCConfigPool,
-            config_file: ABCConfigFile[Any],
-            file_path: str,
-            root_path: str,
-            namespace: str,
-            file_name: str,
+        self,
+        config_pool: ABCConfigPool,
+        config_file: ABCConfigFile[Any],
+        file_path: str,
+        root_path: str,
+        namespace: str,
+        file_name: str,
     ) -> None:
         extract_dir = config_pool.helper.calc_path(root_path, namespace)
         self.compress_file(file_path, extract_dir)
 
     @override
     def before_load(
-            self,
-            config_pool: ABCConfigPool,
-            file_path: str,
-            root_path: str,
-            namespace: str,
-            file_name: str,
+        self,
+        config_pool: ABCConfigPool,
+        file_path: str,
+        root_path: str,
+        namespace: str,
+        file_name: str,
     ) -> None:
         extract_dir = config_pool.helper.calc_path(root_path, namespace)
         self.extract_file(file_path, extract_dir)
 
     @abstractmethod
-    def compress_file(self, file_path: str, extract_dir: str) -> None:
-        ...
+    def compress_file(self, file_path: str, extract_dir: str) -> None: ...
 
     @abstractmethod
-    def extract_file(self, file_path: str, extract_dir: str) -> None:
-        ...
+    def extract_file(self, file_path: str, extract_dir: str) -> None: ...
 
 
 __all__ = (
-    "RequiredPath",
-    "ConfigPool",
-    "ConfigRequirementDecorator",
-    "raises",
-    "BasicConfigSL",
-    "BasicLocalFileConfigSL",
     "BasicChainConfigSL",
     "BasicCompressedConfigSL",
+    "BasicConfigSL",
+    "BasicLocalFileConfigSL",
+    "ConfigPool",
+    "ConfigRequirementDecorator",
     "DefaultConfigPool",
-    "requireConfig",
-    "saveAll",
+    "RequiredPath",
     "get",
-    "set_",
-    "save",
     "load",
+    "raises",
+    "requireConfig",
+    "save",
+    "saveAll",
+    "set_",
 )

@@ -74,8 +74,8 @@ class Ref[T]:
 
 
 __all__ = (
-    "singleton",
-    "UnsetType",
-    "Unset",
     "Ref",
+    "Unset",
+    "UnsetType",
+    "singleton",
 )

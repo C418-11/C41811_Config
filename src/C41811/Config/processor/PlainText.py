@@ -32,17 +32,17 @@ class PlainTextSL(BasicLocalFileConfigSL):
     @property
     @override
     def supported_file_patterns(self) -> tuple[str, ...]:
-        return ".txt",
+        return (".txt",)
 
     supported_file_classes = [ConfigFile]
 
     @override
     def save_file(
-            self,
-            config_file: ABCConfigFile[StringConfigData[Any] | SequenceConfigData[Any]],
-            target_file: SupportsWrite[str],
-            *merged_args: Any,
-            **merged_kwargs: Any
+        self,
+        config_file: ABCConfigFile[StringConfigData[Any] | SequenceConfigData[Any]],
+        target_file: SupportsWrite[str],
+        *merged_args: Any,
+        **merged_kwargs: Any,
     ) -> None:
         if isinstance(config_file.config, StringConfigData):
             with self.raises():
@@ -52,34 +52,29 @@ class PlainTextSL(BasicLocalFileConfigSL):
         with self.raises():
             iter(config_file.config)
 
-        linesep = merged_kwargs.get("linesep", '')
+        linesep = merged_kwargs.get("linesep", "")
         for line in config_file.config:
             with self.raises():
                 target_file.write(line + linesep)
 
     @override
     def load_file(
-            self,
-            source_file: TextIO,
-            *merged_args: Any,
-            **merged_kwargs: Any
+        self, source_file: TextIO, *merged_args: Any, **merged_kwargs: Any
     ) -> ConfigFile[StringConfigData[str] | SequenceConfigData[list[str]]]:
         if merged_kwargs.get("split_line"):
             with self.raises():
                 content: list[str] = source_file.readlines()
             if merged_kwargs.get("remove_linesep"):
                 for i, line in enumerate(content):
-                    content[i] = line.removesuffix(merged_kwargs.get("remove_linesep", ''))
+                    content[i] = line.removesuffix(merged_kwargs.get("remove_linesep", ""))
         else:
             with self.raises():
                 content: str = source_file.read()  # type: ignore[no-redef]
 
         return ConfigFile(
             cast(StringConfigData[str] | SequenceConfigData[list[Any]], ConfigData(content)),
-            config_format=self.processor_reg_name
+            config_format=self.processor_reg_name,
         )
 
 
-__all__ = (
-    "PlainTextSL",
-)
+__all__ = ("PlainTextSL",)

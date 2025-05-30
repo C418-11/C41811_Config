@@ -1,5 +1,3 @@
-
-
 from collections.abc import Iterable
 from collections.abc import Sequence
 from contextlib import suppress
@@ -43,7 +41,7 @@ class TestSequenceConfigData:
                     "d": 6,
                 },
             },
-            [7, 8]
+            [7, 8],
         ]
 
     @staticmethod
@@ -68,30 +66,32 @@ class TestSequenceConfigData:
         assert data.data is not sequence
         assert data.data == sequence
 
-        assert SequenceConfigData().data == list()
+        assert SequenceConfigData().data == []
 
         readonly_data = SequenceConfigData(readonly_sequence)
         assert readonly_data.data is not readonly_sequence
         assert readonly_data.data == readonly_sequence
 
     RetrieveTests: tuple[str, tuple[tuple[str, Any, EE, dict[str, Any]], ...]] = (
-        "path,           value,                        ignore_excs,                  kwargs", (
-        (r"\[0\]", 1, (), {}),
-        (r"\[0\]", 1, (), {"return_raw_value": True}),
-        (r"\[1\]", 2, (), {}),
-        (r"\[2\]\.a", SequenceConfigData([3, 4]), (), {}),
-        (r"\[2\]\.a", [3, 4], (), {"return_raw_value": True}),
-        (r"\[2\]\.b", MappingConfigData({"c": 5, "d": 6}), (), {}),
-        (r"\[2\]\.b", pmap({"c": 5, "d": 6}), (), {"return_raw_value": True}),
-        (r"\[2\]\.b\.c", 5, (), {}),
-        (r"\[2\]\.b\.c", 5, (), {}),
-        (r"\[3\]\[0\]", 7, (), {}),
-        (r"\[0\]\.bar", None, (ConfigDataTypeError,), {}),
-        (r"\[4\]", None, (RequiredPathNotFoundError,), {}),
-        (r"\[3\]\[2\]", None, (RequiredPathNotFoundError,), {}),
-        (r"\[3\]\.0", None, (ConfigDataTypeError,), {}),
-        (r"bar", None, (ConfigDataTypeError,), {}),
-    ))
+        "path,           value,                        ignore_excs,                  kwargs",
+        (
+            (r"\[0\]", 1, (), {}),
+            (r"\[0\]", 1, (), {"return_raw_value": True}),
+            (r"\[1\]", 2, (), {}),
+            (r"\[2\]\.a", SequenceConfigData([3, 4]), (), {}),
+            (r"\[2\]\.a", [3, 4], (), {"return_raw_value": True}),
+            (r"\[2\]\.b", MappingConfigData({"c": 5, "d": 6}), (), {}),
+            (r"\[2\]\.b", pmap({"c": 5, "d": 6}), (), {"return_raw_value": True}),
+            (r"\[2\]\.b\.c", 5, (), {}),
+            (r"\[2\]\.b\.c", 5, (), {}),
+            (r"\[3\]\[0\]", 7, (), {}),
+            (r"\[0\]\.bar", None, (ConfigDataTypeError,), {}),
+            (r"\[4\]", None, (RequiredPathNotFoundError,), {}),
+            (r"\[3\]\[2\]", None, (RequiredPathNotFoundError,), {}),
+            (r"\[3\]\.0", None, (ConfigDataTypeError,), {}),
+            (r"bar", None, (ConfigDataTypeError,), {}),
+        ),
+    )
 
     @staticmethod
     @mark.parametrize(*RetrieveTests)
@@ -103,15 +103,22 @@ class TestSequenceConfigData:
             assert data.retrieve(path, **kwargs) == value
 
     ModifyTests: tuple[str, tuple[tuple[str, Any, EE, dict[str, Any]], ...]] = (
-        "path, value, ignore_excs, kwargs", (
-        (r"\[0\]", 99, (), {}),
-        (r"\[2\]", {"z": 9}, (), {}),
-        (r"\[1\]", 88, (), {}),
-        (r"\[2\]\.a", [9, 0], (), {}),
-        ("bar", None, (ConfigDataTypeError,), {}),
-        (r"\[3\]", None, (), {}),
-        (r"\[4\]", None, (RequiredPathNotFoundError,), {"allow_create": False},),
-    ))
+        "path, value, ignore_excs, kwargs",
+        (
+            (r"\[0\]", 99, (), {}),
+            (r"\[2\]", {"z": 9}, (), {}),
+            (r"\[1\]", 88, (), {}),
+            (r"\[2\]\.a", [9, 0], (), {}),
+            ("bar", None, (ConfigDataTypeError,), {}),
+            (r"\[3\]", None, (), {}),
+            (
+                r"\[4\]",
+                None,
+                (RequiredPathNotFoundError,),
+                {"allow_create": False},
+            ),
+        ),
+    )
 
     @staticmethod
     @mark.parametrize(*ModifyTests)
@@ -124,21 +131,23 @@ class TestSequenceConfigData:
             assert data.retrieve(path, return_raw_value=True) == value
 
     DeleteTests: tuple[str, tuple[tuple[str, EE], ...]] = (
-        "path, ignore_excs", (
-        (r"\[0\]", ()),
-        (r"\[1\]", ()),
-        (r"\[2\]", ()),
-        (r"\[2\]\.a", ()),
-        (r"\[2\]\.a\[1\]", ()),
-        (r"\[2\]\.b\.c", ()),
-        (r"\[3\]\[1\]", ()),
-        ("abc", (ConfigDataTypeError,)),
-        (r"\[0\]\.a", (ConfigDataTypeError,)),
-        (r"\[2\]\[0\]", (ConfigDataTypeError,)),
-        (r"\[9\]", (RequiredPathNotFoundError,)),
-        (r"\[2\]\.z", (RequiredPathNotFoundError,)),
-        (r"\[3\]\[-5\]", (RequiredPathNotFoundError,)),
-    ))
+        "path, ignore_excs",
+        (
+            (r"\[0\]", ()),
+            (r"\[1\]", ()),
+            (r"\[2\]", ()),
+            (r"\[2\]\.a", ()),
+            (r"\[2\]\.a\[1\]", ()),
+            (r"\[2\]\.b\.c", ()),
+            (r"\[3\]\[1\]", ()),
+            ("abc", (ConfigDataTypeError,)),
+            (r"\[0\]\.a", (ConfigDataTypeError,)),
+            (r"\[2\]\[0\]", (ConfigDataTypeError,)),
+            (r"\[9\]", (RequiredPathNotFoundError,)),
+            (r"\[2\]\.z", (RequiredPathNotFoundError,)),
+            (r"\[3\]\[-5\]", (RequiredPathNotFoundError,)),
+        ),
+    )
 
     @staticmethod
     @mark.parametrize(*DeleteTests)
@@ -161,22 +170,24 @@ class TestSequenceConfigData:
         assert path not in data
 
     ExistsTests: tuple[str, tuple[tuple[str, bool | None, EE, dict[str, Any]], ...]] = (
-        "path, is_exist, ignore_excs, kwargs", (
-        (r"\[0\]", True, (), {}),
-        (r"\[2\]", True, (), {}),
-        (r"\[9\]", False, (), {}),
-        (r"\[3\]", True, (), {}),
-        (r"\[3\]", True, (), {}),
-        (r"\[-6\]", False, (), {}),
-        (r"\[3\]\[1\]", True, (), {}),
-        (r"\[3\]\[4\]", False, (), {}),
-        (r"\[2\]\.b\.c", True, (), {}),
-        ("abc", False, (), {"ignore_wrong_type": True}),
-        (r"\[3\]\.abc", False, (), {"ignore_wrong_type": True}),
-        (r"\[2\]\[1\]", None, (ConfigDataTypeError,), {}),
-        (r"\[3\]\.abc", False, (ConfigDataTypeError,), {}),
-        (r"abc", False, (ConfigDataTypeError,), {}),
-    ))
+        "path, is_exist, ignore_excs, kwargs",
+        (
+            (r"\[0\]", True, (), {}),
+            (r"\[2\]", True, (), {}),
+            (r"\[9\]", False, (), {}),
+            (r"\[3\]", True, (), {}),
+            (r"\[3\]", True, (), {}),
+            (r"\[-6\]", False, (), {}),
+            (r"\[3\]\[1\]", True, (), {}),
+            (r"\[3\]\[4\]", False, (), {}),
+            (r"\[2\]\.b\.c", True, (), {}),
+            ("abc", False, (), {"ignore_wrong_type": True}),
+            (r"\[3\]\.abc", False, (), {"ignore_wrong_type": True}),
+            (r"\[2\]\[1\]", None, (ConfigDataTypeError,), {}),
+            (r"\[3\]\.abc", False, (ConfigDataTypeError,), {}),
+            (r"abc", False, (ConfigDataTypeError,), {}),
+        ),
+    )
 
     @staticmethod
     @mark.parametrize(*ExistsTests)
@@ -192,7 +203,7 @@ class TestSequenceConfigData:
             (r"\[10\]", "default value", (), {"default": "default value"}),
             (r"\[3\]\[20\]", "default value", (), {"default": "default value"}),
             (r"foo2\\.not exist", "default value", (ConfigDataTypeError,), {"default": "default value"}),
-        )
+        ),
     )
 
     @staticmethod
@@ -221,7 +232,7 @@ class TestSequenceConfigData:
             (r"\[10\]", "default value", (), {"default": "default value"}),
             (r"\[3\]\[20\]", "default value", (), {"default": "default value"}),
             (r"foo2\\.not exist", "default value", (ConfigDataTypeError,), {"default": "default value"}),
-        )
+        ),
     )
 
     @staticmethod
@@ -240,10 +251,7 @@ class TestSequenceConfigData:
             return
 
         ignore_excs = tuple(exc for exc in ignore_excs if not issubclass(exc, LookupError))
-        if "default" in kwargs:
-            value = [value, kwargs["default"]]
-        else:
-            value = value,
+        value = [value, kwargs["default"]] if "default" in kwargs else (value,)
 
         if data.exists(path, ignore_wrong_type=True):
             value = *value, data.retrieve(path)
@@ -254,17 +262,24 @@ class TestSequenceConfigData:
             assert data.retrieve(path) in value
 
     GetItemTests: tuple[str, tuple[tuple[int, Any], ...]] = (
-        "index, value", (
-        (1, 2),
-        (2, MappingConfigData({
-            "a": [3, 4],
-            "b": {
-                "c": 5,
-                "d": 6,
-            },
-        })),
-        (3, SequenceConfigData([7, 8])),
-    ))
+        "index, value",
+        (
+            (1, 2),
+            (
+                2,
+                MappingConfigData(
+                    {
+                        "a": [3, 4],
+                        "b": {
+                            "c": 5,
+                            "d": 6,
+                        },
+                    }
+                ),
+            ),
+            (3, SequenceConfigData([7, 8])),
+        ),
+    )
 
     @staticmethod
     @mark.parametrize(*GetItemTests)
@@ -272,27 +287,34 @@ class TestSequenceConfigData:
         assert data[index] == value
 
     @staticmethod
-    @mark.parametrize("index, new_value", (
+    @mark.parametrize(
+        "index, new_value",
+        (
             (0, 456),
             (1, {"test": "value"}),
             (2, 789),
             (3, 101112),
-    ))
+        ),
+    )
     def test_setitem(data: SCD, index: int, new_value: Any) -> None:
         data[index] = new_value
         assert (
             cast(SequenceConfigData[Any], data[index]).data == new_value
-            if isinstance(data[index], ConfigData) else data[index] == new_value
+            if isinstance(data[index], ConfigData)
+            else data[index] == new_value
         )
 
     @staticmethod
-    @mark.parametrize("index, ignore_excs", (
+    @mark.parametrize(
+        "index, ignore_excs",
+        (
             (1, ()),
             (2, ()),
             (3, ()),
             (4, (IndexError,)),
             (5, (IndexError,)),
-    ))
+        ),
+    )
     def test_delitem(data: SCD, index: int, ignore_excs: EE) -> None:
         with safe_raises(ignore_excs):
             last = data[index]
@@ -302,7 +324,9 @@ class TestSequenceConfigData:
             assert last != data[index]
 
     @staticmethod
-    @mark.parametrize("item, is_exist", (
+    @mark.parametrize(
+        "item, is_exist",
+        (
             (1, True),
             (888, False),
             (2, True),
@@ -310,17 +334,21 @@ class TestSequenceConfigData:
             ([999], False),
             (r"\[0\]", False),
             ("bar", False),
-    ))
+        ),
+    )
     def test_contains(data: SCD, item: Any, is_exist: bool) -> None:
         assert (item in data) == is_exist
 
-    IterTests: tuple[str, tuple[list[Any], ...]] = ("raw_sequence", (
-        [],
-        [1, 2, 3],
-        [1, {2: [3, 4]}, 5],
-        [1, 2, [3, [4, 5]], 6],
-        [{1: 2, 3: [4, 5, {6: 7}, 8]}, 9, {10: [11, 12]}, 13],
-    ))
+    IterTests: tuple[str, tuple[list[Any], ...]] = (
+        "raw_sequence",
+        (
+            [],
+            [1, 2, 3],
+            [1, {2: [3, 4]}, 5],
+            [1, 2, [3, [4, 5]], 6],
+            [{1: 2, 3: [4, 5, {6: 7}, 8]}, 9, {10: [11, 12]}, 13],
+        ),
+    )
 
     @staticmethod
     @mark.parametrize(*IterTests)
@@ -370,18 +398,18 @@ class TestSequenceConfigData:
     @classmethod
     @mark.parametrize(*RetrieveTests)
     def test_readonly_retrieve(
-            cls,
-            readonly_data: RSCD,
-            path: str,
-            value: Any,
-            ignore_excs: EE,
-            kwargs: dict[str, Any],
+        cls,
+        readonly_data: RSCD,
+        path: str,
+        value: Any,
+        ignore_excs: EE,
+        kwargs: dict[str, Any],
     ) -> None:
         cls.test_retrieve(readonly_data, path, value, ignore_excs, kwargs)
 
     ReadOnlyModifyTests = (
-        ','.join(arg for arg in ModifyTests[0].split(',') if "ignore_excs" not in arg),
-        ((*x[:-2], x[-1]) for x in ModifyTests[1])
+        ",".join(arg for arg in ModifyTests[0].split(",") if "ignore_excs" not in arg),
+        ((*x[:-2], x[-1]) for x in ModifyTests[1]),
     )
 
     @classmethod
@@ -390,8 +418,8 @@ class TestSequenceConfigData:
         cls.test_modify(readonly_data, path, value, ConfigDataReadOnlyError, kwargs)
 
     ReadOnlyDeleteTests = (
-        ', '.join(arg for arg in DeleteTests[0].split(', ') if "ignore_excs" not in arg),
-        tuple(x[:-1] for x in DeleteTests[1])
+        ", ".join(arg for arg in DeleteTests[0].split(", ") if "ignore_excs" not in arg),
+        tuple(x[:-1] for x in DeleteTests[1]),
     )
 
     @classmethod
@@ -405,7 +433,9 @@ class TestSequenceConfigData:
         cls.test_unset(cast(SCD, readonly_data), path, (ConfigDataReadOnlyError,))
 
     @staticmethod
-    @mark.parametrize("method, data, args, readonly", (
+    @mark.parametrize(
+        "method, data, args, readonly",
+        (
             ("append", [], (123,), False),
             ("append", [1, 2, 3], (123,), False),
             ("append", [1, {2: [3, 4]}, 5], (123,), False),
@@ -434,7 +464,8 @@ class TestSequenceConfigData:
             ("clear", (1, 2, 3), (), True),
             ("reverse", [1, 2, 3], (), False),
             ("reverse", (1, 2, 3), (), True),
-    ))
+        ),
+    )
     def test_methods(method: str, data: SCD, args: tuple[Any, ...], readonly: RSCD) -> None:
         cfg = SequenceConfigData(deepcopy(data))
 
@@ -475,22 +506,28 @@ class TestStringConfigData:
         assert StringConfigData().data == ""
 
     @staticmethod
-    @mark.parametrize("string, format_spec", (
+    @mark.parametrize(
+        "string, format_spec",
+        (
             ("test", "<5"),
             ("test", ">9"),
             ("test", "^7"),
-    ))
+        ),
+    )
     def test_format(string: str, format_spec: str) -> None:
         assert format(StringConfigData(string), format_spec) == format(string, format_spec)
 
     @staticmethod
-    @mark.parametrize("string, slice_obj", (
+    @mark.parametrize(
+        "string, slice_obj",
+        (
             ("test", slice(0, 2)),
             ("test", slice(None, None, -1)),
             ("test", slice(1)),
             ("test", slice(None, -2)),
             ("test", slice(None, None, 2)),
-    ))
+        ),
+    )
     def test_slice(string: str, slice_obj: slice) -> None:
         assert StringConfigData(string)[slice_obj] == string[slice_obj]
         cfg, cs = StringConfigData(string), deepcopy(string)
@@ -506,39 +543,51 @@ class TestStringConfigData:
             del cfg[slice_obj]
 
     @staticmethod
-    @mark.parametrize("string", (
+    @mark.parametrize(
+        "string",
+        (
             "test",
             "abba",
             "abcd",
-    ))
+        ),
+    )
     def test_reversed(string: str) -> None:
         assert list(reversed(StringConfigData(string))) == list(reversed(string))
 
     @staticmethod
-    @mark.parametrize("data, string, result", (
+    @mark.parametrize(
+        "data, string, result",
+        (
             ("test", "test", True),
             ("test", "TEST", False),
             ("test", "t", True),
             ("aabb", "ab", True),
-    ))
+        ),
+    )
     def test_contains(data: str, string: str, result: bool) -> None:
         data = StringConfigData(data)
         assert (string in data) is result
 
     @staticmethod
-    @mark.parametrize("string", (
+    @mark.parametrize(
+        "string",
+        (
             "123456",
             "aabbcc",
-    ))
+        ),
+    )
     def test_iter(string: str) -> None:
         data = StringConfigData(string)
         assert list(data) == list(string)
 
     @staticmethod
-    @mark.parametrize("string", (
+    @mark.parametrize(
+        "string",
+        (
             "123456",
             "aabb",
-    ))
+        ),
+    )
     def test_len(string: str) -> None:
         data = StringConfigData(string)
         assert len(data) == len(string)

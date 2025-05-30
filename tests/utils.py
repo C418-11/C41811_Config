@@ -1,5 +1,3 @@
-
-
 import contextlib
 from collections.abc import Generator
 from typing import Any
@@ -16,9 +14,7 @@ type EW = type[Warning] | tuple[type[Warning], ...] | None
 
 @contextlib.contextmanager
 def safe_raises(
-        expected_exception: EE,
-        *args: Any,
-        **kwargs: Any
+    expected_exception: EE, *args: Any, **kwargs: Any
 ) -> Generator[ExceptionInfo[BaseException] | None, Any, None]:
     if not expected_exception:
         yield None

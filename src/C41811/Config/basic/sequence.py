@@ -24,21 +24,19 @@ from .utils import check_read_only
 
 
 @generate
-class SequenceConfigData[D: Sequence[Any]](
-    BasicIndexedConfigData[D],
-    MutableSequence[Any]
-):
+class SequenceConfigData[D: Sequence[Any]](BasicIndexedConfigData[D], MutableSequence[Any]):
     """
     序列配置数据
 
     .. versionadded:: 0.1.5
     """
+
     _data: D
     data: D
 
     def __init__(self, data: D | None = None):
         if data is None:
-            data = list()  # type: ignore[assignment]
+            data = []  # type: ignore[assignment]
         super().__init__(cast(D, data))
 
     @property
@@ -113,6 +111,7 @@ class StringConfigData[D: str | bytes](BasicSingleConfigData[D]):
     """
     字符/字节串配置数据
     """
+
     _data: D
     data: D
 

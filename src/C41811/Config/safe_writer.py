@@ -56,13 +56,13 @@ import portalocker
 
 try:
     import fcntl
-except ImportError:  # pragma: no cover
+except ImportError:
     # noinspection SpellCheckingInspection
     fcntl = None  # type: ignore[assignment]
 
 try:
     from os import fspath
-except ImportError:  # pragma: no cover
+except ImportError:
     fspath = None  # type: ignore[assignment]
 
 type PathLike = str | Path
@@ -80,12 +80,12 @@ _proper_fsync = os.fsync
 if sys.platform != "win32":  # pragma: no cover
     # noinspection SpellCheckingInspection
     if hasattr(fcntl, "F_FULLFSYNC"):
+
         def _proper_fsync(fd: int) -> None:  # type: ignore[misc]
             # https://lists.apple.com/archives/darwin-dev/2005/Feb/msg00072.html
             # https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man2/fsync.2.html
             # https://github.com/untitaker/python-atomicwrites/issues/6
             fcntl.fcntl(fd, fcntl.F_FULLFSYNC)  # type: ignore[attr-defined]
-
 
     def _sync_directory(directory: str) -> None:
         # Ensure that filenames are written to disk
@@ -95,11 +95,9 @@ if sys.platform != "win32":  # pragma: no cover
         finally:
             os.close(fd)
 
-
     def _replace_atomic(src: PathLike, dst: PathLike) -> None:
         os.rename(src, dst)
         _sync_directory(os.path.normpath(os.path.dirname(dst)))
-
 
     def _move_atomic(src: PathLike, dst: PathLike) -> None:
         os.link(src, dst)
@@ -118,24 +116,19 @@ else:  # pragma: no cover
     _MOVEFILE_WRITE_THROUGH = 0x8
     _windows_default_flags = _MOVEFILE_WRITE_THROUGH
 
-
     def _handle_errors(rv: Any) -> None:
         if not rv:
             raise WinError()
 
-
     def _replace_atomic(src: PathLike, dst: PathLike) -> None:
-        _handle_errors(windll.kernel32.MoveFileExW(
-            _path2str(src), _path2str(dst),
-            _windows_default_flags | _MOVEFILE_REPLACE_EXISTING
-        ))
-
+        _handle_errors(
+            windll.kernel32.MoveFileExW(
+                _path2str(src), _path2str(dst), _windows_default_flags | _MOVEFILE_REPLACE_EXISTING
+            )
+        )
 
     def _move_atomic(src: PathLike, dst: PathLike) -> None:
-        _handle_errors(windll.kernel32.MoveFileExW(
-            _path2str(src), _path2str(dst),
-            _windows_default_flags
-        ))
+        _handle_errors(windll.kernel32.MoveFileExW(_path2str(src), _path2str(dst), _windows_default_flags))
 
 
 def replace_atomic(src: PathLike, dst: PathLike) -> None:
@@ -217,7 +210,7 @@ class TempTextIOManager[F: TextIO](ABCTempIOManager[F]):
     管理 ``TextIO`` 对象。
     """
 
-    def __init__(self, prefix: str = '', suffix: str = ".tmp", **open_kwargs: Any):
+    def __init__(self, prefix: str = "", suffix: str = ".tmp", **open_kwargs: Any):
         """
         :param prefix: 临时文件前缀
         :type prefix: str
@@ -233,8 +226,7 @@ class TempTextIOManager[F: TextIO](ABCTempIOManager[F]):
     def from_file(self, file: F) -> F:  # pragma: no cover # 用不上 暂不维护
         path, name = os.path.split(cast(TextIO, file).name)
         f = open(
-            os.path.join(path, f"{self._prefix}{name}{self._suffix}"),
-            mode=cast(TextIO, file).mode, **self._open_kwargs
+            os.path.join(path, f"{self._prefix}{name}{self._suffix}"), mode=cast(TextIO, file).mode, **self._open_kwargs
         )
         shutil.copyfile(cast(TextIO, file).name, f.name)
         return cast(F, f)
@@ -264,11 +256,7 @@ class TempTextIOManager[F: TextIO](ABCTempIOManager[F]):
     def commit(cls, temp_file: F, file: F) -> None:  # pragma: no cover # 用不上 暂不维护
         if not file.writable():
             return
-        cls.commit_by_path(
-            temp_file,
-            cast(TextIO, file).name,
-            cast(TextIO, file).mode
-        )
+        cls.commit_by_path(temp_file, cast(TextIO, file).name, cast(TextIO, file).mode)
 
     @classmethod
     @override
@@ -279,9 +267,9 @@ class TempTextIOManager[F: TextIO](ABCTempIOManager[F]):
             return
 
         overwrite = True
-        if 'x' in mode:  # pragma: no cover
+        if "x" in mode:  # pragma: no cover
             overwrite = False
-        if ('r' in mode) and ('+' not in mode):  # pragma: no cover
+        if ("r" in mode) and ("+" not in mode):  # pragma: no cover
             overwrite = False
 
         if overwrite:
@@ -294,6 +282,7 @@ class LockFlags(IntEnum):
     """
     文件锁标志
     """
+
     EXCLUSIVE = portalocker.LOCK_EX | portalocker.LOCK_NB
     SHARED = portalocker.LOCK_SH | portalocker.LOCK_NB
 
@@ -314,10 +303,7 @@ class SafeOpen[F: AIO]:
     """
 
     def __init__(
-            self,
-            io_manager: ABCTempIOManager[Any],
-            timeout: float | None = 1,
-            flag: LockFlags = LockFlags.EXCLUSIVE
+        self, io_manager: ABCTempIOManager[Any], timeout: float | None = 1, flag: LockFlags = LockFlags.EXCLUSIVE
     ) -> None:
         """
         :param io_manager: IO管理器
@@ -409,9 +395,9 @@ class SafeOpen[F: AIO]:
 
 
 def _timeout_checker(
-        timeout: Real | None = None,
-        interval_increase_speed: Real = .03,  # type: ignore[assignment]
-        max_interval: Real = .5,  # type: ignore[assignment]
+    timeout: Real | None = None,
+    interval_increase_speed: Real = 0.03,  # type: ignore[assignment]
+    max_interval: Real = 0.5,  # type: ignore[assignment]
 ) -> Generator[None, Any, Any]:  # pragma: no cover # 除了windows其他平台压根不会触发timeout
     def _calc_interval(interval: Real) -> Real:
         interval = min(cast(Real, interval + interval_increase_speed), max_interval)
@@ -438,11 +424,11 @@ def _timeout_checker(
 
 
 def acquire_lock(
-        file: AIO,
-        flags: LockFlags,
-        *,
-        timeout: Real | None = 1,  # type: ignore[assignment]
-        immediately_release: bool = False
+    file: AIO,
+    flags: LockFlags,
+    *,
+    timeout: Real | None = 1,  # type: ignore[assignment]
+    immediately_release: bool = False,
 ) -> None:
     """
     获取文件锁
@@ -475,13 +461,13 @@ def release_lock(file: AIO) -> None:
 
 
 def safe_open(
-        path: str | Path,
-        mode: str,
-        *,
-        timeout: float | None = 1,
-        flag: LockFlags = LockFlags.EXCLUSIVE,
-        io_manager: ABCTempIOManager[Any] | None = None,
-        **manager_kwargs: Any
+    path: str | Path,
+    mode: str,
+    *,
+    timeout: float | None = 1,
+    flag: LockFlags = LockFlags.EXCLUSIVE,
+    io_manager: ABCTempIOManager[Any] | None = None,
+    **manager_kwargs: Any,
 ) -> ContextManager[AIO | TextIO]:
     """
     安全打开文件
@@ -504,18 +490,15 @@ def safe_open(
     """
     if io_manager is None:
         io_manager = TempTextIOManager(**manager_kwargs)
-    return cast(
-        ContextManager[AIO | TextIO],
-        SafeOpen(io_manager, timeout, flag).open_path(path, mode)
-    )
+    return cast(ContextManager[AIO | TextIO], SafeOpen(io_manager, timeout, flag).open_path(path, mode))
 
 
 __all__ = (
     "FileLocks",
+    "GlobalModifyLock",
+    "LockFlags",
     "SafeOpen",
-    "safe_open",
     "acquire_lock",
     "release_lock",
-    "LockFlags",
-    "GlobalModifyLock",
+    "safe_open",
 )

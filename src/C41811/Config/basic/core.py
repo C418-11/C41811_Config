@@ -61,7 +61,7 @@ class BasicConfigData[D](ABCConfigData[D], ABC):
     @property
     @override
     def data_read_only(self) -> bool | None:
-        return True  # 全被子类复写了，测不到 # pragma: no cover
+        return True  # 全被子类复写了 测不到 # pragma: no cover
 
     @property  # type: ignore[explicit-override]  # mypy抽风
     @override
@@ -119,11 +119,7 @@ class BasicSingleConfigData[D](BasicConfigData[D], ABC):
         return self.from_data(self._data)
 
 
-class BasicIndexedConfigData[D: Indexed[Any, Any]](
-    BasicSingleConfigData[D],
-    ABCIndexedConfigData[D],
-    ABC
-):
+class BasicIndexedConfigData[D: Indexed[Any, Any]](BasicSingleConfigData[D], ABCIndexedConfigData[D], ABC):
     # noinspection GrazieInspection
     """
     支持 ``索引`` 操作的配置数据基类
@@ -135,10 +131,10 @@ class BasicIndexedConfigData[D: Indexed[Any, Any]](
     """
 
     def _process_path(
-            self,
-            path: ABCPath[Any],
-            path_checker: Callable[[Any, AnyKey, ABCPath[Any], int], Any],
-            process_return: Callable[[Any], Any]
+        self,
+        path: ABCPath[Any],
+        path_checker: Callable[[Any, AnyKey, ABCPath[Any], int], Any],
+        process_return: Callable[[Any], Any],
     ) -> Any:
         # noinspection GrazieInspection
         """
@@ -161,7 +157,7 @@ class BasicIndexedConfigData[D: Indexed[Any, Any]](
         current_data = self._data
 
         for key_index, current_key in enumerate(path):
-            last_path: ABCPath[Any] = path[key_index + 1:]
+            last_path: ABCPath[Any] = path[key_index + 1 :]
 
             check_result = path_checker(current_data, current_key, last_path, key_index)
             if check_result is not None:
@@ -190,7 +186,7 @@ class BasicIndexedConfigData[D: Indexed[Any, Any]](
             if return_raw_value:
                 return deepcopy(current_data)
 
-            is_sequence = isinstance(current_data, Sequence) and not isinstance(current_data, (str, bytes))
+            is_sequence = isinstance(current_data, Sequence) and not isinstance(current_data, str | bytes)
             if isinstance(current_data, Mapping) or is_sequence:
                 return ConfigData(current_data)
 
@@ -228,10 +224,10 @@ class BasicIndexedConfigData[D: Indexed[Any, Any]](
         path = fmt_path(path)
 
         def checker(
-                current_data: Any,
-                current_key: AnyKey,
-                last_path: ABCPath[Any],
-                key_index: int,
+            current_data: Any,
+            current_key: AnyKey,
+            last_path: ABCPath[Any],
+            key_index: int,
         ) -> Literal[True] | None:
             missing_protocol = current_key.__supports_modify__(current_data)
             if missing_protocol:
@@ -261,8 +257,7 @@ class BasicIndexedConfigData[D: Indexed[Any, Any]](
     def exists(self, path: PathLike, *, ignore_wrong_type: bool = False) -> bool:
         path = fmt_path(path)
 
-        def checker(current_data: Any, current_key: AnyKey, _last_path: ABCPath[Any],
-                    key_index: int) -> bool | None:
+        def checker(current_data: Any, current_key: AnyKey, _last_path: ABCPath[Any], key_index: int) -> bool | None:
             missing_protocol = current_key.__supports__(current_data)
             if missing_protocol:
                 if ignore_wrong_type:
@@ -306,7 +301,7 @@ class BasicIndexedConfigData[D: Indexed[Any, Any]](
     @override
     def __getitem__(self, index: Any) -> Any:
         data = self._data[index]
-        is_sequence = isinstance(data, Sequence) and not isinstance(data, (str, bytes))
+        is_sequence = isinstance(data, Sequence) and not isinstance(data, str | bytes)
         if isinstance(data, Mapping) or is_sequence:
             return cast(Self, ConfigData(data))
         return cast(D, deepcopy(data))
@@ -327,6 +322,7 @@ class ConfigData(ABC):
     .. versionchanged:: 0.1.5
        会自动根据传入的配置数据类型选择对应的子类
     """
+
     TYPES: ClassVar[OrderedDict[tuple[type, ...], Callable[[Any], Any] | type]]
     """
     存储配置数据类型对应的子类
@@ -342,7 +338,8 @@ class ConfigData(ABC):
             if not isinstance(args[0], types):
                 continue
             return config_data_cls(*args, **kwargs)
-        raise TypeError(f"Unsupported type: {args[0]}")
+        msg = f"Unsupported type: {args[0]}"
+        raise TypeError(msg)
 
 
 class ConfigFile[D: ABCConfigData[Any]](ABCConfigFile[D]):
@@ -350,12 +347,7 @@ class ConfigFile[D: ABCConfigData[Any]](ABCConfigFile[D]):
     配置文件类
     """
 
-    def __init__(
-            self,
-            initial_config: D | Any,
-            *,
-            config_format: str | None = None
-    ) -> None:
+    def __init__(self, initial_config: D | Any, *, config_format: str | None = None) -> None:
         """
         :param initial_config: 配置数据
         :type initial_config: Any
@@ -375,82 +367,71 @@ class ConfigFile[D: ABCConfigData[Any]](ABCConfigFile[D]):
 
     @override
     def save(
-            self,
-            processor_pool: ABCSLProcessorPool,
-            namespace: str,
-            file_name: str,
-            config_format: str | None = None,
-            *processor_args: Any,
-            **processor_kwargs: Any
+        self,
+        processor_pool: ABCSLProcessorPool,
+        namespace: str,
+        file_name: str,
+        config_format: str | None = None,
+        *processor_args: Any,
+        **processor_kwargs: Any,
     ) -> None:
-
         if config_format is None:
             config_format = self._config_format
 
         if config_format is None:
-            raise UnsupportedConfigFormatError("Unknown")
+            msg = "Unknown"
+            raise UnsupportedConfigFormatError(msg)
         if config_format not in processor_pool.SLProcessors:
             raise UnsupportedConfigFormatError(config_format)
 
-        return processor_pool.SLProcessors[config_format].save(processor_pool, self, processor_pool.root_path,
-                                                               namespace, file_name, *processor_args,
-                                                               **processor_kwargs)
+        return processor_pool.SLProcessors[config_format].save(
+            processor_pool, self, processor_pool.root_path, namespace, file_name, *processor_args, **processor_kwargs
+        )
 
     @classmethod
     @override
     def load(
-            cls,
-            processor_pool: ABCSLProcessorPool,
-            namespace: str,
-            file_name: str,
-            config_format: str,
-            *processor_args: Any,
-            **processor_kwargs: Any,
+        cls,
+        processor_pool: ABCSLProcessorPool,
+        namespace: str,
+        file_name: str,
+        config_format: str,
+        *processor_args: Any,
+        **processor_kwargs: Any,
     ) -> Self:
-
         if config_format not in processor_pool.SLProcessors:
             raise UnsupportedConfigFormatError(config_format)
 
         return cast(
             Self,
             processor_pool.SLProcessors[config_format].load(
-                processor_pool,
-                processor_pool.root_path,
-                namespace,
-                file_name,
-                *processor_args,
-                **processor_kwargs),
+                processor_pool, processor_pool.root_path, namespace, file_name, *processor_args, **processor_kwargs
+            ),
         )
 
     @classmethod
     @override
     def initialize(
-            cls,
-            processor_pool: ABCSLProcessorPool,
-            namespace: str,
-            file_name: str,
-            config_format: str,
-            *processor_args: Any,
-            **processor_kwargs: Any,
+        cls,
+        processor_pool: ABCSLProcessorPool,
+        namespace: str,
+        file_name: str,
+        config_format: str,
+        *processor_args: Any,
+        **processor_kwargs: Any,
     ) -> Self:
-
         if config_format not in processor_pool.SLProcessors:
             raise UnsupportedConfigFormatError(config_format)
 
         return cast(
             Self,
             processor_pool.SLProcessors[config_format].initialize(
-                processor_pool,
-                processor_pool.root_path,
-                namespace,
-                file_name,
-                *processor_args,
-                **processor_kwargs),
+                processor_pool, processor_pool.root_path, namespace, file_name, *processor_args, **processor_kwargs
+            ),
         )
 
 
-class PHelper(ABCProcessorHelper):
-    ...
+class PHelper(ABCProcessorHelper): ...
 
 
 class BasicConfigPool(ABCConfigPool, ABC):
@@ -475,27 +456,24 @@ class BasicConfigPool(ABCConfigPool, ABC):
 
     # noinspection PyMethodOverriding
     @overload  # 咱也不知道为什么mypy只有这样检查会通过而pycharm会报错
-    def get(self, namespace: str) -> dict[str, ABCConfigFile[Any]] | None:
-        ...
+    def get(self, namespace: str) -> dict[str, ABCConfigFile[Any]] | None: ...
 
     # noinspection PyMethodOverriding
     @overload
-    def get(self, namespace: str, file_name: str) -> ABCConfigFile[Any] | None:
-        ...
+    def get(self, namespace: str, file_name: str) -> ABCConfigFile[Any] | None: ...
 
     @overload
     def get(
-            self,
-            namespace: str,
-            file_name: str | None = None,
-    ) -> dict[str, ABCConfigFile[Any]] | ABCConfigFile[Any] | None:
-        ...
+        self,
+        namespace: str,
+        file_name: str | None = None,
+    ) -> dict[str, ABCConfigFile[Any]] | ABCConfigFile[Any] | None: ...
 
     @override
     def get(
-            self,
-            namespace: str,
-            file_name: str | None = None,
+        self,
+        namespace: str,
+        file_name: str | None = None,
     ) -> dict[str, ABCConfigFile[Any]] | ABCConfigFile[Any] | None:
         if namespace not in self._configs:
             return None
@@ -518,10 +496,10 @@ class BasicConfigPool(ABCConfigPool, ABC):
         return self
 
     def _get_formats(
-            self,
-            file_name: str,
-            config_formats: str | Iterable[str] | None,
-            configfile_format: str | None = None,
+        self,
+        file_name: str,
+        config_formats: str | Iterable[str] | None,
+        configfile_format: str | None = None,
     ) -> Iterable[str]:
         """
         从给定参数计算所有可能的配置格式
@@ -582,17 +560,18 @@ class BasicConfigPool(ABCConfigPool, ABC):
             result_formats.append(configfile_format)
 
         if not result_formats:
-            raise UnsupportedConfigFormatError("Unknown")
+            msg = "Unknown"
+            raise UnsupportedConfigFormatError(msg)
 
         return OrderedDict.fromkeys(result_formats)
 
     def _try_sl_processors[R](
-            self,
-            namespace: str,
-            file_name: str,
-            config_formats: str | Iterable[str] | None,
-            processor: Callable[[Self, str, str, str], R],
-            file_config_format: str | None = None,
+        self,
+        namespace: str,
+        file_name: str,
+        config_formats: str | Iterable[str] | None,
+        processor: Callable[[Self, str, str, str], R],
+        file_config_format: str | None = None,
     ) -> R:
         """
         自动尝试推断ABCConfigFile所支持的config_format
@@ -653,12 +632,13 @@ class BasicConfigPool(ABCConfigPool, ABC):
 
     @override
     def save(
-            self,
-            namespace: str,
-            file_name: str,
-            config_formats: str | Iterable[str] | None = None,
-            config: ABCConfigFile[Any] | None = None,
-            *args: Any, **kwargs: Any,
+        self,
+        namespace: str,
+        file_name: str,
+        config_formats: str | Iterable[str] | None = None,
+        config: ABCConfigFile[Any] | None = None,
+        *args: Any,
+        **kwargs: Any,
     ) -> Self:
         if config is not None:
             self.set(namespace, file_name, config)
@@ -691,12 +671,12 @@ class BasicConfigPool(ABCConfigPool, ABC):
 
     @override
     def initialize(
-            self,
-            namespace: str,
-            file_name: str,
-            *args: Any,
-            config_formats: str | Iterable[str] | None = None,
-            **kwargs: Any,
+        self,
+        namespace: str,
+        file_name: str,
+        *args: Any,
+        config_formats: str | Iterable[str] | None = None,
+        **kwargs: Any,
     ) -> ABCConfigFile[Any]:
         def processor(pool: Self, ns: str, fn: str, cf: str) -> ABCConfigFile[Any]:
             config_file_cls: type[ABCConfigFile[Any]] = self.SLProcessors[cf].supported_file_classes[0]
@@ -709,13 +689,13 @@ class BasicConfigPool(ABCConfigPool, ABC):
 
     @override
     def load(
-            self,
-            namespace: str,
-            file_name: str,
-            *args: Any,
-            config_formats: str | Iterable[str] | None = None,
-            allow_initialize: bool = False,
-            **kwargs: Any,
+        self,
+        namespace: str,
+        file_name: str,
+        *args: Any,
+        config_formats: str | Iterable[str] | None = None,
+        allow_initialize: bool = False,
+        **kwargs: Any,
     ) -> ABCConfigFile[Any]:
         """
         加载配置到指定命名空间并返回
@@ -814,10 +794,10 @@ class BasicConfigPool(ABCConfigPool, ABC):
 
 __all__ = (
     "BasicConfigData",
-    "BasicSingleConfigData",
+    "BasicConfigPool",
     "BasicIndexedConfigData",
+    "BasicSingleConfigData",
     "ConfigData",
     "ConfigFile",
     "PHelper",
-    "BasicConfigPool",
 )

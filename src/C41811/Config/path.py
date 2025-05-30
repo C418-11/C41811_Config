@@ -47,6 +47,7 @@ class AttrKey(IndexMixin[str, Mapping[str, Any]], ABCKey[str, Mapping[str, Any]]
     """
     属性键
     """
+
     _key: str
 
     def __init__(self, key: str, meta: str | None = None):
@@ -76,8 +77,8 @@ class AttrKey(IndexMixin[str, Mapping[str, Any]], ABCKey[str, Mapping[str, Any]]
 
     @override
     def unparse(self) -> str:
-        meta = '' if self._meta is None else f"\\{{{self._meta.replace('\\', "\\\\")}\\}}"
-        return f"{meta}\\.{self._key.replace('\\', "\\\\")}"
+        meta = "" if self._meta is None else f"\\{{{self._meta.replace('\\', '\\\\')}\\}}"
+        return f"{meta}\\.{self._key.replace('\\', '\\\\')}"
 
     def __len__(self) -> int:
         return len(self._key)
@@ -97,6 +98,7 @@ class IndexKey(IndexMixin[int, Sequence[Any]], ABCKey[int, Sequence[Any]]):
     """
     下标键
     """
+
     _key: int
 
     def __init__(self, key: int, meta: str | None = None):
@@ -130,7 +132,7 @@ class IndexKey(IndexMixin[int, Sequence[Any]], ABCKey[int, Sequence[Any]]):
 
     @override
     def unparse(self) -> str:
-        meta = '' if self._meta is None else f"\\{{{self._meta.replace('\\', "\\\\")}\\}}"
+        meta = "" if self._meta is None else f"\\{{{self._meta.replace('\\', '\\\\')}\\}}"
         return f"{meta}\\[{self._key}\\]"
 
 
@@ -180,12 +182,12 @@ class Path(ABCPath[AttrKey | IndexKey]):
 
     @override
     def unparse(self) -> str:
-        return ''.join(key.unparse() for key in self._keys)
+        return "".join(key.unparse() for key in self._keys)
 
 
 def _count_backslash(s: str) -> int:
     count = 1
-    while s and (s[-1] == '\\'):
+    while s and (s[-1] == "\\"):
         count += 1
         s = s[:-1]
     return count
@@ -231,37 +233,34 @@ class PathSyntaxParser:
         if not string.startswith((r"\.", r"\[", r"\{")):
             string = rf"\.{string}"
 
-        tokens: list[str] = ['']
+        tokens: list[str] = [""]
         while string:
-            string, sep, token = string.rpartition('\\')
+            string, sep, token = string.rpartition("\\")
 
             # 处理r"\\"防止转义
             if not token:
                 token += tokens.pop()
 
             # 对不存在的转义进行警告
-            elif sep and (token[0] not in {'.', '\\', '[', ']', '{', '}'}):
+            elif sep and (token[0] not in {".", "\\", "[", "]", "{", "}"}):
                 # 检查这个转义符号是否已经被转义
                 if _count_backslash(string) % 2:
-                    warnings.warn(
-                        rf"invalid escape sequence '\{token[0]}'",
-                        SyntaxWarning
-                    )
+                    warnings.warn(rf"invalid escape sequence '\{token[0]}'", SyntaxWarning)
 
             # 连接不应单独存在的token
             index_safe = (len(tokens) > 0) and (len(tokens[-1]) > 1)
-            if index_safe and (tokens[-1][1] not in {'.', '[', ']', '{', '}'}):
+            if index_safe and (tokens[-1][1] not in {".", "[", "]", "{", "}"}):
                 token += tokens.pop()
 
             # 将r"\]"，r"\}"后面紧随的字符单独切割出来
-            if token.startswith((']', '}')) and token[1:]:
+            if token.startswith(("]", "}")) and token[1:]:
                 tokens.append(token[1:])
                 token = token[:1]
 
             tokens.append(sep + token)
 
         tokens.reverse()
-        if tokens[-1] == '':
+        if tokens[-1] == "":
             tokens.pop()
 
         return tuple(tokens)
@@ -284,31 +283,30 @@ class PathSyntaxParser:
 
         tokenized_path = cls.tokenize(string)
         for i, token in enumerate(tokenized_path):
-            if not token.startswith('\\'):
+            if not token.startswith("\\"):
                 raise UnknownTokenTypeError(TokenInfo(tokenized_path, token, i))
 
             token_type = token[1]
-            content = token[2:].replace("\\\\", '\\')
+            content = token[2:].replace("\\\\", "\\")
 
             def _token_closed(tk_typ: str, tk_close: str) -> None:
                 try:
                     top = token_stack.pop()
                 except IndexError:
                     raise ConfigDataPathSyntaxException(
-                        TokenInfo(tokenized_path, token, i),
-                        f"unmatched '{tk_close}': "
+                        TokenInfo(tokenized_path, token, i), f"unmatched '{tk_close}': "
                     ) from None
                 if top != tk_typ:
                     raise ConfigDataPathSyntaxException(
                         TokenInfo(tokenized_path, token, i),
-                        f"closing parenthesis '{tk_close}' does not match opening parenthesis '{top}': "
+                        f"closing parenthesis '{tk_close}' does not match opening parenthesis '{top}': ",
                     )
 
-            if token_type == '}':
-                _token_closed('{', '}')
+            if token_type == "}":
+                _token_closed("{", "}")
                 continue
-            if token_type == ']':
-                _token_closed('[', ']')
+            if token_type == "]":
+                _token_closed("[", "]")
                 try:
                     path.append(IndexKey(int(cast(str, item)), meta))
                 except ValueError:
@@ -319,19 +317,18 @@ class PathSyntaxParser:
 
             if token_stack:
                 raise ConfigDataPathSyntaxException(
-                    TokenInfo(tokenized_path, token, i),
-                    f"'{token_stack.pop()}' was never closed: "
+                    TokenInfo(tokenized_path, token, i), f"'{token_stack.pop()}' was never closed: "
                 )
 
-            if token_type == '[':
-                token_stack.append('[')
+            if token_type == "[":
+                token_stack.append("[")
                 item = content
                 continue
-            if token_type == '{':
-                token_stack.append('{')
+            if token_type == "{":
+                token_stack.append("{")
                 meta = content
                 continue
-            if token_type == '.':
+            if token_type == ".":
                 path.append(AttrKey(content, meta))
                 meta = None
                 continue
@@ -341,7 +338,7 @@ class PathSyntaxParser:
         if token_stack:
             raise ConfigDataPathSyntaxException(
                 TokenInfo(tokenized_path, tokenized_path[-1], len(tokenized_path) - 1),
-                f"'{token_stack.pop()}' was never closed: "
+                f"'{token_stack.pop()}' was never closed: ",
             )
 
         return path

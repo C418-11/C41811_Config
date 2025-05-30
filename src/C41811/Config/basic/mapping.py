@@ -34,11 +34,11 @@ from ..utils import Unset
 
 
 def _keys_recursive(
-        data: Mapping[Any, Any],
-        seen: set[int] | None = None,
-        *,
-        strict: bool,
-        end_point_only: bool,
+    data: Mapping[Any, Any],
+    seen: set[int] | None = None,
+    *,
+    strict: bool,
+    end_point_only: bool,
 ) -> Generator[str, None, None]:
     """
     递归获取配置的键
@@ -73,7 +73,7 @@ def _keys_recursive(
     for k, v in data.items():
         if not isinstance(k, str):
             raise TypeError(f"key must be str, not {type(k).__name__}")
-        k = k.replace('\\', "\\\\")
+        k = k.replace("\\", "\\\\")
         if isinstance(v, Mapping):
             try:
                 yield from (
@@ -100,12 +100,13 @@ class MappingConfigData[D: Mapping[Any, Any]](BasicIndexedConfigData[D], Mutable
 
     .. versionadded:: 0.1.5
     """
+
     _data: D
     data: D
 
     def __init__(self, data: D | None = None):
         if data is None:
-            data = dict()  # type: ignore[assignment]
+            data = {}  # type: ignore[assignment]
         super().__init__(cast(D, data))
 
     @property
@@ -139,15 +140,7 @@ class MappingConfigData[D: Mapping[Any, Any]](BasicIndexedConfigData[D], Mutable
         ----
 
            >>> from C41811.Config import ConfigData
-           >>> data = ConfigData({
-           ...     "foo": {
-           ...         "bar": {
-           ...             "baz": "value"
-           ...         },
-           ...         "bar1": "value1"
-           ...     },
-           ...     "foo1": "value2"
-           ... })
+           >>> data = ConfigData({"foo": {"bar": {"baz": "value"}, "bar1": "value1"}, "foo1": "value2"})
 
            不带参数行为与普通字典一样
 
@@ -171,10 +164,7 @@ class MappingConfigData[D: Mapping[Any, Any]](BasicIndexedConfigData[D], Mutable
 
            为严格模式时会检查循环引用并提前引发错误
 
-           >>> cyclic: dict[str, Any] = {
-           ...     "cyclic": None,
-           ...     "key": "value"
-           ... }
+           >>> cyclic: dict[str, Any] = {"cyclic": None, "key": "value"}
            >>> cyclic["cyclic"] = cyclic
            >>> cyclic = ConfigData(cyclic)
 
@@ -202,7 +192,7 @@ class MappingConfigData[D: Mapping[Any, Any]](BasicIndexedConfigData[D], Mutable
 
         if end_point_only:
             return OrderedDict.fromkeys(
-                k.replace('\\', "\\\\") for k, v in self._data.items() if not isinstance(v, Mapping)
+                k.replace("\\", "\\\\") for k, v in self._data.items() if not isinstance(v, Mapping)
             ).keys()
 
         return self._data.keys()
@@ -293,6 +283,4 @@ class MappingConfigData[D: Mapping[Any, Any]](BasicIndexedConfigData[D], Mutable
         ...
 
 
-__all__ = (
-    "MappingConfigData",
-)
+__all__ = ("MappingConfigData",)

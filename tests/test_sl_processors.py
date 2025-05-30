@@ -1,5 +1,3 @@
-
-
 import os
 import re
 from collections import OrderedDict
@@ -46,223 +44,70 @@ from C41811.Config.processor.Toml import TomlSL
 from C41811.Config.processor.ZipFile import ZipCompressionTypes
 
 JsonTests: tuple[tuple[Any, tuple[EE, ...], tuple[dict[str, Any], ...]], ...] = (
-    (
-        {"a": 1, "b": {"c": 2}},
-        (), ()
-    ),
-    (
-        {"a": 1, "b": {"c": 2}},
-        (), ({"indent": 4}, {})
-    ),
-    (
-        OrderedDict((('a', 1), ('b', 2))),
-        (), ({"indent": 4, "sort_keys": True}, {})
-    ),
-    (
-        OrderedDict((('b', 2), ('a', 1))),
-        (), ({"indent": 4, "sort_keys": False}, {})
-    ),
-    (
-        [1, 2, [3, [4, 5, [6], {'7': 8}]]],
-        (), ({"indent": 2}, {})
-    ),
-    (
-        "string",
-        (), ()
-    ),
-    (
-        True,
-        (), ()
-    ),
-    (
-        None,
-        (), ()
-    ),
-    (
-        11.45,
-        (), ()
-    ),
-    (
-        NotImplemented,
-        ((FailedProcessConfigFileError,), ()), ()
-    ),
-    (
-        OrderedDict((('b', 2), ('a', 1))),
-        ((), (FailedProcessConfigFileError,)), ({}, {"param not exist": None})
-    ),
+    ({"a": 1, "b": {"c": 2}}, (), ()),
+    ({"a": 1, "b": {"c": 2}}, (), ({"indent": 4}, {})),
+    (OrderedDict((("a", 1), ("b", 2))), (), ({"indent": 4, "sort_keys": True}, {})),
+    (OrderedDict((("b", 2), ("a", 1))), (), ({"indent": 4, "sort_keys": False}, {})),
+    ([1, 2, [3, [4, 5, [6], {"7": 8}]]], (), ({"indent": 2}, {})),
+    ("string", (), ()),
+    (True, (), ()),
+    (None, (), ()),
+    (11.45, (), ()),
+    (NotImplemented, ((FailedProcessConfigFileError,), ()), ()),
+    (OrderedDict((("b", 2), ("a", 1))), ((), (FailedProcessConfigFileError,)), ({}, {"param not exist": None})),
 )
 HJsonTests = JsonTests
 
 PickleTests: tuple[tuple[Any, tuple[EE, ...], tuple[Any, ...]], ...] = (
-    (
-        {"a": 1, "b": 2},
-        (), ()
-    ),
-    (
-        {"a": 1, "b": 2},
-        (), ({"protocol": 2}, {})
-    ),
-    (
-        {"a": 1, "b": 2},
-        (), ((2,), ())
-    ),
-    (
-        OrderedDict((('b', 2), ('a', 1))),
-        (), ()
-    ),
-    (
-        [1, 2, [3, [4, 5, [6], {'7': 8}]]],
-        (), ()
-    ),
-    (
-        "string",
-        (), ()
-    ),
-    (
-        True,
-        (), ()
-    ),
-    (
-        None,
-        (), ()
-    ),
-    (
-        11.45,
-        (), ()
-    ),
-    (
-        NotImplemented,
-        (), ()
-    ),
-    (
-        lambda: None,
-        ((FailedProcessConfigFileError,), ()), ()
-    ),
-    (
-        None,
-        ((), (FailedProcessConfigFileError,)), ({}, {"param not exist": None})
-    ),
+    ({"a": 1, "b": 2}, (), ()),
+    ({"a": 1, "b": 2}, (), ({"protocol": 2}, {})),
+    ({"a": 1, "b": 2}, (), ((2,), ())),
+    (OrderedDict((("b", 2), ("a", 1))), (), ()),
+    ([1, 2, [3, [4, 5, [6], {"7": 8}]]], (), ()),
+    ("string", (), ()),
+    (True, (), ()),
+    (None, (), ()),
+    (11.45, (), ()),
+    (NotImplemented, (), ()),
+    (lambda: None, ((FailedProcessConfigFileError,), ()), ()),
+    (None, ((), (FailedProcessConfigFileError,)), ({}, {"param not exist": None})),
 )
 
 PyYamlTests: tuple[tuple[Any, tuple[EE, ...], tuple[dict[str, Any], ...]], ...] = (
-    (
-        {"a": 1, "b": {"c": 2}},
-        (), ()
-    ),
-    (
-        {"a": 1, "b": {"c": 2}},
-        (), ({"indent": 4}, {})
-    ),
-    (
-        [1, 2, [3, [4, 5, [6], {'7': 8}]]],
-        (), ({"indent": 2}, {})
-    ),
-    (
-        "string",
-        (), ()
-    ),
-    (
-        True,
-        (), ()
-    ),
-    (
-        None,
-        (), ()
-    ),
-    (
-        11.45,
-        (), ()
-    ),
-    (
-        NotImplemented,
-        ((FailedProcessConfigFileError,), ()), ()
-    ),
-    (
-        OrderedDict((('b', 2), ('a', 1))),
-        ((FailedProcessConfigFileError,), (FailedProcessConfigFileError,)), ()
-    ),
+    ({"a": 1, "b": {"c": 2}}, (), ()),
+    ({"a": 1, "b": {"c": 2}}, (), ({"indent": 4}, {})),
+    ([1, 2, [3, [4, 5, [6], {"7": 8}]]], (), ({"indent": 2}, {})),
+    ("string", (), ()),
+    (True, (), ()),
+    (None, (), ()),
+    (11.45, (), ()),
+    (NotImplemented, ((FailedProcessConfigFileError,), ()), ()),
+    (OrderedDict((("b", 2), ("a", 1))), ((FailedProcessConfigFileError,), (FailedProcessConfigFileError,)), ()),
 )
 
 RuamelYamlTests: tuple[tuple[Any, tuple[EE, ...], tuple[dict[str, Any], ...]], ...] = (
-    (
-        {"a": 1, "b": {"c": 2}},
-        (), ()
-    ),
-    (
-        [1, 2, [3, [4, 5, [6], {'7': 8}]]],
-        (), ()
-    ),
-    (
-        "string",
-        (), ()
-    ),
-    (
-        True,
-        (), ()
-    ),
-    (
-        None,
-        (), ()
-    ),
-    (
-        11.45,
-        (), ()
-    ),
-    (
-        OrderedDict((('b', 2), ('a', 1))),
-        (), ()
-    ),
-    (
-        NotImplemented,
-        ((FailedProcessConfigFileError,), ()), ()
-    ),
+    ({"a": 1, "b": {"c": 2}}, (), ()),
+    ([1, 2, [3, [4, 5, [6], {"7": 8}]]], (), ()),
+    ("string", (), ()),
+    (True, (), ()),
+    (None, (), ()),
+    (11.45, (), ()),
+    (OrderedDict((("b", 2), ("a", 1))), (), ()),
+    (NotImplemented, ((FailedProcessConfigFileError,), ()), ()),
 )
 
 TOMLTests: tuple[tuple[Any, tuple[EE, ...], tuple[dict[str, Any], ...]], ...] = (
-    (
-        {"a": 1, "b": {"c": 2}},
-        (), ()
-    ),
-    (
-        {'1': [1, 2, 3]},
-        (), ()
-    ),
-    (
-        {},
-        (), ()
-    ),
-    (
-        OrderedDict((('b', 2), ('a', 1))),
-        (), ()
-    ),
-    (
-        {'1': [[1, 2], [3, 4], [5, 6]]},
-        (), ()
-    ),
-    (
-        [1, 2, 3],
-        (FailedProcessConfigFileError,), ()
-    ),
-    (
-        "string",
-        (FailedProcessConfigFileError,), ()
-    ),
-    (
-        True,
-        (FailedProcessConfigFileError,), ()
-    ),
-    (
-        11.45,
-        (FailedProcessConfigFileError,), ()
-    ),
-    (
-        None,
-        (FailedProcessConfigFileError,), ()
-    ),
-    (
-        NotImplemented,
-        ((FailedProcessConfigFileError,), ()), ()
-    ),
+    ({"a": 1, "b": {"c": 2}}, (), ()),
+    ({"1": [1, 2, 3]}, (), ()),
+    ({}, (), ()),
+    (OrderedDict((("b", 2), ("a", 1))), (), ()),
+    ({"1": [[1, 2], [3, 4], [5, 6]]}, (), ()),
+    ([1, 2, 3], (FailedProcessConfigFileError,), ()),
+    ("string", (FailedProcessConfigFileError,), ()),
+    (True, (FailedProcessConfigFileError,), ()),
+    (11.45, (FailedProcessConfigFileError,), ()),
+    (None, (FailedProcessConfigFileError,), ()),
+    (NotImplemented, ((FailedProcessConfigFileError,), ()), ()),
 )
 
 
@@ -273,67 +118,35 @@ class ErrDuringRepr:
 
 
 PythonLiteralTests = (
-    (
-        {"a": 1, "b": .5},
-        (), ()
-    ),
-    (
-        {"a": True, "b": False, "c": None},
-        (), ()
-    ),
-    (
-        {"a": {"c": 2}, "b": {"c", 2}},
-        (), ()
-    ),
-    (
-        {"a": ["c", 2], "b": ("c", 2)},
-        (), ()
-    ),
-    (
-        [1, 2, [3, [4, 5, [6], {'7': 8}]]],
-        (), ()
-    ),
-    (
-        "string",
-        (), ()
-    ),
-    (
-        True,
-        (), ()
-    ),
-    (
-        None,
-        (), ()
-    ),
-    (
-        11.45,
-        (), ()
-    ),
-    (
-        {"a": float("-inf"), "b": frozenset()},
-        ((), (FailedProcessConfigFileError,)), ()
-    ),
-    (
-        {"a": ErrDuringRepr()},
-        ((FailedProcessConfigFileError,), (FailedProcessConfigFileError,)), ()
-    ),
+    ({"a": 1, "b": 0.5}, (), ()),
+    ({"a": True, "b": False, "c": None}, (), ()),
+    ({"a": {"c": 2}, "b": {"c", 2}}, (), ()),
+    ({"a": ["c", 2], "b": ("c", 2)}, (), ()),
+    ([1, 2, [3, [4, 5, [6], {"7": 8}]]], (), ()),
+    ("string", (), ()),
+    (True, (), ()),
+    (None, (), ()),
+    (11.45, (), ()),
+    ({"a": float("-inf"), "b": frozenset()}, ((), (FailedProcessConfigFileError,)), ()),
+    ({"a": ErrDuringRepr()}, ((FailedProcessConfigFileError,), (FailedProcessConfigFileError,)), ()),
 )
 
 PlainTextTests = (
     (
         "A\nB\nC\nD\nE",
-        (), (),
+        (),
+        (),
     ),
     (
         ["A", "B", "C", "D", "E"],
-        (), ({"linesep": "\n"}, {"split_line": True, "remove_linesep": "\n"}),
+        (),
+        ({"linesep": "\n"}, {"split_line": True, "remove_linesep": "\n"}),
     ),
 )
 
 
 def _insert_sl_cls(
-        sl_cls: type[ABCConfigSL],
-        tests: tuple[Any, ...]
+    sl_cls: type[ABCConfigSL], tests: tuple[Any, ...]
 ) -> Generator[tuple[type[ABCConfigSL], Any], Any, None]:
     yield from ((sl_cls, *test) for test in tests)
 
@@ -349,7 +162,7 @@ LocalFileTests = (
         *_insert_sl_cls(TomlSL, TOMLTests),
         *_insert_sl_cls(PythonLiteralSL, PythonLiteralTests),
         *_insert_sl_cls(PlainTextSL, PlainTextTests),
-    )
+    ),
 )
 
 
@@ -360,11 +173,11 @@ def pool(tmpdir: Path) -> ConfigPool:
 
 @mark.parametrize(*LocalFileTests)
 def test_local_file_sl_processors(
-        pool: ConfigPool,
-        sl_cls: type[BasicLocalFileConfigSL],
-        raw_data: Any,
-        ignore_excs: tuple[EE, EE],
-        sl_args: tuple[Any, Any],
+    pool: ConfigPool,
+    sl_cls: type[BasicLocalFileConfigSL],
+    raw_data: Any,
+    ignore_excs: tuple[EE, EE],
+    sl_args: tuple[Any, Any],
 ) -> None:
     sl_obj = sl_cls(*sl_args)
     sl_obj.register_to(pool)
@@ -376,85 +189,37 @@ def test_local_file_sl_processors(
         ignore_excs = ((), ())
 
     with safe_raises(ignore_excs[0]) as info:
-        pool.save('', file_name, config=file)
+        pool.save("", file_name, config=file)
     if info:
         return
-    pool.remove('', file_name)
+    pool.remove("", file_name)
     with safe_raises(ignore_excs[1]) as info:
-        loaded_file = pool.load('', file_name)
+        loaded_file = pool.load("", file_name)
     if info:
         return
     assert loaded_file == file
 
 
 TarFileTests = (
-    (
-        {"Now": {"supports": {"compression": "!"}}},
-        (), dict(compression=TarCompressionTypes.GZIP)
-    ),
-    (
-        {"a": True, "b": {"c": [.5, None]}},
-        (), dict(compression=TarCompressionTypes.BZIP2)
-    ),
-    (
-        {"a": True, "b": {"c": [.5, None]}},
-        (), dict(compression=TarCompressionTypes.LZMA)
-    ),
-    (
-        {"a": True, "b": {"c": [.5, None]}},
-        (), dict(compression=TarCompressionTypes.ONLY_STORAGE)
-    ),
-    (
-        {"a": True, "b": {"c": [.5, None]}},
-        (), dict(compression=None)
-    ),
-    (
-        {"a": True, "b": {"c": [.5, None]}},
-        (), dict(compression="lzma")
-    ),
-    (
-        {"a": True, "b": {"c": [.5, None]}},
-        (), dict(compression="xz")
-    ),
+    ({"Now": {"supports": {"compression": "!"}}}, (), {"compression": TarCompressionTypes.GZIP}),
+    ({"a": True, "b": {"c": [0.5, None]}}, (), {"compression": TarCompressionTypes.BZIP2}),
+    ({"a": True, "b": {"c": [0.5, None]}}, (), {"compression": TarCompressionTypes.LZMA}),
+    ({"a": True, "b": {"c": [0.5, None]}}, (), {"compression": TarCompressionTypes.ONLY_STORAGE}),
+    ({"a": True, "b": {"c": [0.5, None]}}, (), {"compression": None}),
+    ({"a": True, "b": {"c": [0.5, None]}}, (), {"compression": "lzma"}),
+    ({"a": True, "b": {"c": [0.5, None]}}, (), {"compression": "xz"}),
 )
 
 ZipFileTests: tuple[tuple[Any, tuple[EE, ...], dict[str, Any]], ...] = (
-    (
-        {"a": True, "b": {"c": [.5, None]}},
-        (), {}
-    ),
-    (
-        {"a": True, "b": {"c": [.5, None]}},
-        (), dict(compression=ZipCompressionTypes.ZIP)
-    ),
-    (
-        {"a": True, "b": {"c": [.5, None]}},
-        (), dict(compression=ZipCompressionTypes.BZIP2)
-    ),
-    (
-        {"a": True, "b": {"c": [.5, None]}},
-        (), dict(compression=ZipCompressionTypes.LZMA)
-    ),
-    (
-        {"a": True, "b": {"c": [.5, None]}},
-        (), dict(compression=ZipCompressionTypes.ONLY_STORAGE)
-    ),
-    (
-        {"a": True, "b": {"c": [.5, None]}},
-        (), dict(compression=None)
-    ),
-    (
-        {"a": True, "b": {"c": [.5, None]}},
-        (), dict(compression="lzma")
-    ),
-    (
-        {"a": True, "b": {"c": [.5, None]}},
-        (), dict(compression="xz", compress_level=9)
-    ),
-    (
-        {"a": True, "b": {"c": [.5, None]}},
-        (), dict(compression=ZipCompressionTypes.ZIP, compress_level=9)
-    ),
+    ({"a": True, "b": {"c": [0.5, None]}}, (), {}),
+    ({"a": True, "b": {"c": [0.5, None]}}, (), {"compression": ZipCompressionTypes.ZIP}),
+    ({"a": True, "b": {"c": [0.5, None]}}, (), {"compression": ZipCompressionTypes.BZIP2}),
+    ({"a": True, "b": {"c": [0.5, None]}}, (), {"compression": ZipCompressionTypes.LZMA}),
+    ({"a": True, "b": {"c": [0.5, None]}}, (), {"compression": ZipCompressionTypes.ONLY_STORAGE}),
+    ({"a": True, "b": {"c": [0.5, None]}}, (), {"compression": None}),
+    ({"a": True, "b": {"c": [0.5, None]}}, (), {"compression": "lzma"}),
+    ({"a": True, "b": {"c": [0.5, None]}}, (), {"compression": "xz", "compress_level": 9}),
+    ({"a": True, "b": {"c": [0.5, None]}}, (), {"compression": ZipCompressionTypes.ZIP, "compress_level": 9}),
 )
 
 CompressedFileTests = (
@@ -462,22 +227,22 @@ CompressedFileTests = (
     (
         *_insert_sl_cls(TarFileSL, TarFileTests),
         *_insert_sl_cls(ZipFileSL, ZipFileTests),
-    )
+    ),
 )
 
 
 @mark.parametrize(*CompressedFileTests)
 def test_compressed_file_sl_processors(
-        pool: ConfigPool,
-        sl_cls: type[BasicCompressedConfigSL],
-        raw_data: Any,
-        ignore_excs: tuple[EE, EE],
-        init_arguments: dict[str, Any],
+    pool: ConfigPool,
+    sl_cls: type[BasicCompressedConfigSL],
+    raw_data: Any,
+    ignore_excs: tuple[EE, EE],
+    init_arguments: dict[str, Any],
 ) -> None:
     # noinspection PyArgumentList
     compressed_sl = sl_cls(**init_arguments)
     compressed_sl.register_to(pool)
-    local_sl = JsonSL(s_arg=dict(indent=2))
+    local_sl = JsonSL(s_arg={"indent": 2})
     local_sl.register_to(pool)
 
     file: ConfigFile[Any] = ConfigFile(ConfigData(raw_data), config_format=local_sl.reg_name)
@@ -487,12 +252,12 @@ def test_compressed_file_sl_processors(
         ignore_excs = ((), ())
 
     with safe_raises(ignore_excs[0]) as info:
-        pool.save('', file_name, config=file)
+        pool.save("", file_name, config=file)
     if info:
         return
-    pool.remove('', file_name)
+    pool.remove("", file_name)
     with safe_raises(ignore_excs[1]) as info:
-        loaded_file = pool.load('', file_name)
+        loaded_file = pool.load("", file_name)
     if info:
         return
     assert loaded_file == file
@@ -500,57 +265,78 @@ def test_compressed_file_sl_processors(
 
 ComponentTests: tuple[
     str,
-    tuple[tuple[
-        tuple[ABCConfigSL, ...],
-        dict[str, Any],
-        dict[str, ConfigData],
-        tuple[EE, ...],
-        dict[str, Any],
-    ], ...]
+    tuple[
+        tuple[
+            tuple[ABCConfigSL, ...],
+            dict[str, Any],
+            dict[str, ConfigData],
+            tuple[EE, ...],
+            dict[str, Any],
+        ],
+        ...,
+    ],
 ] = (
     "sl_clss, meta, members, ignore_excs, init_arguments",
     (
-        ((JsonSL(s_arg=dict(indent=2)),),
-         {"members": ["test.json"]},
-         {"test.json": ConfigData({"test": "test"})},
-         (), {}),
-        ((JsonSL(s_arg=dict(indent=2)),),
-         {"members": [dict(filename="test", config_format="json")]},
-         {"test": ConfigData({"test": "test"})},
-         (), {}),
-        ((JsonSL(s_arg=dict(indent=2)),),
-         {"members": ["test.json"], "orders": {"create": ["test.json"]}, "order": ["test.json"]},
-         {"test.json": ConfigData({"test": "test"})},
-         (), {}),
-        ((JsonSL(s_arg=dict(indent=2)),),
-         {"members": [dict(filename="test.json", alies="t")], "orders": {"create": ["t"]}, "order": ["t"]},
-         {"test.json": ConfigData({"test": "test"})},
-         (), {}),
-        ((JsonSL(s_arg=dict(indent=2)),),
-         {"members": ["test.json"], "orders": {"create": ["test.json", "test.json"]}},
-         {"test.json": ConfigData({"test": "test"})},
-         ((ValueError,), (), ()), {}),
-        ((
-             JsonSL(s_arg=dict(indent=2)),
-             PythonLiteralSL(),
-             ZipFileSL(compress_level=9),
-             TarFileSL(compression=TarCompressionTypes.GZIP)
-         ),
-         {"members": ["test.json.zip", "test.py.tar.gz"], "order": ["test.py.tar.gz", "test.json.zip"]},
-         {"test.json.zip": ConfigData({"test": "test"}), "test.py.tar.gz": ConfigData({"test": "test"})},
-         (), {}),
-    )
+        (
+            (JsonSL(s_arg={"indent": 2}),),
+            {"members": ["test.json"]},
+            {"test.json": ConfigData({"test": "test"})},
+            (),
+            {},
+        ),
+        (
+            (JsonSL(s_arg={"indent": 2}),),
+            {"members": [{"filename": "test", "config_format": "json"}]},
+            {"test": ConfigData({"test": "test"})},
+            (),
+            {},
+        ),
+        (
+            (JsonSL(s_arg={"indent": 2}),),
+            {"members": ["test.json"], "orders": {"create": ["test.json"]}, "order": ["test.json"]},
+            {"test.json": ConfigData({"test": "test"})},
+            (),
+            {},
+        ),
+        (
+            (JsonSL(s_arg={"indent": 2}),),
+            {"members": [{"filename": "test.json", "alies": "t"}], "orders": {"create": ["t"]}, "order": ["t"]},
+            {"test.json": ConfigData({"test": "test"})},
+            (),
+            {},
+        ),
+        (
+            (JsonSL(s_arg={"indent": 2}),),
+            {"members": ["test.json"], "orders": {"create": ["test.json", "test.json"]}},
+            {"test.json": ConfigData({"test": "test"})},
+            ((ValueError,), (), ()),
+            {},
+        ),
+        (
+            (
+                JsonSL(s_arg={"indent":2}),
+                PythonLiteralSL(),
+                ZipFileSL(compress_level=9),
+                TarFileSL(compression=TarCompressionTypes.GZIP),
+            ),
+            {"members": ["test.json.zip", "test.py.tar.gz"], "order": ["test.py.tar.gz", "test.json.zip"]},
+            {"test.json.zip": ConfigData({"test": "test"}), "test.py.tar.gz": ConfigData({"test": "test"})},
+            (),
+            {},
+        ),
+    ),
 )
 
 
 @mark.parametrize(*ComponentTests)
 def test_component_file_sl_processor(
-        pool: ConfigPool,
-        sl_clss: list[ABCConfigSL],
-        meta: dict[str | None, MappingConfigData[Any]] | None | ComponentMeta[Any],
-        members: dict[str, Any] | None,
-        ignore_excs: tuple[EE, EE, EE],
-        init_arguments: dict[str, Any],
+    pool: ConfigPool,
+    sl_clss: list[ABCConfigSL],
+    meta: dict[str | None, MappingConfigData[Any]] | None | ComponentMeta[Any],
+    members: dict[str, Any] | None,
+    ignore_excs: tuple[EE, EE, EE],
+    init_arguments: dict[str, Any],
 ) -> None:
     component_sl = ComponentSL(**init_arguments)
     component_sl.register_to(pool)
@@ -562,8 +348,9 @@ def test_component_file_sl_processor(
 
     with safe_raises(ignore_excs[0]) as info:
         config_data = ComponentConfigData(
-            meta if isinstance(meta, ComponentMeta) else
-            ComponentMetaParser().convert_config2meta(MappingConfigData(meta)),  # type: ignore[arg-type]
+            meta
+            if isinstance(meta, ComponentMeta)
+            else ComponentMetaParser().convert_config2meta(MappingConfigData(meta)),  # type: ignore[arg-type]
             members=members,
         )
     if info:
@@ -573,12 +360,12 @@ def test_component_file_sl_processor(
     file_name = f"TestConfigFile{sl_clss[0].supported_file_patterns[0]}{component_sl.supported_file_patterns[0]}"
 
     with safe_raises(ignore_excs[1]) as info:
-        pool.save('', file_name, config=file)
+        pool.save("", file_name, config=file)
     if info:
         return
-    pool.remove('', file_name)
+    pool.remove("", file_name)
     with safe_raises(ignore_excs[2]) as info:
-        loaded_data: ComponentConfigData[Any, Any] = pool.load('', file_name).config
+        loaded_data: ComponentConfigData[Any, Any] = pool.load("", file_name).config
     if info:
         return
     assert loaded_data.meta.members == config_data.meta.members
@@ -593,7 +380,7 @@ def test_save_none_component(pool: ConfigPool) -> None:
     json_sl.register_to(pool)
 
     file_name = f"TestConfigFile{json_sl.supported_file_patterns[0]}{comp_sl.supported_file_patterns[0]}"
-    pool.save('', file_name, config=ConfigFile(ConfigData(), config_format=comp_sl.reg_name))
+    pool.save("", file_name, config=ConfigFile(ConfigData(), config_format=comp_sl.reg_name))
 
 
 def test_component_initialize(pool: ConfigPool) -> None:
@@ -603,7 +390,7 @@ def test_component_initialize(pool: ConfigPool) -> None:
     json_sl.register_to(pool)
 
     file_name = f"TestConfigFile{json_sl.supported_file_patterns[0]}{comp_sl.supported_file_patterns[0]}"
-    pool.load('', file_name, allow_initialize=True)
+    pool.load("", file_name, allow_initialize=True)
 
 
 def test_component_wrong_config_data(pool: ConfigPool) -> None:
@@ -615,16 +402,18 @@ def test_component_wrong_config_data(pool: ConfigPool) -> None:
     file_name = f"TestConfigFile{json_sl.supported_file_patterns[0]}{comp_sl.supported_file_patterns[0]}"
     with raises(FailedProcessConfigFileError, match="is not a"):
         pool.save(
-            '', file_name,
+            "",
+            file_name,
             config=ConfigFile(ConfigData([])),
         )
-    pool.discard('', file_name)
+    pool.discard("", file_name)
     pool.save(
-        comp_sl.namespace_formatter('', file_name), comp_sl.initial_file + json_sl.supported_file_patterns[0],
+        comp_sl.namespace_formatter("", file_name),
+        comp_sl.initial_file + json_sl.supported_file_patterns[0],
         config=ConfigFile(ConfigData([])),
     )
     with raises(FailedProcessConfigFileError, match="is not a"):
-        pool.load('', file_name)
+        pool.load("", file_name)
 
 
 def test_compressed_component(pool: ConfigPool) -> None:
@@ -644,24 +433,25 @@ def test_compressed_component(pool: ConfigPool) -> None:
     fn_c = f"c{json_sl.supported_file_patterns[0]}{tar_sl.supported_file_patterns[0]}"
 
     cfg: MappingConfigData[Any] = pool.require(
-        '', file_name,
+        "",
+        file_name,
         {
             None: {"members": [fn_a, fn_b, fn_c]},
             fn_a: {"key": None},
             fn_b: {"key": True},
             fn_c: {"key": False},
         },
-        "component"
+        "component",
     ).check()
-    assert cfg.retrieve(fr"\{{{fn_a}\}}\.key") is None
-    assert cfg.retrieve(fr"\{{{fn_b}\}}\.key") is True
-    assert cfg.retrieve(fr"\{{{fn_c}\}}\.key") is False
+    assert cfg.retrieve(rf"\{{{fn_a}\}}\.key") is None
+    assert cfg.retrieve(rf"\{{{fn_b}\}}\.key") is True
+    assert cfg.retrieve(rf"\{{{fn_c}\}}\.key") is False
     pool.save_all()
-    pool.remove('', file_name)
-    cfg = pool.load('', file_name).config
-    assert cfg.retrieve(fr"\{{{fn_a}\}}\.key") is None
-    assert cfg.retrieve(fr"\{{{fn_b}\}}\.key") is True
-    assert cfg.retrieve(fr"\{{{fn_c}\}}\.key") is False
+    pool.remove("", file_name)
+    cfg = pool.load("", file_name).config
+    assert cfg.retrieve(rf"\{{{fn_a}\}}\.key") is None
+    assert cfg.retrieve(rf"\{{{fn_b}\}}\.key") is True
+    assert cfg.retrieve(rf"\{{{fn_c}\}}\.key") is False
 
 
 def test_python(pool: ConfigPool) -> None:
@@ -669,9 +459,11 @@ def test_python(pool: ConfigPool) -> None:
     PlainTextSL().register_to(pool)
 
     pool.save(
-        '', "test-python.py",
-        config=ConfigFile(dedent(
-            """
+        "",
+        "test-python.py",
+        config=ConfigFile(
+            dedent(
+                """
             key = "value"
 
             length = len(key)
@@ -682,10 +474,13 @@ def test_python(pool: ConfigPool) -> None:
 
             datetime = _dt.now()
             """
-        )), config_formats={"plaintext"})
+            )
+        ),
+        config_formats={"plaintext"},
+    )
 
-    pool.discard('', "test-python.py")
-    cfg: MappingConfigData[Any] = pool.load('', "test-python.py").config
+    pool.discard("", "test-python.py")
+    cfg: MappingConfigData[Any] = pool.load("", "test-python.py").config
 
     assert cfg["key"] == "value"
     assert cfg["length"] == 5
@@ -696,25 +491,25 @@ def test_python(pool: ConfigPool) -> None:
 def test_os_env(pool: ConfigPool) -> None:
     OSEnvSL().register_to(pool)
 
-    environ: EnvironmentConfigData = pool.load('', "snapshot.os.env").config
+    environ: EnvironmentConfigData = pool.load("", "snapshot.os.env").config
     assert dict(environ) == dict(os.environ)
-    environ.unset("TEST_ENV_VAR")  # 预准备，确保该环境变量不存在
-    pool.save('', "snapshot.os.env")
+    environ.unset("TEST_ENV_VAR")  # 预准备 确保该环境变量不存在
+    pool.save("", "snapshot.os.env")
     assert "TEST_ENV_VAR" not in os.environ
 
-    # save操作会重置environ内部维护的diff,所以不用担心这里再加回去会被认为还原刚刚的修改
+    # save操作会重置environ内部维护的diff 所以不用担心这里再加回去会被认为还原刚刚的修改
     environ["TEST_ENV_VAR"] = "test"  # 检测同步新增键
-    assert "TEST_ENV_VAR" not in os.environ  # 确保不会直接同步修改到环境变量，变更仅内存
-    pool.save('', "snapshot.os.env")  # 同步修改到环境变量
+    assert "TEST_ENV_VAR" not in os.environ  # 确保不会直接同步修改到环境变量 变更仅内存
+    pool.save("", "snapshot.os.env")  # 同步修改到环境变量
     assert "TEST_ENV_VAR" in os.environ
     assert os.environ["TEST_ENV_VAR"] == "test"
 
     environ["TEST_ENV_VAR"] = "value"
-    pool.save('', "snapshot.os.env")
+    pool.save("", "snapshot.os.env")
     assert os.environ["TEST_ENV_VAR"] == "value"
 
     environ.unset("TEST_ENV_VAR")
-    pool.save('', "snapshot.os.env")
+    pool.save("", "snapshot.os.env")
     assert "TEST_ENV_VAR" not in os.environ
 
 
@@ -759,11 +554,7 @@ def test_base(sl_cls: type[BasicConfigSL]) -> None:
         "supported_file_patterns",
     )
     if issubclass(sl_cls, BasicLocalFileConfigSL):
-        attr_tests = (
-            "saver_args",
-            "loader_args",
-            *attr_tests
-        )
+        attr_tests = ("saver_args", "loader_args", *attr_tests)
     for attr in attr_tests:
         with raises(AttributeError, match=re.compile(rf"property '{attr}' of '.+' object has no setter")):
             setattr(sl_cls(), attr, None)

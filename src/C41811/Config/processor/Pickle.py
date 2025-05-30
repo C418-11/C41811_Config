@@ -32,27 +32,27 @@ class PickleSL(BasicLocalFileConfigSL):
 
     supported_file_classes = [ConfigFile]
 
-    _s_open_kwargs = dict(mode="wb")
+    _s_open_kwargs = {"mode": "wb"}
 
     @override
     def save_file(
-            self,
-            config_file: ABCConfigFile[Any],
-            target_file: SupportsWrite[bytes],
-            *merged_args: Any,
-            **merged_kwargs: Any,
+        self,
+        config_file: ABCConfigFile[Any],
+        target_file: SupportsWrite[bytes],
+        *merged_args: Any,
+        **merged_kwargs: Any,
     ) -> None:
         with self.raises():
             pickle.dump(config_file.config.data, target_file, *merged_args, **merged_kwargs)
 
-    _l_open_kwargs = dict(mode="rb")
+    _l_open_kwargs = {"mode": "rb"}
 
     @override
     def load_file(
-            self,
-            source_file: SupportsReadAndReadline[bytes],
-            *merged_args: Any,
-            **merged_kwargs: Any,
+        self,
+        source_file: SupportsReadAndReadline[bytes],
+        *merged_args: Any,
+        **merged_kwargs: Any,
     ) -> ConfigFile[Any]:
         with self.raises():
             data = pickle.load(source_file, *merged_args, **merged_kwargs)
@@ -60,6 +60,4 @@ class PickleSL(BasicLocalFileConfigSL):
         return ConfigFile(data, config_format=self.processor_reg_name)
 
 
-__all__ = (
-    "PickleSL",
-)
+__all__ = ("PickleSL",)

@@ -1,5 +1,3 @@
-
-
 import re
 from collections.abc import Mapping
 from collections.abc import MutableMapping
@@ -28,7 +26,9 @@ from C41811.Config.errors import UnknownTokenTypeError
 from C41811.Config.errors import UnsupportedConfigFormatError
 
 
-@mark.parametrize("args, raw_string", (
+@mark.parametrize(
+    "args, raw_string",
+    (
         ((["\\[2", "\\[3", "\\]"], "\\[3", 1), "\\[2\\[3\\]"),
         ((["\\[2", "\\]", "\\.3", "\\]"], "\\]", 3), "\\[2\\]\\.3\\]"),
         ((["\\[2", "\\.3"], ".3", 1), "\\[2\\.3"),
@@ -38,7 +38,8 @@ from C41811.Config.errors import UnsupportedConfigFormatError
         ((["abc", "\\[2", "\\]"], "abc", 0), "abc\\[2\\]"),
         ((["abc"], "abc", 0), "abc"),
         ((["\\a\\a"], "\\a\\a", 0), "\\a\\a"),
-))
+    ),
+)
 def test_token_info(args: tuple[tuple[str, ...], str, int], raw_string: str) -> None:
     ti = TokenInfo(*args)
     assert ti.raw_string == raw_string
@@ -74,16 +75,22 @@ def test_unknown_token_type_error(token_info: TokenInfo) -> None:
         raise UnknownTokenTypeError(token_info, "$$override$$")
 
 
-@mark.parametrize("kwargs, relative_keys", (
-        ({"path": Path((AttrKey("foo2"), AttrKey("bar"))), "current_key": AttrKey("bar"), "index": 1},
-         (AttrKey("foo2"),)),
+@mark.parametrize(
+    "kwargs, relative_keys",
+    (
+        (
+            {"path": Path((AttrKey("foo2"), AttrKey("bar"))), "current_key": AttrKey("bar"), "index": 1},
+            (AttrKey("foo2"),),
+        ),
         ({"path": Path((AttrKey("foo3"),)), "current_key": AttrKey("foo3"), "index": 0}, ()),
         ({"path": Path((AttrKey("not exist"),)), "current_key": AttrKey("not exist"), "index": 0}, ()),
         ({"path": Path((AttrKey("foo.not exist"),)), "current_key": AttrKey("foo.not exist"), "index": 0}, ()),
-        ({"path": Path((AttrKey("foo2"), AttrKey("not exist"))), "current_key": AttrKey("not exist"), "index": 1},
-         (AttrKey("foo2"),)),
-
-))
+        (
+            {"path": Path((AttrKey("foo2"), AttrKey("not exist"))), "current_key": AttrKey("not exist"), "index": 1},
+            (AttrKey("foo2"),),
+        ),
+    ),
+)
 def test_key_info(kwargs: dict[str, Any], relative_keys: tuple[AttrKey | IndexKey, ...]) -> None:
     ki = KeyInfo(**kwargs)
     assert ki.relative_keys == Path(relative_keys)
@@ -91,14 +98,7 @@ def test_key_info(kwargs: dict[str, Any], relative_keys: tuple[AttrKey | IndexKe
 
 @fixture
 def key_info() -> KeyInfo[AttrKey]:
-    return KeyInfo(
-        cast(
-            ABCPath[AttrKey],
-            Path((AttrKey("foo3"),))
-        ),
-        AttrKey("foo3"),
-        0
-    )
+    return KeyInfo(cast(ABCPath[AttrKey], Path((AttrKey("foo3"),))), AttrKey("foo3"), 0)
 
 
 def test_required_path_not_found_error(key_info: KeyInfo[Any]) -> None:
@@ -117,7 +117,9 @@ def test_config_data_readonly_error() -> None:
         raise ConfigDataReadOnlyError("$$message$$")
 
 
-@mark.parametrize("required_type, current_type", (
+@mark.parametrize(
+    "required_type, current_type",
+    (
         (int, str),
         (str, int),
         (list[str], str),
@@ -127,7 +129,8 @@ def test_config_data_readonly_error() -> None:
         ((MutableMapping, Sequence), Mapping),
         ((str, bytes), float),
         ((bool, int, float), frozenset),
-))
+    ),
+)
 def test_config_data_type_error(key_info: KeyInfo[Any], required_type: tuple[type, ...], current_type: type) -> None:
     def _repr(t: tuple[type, ...] | type) -> str:
         if isinstance(t, tuple) and len(t) == 1:
@@ -161,4 +164,4 @@ def test_failed_process_config_file_error() -> None:
         raise cls([Exception(1), Exception(2), Exception(3)])
 
     with raises(cls, match=r"1: 1\n2: 2\n3: 3"):
-        raise cls({'1': Exception('1'), '2': Exception(2), '3': Exception(3)})
+        raise cls({"1": Exception("1"), "2": Exception(2), "3": Exception(3)})

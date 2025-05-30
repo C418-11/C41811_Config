@@ -21,6 +21,7 @@ class TokenInfo:
     """
     一段标记的相关信息 用于快速定位到指定标记
     """
+
     tokens: tuple[str, ...]
     """
     当前完整标记列表
@@ -36,7 +37,7 @@ class TokenInfo:
 
     @property
     def raw_string(self) -> str:
-        return ''.join(self.tokens)
+        return "".join(self.tokens)
 
 
 class ConfigDataPathSyntaxException(Exception):
@@ -90,6 +91,7 @@ class ConfigOperate(Enum):
     """
     对配置的操作类型
     """
+
     Delete = "Delete"
     Read = "Read"
     Write = "Write"
@@ -101,6 +103,7 @@ class KeyInfo[K: AnyKey]:
     """
     一段路径的相关信息 用于快速定位到指定键
     """
+
     path: ABCPath[K]
     """
     当前完整路径
@@ -116,7 +119,7 @@ class KeyInfo[K: AnyKey]:
 
     @property
     def relative_keys(self) -> Iterable[K]:
-        return self.path[:self.index]
+        return self.path[: self.index]
 
 
 class RequiredPathNotFoundError(LookupError):
@@ -128,9 +131,9 @@ class RequiredPathNotFoundError(LookupError):
     """
 
     def __init__(
-            self,
-            key_info: KeyInfo[Any],
-            operate: ConfigOperate = ConfigOperate.Unknown,
+        self,
+        key_info: KeyInfo[Any],
+        operate: ConfigOperate = ConfigOperate.Unknown,
     ):
         """
         :param key_info: 键相关信息
@@ -175,10 +178,10 @@ class ConfigDataTypeError(ValueError):
     """
 
     def __init__(
-            self,
-            key_info: KeyInfo[Any],
-            required_type: tuple[type, ...] | type,
-            current_type: type,
+        self,
+        key_info: KeyInfo[Any],
+        required_type: tuple[type, ...] | type,
+        current_type: type,
     ):
         """
         :param key_info: 键相关信息
@@ -276,11 +279,7 @@ class FailedProcessConfigFileError[E: BaseException](BaseExceptionGroup, Excepti
     reasons: tuple[E, ...] | OrderedDict[str, E]
 
     @staticmethod
-    def __new__(
-            cls,
-            reason: E | Iterable[E] | Mapping[str, E],
-            msg: str = "Failed to process config file"
-    ) -> Self:
+    def __new__(cls, reason: E | Iterable[E] | Mapping[str, E], msg: str = "Failed to process config file") -> Self:
         """
         :param reason: 处理配置文件失败的原因
         :type reason: BaseException | Iterable[BaseException] | Mapping[str, BaseException]
@@ -293,16 +292,11 @@ class FailedProcessConfigFileError[E: BaseException](BaseExceptionGroup, Excepti
         exceptions: tuple[E, ...]
         if isinstance(reason, Mapping):
             reasons = OrderedDict(reason)
-            message = '\n'.join((
-                msg,
-                *map(lambda _: f"{_[0]}: {_[1]}", reason.items())))
+            message = "\n".join((msg, *map(lambda _: f"{_[0]}: {_[1]}", reason.items())))
             exceptions = tuple(reason.values())
         elif isinstance(reason, Iterable):
             reasons = tuple(cast(Iterable[E], reason))
-            message = '\n'.join((
-                msg,
-                *map(str, reason))
-            )
+            message = "\n".join((msg, *map(str, reason)))
             exceptions = tuple(cast(Iterable[E], reason))
         else:
             reason: E  # type: ignore[no-redef]
@@ -310,26 +304,22 @@ class FailedProcessConfigFileError[E: BaseException](BaseExceptionGroup, Excepti
             message = f"{msg}: {reason}"
             exceptions = reasons
 
-        obj = super().__new__(
-            cls,
-            message,
-            exceptions
-        )
+        obj = super().__new__(cls, message, exceptions)
         obj.reasons = reasons
         return obj
 
 
 __all__ = (
-    "TokenInfo",
     "ConfigDataPathSyntaxException",
-    "UnknownTokenTypeError",
-    "ConfigOperate",
-    "KeyInfo",
-    "RequiredPathNotFoundError",
     "ConfigDataReadOnlyError",
     "ConfigDataTypeError",
+    "ConfigOperate",
     "CyclicReferenceError",
-    "UnsupportedConfigFormatError",
     "FailedProcessConfigFileError",
-    "UnknownErrorDuringValidateError"
+    "KeyInfo",
+    "RequiredPathNotFoundError",
+    "TokenInfo",
+    "UnknownErrorDuringValidateError",
+    "UnknownTokenTypeError",
+    "UnsupportedConfigFormatError",
 )

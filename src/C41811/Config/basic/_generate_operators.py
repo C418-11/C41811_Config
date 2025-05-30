@@ -57,8 +57,8 @@ def generate[C](cls: type[C]) -> type[C]:
 
 
 def operate[F: Callable[..., Any]](
-        operate_func: Callable[..., Any],
-        inplace_func: Callable[..., Any],
+    operate_func: Callable[..., Any],
+    inplace_func: Callable[..., Any],
 ) -> Callable[[F], F]:
     def decorator(func: F) -> F:
         func.__generate_operators__ = {  # type: ignore[attr-defined]

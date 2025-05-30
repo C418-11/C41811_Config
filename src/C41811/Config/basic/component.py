@@ -75,8 +75,9 @@ class ComponentMeta[D: ABCConfigData[Any]]:
     parser: ABCMetaParser[Any, Any] | None = field(default=None)
 
 
-class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](BasicConfigData[D],
-                                                                               ABCIndexedConfigData[D]):
+class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
+    BasicConfigData[D], ABCIndexedConfigData[D]
+):
     """
     组件配置数据
 
@@ -171,7 +172,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](B
             raise
 
     def _resolve_members[P: ABCPath[Any], R](
-            self, path: P, order: list[str], processor: Callable[[P, D], R], exception: Exception
+        self, path: P, order: list[str], processor: Callable[[P, D], R], exception: Exception
     ) -> R:
         """
         逐个尝试解析成员配置数据
@@ -230,7 +231,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](B
                     key_info=KeyInfo(path, path[0], 0),
                     operate=ConfigOperate.Read,
                 ),
-            )
+            ),
         )
 
     @override
@@ -252,7 +253,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](B
                     key_info=KeyInfo(path, path[0], 0),
                     operate=ConfigOperate.Write,
                 ),
-            )
+            ),
         )
 
     @override
@@ -275,7 +276,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](B
                     key_info=KeyInfo(path, path[0], 0),
                     operate=ConfigOperate.Delete,
                 ),
-            )
+            ),
         )
 
     @override
@@ -309,7 +310,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](B
         def processor(pth: ABCPath[Any], member: D) -> bool:
             return member.exists(pth, *args, **kwargs)
 
-        with suppress(RequiredPathNotFoundError):  # 个别极端条件触发，例如\{不存在的成员\}\.key
+        with suppress(RequiredPathNotFoundError):  # 个别极端条件触发 例如\{不存在的成员\}\.key
             return self._resolve_members(
                 path,
                 order=self._meta.orders.read,
@@ -377,10 +378,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](B
     def __eq__(self, other: Any) -> bool | NotImplementedType:
         if not isinstance(other, type(self)):
             return NotImplemented
-        return all((
-            self._meta == other._meta,
-            self._members == other._members
-        ))
+        return all((self._meta == other._meta, self._members == other._members))
 
     @override
     def __str__(self) -> str:
@@ -421,8 +419,8 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](B
 
 
 __all__ = (
-    "ComponentOrders",
+    "ComponentConfigData",
     "ComponentMember",
     "ComponentMeta",
-    "ComponentConfigData",
+    "ComponentOrders",
 )

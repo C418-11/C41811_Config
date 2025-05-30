@@ -1,5 +1,3 @@
-
-
 import math
 from collections.abc import Callable
 from numbers import Number
@@ -32,8 +30,8 @@ class TestNumberConfigData:
 
     @staticmethod
     def test_freeze(
-            data: NumberConfigData[int],  # type: ignore[type-var]
-            readonly_data: NumberConfigData[int]  # type: ignore[type-var]
+        data: NumberConfigData[int],  # type: ignore[type-var]
+        readonly_data: NumberConfigData[int],  # type: ignore[type-var]
     ) -> None:
         data.freeze()
         readonly_data.freeze()
@@ -59,37 +57,48 @@ class TestNumberConfigData:
         assert readonly_data.read_only is True
 
     @staticmethod
-    @mark.parametrize("number", (
+    @mark.parametrize(
+        "number",
+        (
             0,
-            0.,
-    ))
+            0.0,
+        ),
+    )
     def test_int(number: Number) -> None:
         assert int(NumberConfigData(number)) == 0
 
     @staticmethod
-    @mark.parametrize("number", (
+    @mark.parametrize(
+        "number",
+        (
             0,
-            0.,
-    ))
+            0.0,
+        ),
+    )
     def test_float(number: Number) -> None:
-        assert float(NumberConfigData(number)) == 0.
+        assert float(NumberConfigData(number)) == 0.0
 
     @staticmethod
-    @mark.parametrize("number, value", (
+    @mark.parametrize(
+        "number, value",
+        (
             (0, False),
-            (0., False),
+            (0.0, False),
             (1, True),
-            (.1, True),
+            (0.1, True),
             (0j, False),
             (1j, True),
-            (0.j, False),
-            (.1j, True),
-    ))
+            (0.0j, False),
+            (0.1j, True),
+        ),
+    )
     def test_bool(number: Number, value: bool) -> None:
         assert bool(NumberConfigData(number)) == value
 
     @staticmethod
-    @mark.parametrize("func, number, args", (
+    @mark.parametrize(
+        "func, number, args",
+        (
             (round, 0.55, ()),
             (round, 0.55, (2,)),
             (round, 0.55, (1,)),
@@ -106,7 +115,8 @@ class TestNumberConfigData:
             (math.floor, 0.4, ()),
             (math.floor, 1.5, ()),
             (math.floor, 1.4, ()),
-    ))
+        ),
+    )
     def test_protocol(func: Callable[..., Any], number: Number, args: Any) -> None:
         assert func(NumberConfigData(number), *args) == func(number, *args)
 

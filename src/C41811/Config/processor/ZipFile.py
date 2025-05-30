@@ -44,12 +44,12 @@ class ZipFileSL(BasicCompressedConfigSL):
     """
 
     def __init__(
-            self,
-            *,
-            reg_alias: str | None = None,
-            create_dir: bool = True,
-            compression: ZipCompressionTypes | str | int | None = ZipCompressionTypes.ONLY_STORAGE,
-            compress_level: Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9] | int | None = None,
+        self,
+        *,
+        reg_alias: str | None = None,
+        create_dir: bool = True,
+        compression: ZipCompressionTypes | str | int | None = ZipCompressionTypes.ONLY_STORAGE,
+        compress_level: Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9] | int | None = None,
     ):
         """
         :param reg_alias: sl处理器注册别名
@@ -68,14 +68,16 @@ class ZipFileSL(BasicCompressedConfigSL):
         elif isinstance(compression, (str, int)):
             for compression_type in ZipCompressionTypes:
                 if compression in (
-                        compression_type.full_name, compression_type.short_name, compression_type.zipfile_constant
+                    compression_type.full_name,
+                    compression_type.short_name,
+                    compression_type.zipfile_constant,
                 ):
                     compression = compression_type
                     break
 
         self._compression: ZipCompressionType = cast(ZipCompressionTypes, compression)
         self._compress_level: int | None = compress_level
-        self._short_name = '' if self._compression.short_name is None else self._compression.short_name
+        self._short_name = "" if self._compression.short_name is None else self._compression.short_name
 
     @property
     @override
@@ -85,7 +87,7 @@ class ZipFileSL(BasicCompressedConfigSL):
     @property
     @override
     def namespace_suffix(self) -> str:
-        safe_name = self.processor_reg_name.replace(':', '-')
+        safe_name = self.processor_reg_name.replace(":", "-")
         return os.path.join(super().namespace_suffix, f"${safe_name}~")
 
     @property
@@ -96,7 +98,8 @@ class ZipFileSL(BasicCompressedConfigSL):
         return (
             f".{self._compress_level}.{self._compression.full_name}",
             f".{self._compress_level}.{self._compression.short_name}",
-            f".{self._compression.short_name}", f".{self._compression.full_name}",
+            f".{self._compression.short_name}",
+            f".{self._compression.full_name}",
         )
 
     supported_file_classes = [ConfigFile]
@@ -106,8 +109,8 @@ class ZipFileSL(BasicCompressedConfigSL):
         with (
             safe_open(file_path, "wb") as file,
             zipfile.ZipFile(
-                file, mode='w', compression=self._compression.zipfile_constant, compresslevel=self._compress_level
-            ) as zip_file
+                file, mode="w", compression=self._compression.zipfile_constant, compresslevel=self._compress_level
+            ) as zip_file,
         ):
             for root, dirs, files in os.walk(extract_dir):
                 for item in itertools.chain(dirs, files):
@@ -116,10 +119,7 @@ class ZipFileSL(BasicCompressedConfigSL):
 
     @override
     def extract_file(self, file_path: str, extract_dir: str) -> None:
-        with (
-            safe_open(file_path, "rb") as file,
-            zipfile.ZipFile(file) as zip_file
-        ):
+        with safe_open(file_path, "rb") as file, zipfile.ZipFile(file) as zip_file:
             zip_file.extractall(extract_dir)
 
 

@@ -37,6 +37,6 @@ def check_read_only[F: Callable[..., Any]](func: F) -> F:
 
 
 __all__ = (
-    "fmt_path",
     "check_read_only",
+    "fmt_path",
 )

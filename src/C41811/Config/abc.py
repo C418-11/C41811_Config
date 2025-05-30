@@ -145,10 +145,12 @@ class ABCKey[K, D](ABC):
         if not isinstance(other, type(self)):
             return NotImplemented
 
-        return all((
-            self._key == other._key,
-            self._meta == other._meta,
-        ))
+        return all(
+            (
+                self._key == other._key,
+                self._meta == other._meta,
+            )
+        )
 
     @override
     def __hash__(self) -> int:
@@ -165,7 +167,7 @@ class ABCKey[K, D](ABC):
 
     @override
     def __repr__(self) -> str:
-        meta = '' if self._meta is None else f", meta={self._meta}"
+        meta = "" if self._meta is None else f", meta={self._meta}"
         return f"<{type(self).__name__}(key={self._key}{meta})>"
 
 
@@ -193,12 +195,10 @@ class ABCPath[K: AnyKey](ABC, Iterable[K]):
         """
 
     @overload
-    def __getitem__(self, item: slice) -> Self:
-        ...
+    def __getitem__(self, item: slice) -> Self: ...
 
     @overload
-    def __getitem__(self, item: int) -> K:
-        ...
+    def __getitem__(self, item: int) -> K: ...
 
     def __getitem__(self, item: Any) -> K | Self:
         items: K | tuple[K, ...] = self._keys[item]
@@ -254,7 +254,7 @@ class ABCConfigData[D](ABC):
         :rtype: Self
 
         .. note::
-           套壳__init__，主要是为了方便内部快速创建与传入的ABCConfigData同类型的对象
+           套壳 ``__init__`` 主要是为了方便内部快速创建与传入的ABCConfigData同类型的对象
 
            例如：
 
@@ -327,7 +327,7 @@ class ABCConfigData[D](ABC):
 
     @override
     def __format__(self, format_spec: str) -> str:
-        if format_spec == 'r':
+        if format_spec == "r":
             return repr(self)
         return super().__format__(format_spec)
 
@@ -338,11 +338,7 @@ type PathLike = str | ABCPath[AnyKey]
 """
 
 
-class ABCIndexedConfigData[D: Indexed[Any, Any]](
-    ABCConfigData[D],
-    MutableIndexed[Any, Any],
-    ABC
-):
+class ABCIndexedConfigData[D: Indexed[Any, Any]](ABCConfigData[D], MutableIndexed[Any, Any], ABC):
     # noinspection GrazieInspection
     """
     支持 ``索引`` 操作的配置数据
@@ -470,9 +466,7 @@ class ABCIndexedConfigData[D: Indexed[Any, Any]](
         ----
 
            >>> from C41811.Config import ConfigData
-           >>> data = ConfigData({
-           ...     "key": "value"
-           ... })
+           >>> data = ConfigData({"key": "value"})
 
            路径存在时返回值
 
@@ -486,7 +480,7 @@ class ABCIndexedConfigData[D: Indexed[Any, Any]](
 
            自定义默认值
 
-           >>> data.get("with default",default="default value")
+           >>> data.get("with default", default="default value")
            'default value'
 
         .. versionchanged:: 0.2.0
@@ -515,9 +509,7 @@ class ABCIndexedConfigData[D: Indexed[Any, Any]](
         ----
 
            >>> from C41811.Config import ConfigData
-           >>> data = ConfigData({
-           ...     "key": "value"
-           ... })
+           >>> data = ConfigData({"key": "value"})
 
            路径存在时返回值
 
@@ -533,7 +525,7 @@ class ABCIndexedConfigData[D: Indexed[Any, Any]](
 
            自定义默认值
 
-           >>> data.setdefault("with default",default="default value")
+           >>> data.setdefault("with default", default="default value")
            'default value'
            >>> data
            MappingConfigData({'key': 'value', 'not exists': None, 'with default': 'default value'})
@@ -545,31 +537,25 @@ class ABCIndexedConfigData[D: Indexed[Any, Any]](
         """
 
     @abstractmethod
-    def __contains__(self, key: Any) -> bool:
-        ...
+    def __contains__(self, key: Any) -> bool: ...
 
     @abstractmethod
-    def __iter__(self) -> Iterator[Any]:
-        ...
+    def __iter__(self) -> Iterator[Any]: ...
 
     @abstractmethod
-    def __len__(self) -> int:
-        ...
+    def __len__(self) -> int: ...
 
     @override
     @abstractmethod
-    def __getitem__(self, index: Any) -> Any:
-        ...
+    def __getitem__(self, index: Any) -> Any: ...
 
     @override
     @abstractmethod
-    def __setitem__(self, index: Any, value: Any) -> None:
-        ...
+    def __setitem__(self, index: Any, value: Any) -> None: ...
 
     @override
     @abstractmethod
-    def __delitem__(self, index: Any) -> None:
-        ...
+    def __delitem__(self, index: Any) -> None: ...
 
 
 class ABCProcessorHelper(ABC):
@@ -581,9 +567,9 @@ class ABCProcessorHelper(ABC):
 
     @staticmethod
     def calc_path(
-            root_path: str,
-            namespace: str,
-            file_name: str | None = None,
+        root_path: str,
+        namespace: str,
+        file_name: str | None = None,
     ) -> str:
         """
         处理配置文件对应的文件路径
@@ -602,7 +588,7 @@ class ABCProcessorHelper(ABC):
         """
 
         if file_name is None:
-            file_name = ''
+            file_name = ""
 
         return os.path.normpath(os.path.join(root_path, namespace, file_name))
 
@@ -622,9 +608,9 @@ class ABCSLProcessorPool(ABC):
         .. versionchanged:: 0.2.0
            重命名 ``SLProcessor`` 为 ``SLProcessors``
         """
-        self.FileNameProcessors: OrderedDict[
-            str | Pattern[str], list[str]
-        ] = OrderedDict()  # {FileNameMatch: [RegName]}
+        self.FileNameProcessors: OrderedDict[str | Pattern[str], list[str]] = (
+            OrderedDict()
+        )  # {FileNameMatch: [RegName]}
         # noinspection SpellCheckingInspection
         """
         文件名处理器注册表
@@ -647,8 +633,7 @@ class ABCSLProcessorPool(ABC):
 
     @property
     @abstractmethod
-    def helper(self) -> ABCProcessorHelper:
-        ...
+    def helper(self) -> ABCProcessorHelper: ...
 
     @property
     def root_path(self) -> str:
@@ -663,12 +648,7 @@ class ABCConfigFile[D: ABCConfigData[Any]](ABC):
     配置文件类
     """
 
-    def __init__(
-            self,
-            initial_config: D,
-            *,
-            config_format: str | None = None
-    ) -> None:
+    def __init__(self, initial_config: D, *, config_format: str | None = None) -> None:
         """
         :param initial_config: 配置数据
         :type initial_config: ABCConfigData
@@ -705,13 +685,13 @@ class ABCConfigFile[D: ABCConfigData[Any]](ABC):
 
     @abstractmethod
     def save(
-            self,
-            processor_pool: ABCSLProcessorPool,
-            namespace: str,
-            file_name: str,
-            config_format: str | None = None,
-            *processor_args: Any,
-            **processor_kwargs: Any,
+        self,
+        processor_pool: ABCSLProcessorPool,
+        namespace: str,
+        file_name: str,
+        config_format: str | None = None,
+        *processor_args: Any,
+        **processor_kwargs: Any,
     ) -> None:
         """
         使用SL处理保存配置
@@ -734,13 +714,13 @@ class ABCConfigFile[D: ABCConfigData[Any]](ABC):
     @classmethod
     @abstractmethod
     def load(
-            cls,
-            processor_pool: ABCSLProcessorPool,
-            namespace: str,
-            file_name: str,
-            config_format: str,
-            *processor_args: Any,
-            **processor_kwargs: Any,
+        cls,
+        processor_pool: ABCSLProcessorPool,
+        namespace: str,
+        file_name: str,
+        config_format: str,
+        *processor_args: Any,
+        **processor_kwargs: Any,
     ) -> Self:
         """
         从SL处理器加载配置
@@ -766,13 +746,13 @@ class ABCConfigFile[D: ABCConfigData[Any]](ABC):
     @classmethod
     @abstractmethod
     def initialize(
-            cls,
-            processor_pool: ABCSLProcessorPool,
-            namespace: str,
-            file_name: str,
-            config_format: str,
-            *processor_args: Any,
-            **processor_kwargs: Any,
+        cls,
+        processor_pool: ABCSLProcessorPool,
+        namespace: str,
+        file_name: str,
+        config_format: str,
+        *processor_args: Any,
+        **processor_kwargs: Any,
     ) -> Self:
         """
         初始化一个受SL处理器支持的配置文件
@@ -827,26 +807,23 @@ class ABCConfigPool(ABCSLProcessorPool):
     """
 
     @overload
-    def get(self, namespace: str) -> dict[str, ABCConfigFile[Any]] | None:
-        ...
+    def get(self, namespace: str) -> dict[str, ABCConfigFile[Any]] | None: ...
 
     @overload
-    def get(self, namespace: str, file_name: str) -> ABCConfigFile[Any] | None:
-        ...
+    def get(self, namespace: str, file_name: str) -> ABCConfigFile[Any] | None: ...
 
     @overload
     def get(
-            self,
-            namespace: str,
-            file_name: str | None = None,
-    ) -> dict[str, ABCConfigFile[Any]] | ABCConfigFile[Any] | None:
-        ...
+        self,
+        namespace: str,
+        file_name: str | None = None,
+    ) -> dict[str, ABCConfigFile[Any]] | ABCConfigFile[Any] | None: ...
 
     @abstractmethod
     def get(
-            self,
-            namespace: str,
-            file_name: str | None = None,
+        self,
+        namespace: str,
+        file_name: str | None = None,
     ) -> dict[str, ABCConfigFile[Any]] | ABCConfigFile[Any] | None:
         """
         获取配置
@@ -883,12 +860,13 @@ class ABCConfigPool(ABCSLProcessorPool):
 
     @abstractmethod
     def save(
-            self,
-            namespace: str,
-            file_name: str,
-            config_formats: str | Iterable[str] | None = None,
-            config: ABCConfigFile[Any] | None = None,
-            *args: Any, **kwargs: Any,
+        self,
+        namespace: str,
+        file_name: str,
+        config_formats: str | Iterable[str] | None = None,
+        config: ABCConfigFile[Any] | None = None,
+        *args: Any,
+        **kwargs: Any,
     ) -> Self:
         """
         保存配置
@@ -926,12 +904,12 @@ class ABCConfigPool(ABCSLProcessorPool):
 
     @abstractmethod
     def initialize(
-            self,
-            namespace: str,
-            file_name: str,
-            *args: Any,
-            config_formats: str | Iterable[str] | None = None,
-            **kwargs: Any,
+        self,
+        namespace: str,
+        file_name: str,
+        *args: Any,
+        config_formats: str | Iterable[str] | None = None,
+        **kwargs: Any,
     ) -> ABCConfigFile[Any]:
         """
         初始化配置文件到指定命名空间并返回
@@ -951,13 +929,13 @@ class ABCConfigPool(ABCSLProcessorPool):
 
     @abstractmethod
     def load(
-            self,
-            namespace: str,
-            file_name: str,
-            *args: Any,
-            config_formats: str | Iterable[str] | None = None,
-            allow_initialize: bool = False,
-            **kwargs: Any,
+        self,
+        namespace: str,
+        file_name: str,
+        *args: Any,
+        config_formats: str | Iterable[str] | None = None,
+        allow_initialize: bool = False,
+        **kwargs: Any,
     ) -> ABCConfigFile[Any]:
         """
         加载配置到指定命名空间并返回
@@ -1030,9 +1008,9 @@ class ABCConfigSL(ABC):
     """
 
     def __init__(
-            self,
-            *,
-            reg_alias: str | None = None,
+        self,
+        *,
+        reg_alias: str | None = None,
     ):
         """
         :param reg_alias: sl处理器注册别名
@@ -1094,14 +1072,14 @@ class ABCConfigSL(ABC):
 
     @abstractmethod
     def save(
-            self,
-            processor_pool: ABCSLProcessorPool,
-            config_file: ABCConfigFile[Any],
-            root_path: str,
-            namespace: str,
-            file_name: str,
-            *args: Any,
-            **kwargs: Any,
+        self,
+        processor_pool: ABCSLProcessorPool,
+        config_file: ABCConfigFile[Any],
+        root_path: str,
+        namespace: str,
+        file_name: str,
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         """
         保存处理器
@@ -1125,13 +1103,13 @@ class ABCConfigSL(ABC):
 
     @abstractmethod
     def load(
-            self,
-            processor_pool: ABCSLProcessorPool,
-            root_path: str,
-            namespace: str,
-            file_name: str,
-            *args: Any,
-            **kwargs: Any
+        self,
+        processor_pool: ABCSLProcessorPool,
+        root_path: str,
+        namespace: str,
+        file_name: str,
+        *args: Any,
+        **kwargs: Any,
     ) -> ABCConfigFile[Any]:
         """
         加载处理器
@@ -1158,13 +1136,13 @@ class ABCConfigSL(ABC):
 
     @abstractmethod
     def initialize(
-            self,
-            processor_pool: ABCSLProcessorPool,
-            root_path: str,
-            namespace: str,
-            file_name: str,
-            *args: Any,
-            **kwargs: Any
+        self,
+        processor_pool: ABCSLProcessorPool,
+        root_path: str,
+        namespace: str,
+        file_name: str,
+        *args: Any,
+        **kwargs: Any,
     ) -> ABCConfigFile[Any]:
         """
         初始化一个受SL处理器支持的配置文件
@@ -1193,19 +1171,23 @@ class ABCConfigSL(ABC):
         reg_alias = self.reg_alias == other.reg_alias
         file_match_eq = self.supported_file_patterns == other.supported_file_patterns
 
-        return all((
-            processor_reg_name,
-            reg_alias,
-            file_match_eq,
-        ))
+        return all(
+            (
+                processor_reg_name,
+                reg_alias,
+                file_match_eq,
+            )
+        )
 
     @override
     def __hash__(self) -> int:
-        return hash((
-            self.processor_reg_name,
-            self.reg_alias,
-            self.supported_file_patterns,
-        ))
+        return hash(
+            (
+                self.processor_reg_name,
+                self.reg_alias,
+                self.supported_file_patterns,
+            )
+        )
 
 
 class ABCMetaParser[D: ABCConfigData[Any], M](ABC):
@@ -1247,17 +1229,17 @@ class ABCMetaParser[D: ABCConfigData[Any], M](ABC):
 
 
 __all__ = (
-    "AnyKey",
-    "ABCKey",
-    "ABCPath",
     "ABCConfigData",
-    "PathLike",
+    "ABCConfigFile",
+    "ABCConfigPool",
+    "ABCConfigSL",
     "ABCIndexedConfigData",
+    "ABCKey",
+    "ABCMetaParser",
+    "ABCPath",
     "ABCProcessorHelper",
     "ABCSLProcessorPool",
-    "ABCConfigPool",
-    "ABCConfigFile",
+    "AnyKey",
+    "PathLike",
     "SLArgument",
-    "ABCConfigSL",
-    "ABCMetaParser",
 )

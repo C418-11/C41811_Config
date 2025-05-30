@@ -13,7 +13,7 @@ from ..main import BasicLocalFileConfigSL
 try:
     # noinspection PyPackageRequirements, PyUnresolvedReferences
     from ruamel.yaml import YAML
-except ImportError:  # pragma: no cover
+except ImportError:
     raise ImportError("ruamel.yaml is not installed. Please install it with `pip install ruamel.yaml`") from None
 
 
@@ -23,6 +23,7 @@ class RuamelYamlSL(BasicLocalFileConfigSL):
 
     默认尝试最大限度保留yaml中的额外信息(如注释
     """
+
     yaml = YAML(typ="rt", pure=True)
 
     @property
@@ -39,21 +40,14 @@ class RuamelYamlSL(BasicLocalFileConfigSL):
 
     @override
     def save_file(
-            self,
-            config_file: ABCConfigFile[Any],
-            target_file: SupportsWrite[str],
-            *merged_args: Any,
-            **merged_kwargs: Any
+        self, config_file: ABCConfigFile[Any], target_file: SupportsWrite[str], *merged_args: Any, **merged_kwargs: Any
     ) -> None:
         with self.raises():
             self.yaml.dump(config_file.config.data, target_file)
 
     @override
     def load_file(
-            self,
-            source_file: SupportsReadAndReadline[str],
-            *merged_args: Any,
-            **merged_kwargs: Any
+        self, source_file: SupportsReadAndReadline[str], *merged_args: Any, **merged_kwargs: Any
     ) -> ConfigFile[Any]:
         with self.raises():
             data = self.yaml.load(source_file)
@@ -61,6 +55,4 @@ class RuamelYamlSL(BasicLocalFileConfigSL):
         return ConfigFile(data, config_format=self.processor_reg_name)
 
 
-__all__ = (
-    "RuamelYamlSL",
-)
+__all__ = ("RuamelYamlSL",)
