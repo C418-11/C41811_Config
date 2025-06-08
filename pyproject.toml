@@ -224,7 +224,7 @@ commands = [
         "--cov=src", "--cov-report=term-missing", "--cov-report=html:docs/_static/_coverage"
     ],
     [
-        "powershell", "-c", "ruff check --exit-zero 2>&1 | ansi2html > ./docs/_static/_ruff.html"
+        "bash", "-c", "ruff check --exit-zero 2>&1 | ansi2html > ./docs/_static/_ruff.html"
     ],
 ]
 
