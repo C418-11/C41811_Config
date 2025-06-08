@@ -43,6 +43,26 @@ dependencies = [
 "Documentation" = "https://C41811Config.readthedocs.io"
 
 [project.optional-dependencies]
+dev = [
+    "PyYAML~=6.0.2",
+    "ruamel.yaml~=0.18.10",
+    "toml~=0.10.2",
+    "hjson~=3.1.0",
+
+    "tox~=4.26.0",
+]
+PyYamlSL = ["PyYAML~=6.0.2"]
+RuamelYamlSL = ["ruamel.yaml~=0.18.10"]
+TomlSL = ["toml~=0.10.2"]
+HJsonSL = ["hjson~=3.1.0"]
+
+[dependency-groups]
+dev = [
+    "PyYAML~=6.0.2",
+    "ruamel.yaml~=0.18.10",
+    "toml~=0.10.2",
+    "hjson~=3.1.0",
+]
 docs = [
     "setuptools-scm>=8.2,<8.4",
     "sphinx~=8.2.3",
@@ -50,23 +70,16 @@ docs = [
     "sphinx-copybutton~=0.5.2",
     "furo==2024.8.6",
 ]
-dev = [
-    "PyYAML~=6.0.2",
-    "ruamel.yaml~=0.18.10",
-    "toml~=0.10.2",
-    "hjson~=3.1.0"
-]
 tox = [
-    "tox~=4.25.0",
+    "tox~=4.26.0",
 ]
 test = [
     "pytest>=8.3.5,<8.5.0",
     "pytest-html~=4.1.1",
     "pytest-cov>=6.0,<6.2",
 ]
-flake8 = [
-    "flake8~=7.2.0",
-    "flake8-html~=0.4.3",
+ruff = [
+    "ruff~=0.11.13",
 ]
 mypy = [
     "mypy>=1.15,<1.17",
@@ -76,10 +89,6 @@ mypy = [
     "types-toml",
     "types-setuptools",
 ]
-PyYamlSL = ["PyYAML~=6.0.2"]
-RuamelYamlSL = ["ruamel.yaml~=0.18.10"]
-TomlSL = ["toml~=0.10.2"]
-HJsonSL = ["hjson~=3.1.0"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -91,14 +100,7 @@ local_scheme = "node-and-date"
 fallback_version = "0.0+UNKNOWN"
 
 [tool.pytest.ini_options]
-addopts = "-v --doctest-modules --ignore-glob=docs/conf.py"
-
-[tool.flake8]
-max-line-length = 120  # flake8暂时不支持pyproject.toml中的配置
-show-source = true
-doctests = true
-max-complexity = 10
-statistics = true
+addopts = "-v --doctest-modules --ignore-glob=docs/conf.py --color yes"
 
 [tool.ruff]
 line-length = 120
@@ -152,6 +154,8 @@ ignore = [  # ruff推荐忽略以避免和formatter冲突
     "E111", # indentation-with-invalid-multiples
     "E114", # indentation-with-invalid-multiple-comment
     "E117", # over-indented
+
+    "N999", # 临时禁用  # todo
 ]
 
 [tool.mypy]
@@ -177,28 +181,26 @@ exclude_also = [
 ]
 
 [tool.tox]
-envlist = ["py312", "py313", "flake8", "mypy"]
-#envlist = ["py312", "py313", "py314", "flake8", "mypy"]  # todo uncomment when pydantic supports 3.14
+envlist = ["py312", "py313", "ruff", "mypy"]
+#envlist = ["py312", "py313", "py314", "ruff", "mypy"]  # todo uncomment when pydantic supports 3.14
 
 [tool.tox.env_run_base]
 use_develop = true
-extras = ["dev", "test"]
+dependency_groups = ["dev", "test"]
 commands = [
     ["pytest"],
 ]
 
-[tool.tox.env.flake8]
-extras = ["flake8"]
+[tool.tox.env.ruff]
+dependency_groups = ["ruff"]
+setenv = {CLICOLOR_FORCE="1"}
 commands = [
-    ["flake8",
-        "--doctests", "--max-line-length=120", "--max-complexity=10",
-        "--show-source", "--count", "--statistics", "--ignore=E122,E121,E126,W503,E123,E704,F401,E701,E203",
-        "tests", "src"
-    ],
+    ["ruff", "check"],
+    ["ruff", "format"],
 ]
 
 [tool.tox.env.mypy]
-extras = ["mypy"]
+dependency_groups = ["mypy"]
 commands = [
     ["mypy", "tests"],
     ["pip", "uninstall", "-y", "C41811.Config"],
@@ -207,11 +209,13 @@ commands = [
 
 [tool.tox.env.prepare-doc]
 base_python = ["py313"]
-allowlist_externals = ["npm", "lessc"]
-extras = ["dev", "test", "flake8"]
+allowlist_externals = ["npm", "lessc", "powershell"]
+dependency_groups = ["dev", "test", "ruff"]
 commands_pre = [
     ["npm", "install", "-g", "less"],
 ]
+deps = ["ansi2html"]
+setenv = {CLICOLOR_FORCE = "1"}
 commands = [
     ["lessc", "./docs/_static/.pygments_darcula.less", "./docs/_static/pygments_darcula.css"],
     ["-",
@@ -220,18 +224,14 @@ commands = [
         "--cov=src", "--cov-report=term-missing", "--cov-report=html:docs/_static/_coverage"
     ],
     [
-        "flake8",
-        "--doctests", "--max-line-length=120", "--max-complexity=10",
-        "--show-source", "--count", "--statistics", "--ignore=E122,E121,E126,W503,E123,E704,F401,E701,E203",
-        "--exit-zero", "--format=html", "--htmldir=./docs/_static/_flake8", "--tee",
-        "tests", "src"
+        "powershell", "-c", "ruff check --exit-zero 2>&1 | ansi2html > ./docs/_static/_ruff.html"
     ],
 ]
 
 [tool.tox.env.doc]
-extras = ["docs"]
+dependency_groups = ["docs"]
 allowlist_externals = ["tox"]
 commands = [
-    ["tox", "-e", "prepare-doc"],
+    ["tox", "-e", "prepare-doc", "--colored", "yes"],
     ["sphinx-build", "-b", "html", "./docs", "./docs/_build"],
 ]

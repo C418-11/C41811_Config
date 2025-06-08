@@ -81,7 +81,7 @@ docs/_build/
 docs/autoapi/
 docs/_static/_pytest/
 docs/_static/_coverage/
-docs/_static/_flake8/
+docs/_static/_ruff.html
 docs/_static/pygments_darcula.css
 
 # PyBuilder
