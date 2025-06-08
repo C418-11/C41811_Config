@@ -46,7 +46,7 @@ class TestConfigFile:
     @staticmethod
     @fixture
     def pool(tmpdir: FPath) -> P:
-        return cast(P, ConfigPool(root_path=str(tmpdir)))
+        return ConfigPool(root_path=str(tmpdir))
 
     @staticmethod
     def test_attr_readonly(file: ConfigFile[D_MCD], data: D_MCD) -> None:
