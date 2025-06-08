@@ -105,7 +105,7 @@ class TarFileSL(BasicCompressedConfigSL):
             return (".tar",)
         return f".tar.{self._compression.short_name}", f".tar.{self._compression.full_name}"
 
-    supported_file_classes = [ConfigFile]
+    supported_file_classes = [ConfigFile]  # noqa: RUF012
 
     @override
     def compress_file(self, file_path: str, extract_dir: str) -> None:

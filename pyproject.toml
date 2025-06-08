@@ -135,6 +135,7 @@ select = [
     "FLY",  # flynt (f-string转换)
     "FURB", # refurb (代码简化)
     "RUF",  # ruff (专属规则)
+    "PERF", # perflint (性能优化)
     "PGH",  # pygrep-hooks (type: ignore & noqa 参数检查)
 
     # 静态分析/复杂度
@@ -191,7 +192,7 @@ extras = ["flake8"]
 commands = [
     ["flake8",
         "--doctests", "--max-line-length=120", "--max-complexity=10",
-        "--show-source", "--count", "--statistics", "--ignore=E122,E121,E126,W503,E123",
+        "--show-source", "--count", "--statistics", "--ignore=E122,E121,E126,W503,E123,E704,F401,E701,E203",
         "tests", "src"
     ],
 ]
@@ -221,7 +222,7 @@ commands = [
     [
         "flake8",
         "--doctests", "--max-line-length=120", "--max-complexity=10",
-        "--show-source", "--count", "--statistics", "--ignore=E122,E121,E126,W503,E123",
+        "--show-source", "--count", "--statistics", "--ignore=E122,E121,E126,W503,E123,E704,F401,E701,E203",
         "--exit-zero", "--format=html", "--htmldir=./docs/_static/_flake8", "--tee",
         "tests", "src"
     ],

@@ -259,10 +259,7 @@ class TestMappingConfigData:
             return
 
         ignore_excs = tuple(exc for exc in ignore_excs if not issubclass(exc, LookupError))
-        if "default" in kwargs:
-            value = [value, kwargs["default"]]
-        else:
-            value = (value,)
+        value = [value, kwargs["default"]] if "default" in kwargs else (value,)
 
         if data.exists(path, ignore_wrong_type=True):
             value = *value, data.retrieve(path)

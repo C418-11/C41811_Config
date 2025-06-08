@@ -25,7 +25,8 @@ class NoneConfigData(BasicSingleConfigData[None]):
         """
 
         if data is not None:
-            raise ValueError(f"{type(self).__name__} can only accept None as data")
+            msg = f"{type(self).__name__} can only accept None as data"
+            raise ValueError(msg)
 
         super().__init__(data)
 
@@ -47,7 +48,7 @@ class ObjectConfigData[D: object](BasicSingleConfigData[D]):
 
         .. caution::
            未默认做深拷贝，可能导致非预期行为
-        """
+        """  # noqa: RUF002
         super().__init__(None)  # type: ignore[arg-type]
 
         self._data: D = data

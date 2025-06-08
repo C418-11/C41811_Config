@@ -14,7 +14,8 @@ try:
     # noinspection PyPackageRequirements, PyUnresolvedReferences
     from ruamel.yaml import YAML
 except ImportError:
-    raise ImportError("ruamel.yaml is not installed. Please install it with `pip install ruamel.yaml`") from None
+    msg = "ruamel.yaml is not installed. Please install it with `pip install ruamel.yaml`"
+    raise ImportError(msg) from None
 
 
 class RuamelYamlSL(BasicLocalFileConfigSL):
@@ -36,7 +37,7 @@ class RuamelYamlSL(BasicLocalFileConfigSL):
     def supported_file_patterns(self) -> tuple[str, ...]:
         return ".yaml", ".yml"
 
-    supported_file_classes = [ConfigFile]
+    supported_file_classes = [ConfigFile]  # noqa: RUF012
 
     @override
     def save_file(

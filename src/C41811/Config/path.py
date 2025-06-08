@@ -28,7 +28,7 @@ class IndexMixin[K, D: Indexed[Any, Any]](ABCKey[K, D], ABC):
 
     .. versionchanged:: 0.1.5
        重命名 ``ItemMixin`` 为 ``IndexMixin``
-    """
+    """  # noqa: RUF002
 
     @override
     def __get_inner_element__(self, data: D) -> D:
@@ -60,7 +60,8 @@ class AttrKey(IndexMixin[str, Mapping[str, Any]], ABCKey[str, Mapping[str, Any]]
         :raise TypeError: key不为str时抛出
         """
         if not isinstance(key, str):
-            raise TypeError(f"key must be str, not {type(key).__name__}")
+            msg = f"key must be str, not {type(key).__name__}"
+            raise TypeError(msg)
         super().__init__(key, meta)
 
     @override
@@ -111,7 +112,8 @@ class IndexKey(IndexMixin[int, Sequence[Any]], ABCKey[int, Sequence[Any]]):
         :raise TypeError: key不为int时抛出
         """
         if not isinstance(key, int):
-            raise TypeError(f"key must be int, not {type(key).__name__}")
+            msg = f"key must be int, not {type(key).__name__}"
+            raise TypeError(msg)
         super().__init__(key, meta)
 
     @override
@@ -169,7 +171,8 @@ class Path(ABCPath[AttrKey | IndexKey]):
             if isinstance(loc, str):
                 keys.append(AttrKey(loc))
                 continue
-            raise ValueError("locate element must be 'int' or 'str'")
+            msg = "locate element must be 'int' or 'str'"
+            raise ValueError(msg)
         return cls(keys)
 
     def to_locate(self) -> list[str | int]:
@@ -228,7 +231,7 @@ class PathSyntaxParser:
            更改返回值类型为 ``tuple[str, ...]``
 
            添加缓存
-        """
+        """  # noqa: RUF002
         # 开头默认为AttrKey
         if not string.startswith((r"\.", r"\[", r"\{")):
             string = rf"\.{string}"
@@ -241,18 +244,16 @@ class PathSyntaxParser:
             if not token:
                 token += tokens.pop()
 
-            # 对不存在的转义进行警告
-            elif sep and (token[0] not in {".", "\\", "[", "]", "{", "}"}):
-                # 检查这个转义符号是否已经被转义
-                if _count_backslash(string) % 2:
-                    warnings.warn(rf"invalid escape sequence '\{token[0]}'", SyntaxWarning)
+            # 对不存在的转义进行警告                                             # 检查这个转义符号是否已经被转义
+            elif sep and (token[0] not in {".", "\\", "[", "]", "{", "}"}) and _count_backslash(string) % 2:
+                warnings.warn(rf"invalid escape sequence '\{token[0]}'", SyntaxWarning, stacklevel=2)
 
             # 连接不应单独存在的token
             index_safe = (len(tokens) > 0) and (len(tokens[-1]) > 1)
             if index_safe and (tokens[-1][1] not in {".", "[", "]", "{", "}"}):
                 token += tokens.pop()
 
-            # 将r"\]"，r"\}"后面紧随的字符单独切割出来
+            # 将 r"\]" 和 r"\}" 后面紧随的字符单独切割出来
             if token.startswith(("]", "}")) and token[1:]:
                 tokens.append(token[1:])
                 token = token[:1]
@@ -282,42 +283,43 @@ class PathSyntaxParser:
         token_stack: list[str] = []
 
         tokenized_path = cls.tokenize(string)
-        for i, token in enumerate(tokenized_path):
+        for index, token in enumerate(tokenized_path):
             if not token.startswith("\\"):
-                raise UnknownTokenTypeError(TokenInfo(tokenized_path, token, i))
+                raise UnknownTokenTypeError(TokenInfo(tokenized_path, token, index))
 
             token_type = token[1]
             content = token[2:].replace("\\\\", "\\")
 
-            def _token_closed(tk_typ: str, tk_close: str) -> None:
+            def _token_closed(tk_typ: str, tk_close: str, tk: str, i: int) -> None:
                 try:
                     top = token_stack.pop()
                 except IndexError:
                     raise ConfigDataPathSyntaxException(
-                        TokenInfo(tokenized_path, token, i), f"unmatched '{tk_close}': "
+                        TokenInfo(tokenized_path, tk, i), f"unmatched '{tk_close}': "
                     ) from None
                 if top != tk_typ:
                     raise ConfigDataPathSyntaxException(
-                        TokenInfo(tokenized_path, token, i),
+                        TokenInfo(tokenized_path, tk, i),
                         f"closing parenthesis '{tk_close}' does not match opening parenthesis '{top}': ",
                     )
 
             if token_type == "}":
-                _token_closed("{", "}")
+                _token_closed("{", "}", token, index)
                 continue
             if token_type == "]":
-                _token_closed("[", "]")
+                _token_closed("[", "]", token, index)
                 try:
-                    path.append(IndexKey(int(cast(str, item)), meta))
+                    path.append(IndexKey(int(item), meta))  # type: ignore[arg-type]
                 except ValueError:
-                    raise ValueError("index key must be int")
+                    msg = "index key must be int"
+                    raise ValueError(msg) from None
                 item = None
                 meta = None
                 continue
 
             if token_stack:
                 raise ConfigDataPathSyntaxException(
-                    TokenInfo(tokenized_path, token, i), f"'{token_stack.pop()}' was never closed: "
+                    TokenInfo(tokenized_path, token, index), f"'{token_stack.pop()}' was never closed: "
                 )
 
             if token_type == "[":
@@ -333,7 +335,7 @@ class PathSyntaxParser:
                 meta = None
                 continue
 
-            raise UnknownTokenTypeError(TokenInfo(tokenized_path, token, i))
+            raise UnknownTokenTypeError(TokenInfo(tokenized_path, token, index))
 
         if token_stack:
             raise ConfigDataPathSyntaxException(

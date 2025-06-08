@@ -131,7 +131,8 @@ def _process_pydantic_exceptions(err: ValidationError) -> Exception:
         elif isinstance(key, int):
             locate_keys.append(IndexKey(key))
         else:  # pragma: no cover
-            raise UnknownErrorDuringValidateError("Cannot convert pydantic index to string") from err
+            msg = "Cannot convert pydantic index to string"
+            raise UnknownErrorDuringValidateError(msg) from err
 
     kwargs: dict[str, Any] = {
         "key_info": KeyInfo(path=Path(locate_keys), current_key=locate_keys[-1], index=len(locate_keys) - 1)
@@ -149,10 +150,10 @@ def _process_pydantic_exceptions(err: ValidationError) -> Exception:
         "model_type": lambda: ErrInfo(
             ConfigDataTypeError,
             {
-                "required_type":(
+                "required_type": (
                     Never if (match := re.match(r"Input should be (.*)", err_msg)) is None else match.group(1)
                 ),
-                "current_type":type(err_input),
+                "current_type": type(err_input),
             },
         ),
         "int_type": lambda: ErrInfo(ConfigDataTypeError, {"required_type": int, "current_type": type(err_input)}),
@@ -184,7 +185,7 @@ class SkipMissingType:
 
     @staticmethod
     def __get_pydantic_core_schema__(*_: Any) -> core_schema.ChainSchema:
-        # 构造一个永远无法匹配的schema，使 SkipMissing | int 可以正常工作，即被pydantic视为：int
+        # 构造一个永远无法匹配的schema使 `SkipMissing | int` 可以正常工作 即被pydantic视为 `int`
         return core_schema.chain_schema([core_schema.none_schema(), core_schema.is_subclass_schema(type)])
 
 
@@ -201,7 +202,7 @@ class FieldDefinition[T: type | types.UnionType | types.EllipsisType | types.Gen
 
     .. versionchanged:: 0.3.0
        新增对 :py:class:`TypeAliasType` 支持
-    """
+    """  # noqa: RUF002
 
     @overload
     def __init__(self, annotation: T, default: Any, *, allow_recursive: bool = True): ...
@@ -242,7 +243,8 @@ class FieldDefinition[T: type | types.UnionType | types.EllipsisType | types.Gen
             kwargs["default_factory"] = default_factory
 
         if len(kwargs) != 1:
-            raise ValueError("take one of arguments 'default' or 'default_factory'")
+            msg = "take one of arguments 'default' or 'default_factory'"
+            raise ValueError(msg)
 
         value = default
         if not isinstance(default, FieldInfo):
@@ -284,20 +286,20 @@ def _is_mapping(typ: Any) -> bool:
         return True
     try:
         MappingType(value=typ)
-        return True
     except (ValidationError, TypeError):
         return False
+    return True
 
 
 def _allow_recursive(typ: Any) -> bool:
     """
     判断是否允许递归处理字段值（键全为字符串则视为允许）
-    """
+    """  # noqa: RUF002
     try:
         RecursiveMapping(value=typ)
-        return True
     except (ValidationError, TypeError):
         return False
+    return True
 
 
 class DefaultValidatorFactory[D: MCD | NoneConfigData]:
@@ -323,8 +325,8 @@ class DefaultValidatorFactory[D: MCD | NoneConfigData]:
              - 默认值
              - 类型
            * - model_config_key
-             - 内部编译 :py:mod:`pydantic` 的 :py:class:`~pydantic.main.BaseModel` 时，模型配置是以嵌套字典的形式存储的，
-               因此请确保此参数不与任何其中子模型名冲突
+             - 内部编译 :py:mod:`pydantic` 的 :py:class:`~pydantic.main.BaseModel`
+               时，模型配置是以嵌套字典的形式存储的，因此请确保此参数不与任何其中子模型名冲突
              - ".__model_config__"
              - Any
 
@@ -333,7 +335,7 @@ class DefaultValidatorFactory[D: MCD | NoneConfigData]:
 
         .. versionchanged:: 0.1.4
            支持验证器非字符串键 (含有非字符串键的子验证器不会被递归处理)
-        """
+        """  # noqa: RUF002
 
         validator = deepcopy(validator)
         if isinstance(validator, Mapping):  # 先检查Mapping因为Mapping可以是Iterable
@@ -343,7 +345,8 @@ class DefaultValidatorFactory[D: MCD | NoneConfigData]:
             # k: Any
             validator = OrderedDict((k, Any) for k in validator)
         else:
-            raise TypeError(f"Invalid validator type '{type(validator).__name__}'")
+            msg = f"Invalid validator type '{type(validator).__name__}'"
+            raise TypeError(msg)
         self.validator = validator
         self.validator_config = validator_config
 
@@ -366,7 +369,7 @@ class DefaultValidatorFactory[D: MCD | NoneConfigData]:
         """
 
         iterator = iter(validator.items())
-        key: str = ""  # 能通过类型检查的默认值，但此值不当被使用
+        key: str = None  # type: ignore[assignment]
         value: Any = None
 
         def _next() -> bool:
@@ -402,7 +405,8 @@ class DefaultValidatorFactory[D: MCD | NoneConfigData]:
 
                 warnings.warn(
                     f"Overwriting exists validator path with unexpected type"
-                    f" '{value}'(new) and '{target_value}'(exists)"
+                    f" '{value}'(new) and '{target_value}'(exists)",
+                    stacklevel=2,
                 )
 
             if _allow_recursive(value):
@@ -448,7 +452,7 @@ class DefaultValidatorFactory[D: MCD | NoneConfigData]:
                 # foo: int = FieldInfo()
                 definition = FieldDefinition(value, FieldInfo())
             # foo = FieldDefinition(int, FieldInfo())
-            # 已经是处理好的字段定义，不需要特殊处理
+            # 已经是处理好的字段定义不需要特殊处理
             elif isinstance(value, FieldDefinition):
                 definition = value
             # foo = 1
@@ -463,7 +467,7 @@ class DefaultValidatorFactory[D: MCD | NoneConfigData]:
                     definition.allow_recursive,
                     _allow_recursive(definition.value.default),
                     # foo.bar = {}
-                    # 这种情况下不进行递归解析，获取所有键(foo.bar.*)如果进行了解析就只会返回foo.bar={}
+                    # 这种情况下不进行递归解析 即捕获所有键(foo.bar.*)如果进行了解析就会忽略所有内容即返回foo.bar={}
                     definition.value.default,
                 )
             ):
@@ -530,9 +534,10 @@ def pydantic_validator[D: MCD | NoneConfigData](
     :type cfg: ValidatorFactoryConfig
     """
     if not issubclass(validator, BaseModel):
-        raise TypeError(f"Expected a subclass of BaseModel for parameter 'validator', but got '{validator.__name__}'")
+        msg = f"Expected a subclass of BaseModel for parameter 'validator', but got '{validator.__name__}'"
+        raise TypeError(msg)
     if cfg.skip_missing:
-        warnings.warn("skip_missing is not supported in pydantic validator")
+        warnings.warn("skip_missing is not supported in pydantic validator", stacklevel=2)
 
     def _builder(config_ref: Ref[D]) -> D:
         if isinstance(config_ref.value, NoneConfigData):
@@ -589,7 +594,7 @@ class ComponentValidatorFactory[D: ComponentConfigData[Any, Any] | NoneConfigDat
              - 组件元数据验证器
              - 尝试从传入的组件元数据获得，若不存在(值为None)则放弃验证
              - Callable[[ComponentMeta, ValidatorFactoryConfig], ComponentMeta]
-        """
+        """  # noqa: RUF002
 
         self.validator = validator
         self.validator_config = validator_config

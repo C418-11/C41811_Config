@@ -18,7 +18,8 @@ try:
     # noinspection PyPackageRequirements, PyUnresolvedReferences
     import toml
 except ImportError:
-    raise ImportError("toml is not installed. Please install it with `pip install toml`") from None
+    msg = "toml is not installed. Please install it with `pip install toml`"
+    raise ImportError(msg) from None
 
 
 class TomlSL(BasicLocalFileConfigSL):
@@ -36,7 +37,7 @@ class TomlSL(BasicLocalFileConfigSL):
     def supported_file_patterns(self) -> tuple[str, ...]:
         return (".toml",)
 
-    supported_file_classes = [ConfigFile]
+    supported_file_classes = [ConfigFile]  # noqa: RUF012
 
     @override
     def save_file(

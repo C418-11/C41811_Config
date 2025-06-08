@@ -34,7 +34,7 @@ class PlainTextSL(BasicLocalFileConfigSL):
     def supported_file_patterns(self) -> tuple[str, ...]:
         return (".txt",)
 
-    supported_file_classes = [ConfigFile]
+    supported_file_classes = [ConfigFile]  # noqa: RUF012
 
     @override
     def save_file(

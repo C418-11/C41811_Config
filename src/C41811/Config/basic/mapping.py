@@ -59,7 +59,7 @@ def _keys_recursive(
     :raises TypeError: 递归获取时键不为str时抛出
 
     .. versionadded:: 0.2.0
-    """
+    """  # noqa: RUF002
     if seen is None:
         seen = set()
 
@@ -72,8 +72,9 @@ def _keys_recursive(
 
     for k, v in data.items():
         if not isinstance(k, str):
-            raise TypeError(f"key must be str, not {type(k).__name__}")
-        k = k.replace("\\", "\\\\")
+            msg = f"key must be str, not {type(k).__name__}"
+            raise TypeError(msg)
+        k = k.replace("\\", "\\\\")  # noqa: PLW2901
         if isinstance(v, Mapping):
             try:
                 yield from (
@@ -183,7 +184,7 @@ class MappingConfigData[D: Mapping[Any, Any]](BasicIndexedConfigData[D], Mutable
 
         .. versionchanged:: 0.2.0
            添加 ``strict`` 参数
-        """
+        """  # noqa: RUF002
 
         if recursive:
             return OrderedDict.fromkeys(
@@ -250,11 +251,11 @@ class MappingConfigData[D: Mapping[Any, Any]](BasicIndexedConfigData[D], Mutable
         try:
             result = self.retrieve(path)
             self.delete(path)
-            return result
         except RequiredPathNotFoundError:
             if default is not Unset:
                 return default
             raise
+        return result
 
     @override
     @check_read_only
@@ -273,7 +274,8 @@ class MappingConfigData[D: Mapping[Any, Any]](BasicIndexedConfigData[D], Mutable
         try:
             return self[item]
         except KeyError:
-            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{item}'")
+            msg = f"'{self.__class__.__name__}' object has no attribute '{item}'"
+            raise AttributeError(msg) from None
 
     @operate(operator.or_, operator.ior)
     def __or__(self, other: Any) -> Self:  # type: ignore[empty-body]

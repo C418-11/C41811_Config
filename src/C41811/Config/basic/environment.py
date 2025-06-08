@@ -34,8 +34,8 @@ class Difference:
     修改/新增的键
 
     .. note::
-       为了 `性能/内存` 所以实现的不是很完美，如果一个键更改为了另一个值再改回来仍然会被认为是被修改过的键
-    """
+       实现的不是很完美，如果一个键更改为了另一个值再改回来仍然会被认为是被修改过的键
+    """  # noqa: RUF001
     removed: set[str] = field(default_factory=set)
     """
     删除的键
@@ -71,10 +71,9 @@ class Difference:
 def diff_keys[F: Callable[..., Any]](func: F) -> F:
     @wrapt.decorator  # type: ignore[misc]
     def wrapper(wrapped: F, instance: Any, args: tuple[Any, ...], kwargs: dict[str, Any]) -> Any:
-        if not isinstance(instance, EnvironmentConfigData):
-            raise TypeError(  # pragma: no cover
-                f"instance must be {EnvironmentConfigData.__name__} but got {type(instance).__name__}"
-            )
+        if not isinstance(instance, EnvironmentConfigData):  # pragma: no cover
+            msg = f"instance must be {EnvironmentConfigData.__name__} but got {type(instance).__name__}"
+            raise TypeError(msg)
 
         before = set(instance.keys())
         before_never_changed = before - instance.difference.updated - instance.difference.removed

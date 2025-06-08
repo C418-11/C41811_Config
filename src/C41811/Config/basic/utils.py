@@ -27,8 +27,9 @@ def fmt_path(path: PathLike) -> ABCPath[Any]:
 def check_read_only[F: Callable[..., Any]](func: F) -> F:
     @wrapt.decorator  # type: ignore[misc]
     def wrapper(wrapped: F, instance: ABCConfigData[Any] | None, args: tuple[Any, ...], kwargs: dict[str, Any]) -> Any:
-        if instance is None:
-            raise TypeError("must be called from an instance")  # pragma: no cover
+        if instance is None:  # pragma: no cover
+            msg = "must be called from an instance"
+            raise TypeError(msg)
         if instance.read_only:
             raise ConfigDataReadOnlyError
         return wrapped(*args, **kwargs)

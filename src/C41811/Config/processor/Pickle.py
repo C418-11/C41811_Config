@@ -30,9 +30,9 @@ class PickleSL(BasicLocalFileConfigSL):
     def supported_file_patterns(self) -> tuple[str, ...]:
         return ".pickle", ".pkl"
 
-    supported_file_classes = [ConfigFile]
-
-    _s_open_kwargs = {"mode": "wb"}
+    supported_file_classes = [ConfigFile]  # noqa: RUF012
+    _s_open_kwargs = {"mode": "wb"}  # noqa: RUF012
+    _l_open_kwargs = {"mode": "rb"}  # noqa: RUF012
 
     @override
     def save_file(
@@ -44,8 +44,6 @@ class PickleSL(BasicLocalFileConfigSL):
     ) -> None:
         with self.raises():
             pickle.dump(config_file.config.data, target_file, *merged_args, **merged_kwargs)
-
-    _l_open_kwargs = {"mode": "rb"}
 
     @override
     def load_file(

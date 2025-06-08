@@ -40,7 +40,7 @@ class TokenInfo:
         return "".join(self.tokens)
 
 
-class ConfigDataPathSyntaxException(Exception):
+class ConfigDataPathSyntaxException(Exception):  # noqa: N818
     """
     配置数据检索路径语法错误
     """
@@ -63,8 +63,10 @@ class ConfigDataPathSyntaxException(Exception):
         """
         self.token_info = token_info
 
-        if not (msg is None and hasattr(self, "msg")):
-            self.msg = msg  # type: ignore[assignment]
+        if msg is not None:
+            self.msg = msg
+        elif not hasattr(self, "msg"):
+            self.msg = "Configuration data path syntax error: "
 
     @override
     def __str__(self) -> str:
@@ -292,7 +294,7 @@ class FailedProcessConfigFileError[E: BaseException](BaseExceptionGroup, Excepti
         exceptions: tuple[E, ...]
         if isinstance(reason, Mapping):
             reasons = OrderedDict(reason)
-            message = "\n".join((msg, *map(lambda _: f"{_[0]}: {_[1]}", reason.items())))
+            message = "\n".join((msg, *(f"{k}: {v}" for k, v in reason.items())))
             exceptions = tuple(reason.values())
         elif isinstance(reason, Iterable):
             reasons = tuple(cast(Iterable[E], reason))

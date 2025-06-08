@@ -38,6 +38,7 @@ import time
 from abc import ABC
 from abc import abstractmethod
 from collections.abc import Generator
+from contextlib import AbstractContextManager
 from contextlib import contextmanager
 from contextlib import suppress
 from enum import IntEnum
@@ -46,7 +47,6 @@ from pathlib import Path
 from threading import Lock
 from typing import IO
 from typing import Any
-from typing import ContextManager
 from typing import TextIO
 from typing import cast
 from typing import override
@@ -141,13 +141,14 @@ def replace_atomic(src: PathLike, dst: PathLike) -> None:
     :type src: str
     :param dst: 目标
     :type dst: str
-    """
+    """  # noqa: RUF002
     _replace_atomic(src, dst)
 
 
 def move_atomic(src: PathLike, dst: PathLike) -> None:  # pragma: no cover
     """
-    移动 ``src`` 到 ``dst`` 。可能存在两个文件系统条目同时存在的时间窗口。如果 ``dst`` 已经存在，将引发：py:exc: ‘ FileExistsError ’。
+    移动 ``src`` 到 ``dst`` 。可能存在两个文件系统条目同时存在的时间窗口。如果 ``dst`` 已经存在，将引发：
+    py:exc:`FileExistsError`。
 
     两个路径必须位于同一个文件系统上，这样操作才能是原子的。
 
@@ -155,7 +156,7 @@ def move_atomic(src: PathLike, dst: PathLike) -> None:  # pragma: no cover
     :type src: str
     :param dst: 目标
     :type dst: str
-    """
+    """  # noqa: RUF002
     _move_atomic(src, dst)
 
 
@@ -225,7 +226,7 @@ class TempTextIOManager[F: TextIO](ABCTempIOManager[F]):
     @override
     def from_file(self, file: F) -> F:  # pragma: no cover # 用不上 暂不维护
         path, name = os.path.split(cast(TextIO, file).name)
-        f = open(
+        f = open(  # noqa: SIM115
             os.path.join(path, f"{self._prefix}{name}{self._suffix}"), mode=cast(TextIO, file).mode, **self._open_kwargs
         )
         shutil.copyfile(cast(TextIO, file).name, f.name)
@@ -333,7 +334,8 @@ class SafeOpen[F: AIO]:
             lock = FileLocks.setdefault(_path2str(path), Lock())
 
         if not lock.acquire(timeout=-1 if self._timeout is None else self._timeout):  # pragma: no cover
-            raise TimeoutError("Timeout waiting for file lock")
+            msg = "Timeout waiting for file lock"
+            raise TimeoutError(msg)
 
         f: F | None = None
         try:
@@ -369,7 +371,8 @@ class SafeOpen[F: AIO]:
             lock = FileLocks.setdefault(cast(TextIO, file).name, Lock())
 
         if not lock.acquire(timeout=-1 if self._timeout is None else self._timeout):
-            raise TimeoutError("Timeout waiting for file lock")
+            msg = "Timeout waiting for file lock"
+            raise TimeoutError(msg)
 
         acquire_lock(file, self._flag, timeout=cast(Real | None, self._timeout), immediately_release=True)
         f: F | None = None
@@ -416,7 +419,8 @@ def _timeout_checker(
         while cast(Real, time.time() - start) < timeout:
             yield
             interval = _calc_interval(interval)
-        raise TimeoutError("Timeout waiting for file lock")
+        msg = "Timeout waiting for file lock"
+        raise TimeoutError(msg)
 
     if timeout is None:
         return _inf_loop()
@@ -468,7 +472,7 @@ def safe_open(
     flag: LockFlags = LockFlags.EXCLUSIVE,
     io_manager: ABCTempIOManager[Any] | None = None,
     **manager_kwargs: Any,
-) -> ContextManager[AIO | TextIO]:
+) -> AbstractContextManager[AIO | TextIO]:
     """
     安全打开文件
 
@@ -490,7 +494,7 @@ def safe_open(
     """
     if io_manager is None:
         io_manager = TempTextIOManager(**manager_kwargs)
-    return cast(ContextManager[AIO | TextIO], SafeOpen(io_manager, timeout, flag).open_path(path, mode))
+    return cast(AbstractContextManager[AIO | TextIO], SafeOpen(io_manager, timeout, flag).open_path(path, mode))
 
 
 __all__ = (

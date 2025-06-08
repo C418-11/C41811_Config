@@ -270,7 +270,7 @@ class ABCConfigData[D](ABC):
 
         .. versionchanged:: 0.2.0
            现在会自适应初始化参数
-        """
+        """  # noqa: RUF002
         # noinspection PyArgumentList
         return cls(*args, **kwargs)
 
@@ -356,7 +356,7 @@ class ABCIndexedConfigData[D: Indexed[Any, Any]](ABCConfigData[D], MutableIndexe
 
         :param path: 路径
         :type path: str | ABCPath
-        :param return_raw_value: 是否获取原始值，为False时，会将Mapping | Sequence转换为对应类
+        :param return_raw_value: 是否获取原始值，为 :py:const:`False` 时，会将Mapping | Sequence转换为对应类
         :type return_raw_value: bool
 
         :return: 路径的值
@@ -367,7 +367,7 @@ class ABCIndexedConfigData[D: Indexed[Any, Any]](ABCConfigData[D], MutableIndexe
 
         .. versionchanged:: 0.2.0
            重命名参数 ``get_raw`` 为 ``return_raw_value``
-        """
+        """  # noqa: RUF002
 
     @abstractmethod
     def modify(self, path: PathLike, value: Any, *, allow_create: bool = True) -> Self:
@@ -393,7 +393,7 @@ class ABCIndexedConfigData[D: Indexed[Any, Any]](ABCConfigData[D], MutableIndexe
 
         .. attention::
            ``allow_create`` 时，使用与 `self.data` 一样的类型新建路径
-        """
+        """  # noqa: RUF002
 
     @abstractmethod
     def delete(self, path: PathLike) -> Self:
@@ -426,7 +426,7 @@ class ABCIndexedConfigData[D: Indexed[Any, Any]](ABCConfigData[D], MutableIndexe
         :raise ConfigDataTypeError: 配置数据类型错误
 
         .. versionadded:: 0.1.2
-        """
+        """  # noqa: RUF002
 
     @abstractmethod
     def exists(self, path: PathLike, *, ignore_wrong_type: bool = False) -> bool:
@@ -485,7 +485,7 @@ class ABCIndexedConfigData[D: Indexed[Any, Any]](ABCConfigData[D], MutableIndexe
 
         .. versionchanged:: 0.2.0
            重命名参数 ``get_raw`` 为 ``return_raw_value``
-        """
+        """  # noqa: RUF002
 
     @abstractmethod
     def setdefault(self, path: PathLike, default: Any = None, *, return_raw_value: bool = False) -> Any:
@@ -558,7 +558,7 @@ class ABCIndexedConfigData[D: Indexed[Any, Any]](ABCConfigData[D], MutableIndexe
     def __delitem__(self, index: Any) -> None: ...
 
 
-class ABCProcessorHelper(ABC):
+class ABCProcessorHelper(ABC):  # noqa: B024
     """
     辅助SL处理器
 
@@ -585,7 +585,7 @@ class ABCProcessorHelper(ABC):
 
         :return: 配置文件路径
         :rtype: str
-        """
+        """  # noqa: RUF002
 
         if file_name is None:
             file_name = ""
@@ -628,7 +628,7 @@ class ABCSLProcessorPool(ABC):
            重命名 ``FileExtProcessor`` 为 ``FileNameProcessors``
 
            现在是顺序敏感的
-        """
+        """  # noqa: RUF001
         self._root_path = root_path
 
     @property
@@ -660,7 +660,7 @@ class ABCConfigFile[D: ABCConfigData[Any]](ABC):
 
         .. versionchanged:: 0.2.0
            重命名参数 ``config_data`` 为 ``initial_config``
-        """
+        """  # noqa: RUF002
 
         self._config: D = initial_config
 
@@ -782,10 +782,7 @@ class ABCConfigFile[D: ABCConfigData[Any]](ABC):
         if not isinstance(other, type(self)):
             return NotImplemented
 
-        for field in ["_config_format", "_config"]:
-            if getattr(self, field) != getattr(other, field):
-                return False
-        return True
+        return all(getattr(self, field) == getattr(other, field) for field in ["_config_format", "_config"])
 
     @override
     def __repr__(self) -> str:
@@ -888,7 +885,7 @@ class ABCConfigPool(ABCSLProcessorPool):
 
         .. versionchanged:: 0.2.0
            返回当前实例便于链式调用
-        """
+        """  # noqa: RUF002
 
     @abstractmethod
     def save_all(self, ignore_err: bool = False) -> None | dict[str, dict[str, tuple[ABCConfigFile[Any], Exception]]]:
@@ -900,7 +897,7 @@ class ABCConfigPool(ABCSLProcessorPool):
 
         :return: ignore_err为True时返回{Namespace: {FileName: (ConfigObj, Exception)}}，否则返回None
         :rtype: None | dict[str, dict[str, tuple[ABCConfigFile, Exception]]]
-        """
+        """  # noqa: RUF002
 
     @abstractmethod
     def initialize(

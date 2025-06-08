@@ -65,7 +65,7 @@ class ZipFileSL(BasicCompressedConfigSL):
 
         if compression is None:
             compression = ZipCompressionTypes.ONLY_STORAGE
-        elif isinstance(compression, (str, int)):
+        elif isinstance(compression, str | int):
             for compression_type in ZipCompressionTypes:
                 if compression in (
                     compression_type.full_name,
@@ -102,7 +102,7 @@ class ZipFileSL(BasicCompressedConfigSL):
             f".{self._compression.full_name}",
         )
 
-    supported_file_classes = [ConfigFile]
+    supported_file_classes = [ConfigFile]  # noqa: RUF012
 
     @override
     def compress_file(self, file_path: str, extract_dir: str) -> None:

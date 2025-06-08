@@ -13,6 +13,7 @@ from collections.abc import Sequence
 from contextlib import contextmanager
 from copy import deepcopy
 from typing import Any
+from typing import ClassVar
 from typing import Literal
 from typing import cast
 from typing import override
@@ -73,8 +74,8 @@ class RequiredPath[V, D: ABCConfigData[Any]]:
         :type static_config: Optional[validators.ValidatorFactoryConfig]
 
         .. tip::
-           提供 ``static_config`` 参数可以避免在 :py:meth:`~RequiredPath.filter` 中反复调用 ``validator_factory`` 以提高性能
-           ( :py:meth:`~RequiredPath.filter` 配置一切都为默认值的前提下)
+           提供 ``static_config`` 参数可以避免在 :py:meth:`~RequiredPath.filter` 中反复调用 ``validator_factory``
+           以提高性能 ( :py:meth:`~RequiredPath.filter` 配置一切都为默认值的前提下)
         """
         if not callable(validator_factory):
             validator_factory = ValidatorTypes(validator_factory)
@@ -90,7 +91,7 @@ class RequiredPath[V, D: ABCConfigData[Any]]:
         else:
             self._static_validator = None
 
-    ValidatorFactories: dict[ValidatorTypes, VALIDATOR_FACTORY[V, D]] = {
+    ValidatorFactories: ClassVar[dict[ValidatorTypes, VALIDATOR_FACTORY[Any, Any]]] = {
         ValidatorTypes.DEFAULT: cast(VALIDATOR_FACTORY[V, D], DefaultValidatorFactory),
         ValidatorTypes.NO_VALIDATION: lambda v, *_: v,
         ValidatorTypes.PYDANTIC: cast(VALIDATOR_FACTORY[V, D], pydantic_validator),
@@ -111,7 +112,9 @@ class RequiredPath[V, D: ABCConfigData[Any]]:
 
         :param data: 要过滤的原始数据
         :type data: Ref[ABCConfigData] | ABCConfigData
-        :param allow_modify: 是否允许值不存在时修改data参数对象填充默认值(即使为False仍然会在结果中填充默认值,但不会修改data参数对象)
+        :param allow_modify:
+           是否允许值不存在时修改 ``data`` 参数对象填充默认值(即使为False仍然会在结果中填充默认值，但不会修改 ``data``
+           参数对象)
         :type allow_modify: Optional[bool]
         :param skip_missing: 忽略丢失的键
         :type skip_missing: Optional[bool]
@@ -129,15 +132,17 @@ class RequiredPath[V, D: ABCConfigData[Any]]:
            返回的配置数据是 `*快照*`
 
         .. caution::
-           提供了任意配置参数(``allow_modify``, ``skip_missing``, ...)时,这次调用将完全舍弃 `static_config` 使用当前提供的配置参数
+           提供了任意配置参数(``allow_modify``, ``skip_missing``, ...)时,这次调用将完全舍弃 `static_config`
+           使用当前提供的配置参数
 
-           这会导致调用 `validator_factory` 产生额外开销(如果你提供 `static_config` 参数是为了避免反复调用 `validator_factory` 的话)
+           这会导致调用 `validator_factory` 产生额外开销(如果你提供 `static_config` 参数是为了避免反复调用
+           `validator_factory` 的话)
 
         .. versionchanged:: 0.2.0
            重命名参数 ``ignore_missing`` 为 ``skip_missing``
 
            ``data`` 参数支持 :py:class:`Ref`
-        """
+        """  # noqa: RUF002
         config_kwargs: dict[str, Any] = {}
         if allow_modify is not None:
             config_kwargs["allow_modify"] = allow_modify
@@ -164,7 +169,7 @@ class ConfigRequirementDecorator:
 
     .. versionchanged:: 0.2.0
        重命名 ``RequireConfigDecorator`` 为 ``ConfigRequirementDecorator``
-    """
+    """  # noqa: RUF002
 
     def __init__[D: ABCConfigData[Any]](
         self,
@@ -199,7 +204,7 @@ class ConfigRequirementDecorator:
            重命名参数 ``cache_config`` 为 ``config_cacher``
 
            重命名参数 ``allow_create`` 为 ``allow_initialize``
-        """
+        """  # noqa: RUF002
         config = config_pool.load(
             namespace, file_name, config_formats=config_formats, allow_initialize=allow_initialize
         )
@@ -301,11 +306,11 @@ DefaultConfigPool = ConfigPool()
 """
 默认配置池
 """
-requireConfig = DefaultConfigPool.require
+requireConfig = DefaultConfigPool.require  # noqa: N816
 """
 :py:data:`DefaultConfigPool` . :py:meth:`~ConfigPool.require`
 """
-saveAll = DefaultConfigPool.save_all
+saveAll = DefaultConfigPool.save_all  # noqa: N816
 """
 :py:data:`DefaultConfigPool` . :py:meth:`~ConfigPool.save_all`
 """
@@ -419,8 +424,8 @@ class BasicLocalFileConfigSL(BasicConfigSL, ABC):
        重命名从 ``BaseLocalFileConfigSL`` 为 ``BasicLocalFileConfigSL``
     """
 
-    _s_open_kwargs: dict[str, Any] = {"mode": "w", "encoding": "utf-8"}
-    _l_open_kwargs: dict[str, Any] = {"mode": "r", "encoding": "utf-8"}
+    _s_open_kwargs: dict[str, Any] = {"mode": "w", "encoding": "utf-8"}  # noqa: RUF012
+    _l_open_kwargs: dict[str, Any] = {"mode": "r", "encoding": "utf-8"}  # noqa: RUF012
 
     def __init__(
         self,
@@ -454,7 +459,8 @@ class BasicLocalFileConfigSL(BasicConfigSL, ABC):
                 return tuple(value), pmap()
             if isinstance(value, Mapping):
                 return (), pmap(value)
-            raise TypeError(f"Invalid argument type, must be '{SLArgument}'")
+            msg = f"Invalid argument type, must be '{SLArgument}'"
+            raise TypeError(msg)
 
         self._saver_args: tuple[tuple[Any, ...], PMap[str, Any]] = _build_arg(s_arg)
         self._loader_args: tuple[tuple[Any, ...], PMap[str, Any]] = _build_arg(l_arg)
@@ -668,7 +674,7 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
         :return: 格式化后的命名空间
         :rtype: str
         """
-        return namespace  # 全被子类复写了，测不到 # pragma: no cover
+        return namespace  # 全被子类复写了测不到 # pragma: no cover
 
     def filename_formatter(self, file_name: str) -> str:
         # noinspection SpellCheckingInspection
@@ -776,7 +782,7 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
         :type file_name: str
         """
 
-        config_pool.save(namespace, file_name, config=config_file, *args, **kwargs)  # type: ignore[misc]
+        config_pool.save(namespace, file_name, *args, config=config_file, **kwargs)  # type: ignore[misc]
         if self._cleanup_registry:
             config_pool.discard(namespace, file_name)
 
@@ -800,7 +806,7 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
 
         .. caution::
            传递SL处理前没有清理已经缓存在配置池里的配置文件，返回的可能不是最新数据
-        """
+        """  # noqa: RUF002
 
         cfg_file = config_pool.load(namespace, file_name, *args, **kwargs)
         if self._cleanup_registry:

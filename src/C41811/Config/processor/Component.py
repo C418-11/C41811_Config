@@ -76,7 +76,8 @@ class ComponentMetaParser[D: MappingConfigData[Any]](ABCMetaParser[D, ComponentM
         for attr in orders.__dataclass_fields__:
             o = getattr(orders, attr)
             if len(set(o)) != len(o):
-                raise ValueError(f"name(s) repeated in {attr} order")
+                msg = f"name(s) repeated in {attr} order"
+                raise ValueError(msg)
 
         return ComponentMeta(meta, orders, members, self)
 
@@ -131,7 +132,7 @@ class ComponentSL(BasicChainConfigSL):
     def namespace_formatter(self, namespace: str, file_name: str) -> str:
         return os.path.normpath(os.path.join(namespace, self.filename_formatter(file_name)))
 
-    supported_file_classes = [ConfigFile]
+    supported_file_classes = [ConfigFile]  # noqa: RUF012
 
     @property
     def initial_file(self) -> str:
@@ -152,7 +153,8 @@ class ComponentSL(BasicChainConfigSL):
             config_data = ComponentConfigData()
         elif not isinstance(config_data, ComponentConfigData):
             with self.raises(TypeError):
-                raise TypeError(f"{namespace} is not a ComponentConfigData")
+                msg = f"{namespace} is not a ComponentConfigData"
+                raise TypeError(msg)
 
         meta_config = self.meta_parser.convert_meta2config(config_data.meta)
         file_name, file_ext = os.path.splitext(file_name)
@@ -181,7 +183,8 @@ class ComponentSL(BasicChainConfigSL):
 
         if not isinstance(initial_data, MappingConfigData):
             with self.raises(TypeError):
-                raise TypeError(f"{namespace} is not a MappingConfigData")
+                msg = f"{namespace} is not a MappingConfigData"
+                raise TypeError(msg)
 
         meta = self.meta_parser.convert_config2meta(initial_data)
         members = {}

@@ -114,7 +114,7 @@ TOMLTests: tuple[tuple[Any, tuple[EE, ...], tuple[dict[str, Any], ...]], ...] = 
 class ErrDuringRepr:
     @override
     def __repr__(self) -> str:
-        raise Exception("repr error")
+        raise Exception("repr error")  # noqa: TRY002, TRY003, EM101
 
 
 PythonLiteralTests = (
@@ -315,7 +315,7 @@ ComponentTests: tuple[
         ),
         (
             (
-                JsonSL(s_arg={"indent":2}),
+                JsonSL(s_arg={"indent": 2}),
                 PythonLiteralSL(),
                 ZipFileSL(compress_level=9),
                 TarFileSL(compression=TarCompressionTypes.GZIP),

@@ -15,7 +15,7 @@ def singleton[C: Any](target_cls: type[C], /) -> type[C]:
     单例模式类装饰器
     """
 
-    def __new__(cls: type[C], /, *args: Any, **kwargs: Any) -> C:
+    def __new__(cls: type[C], /, *args: Any, **kwargs: Any) -> C:  # noqa: N807
         if not hasattr(cls, "__singleton_instance__"):
             cls.__singleton_instance__ = cls.__singleton_new__(cls, *args, **kwargs)
 

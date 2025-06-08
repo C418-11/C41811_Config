@@ -18,7 +18,8 @@ try:
     # noinspection PyPackageRequirements, PyUnresolvedReferences
     import hjson  # type: ignore[import-not-found]
 except ImportError:
-    raise ImportError("HumanJson is not installed. Please install it with `pip install hjson`") from None
+    msg = "HumanJson is not installed. Please install it with `pip install hjson`"
+    raise ImportError(msg) from None
 
 
 class HJsonSL(BasicLocalFileConfigSL):
@@ -36,7 +37,7 @@ class HJsonSL(BasicLocalFileConfigSL):
     def supported_file_patterns(self) -> tuple[str, ...]:
         return ".hjson", ".json"
 
-    supported_file_classes = [ConfigFile]
+    supported_file_classes = [ConfigFile]  # noqa: RUF012
 
     @override
     def save_file(

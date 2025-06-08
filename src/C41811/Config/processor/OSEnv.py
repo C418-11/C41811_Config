@@ -33,7 +33,7 @@ class OSEnvSL(BasicConfigSL):
     def supported_file_patterns(self) -> tuple[str, ...]:
         return ".os.env", ".os.environ"
 
-    supported_file_classes = [ConfigFile]
+    supported_file_classes = [ConfigFile]  # noqa: RUF012
 
     @override
     def save(

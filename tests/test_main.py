@@ -190,7 +190,7 @@ class TestConfigPool:
         assert ["", "test"] in pool
         with raises(ValueError, match="item must be a tuple of length 2, got"):
             # noinspection PyStatementEffect
-            ["", "test", "extra"] in pool
+            ["", "test", "extra"] in pool  # noqa: B015
 
     @staticmethod
     def test_len(pool: ConfigPool, file: ConfigFile[MCD]) -> None:
@@ -242,16 +242,14 @@ class TestRequiredPath:
     @mark.parametrize(
         "kwargs",
         (
-                {},
-                {"allow_modify": True},
-                {"skip_missing": True},
-                {"allow_modify": True, "skip_missing": True},
+            {},
+            {"allow_modify": True},
+            {"skip_missing": True},
+            {"allow_modify": True, "skip_missing": True},
         ),
     )
     def test_no_validation(data: MCD, kwargs: dict[str, Any]) -> None:
-        assert RequiredPath(
-            lambda _: _.value, "no-validation"
-        ).filter(deepcopy(data), **kwargs) == data  # type: ignore[arg-type]
+        assert RequiredPath(lambda _: _.value, "no-validation").filter(deepcopy(data), **kwargs) == data  # type: ignore[arg-type]
 
     PydanticTests: tuple[
         str,
@@ -281,13 +279,13 @@ class TestRequiredPath:
     @staticmethod
     @mark.parametrize(*PydanticTests)
     def test_pydantic(
-            data: MCD,
-            pydantic_model: type[BaseModel],
-            path: str,
-            value: Any,
-            kwargs: dict[str, Any],
-            ignore_excs: EE,
-            ignore_warns: EW,
+        data: MCD,
+        pydantic_model: type[BaseModel],
+        path: str,
+        value: Any,
+        kwargs: dict[str, Any],
+        ignore_excs: EE,
+        ignore_warns: EW,
     ) -> None:
         with safe_raises(ignore_excs), safe_warns(ignore_warns):
             data = cast(
@@ -378,11 +376,11 @@ class TestRequiredPath:
     @staticmethod
     @mark.parametrize(*IterableTests)
     def test_default_iterable(
-            data: MCD,
-            paths: list[str],
-            values: list[Any],
-            kwargs: dict[str, Any],
-            ignore_excs: EE,
+        data: MCD,
+        paths: list[str],
+        values: list[Any],
+        kwargs: dict[str, Any],
+        ignore_excs: EE,
     ) -> None:
         with safe_raises(ignore_excs) as info:
             data = cast(
@@ -588,11 +586,11 @@ class TestRequiredPath:
     @staticmethod
     @mark.parametrize(*MappingTests)
     def test_default_mapping(
-            data: MCD,
-            mapping: dict[str, Any],
-            result: dict[str, Any],
-            kwargs: dict[str, Any],
-            ignores: tuple[type[Warning | BaseException], ...],
+        data: MCD,
+        mapping: dict[str, Any],
+        result: dict[str, Any],
+        kwargs: dict[str, Any],
+        ignores: tuple[type[Warning | BaseException], ...],
     ) -> None:
         ignore_warns = tuple(e for e in ignores if issubclass(e, Warning))
         ignore_excs = tuple(set(ignores) - set(ignore_warns))
@@ -679,11 +677,11 @@ class TestRequiredPath:
     @staticmethod
     @mark.parametrize(*ComponentTests)
     def test_component[CCD: ComponentConfigData[MappingConfigData[Any], ComponentMeta[MCD]]](
-            data: CCD,
-            validator: dict[str | None, dict[str, Any]],
-            result: CCD,
-            kwargs: dict[str, Any],
-            ignores: tuple[type[Warning | BaseException], ...],
+        data: CCD,
+        validator: dict[str | None, dict[str, Any]],
+        result: CCD,
+        kwargs: dict[str, Any],
+        ignores: tuple[type[Warning | BaseException], ...],
     ) -> None:
         ignore_warns = tuple(e for e in ignores if issubclass(e, Warning))
         ignore_excs = tuple(set(ignores) - set(ignore_warns))
@@ -703,36 +701,36 @@ class TestRequiredPath:
     @mark.parametrize(
         "validator, static_config, times",
         (
-                ({"foo\\.bar": int, "foo": dict, "foo1": int, "foo2": list[str]}, ValidatorFactoryConfig(), 100),
-                (
-                        {
-                            "foo\\.bar": int,
-                            "foo": dict,
-                            "foo1": int,
-                            "foo2": list[str],
-                            "foo3": {
-                                "bar": 789,
-                                "test": {
-                                    "value": 101112,
-                                },
-                            },
-                            "foo4": {
-                                "bar": 789,
-                                "test": {
-                                    "value": 101112,
-                                },
-                            },
+            ({"foo\\.bar": int, "foo": dict, "foo1": int, "foo2": list[str]}, ValidatorFactoryConfig(), 100),
+            (
+                {
+                    "foo\\.bar": int,
+                    "foo": dict,
+                    "foo1": int,
+                    "foo2": list[str],
+                    "foo3": {
+                        "bar": 789,
+                        "test": {
+                            "value": 101112,
                         },
-                        ValidatorFactoryConfig(allow_modify=True),
-                        100,
-                ),
+                    },
+                    "foo4": {
+                        "bar": 789,
+                        "test": {
+                            "value": 101112,
+                        },
+                    },
+                },
+                ValidatorFactoryConfig(allow_modify=True),
+                100,
+            ),
         ),
     )
     def test_static_config_usetime(
-            data: MCD,
-            validator: dict[str, Any],
-            static_config: ValidatorFactoryConfig,
-            times: int,
+        data: MCD,
+        validator: dict[str, Any],
+        static_config: ValidatorFactoryConfig,
+        times: int,
     ) -> None:
         static_filter = cast(Callable[[MCD], MCD], RequiredPath(validator, static_config=static_config).filter)
         dynamic_filter = cast(Callable[[MCD], MCD], RequiredPath(validator).filter)
@@ -814,10 +812,10 @@ class TestRequiredPath:
     @staticmethod  # 专门针对保留子键的测试
     @mark.parametrize(*IncludeSubKeyTests)
     def test_include_sub_key(
-            recursive_data: MCD,
-            validator: dict[str, Any],
-            result: Any,
-            ignores: tuple[EW, EE],
+        recursive_data: MCD,
+        validator: dict[str, Any],
+        result: Any,
+        ignores: tuple[EW, EE],
     ) -> None:
         if not ignores:
             ignores = ((), ())

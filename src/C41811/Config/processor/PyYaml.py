@@ -14,7 +14,8 @@ try:
     # noinspection PyPackageRequirements, PyUnresolvedReferences
     import yaml
 except ImportError:
-    raise ImportError("PyYaml is not installed. Please install it with `pip install PyYaml`") from None
+    msg = "PyYaml is not installed. Please install it with `pip install PyYaml`"
+    raise ImportError(msg) from None
 
 
 class PyYamlSL(BasicLocalFileConfigSL):
@@ -32,7 +33,7 @@ class PyYamlSL(BasicLocalFileConfigSL):
     def supported_file_patterns(self) -> tuple[str, ...]:
         return ".yaml", ".yml"
 
-    supported_file_classes = [ConfigFile]
+    supported_file_classes = [ConfigFile]  # noqa: RUF012
 
     @override
     def save_file(

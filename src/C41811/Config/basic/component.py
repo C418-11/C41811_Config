@@ -69,7 +69,7 @@ class ComponentMeta[D: ABCConfigData[Any]]:
     .. versionadded:: 0.2.0
     """
 
-    config: D = cast(D, field(default_factory=ConfigData))
+    config: D = field(default_factory=cast(Callable[[], D], ConfigData))
     orders: ComponentOrders = field(default_factory=ComponentOrders)
     members: list[ComponentMember] = field(default_factory=list)
     parser: ABCMetaParser[Any, Any] | None = field(default=None)
@@ -109,15 +109,18 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
         self._members: MutableMapping[str, D] = deepcopy(members)
 
         if len(self._filename2meta) != len(self._meta.members):
-            raise ValueError("repeated filename in meta")
+            msg = "repeated filename in meta"
+            raise ValueError(msg)
 
         same_names = self._alias2filename.keys() & self._alias2filename.values()
         if same_names:
-            raise ValueError(f"alias and filename cannot be the same {tuple(same_names)}")
+            msg = f"alias and filename cannot be the same {tuple(same_names)}"
+            raise ValueError(msg)
 
         unexpected_names = self._members.keys() ^ self._filename2meta.keys()
         if unexpected_names:
-            raise ValueError(f"cannot match members from meta {tuple(unexpected_names)}")
+            msg = f"cannot match members from meta {tuple(unexpected_names)}"
+            raise ValueError(msg)
 
     @property
     def meta(self) -> M:
@@ -130,7 +133,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
                 由于 :py:class:`ComponentMeta` 仅提供一个通用的接口，
                 直接修改其中元数据而不修改 ``config`` 字段 `*可能*` 会导致SL与元数据的不同步，
                 这取决于 :py:class:`ComponentSL` 所取用的元数据解析器的行为
-        """
+        """  # noqa: RUF002
         return self._meta
 
     @property
@@ -138,7 +141,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
         """
         .. caution::
             未默认做深拷贝，可能导致非预期行为
-        """
+        """  #  noqa: RUF002
         return self._members
 
     @property
@@ -192,7 +195,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
         .. important::
            针对 :py:exc:`RequiredPathNotFoundError` ， :py:exc:`ConfigDataTypeError` 做了特殊处理，
            多个成员都抛出其一时最终仅抛出其中 :py:attr:`KeyInfo.index` 最大的
-        """
+        """  # noqa: RUF002
         if path and (path[0].meta is not None):
             try:
                 selected_member = self._member(path[0].meta)

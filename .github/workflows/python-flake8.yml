@@ -42,5 +42,5 @@ jobs:
         run: >
           flake8
           --doctests --max-line-length=120 --max-complexity=10 --show-source
-          --count --statistics --ignore=E122,E121,E126,W503,E123
+          --count --statistics --ignore=E122,E121,E126,W503,E123,E704,F401,E701,E203
           tests src

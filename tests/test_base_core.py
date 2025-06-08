@@ -81,7 +81,7 @@ class TestConfigFile:
 
     ExtraKwargs = ({"config_format": "json"},)
 
-    CombExtraKwargs: list[dict[str, str]] = []
+    CombExtraKwargs: list[dict[str, str]] = []  # noqa: RUF012
     for i in range(1, len(ExtraKwargs) + 1):
         CombExtraKwargs.extend(
             functools.reduce(operator.or_, kwargs_tuple) for kwargs_tuple in itertools.combinations(ExtraKwargs, i)

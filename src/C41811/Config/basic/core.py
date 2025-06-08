@@ -153,7 +153,7 @@ class BasicIndexedConfigData[D: Indexed[Any, Any]](BasicSingleConfigData[D], ABC
 
         .. versionchanged:: 0.2.0
            重命名参数 ``process_check`` 为 ``path_checker``
-        """
+        """  # noqa: RUF002
         current_data = self._data
 
         for key_index, current_key in enumerate(path):
@@ -361,7 +361,7 @@ class ConfigFile[D: ABCConfigData[Any]](ABCConfigFile[D]):
            现在会自动尝试转换 ``initial_config`` 参数为 :py:class:`ConfigData`
 
            重命名参数 ``config_data`` 为 ``initial_config``
-        """
+        """  # noqa: RUF002
 
         super().__init__(cast(D, ConfigData(initial_config)), config_format=config_format)
 
@@ -532,7 +532,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
         3.file_config_format非None
 
         .. versionadded:: 0.2.0
-        """
+        """  # noqa: RUF002
         result_formats = []
         # 先尝试从传入的参数中获取配置文件格式
         if config_formats is None:
@@ -606,7 +606,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
 
         .. versionchanged:: 0.2.0
            将格式计算部分提取到单独的函数 :py:meth:`_get_formats`
-        """
+        """  # noqa: RUF002
 
         def callback_wrapper(cfg_fmt: str) -> R:
             return processor(self, namespace, file_name, cfg_fmt)
@@ -618,7 +618,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
                 errors[config_format] = UnsupportedConfigFormatError(config_format)
                 continue
             try:
-                # 能正常运行直接返回结果，不再进行尝试
+                # 能正常运行直接返回结果不再进行尝试
                 return callback_wrapper(config_format)
             except FailedProcessConfigFileError as err:
                 errors[config_format] = err
@@ -627,7 +627,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
             if isinstance(error, UnsupportedConfigFormatError):
                 raise error from None
 
-        # 如果没有一个SL加载器能正确加载，则抛出异常
+        # 如果没有一个SL加载器能正确加载则抛出异常
         raise FailedProcessConfigFileError(errors)
 
     @override
@@ -759,7 +759,8 @@ class BasicConfigPool(ABCConfigPool, ABC):
     def __getitem__(self, item: str | tuple[str, str]) -> dict[str, ABCConfigFile[Any]] | ABCConfigFile[Any]:
         if isinstance(item, tuple):
             if len(item) != 2:
-                raise ValueError(f"item must be a tuple of length 2, got {item}")
+                msg = f"item must be a tuple of length 2, got {item}"
+                raise ValueError(msg)
             return deepcopy(self.configs[item[0]][item[1]])
         return deepcopy(self.configs[item])
 
@@ -774,7 +775,8 @@ class BasicConfigPool(ABCConfigPool, ABC):
         if len(item) == 1:
             return item[0] in self._configs
         if len(item) != 2:
-            raise ValueError(f"item must be a tuple of length 2, got {item}")
+            msg = f"item must be a tuple of length 2, got {item}"
+            raise ValueError(msg)
         return (item[0] in self._configs) and (item[1] in self._configs[item[0]])
 
     def __len__(self) -> int:

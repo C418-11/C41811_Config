@@ -114,7 +114,7 @@ def test_config_data_readonly_error() -> None:
         raise ConfigDataReadOnlyError
 
     with raises(ConfigDataReadOnlyError, match=r"\$\$message\$\$"):
-        raise ConfigDataReadOnlyError("$$message$$")
+        raise ConfigDataReadOnlyError("$$message$$")  # noqa: EM101
 
 
 @mark.parametrize(
@@ -148,7 +148,7 @@ def test_unknown_error_during_validate_error() -> None:
 
 def test_unsupported_config_format_error() -> None:
     with raises(UnsupportedConfigFormatError, match="json"):
-        raise UnsupportedConfigFormatError("json")
+        raise UnsupportedConfigFormatError("json")  # noqa: EM101
 
     cls = UnsupportedConfigFormatError
     assert cls("json") == cls("json")

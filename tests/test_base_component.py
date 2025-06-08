@@ -27,7 +27,7 @@ type CCD = ComponentConfigData[ABCIndexedConfigData[dict[Any, Any]], ComponentMe
 
 def _ccd_from_members(members: M) -> CCD:
     return ComponentConfigData(
-        meta=ComponentMeta(members=[ComponentMember(fn) for fn in members.keys()]),
+        meta=ComponentMeta(members=[ComponentMember(fn) for fn in members]),
         members=members,
     )
 
@@ -976,8 +976,8 @@ class TestComponentConfigData:
         a, b = _ccd_from_members(a), _ccd_from_members(b)
 
         assert (a == b) is is_eq
-        assert (not a != b) is is_eq
-        assert not a == {}
+        assert (not a != b) is is_eq  # noqa: SIM202
+        assert not a == {}  # noqa: SIM201
         assert b != {}
 
     @staticmethod
