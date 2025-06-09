@@ -1055,17 +1055,24 @@ class ABCConfigSL(ABC):
            重命名 ``file_ext`` 为 ``supported_file_patterns``
         """
 
-    def register_to(self, config_pool: ABCSLProcessorPool) -> None:
+    def register_to(self, config_pool: ABCSLProcessorPool) -> Self:
         """
         注册到配置池中
 
         :param config_pool: 配置池
         :type config_pool: ABCSLProcessorPool
+
+        :return: 返回当前实例便于链式调用
+        :rtype: Self
+
+        .. versionchanged:: 0.3.0
+           返回当前实例便于链式调用
         """
 
         config_pool.SLProcessors[self.reg_name] = self
         for match in self.supported_file_patterns:
             config_pool.FileNameProcessors.setdefault(match, []).append(self.reg_name)
+        return self
 
     @abstractmethod
     def save(

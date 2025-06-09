@@ -15,6 +15,7 @@ from copy import deepcopy
 from typing import Any
 from typing import ClassVar
 from typing import Literal
+from typing import Self
 from typing import cast
 from typing import override
 
@@ -341,17 +342,23 @@ class BasicConfigSL(ABCConfigSL, ABC):
     """
 
     @override
-    def register_to(self, config_pool: ABCSLProcessorPool | None = None) -> None:
+    def register_to(self, config_pool: ABCSLProcessorPool | None = None) -> Self:
         """
         注册到配置池中
 
         :param config_pool: 配置池
         :type config_pool: Optional[ABCSLProcessorPool]
+
+        :return: 返回当前实例便于链式调用
+        :rtype: Self
+
+        .. versionchanged:: 0.3.0
+           返回当前实例便于链式调用
         """
         if config_pool is None:
             config_pool = DefaultConfigPool
 
-        super().register_to(config_pool)
+        return super().register_to(config_pool)
 
     @override
     def initialize(
