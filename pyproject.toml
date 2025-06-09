@@ -193,8 +193,8 @@ commands = [
 dependency_groups = ["ruff"]
 setenv = {CLICOLOR_FORCE="1"}
 commands = [
-    ["ruff", "check"],
-    ["ruff", "format"],
+    ["ruff", "check", "--no-fix"],
+    ["ruff", "format", "--check"],
 ]
 
 [tool.tox.env.mypy]
