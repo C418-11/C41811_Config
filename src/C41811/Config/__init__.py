@@ -1,4 +1,4 @@
-# cython: language_level = 3
+# cython: language_level = 3  # noqa: N999
 
 """
 C41811.Config 旨在通过提供一套简洁的 API 和灵活的配置处理机制，来简化配置文件的管理。

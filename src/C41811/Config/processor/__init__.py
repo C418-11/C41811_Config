@@ -1,4 +1,4 @@
-# cython: language_level = 3
+# cython: language_level = 3  # noqa: N999
 
 # noinspection GrazieInspection
 """

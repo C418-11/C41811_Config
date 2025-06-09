@@ -154,8 +154,6 @@ ignore = [  # ruff推荐忽略以避免和formatter冲突
     "E111", # indentation-with-invalid-multiples
     "E114", # indentation-with-invalid-multiple-comment
     "E117", # over-indented
-
-    "N999", # 临时禁用  # todo
 ]
 
 [tool.mypy]
