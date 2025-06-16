@@ -1,6 +1,10 @@
 # cython: language_level = 3  # noqa: N999
 
 
+"""
+PyYaml配置文件处理器
+"""
+
 from typing import Any
 from typing import override
 

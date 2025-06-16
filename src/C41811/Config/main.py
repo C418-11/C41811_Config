@@ -1,6 +1,10 @@
 # cython: language_level = 3
 
 
+"""
+主要部分
+"""
+
 import os.path
 import re
 from abc import ABC
@@ -243,6 +247,16 @@ class ConfigRequirementDecorator:
         return self._wrapped_filter(**kwargs)
 
     def __call__(self, func: Callable[[ABCConfigData[Any], Any], Any]) -> Callable[..., Any]:
+        """
+        通过装饰器提供配置数据注入，配置数据将会注入到 ``self`` (如果为方法而不是函数)后的第一个参数
+
+        :param func: 需要装饰的函数
+        :type func: Callable[[ABCConfigData[Any], Any], Any]
+
+        :return: 装饰后的函数
+        :rtype: Callable[..., Any]
+        """  # noqa: RUF002
+
         @wrapt.decorator  # type: ignore[misc]
         def wrapper(
             wrapped: Callable[..., Any],
@@ -654,7 +668,7 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
 
     def __init__(self, *, reg_alias: str | None = None, create_dir: bool = True):
         """
-        :param reg_alias: sl处理器注册别名
+        :param reg_alias: 处理器别名
         :type reg_alias: Optional[str]
         :param create_dir: 是否创建目录
         :type create_dir: bool
@@ -827,7 +841,21 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
         root_path: str,
         namespace: str,
         file_name: str,
-    ) -> None: ...
+    ) -> None:
+        """
+        加载前处理
+
+        :param config_pool: 配置池
+        :type config_pool: ABCConfigPool
+        :param file_path: 文件路径
+        :type file_path: str
+        :param root_path: 根路径
+        :type root_path: str
+        :param namespace: 命名空间
+        :type namespace: str
+        :param file_name: 文件名
+        :type file_name: str
+        """
 
     def after_save(
         self,
@@ -837,7 +865,23 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
         root_path: str,
         namespace: str,
         file_name: str,
-    ) -> None: ...
+    ) -> None:
+        """
+        保存后处理
+
+        :param config_pool: 配置池
+        :type config_pool: ABCConfigPool
+        :param config_file: 配置文件
+        :type config_file: ABCConfigFile[Any]
+        :param file_path: 文件路径
+        :type file_path: str
+        :param root_path: 根路径
+        :type root_path: str
+        :param namespace: 命名空间
+        :type namespace: str
+        :param file_name: 文件名
+        :type file_name: str
+        """
 
 
 class BasicCachedConfigSL(BasicChainConfigSL, ABC):
@@ -895,10 +939,28 @@ class BasicCompressedConfigSL(BasicCachedConfigSL, ABC):
         self.extract_file(file_path, extract_dir)
 
     @abstractmethod
-    def compress_file(self, file_path: str, extract_dir: str) -> None: ...
+    def compress_file(self, file_path: str, extract_dir: str) -> None:
+        """
+        压缩文件
+
+        :param file_path: 压缩文件路径
+        :type file_path: str
+
+        :param extract_dir: 解压目录
+        :type extract_dir: str
+        """
 
     @abstractmethod
-    def extract_file(self, file_path: str, extract_dir: str) -> None: ...
+    def extract_file(self, file_path: str, extract_dir: str) -> None:
+        """
+        解压文件
+
+        :param file_path: 压缩文件路径
+        :type file_path: str
+
+        :param extract_dir: 解压目录
+        :type extract_dir: str
+        """
 
 
 __all__ = (

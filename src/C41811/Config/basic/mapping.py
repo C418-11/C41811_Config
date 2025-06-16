@@ -2,6 +2,8 @@
 
 
 """
+映射类型配置数据实现
+
 .. versionadded:: 0.2.0
 """
 
@@ -106,6 +108,10 @@ class MappingConfigData[D: Mapping[Any, Any]](BasicIndexedConfigData[D], Mutable
     data: D
 
     def __init__(self, data: D | None = None):
+        """
+        :param data: 映射数据
+        :type data: D | None
+        """
         if data is None:
             data = {}  # type: ignore[assignment]
         super().__init__(cast(D, data))

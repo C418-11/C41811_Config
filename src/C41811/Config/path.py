@@ -1,6 +1,10 @@
 # cython: language_level = 3
 
 
+"""
+配置数据路径
+"""
+
 import warnings
 from abc import ABC
 from collections.abc import Iterable
@@ -139,6 +143,10 @@ class IndexKey(IndexMixin[int, Sequence[Any]], ABCKey[int, Sequence[Any]]):
 
 
 class Path(ABCPath[AttrKey | IndexKey]):
+    """
+    配置数据路径
+    """
+
     @classmethod
     def from_str(cls, string: str) -> Self:
         """

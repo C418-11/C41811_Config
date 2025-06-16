@@ -2,6 +2,8 @@
 
 
 """
+HJson配置文件处理器
+
 .. versionadded:: 0.3.0
 """
 

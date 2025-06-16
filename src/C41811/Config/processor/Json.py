@@ -1,6 +1,10 @@
 # cython: language_level = 3  # noqa: N999
 
 
+"""
+Json配置文件处理器
+"""
+
 import json
 from typing import Any
 from typing import override

@@ -2,6 +2,8 @@
 
 
 """
+环境变量配置数据实现
+
 .. versionadded:: 0.2.0
 """
 
@@ -109,6 +111,10 @@ class EnvironmentConfigData(MappingConfigData[MutableMapping[str, str]]):
     """
 
     def __init__(self, data: MutableMapping[str, str] | None = None):
+        """
+        :param data: 环境变量数据
+        :type data: MutableMapping[str, str] | None
+        """
         super().__init__(data)
         self.difference = Difference()
 

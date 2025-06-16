@@ -1,6 +1,10 @@
 # cython: language_level = 3
 
 
+"""
+错误类
+"""
+
 from collections import OrderedDict
 from collections.abc import Iterable
 from collections.abc import Mapping
@@ -37,6 +41,9 @@ class TokenInfo:
 
     @property
     def raw_string(self) -> str:
+        """
+        标记的原始字符串
+        """
         return "".join(self.tokens)
 
 
@@ -121,6 +128,9 @@ class KeyInfo[K: AnyKey]:
 
     @property
     def relative_keys(self) -> Iterable[K]:
+        """
+        从根到当前键的相对路径
+        """
         return self.path[: self.index]
 
 

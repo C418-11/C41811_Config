@@ -2,6 +2,8 @@
 
 
 """
+组件配置数据实现
+
 .. versionadded:: 0.2.0
 """
 
@@ -106,7 +108,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
             for member_meta in self._meta.members
             if member_meta.alias is not None
         }
-        self._members: MutableMapping[str, D] = deepcopy(members)
+        self._members: Mapping[str, D] = deepcopy(members)
 
         if len(self._filename2meta) != len(self._meta.members):
             msg = "repeated filename in meta"
@@ -125,6 +127,8 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
     @property
     def meta(self) -> M:
         """
+        组件元信息
+
         .. caution::
             未默认做深拷贝，可能导致非预期行为
 
@@ -139,6 +143,8 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
     @property
     def members(self) -> Mapping[str, D]:
         """
+        组件成员
+
         .. caution::
             未默认做深拷贝，可能导致非预期行为
         """  #  noqa: RUF002
@@ -147,14 +153,23 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
     @property
     @override
     def data_read_only(self) -> bool | None:
+        """
+        组件数据是否为只读
+        """
         return not isinstance(self._members, MutableMapping)
 
     @property
     def filename2meta(self) -> Mapping[str, ComponentMember]:
+        """
+        文件名到成员元信息的映射
+        """
         return deepcopy(self._filename2meta)
 
     @property
     def alias2filename(self) -> Mapping[str, str]:
+        """
+        别名到文件名的映射
+        """
         return deepcopy(self._alias2filename)
 
     def _member(self, member: str) -> D:
@@ -413,12 +428,12 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
     @override
     @check_read_only
     def __setitem__(self, index: Any, value: D) -> None:
-        self._members[index] = value
+        self._members[index] = value  # type: ignore[index]
 
     @override
     @check_read_only
     def __delitem__(self, index: Any) -> None:
-        del self._members[index]
+        del self._members[index]  # type: ignore[attr-defined]
 
 
 __all__ = (

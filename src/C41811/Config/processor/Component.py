@@ -2,6 +2,8 @@
 
 
 """
+组件配置处理器
+
 .. versionadded:: 0.2.0
 """
 
@@ -111,6 +113,14 @@ class ComponentSL(BasicChainConfigSL):
         create_dir: bool = True,
         meta_parser: ABCMetaParser[Any, ComponentMeta[Any]] | None = None,
     ):
+        """
+        :param reg_alias: 处理器别名
+        :type reg_alias: str | None
+        :param create_dir: 是否创建目录
+        :type create_dir: bool
+        :param meta_parser: 元数据解析器
+        :type meta_parser: basic.mapping.ABCMetaParser | None
+        """
         super().__init__(reg_alias=reg_alias, create_dir=create_dir)
 
         if meta_parser is None:
@@ -135,7 +145,8 @@ class ComponentSL(BasicChainConfigSL):
     supported_file_classes = [ConfigFile]  # noqa: RUF012
 
     @property
-    def initial_file(self) -> str:
+    def initial_file(self) -> str:  # TODO 重命名为 meta_file 并更改默认值为 __meta__
+        """元信息文件"""
         return "__init__"
 
     @override

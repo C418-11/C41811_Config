@@ -2,6 +2,8 @@
 
 
 """
+数值类型配置数据实现
+
 .. versionadded:: 0.2.0
 """
 
@@ -31,6 +33,10 @@ class NumberConfigData[D: Number](BasicSingleConfigData[D]):
     data: D
 
     def __init__(self, data: D | None = None):
+        """
+        :param data: 数值数据
+        :type data: D | None
+        """
         if data is None:
             data = 0  # type: ignore[assignment]
         super().__init__(cast(D, data))
@@ -184,6 +190,10 @@ class BoolConfigData[D: bool](NumberConfigData[D]):  # type: ignore[type-var]  #
     data: D
 
     def __init__(self, data: D | None = None):
+        """
+        :param data: 布尔值数据
+        :type data: D | None
+        """
         super().__init__(cast(D, bool(data)))
 
 

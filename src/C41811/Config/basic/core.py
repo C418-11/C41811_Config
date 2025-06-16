@@ -2,6 +2,8 @@
 
 
 """
+主要中间层
+
 .. versionadded:: 0.2.0
 """
 
@@ -332,6 +334,12 @@ class ConfigData(ABC):
     """
 
     def __new__(cls, *args: Any, **kwargs: Any) -> Any:
+        """
+        :param args: 配置数据
+        :type args: Any
+        :param kwargs: 配置数据
+        :type kwargs: Any
+        """
         if not args:
             args = (None,)
         for types, config_data_cls in cls.TYPES.items():
@@ -431,7 +439,10 @@ class ConfigFile[D: ABCConfigData[Any]](ABCConfigFile[D]):
         )
 
 
-class PHelper(ABCProcessorHelper): ...
+class PHelper(ABCProcessorHelper):
+    """
+    处理器助手类
+    """
 
 
 class BasicConfigPool(ABCConfigPool, ABC):
@@ -445,6 +456,10 @@ class BasicConfigPool(ABCConfigPool, ABC):
     """
 
     def __init__(self, root_path: str = "./.config"):
+        """
+        :param root_path: 配置根路径
+        :type root_path: str
+        """
         super().__init__(root_path)
         self._configs: dict[str, dict[str, ABCConfigFile[Any]]] = {}
         self._helper = PHelper()
@@ -787,6 +802,9 @@ class BasicConfigPool(ABCConfigPool, ABC):
 
     @property
     def configs(self) -> dict[str, dict[str, ABCConfigFile[Any]]]:
+        """
+        配置文件字典
+        """
         return deepcopy(self._configs)
 
     @override

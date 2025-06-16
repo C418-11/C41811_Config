@@ -1,6 +1,10 @@
 # cython: language_level = 3
 
 
+"""
+配置验证器
+"""
+
 import dataclasses
 import re
 import types
@@ -501,6 +505,15 @@ class DefaultValidatorFactory[D: MCD | NoneConfigData]:
         self.model = self._mapping2model(fmt_validator, model_config.data)
 
     def __call__(self, config_ref: Ref[D]) -> D:
+        """
+        验证配置数据
+
+        :param config_ref: 配置数据引用
+        :type config_ref: Ref[D]
+
+        :return: 验证后的配置数据
+        :rtype: D
+        """
         if isinstance(config_ref.value, NoneConfigData):
             config_ref.value = MappingConfigData()  # type: ignore[assignment]
         data: MCD = config_ref.value  # type: ignore[assignment]
@@ -609,6 +622,15 @@ class ComponentValidatorFactory[D: ComponentConfigData[Any, Any] | NoneConfigDat
             self.validators[member] = self.validator_factory(validator, self.validator_config)
 
     def __call__(self, config_ref: Ref[D]) -> D:
+        """
+        验证配置数据
+
+        :param config_ref: 配置数据引用
+        :type config_ref: Ref[D]
+
+        :return: 验证后的配置数据
+        :rtype: D
+        """
         if isinstance(config_ref.value, NoneConfigData):
             config_ref.value = ComponentConfigData()  # type: ignore[assignment]
 

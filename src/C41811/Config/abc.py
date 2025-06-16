@@ -1,6 +1,10 @@
 # cython: language_level = 3
 
 
+"""
+配置抽象基类
+"""
+
 import os
 from abc import ABC
 from abc import abstractmethod
@@ -43,6 +47,9 @@ class ABCKey[K, D](ABC):
 
     @property
     def key(self) -> K:
+        """
+        键
+        """
         return deepcopy(self._key)
 
     @property
@@ -177,6 +184,10 @@ class ABCPath[K: AnyKey](ABC, Iterable[K]):
     """
 
     def __init__(self, keys: Iterable[K]):
+        """
+        :param keys: 路径的键
+        :type keys: Iterable[K]
+        """
         self._keys = deepcopy(tuple(keys))
 
     @property
@@ -355,7 +366,7 @@ class ABCIndexedConfigData[D: Indexed[Any, Any]](ABCConfigData[D], MutableIndexe
         获取路径的值的*快照*
 
         :param path: 路径
-        :type path: str | ABCPath
+        :type path: PathLike
         :param return_raw_value: 是否获取原始值，为 :py:const:`False` 时，会将Mapping | Sequence转换为对应类
         :type return_raw_value: bool
 
@@ -375,7 +386,7 @@ class ABCIndexedConfigData[D: Indexed[Any, Any]](ABCConfigData[D], MutableIndexe
         修改路径的值
 
         :param path: 路径
-        :type path: str | ABCPath
+        :type path: PathLike
         :param value: 值
         :type value: Any
         :param allow_create: 是否允许创建不存在的路径，默认为True
@@ -401,7 +412,7 @@ class ABCIndexedConfigData[D: Indexed[Any, Any]](ABCConfigData[D], MutableIndexe
         删除路径
 
         :param path: 路径
-        :type path: str | ABCPath
+        :type path: PathLike
 
         :return: 返回当前实例便于链式调用
         :rtype: Self
@@ -417,7 +428,7 @@ class ABCIndexedConfigData[D: Indexed[Any, Any]](ABCConfigData[D], MutableIndexe
         确保路径不存在 (删除路径，但是找不到路径时不会报错)
 
         :param path: 路径
-        :type path: str | ABCPath
+        :type path: PathLike
 
         :return: 返回当前实例便于链式调用
         :rtype: Self
@@ -434,7 +445,7 @@ class ABCIndexedConfigData[D: Indexed[Any, Any]](ABCConfigData[D], MutableIndexe
         判断路径是否存在
 
         :param path: 路径
-        :type path: str | ABCPath
+        :type path: PathLike
         :param ignore_wrong_type: 忽略配置数据类型错误
         :type ignore_wrong_type: bool
 
@@ -450,7 +461,7 @@ class ABCIndexedConfigData[D: Indexed[Any, Any]](ABCConfigData[D], MutableIndexe
         获取路径的值的*快照*，路径不存在时填充默认值
 
         :param path: 路径
-        :type path: str | ABCPath
+        :type path: PathLike
 
         :param default: 默认值
         :type default: Any
@@ -493,7 +504,7 @@ class ABCIndexedConfigData[D: Indexed[Any, Any]](ABCConfigData[D], MutableIndexe
         如果路径不在配置数据中则填充默认值到配置数据并返回
 
         :param path: 路径
-        :type path: str | ABCPath
+        :type path: PathLike
         :param default: 默认值
         :type default: Any
         :param return_raw_value: 是否获取原始值
@@ -599,6 +610,10 @@ class ABCSLProcessorPool(ABC):
     """
 
     def __init__(self, root_path: str = "./.config"):
+        """
+        :param root_path: 保存的根目录
+        :type root_path: str
+        """
         self.SLProcessors: dict[str, ABCConfigSL] = {}
         """
         处理器注册表
@@ -633,7 +648,10 @@ class ABCSLProcessorPool(ABC):
 
     @property
     @abstractmethod
-    def helper(self) -> ABCProcessorHelper: ...
+    def helper(self) -> ABCProcessorHelper:
+        """
+        处理器助手
+        """
 
     @property
     def root_path(self) -> str:

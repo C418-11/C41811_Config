@@ -2,6 +2,8 @@
 
 
 """
+序列类型配置数据实现
+
 .. versionadded:: 0.2.0
 """
 
@@ -35,6 +37,10 @@ class SequenceConfigData[D: Sequence[Any]](BasicIndexedConfigData[D], MutableSeq
     data: D
 
     def __init__(self, data: D | None = None):
+        """
+        :param data: 序列数据
+        :type data: D | None
+        """
         if data is None:
             data = []  # type: ignore[assignment]
         super().__init__(cast(D, data))
@@ -116,6 +122,10 @@ class StringConfigData[D: str | bytes](BasicSingleConfigData[D]):
     data: D
 
     def __init__(self, data: D | None = None):
+        """
+        :param data: 配置数据
+        :type data: D | None
+        """
         if data is None:
             data = ""  # type: ignore[assignment]
         super().__init__(cast(D, data))

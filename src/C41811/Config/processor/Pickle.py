@@ -1,6 +1,10 @@
 # cython: language_level = 3  # noqa: N999
 
 
+"""
+Pickle配置文件处理器
+"""
+
 import pickle
 from typing import Any
 from typing import override

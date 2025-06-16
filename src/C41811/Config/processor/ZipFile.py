@@ -2,6 +2,8 @@
 
 
 """
+Zip压缩配置文件处理器
+
 .. versionadded:: 0.2.0
 """
 
@@ -21,6 +23,10 @@ from ..safe_writer import safe_open
 
 @dataclass(frozen=True)
 class ZipCompressionType:
+    """
+    压缩类型数据结构
+    """
+
     full_name: str
     short_name: str | None
     zipfile_constant: int

@@ -66,8 +66,12 @@
    - `:py:exc:`
    - `:py:meth:`
    - `:py:func:`
+   - `:py:deco:`
+   - `:py:attr:`
    - `:py:data:`
    - `:py:const:`
+   - `:py:type:`
+   - `:py:obj:`
    - `:pep:`
 
    等语句创建合法的链接，过长的引用使用sphinx的 ``~`` 语法创建链接

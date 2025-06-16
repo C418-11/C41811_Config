@@ -1,6 +1,10 @@
 # cython: language_level = 3  # noqa: N999
 
 
+"""
+Python字面量配置文件处理器
+"""
+
 import pprint
 from ast import literal_eval
 from typing import Any

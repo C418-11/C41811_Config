@@ -2,6 +2,8 @@
 
 
 """
+Python脚本配置文件处理器
+
 .. versionadded:: 0.2.0
 """
 

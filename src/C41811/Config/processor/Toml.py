@@ -1,6 +1,10 @@
 # cython: language_level = 3  # noqa: N999
 
 
+"""
+Toml配置文件处理器
+"""
+
 from collections.abc import Mapping
 from collections.abc import MutableMapping
 from typing import Any

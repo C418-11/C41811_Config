@@ -1,6 +1,8 @@
 # cython: language_level = 3
 
 """
+杂项实用程序
+
 .. versionadded:: 0.2.0
 """
 
@@ -66,6 +68,10 @@ class Ref[T]:
     """
 
     def __init__(self, value: T):
+        """
+        :param value: 引用对象
+        :type value: T
+        """
         self.value = value
 
     @override
