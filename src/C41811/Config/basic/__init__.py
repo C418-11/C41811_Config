@@ -73,6 +73,7 @@ ConfigData.register(BoolConfigData)
 ConfigData.register(StringConfigData)
 ConfigData.register(ObjectConfigData)
 ConfigData.register(ComponentConfigData)
+ConfigData.register(EnvironmentConfigData)
 
 __all__ = (
     "BasicConfigData",
