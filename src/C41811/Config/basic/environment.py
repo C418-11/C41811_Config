@@ -71,6 +71,15 @@ class Difference:
 
 
 def diff_keys[F: Callable[..., Any]](func: F) -> F:
+    """
+    计算执行方法前后配置数据的键差异
+
+    :param func: 方法
+    :type func: F
+
+    :return: 方法
+    :rtype: F
+    """
     @wrapt.decorator  # type: ignore[misc]
     def wrapper(wrapped: F, instance: Any, args: tuple[Any, ...], kwargs: dict[str, Any]) -> Any:
         if not isinstance(instance, EnvironmentConfigData):  # pragma: no cover
@@ -108,7 +117,11 @@ class EnvironmentConfigData(MappingConfigData[MutableMapping[str, str]]):
 
     .. note::
        :py:class:`~Config.processor.OSEnv.OSEnvSL` 在保存时会重置差异数据
-    """
+
+    .. warning::
+       当前实现 `不会验证值的类型` ，当值不是字符串类型时，在实际写入 :py:data:`os.environ` 时会抛出错误，
+       请确保传入的值是字符串类型
+    """  # noqa: RUF002
 
     def __init__(self, data: MutableMapping[str, str] | None = None):
         """

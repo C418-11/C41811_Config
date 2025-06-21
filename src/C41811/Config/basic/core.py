@@ -335,6 +335,8 @@ class ConfigData(ABC):
 
     def __new__(cls, *args: Any, **kwargs: Any) -> Any:
         """
+        将根据第一个位置参数决定配置数据类型
+
         :param args: 配置数据
         :type args: Any
         :param kwargs: 配置数据
