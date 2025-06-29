@@ -32,9 +32,7 @@ from ..validators import ValidatorFactoryConfig
 
 
 class ComponentMetaParser[D: MappingConfigData[Any]](ABCMetaParser[D, ComponentMeta[D]]):
-    """
-    默认元信息解析器
-    """
+    """默认元信息解析器"""
 
     _validator: RequiredPath[dict[str, Any], D] = RequiredPath(
         {
@@ -102,9 +100,7 @@ class ComponentMetaParser[D: MappingConfigData[Any]](ABCMetaParser[D, ComponentM
 
 
 class ComponentSL(BasicChainConfigSL):
-    """
-    组件模式配置处理器
-    """
+    """组件模式配置处理器"""
 
     def __init__(
         self,
@@ -120,7 +116,7 @@ class ComponentSL(BasicChainConfigSL):
         :type create_dir: bool
         :param meta_parser: 元数据解析器
         :type meta_parser: basic.mapping.ABCMetaParser | None
-        """
+        """  # noqa: D205
         super().__init__(reg_alias=reg_alias, create_dir=create_dir)
 
         if meta_parser is None:

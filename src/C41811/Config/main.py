@@ -1,9 +1,7 @@
 # cython: language_level = 3
 
 
-"""
-主要部分
-"""
+"""主要部分"""
 
 import os.path
 import re
@@ -51,9 +49,7 @@ type VALIDATOR_FACTORY[V, D: ABCConfigData[Any]] = Callable[[V, ValidatorFactory
 
 
 class RequiredPath[V, D: ABCConfigData[Any]]:
-    """
-    对需求的键进行存在检查、类型检查、填充默认值
-    """
+    """对需求的键进行存在检查、类型检查、填充默认值"""
 
     def __init__(
         self,
@@ -81,7 +77,7 @@ class RequiredPath[V, D: ABCConfigData[Any]]:
         .. tip::
            提供 ``static_config`` 参数可以避免在 :py:meth:`~RequiredPath.filter` 中反复调用 ``validator_factory``
            以提高性能 ( :py:meth:`~RequiredPath.filter` 配置一切都为默认值的前提下)
-        """
+        """  # noqa: D205
         if not callable(validator_factory):
             validator_factory = ValidatorTypes(validator_factory)
         if isinstance(validator_factory, ValidatorTypes):
@@ -209,7 +205,7 @@ class ConfigRequirementDecorator:
            重命名参数 ``cache_config`` 为 ``config_cacher``
 
            重命名参数 ``allow_create`` 为 ``allow_initialize``
-        """  # noqa: RUF002
+        """  # noqa: RUF002, D205
         config = config_pool.load(
             namespace, file_name, config_formats=config_formats, allow_initialize=allow_initialize
         )
@@ -279,9 +275,7 @@ class ConfigRequirementDecorator:
 
 
 class ConfigPool(BasicConfigPool):
-    """
-    配置池
-    """
+    """配置池"""
 
     def require(
         self,
@@ -471,7 +465,7 @@ class BasicLocalFileConfigSL(BasicConfigSL, ABC):
 
         .. versionchanged:: 0.2.0
            将 ``保存加载器参数`` 相关从 :py:class:`BasicConfigSL` 移动到此类
-        """
+        """  # noqa: D205
 
         def _build_arg(value: SLArgument) -> tuple[tuple[Any, ...], PMap[str, Any]]:
             if value is None:
@@ -492,16 +486,12 @@ class BasicLocalFileConfigSL(BasicConfigSL, ABC):
 
     @property
     def saver_args(self) -> tuple[tuple[Any, ...], PMap[str, Any]]:
-        """
-        :return: 保存器默认参数
-        """
+        """保存器默认参数"""
         return self._saver_args
 
     @property
     def loader_args(self) -> tuple[tuple[Any, ...], PMap[str, Any]]:
-        """
-        :return: 加载器默认参数
-        """
+        """加载器默认参数"""
         return self._loader_args
 
     raises = staticmethod(raises)
@@ -672,7 +662,7 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
         :type reg_alias: Optional[str]
         :param create_dir: 是否创建目录
         :type create_dir: bool
-        """
+        """  # noqa: D205
         super().__init__(reg_alias=reg_alias)
 
         self.create_dir = create_dir
@@ -802,7 +792,6 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
         :param file_name: 文件名
         :type file_name: str
         """
-
         config_pool.save(namespace, file_name, *args, config=config_file, **kwargs)  # type: ignore[misc]
         if self._cleanup_registry:
             config_pool.discard(namespace, file_name)
@@ -828,7 +817,6 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
         .. caution::
            传递SL处理前没有清理已经缓存在配置池里的配置文件，返回的可能不是最新数据
         """  # noqa: RUF002
-
         cfg_file = config_pool.load(namespace, file_name, *args, **kwargs)
         if self._cleanup_registry:
             config_pool.discard(namespace, file_name)
@@ -885,15 +873,11 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
 
 
 class BasicCachedConfigSL(BasicChainConfigSL, ABC):
-    """
-    基础缓存配置处理器
-    """
+    """基础缓存配置处理器"""
 
     @property
     def namespace_suffix(self) -> str:
-        """
-        命名空间后缀
-        """
+        """命名空间后缀"""
         return "$temporary~"
 
     @override

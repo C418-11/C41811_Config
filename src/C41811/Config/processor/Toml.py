@@ -1,9 +1,7 @@
 # cython: language_level = 3  # noqa: N999
 
 
-"""
-Toml配置文件处理器
-"""
+"""Toml配置文件处理器"""
 
 from collections.abc import Mapping
 from collections.abc import MutableMapping
@@ -27,9 +25,7 @@ except ImportError:
 
 
 class TomlSL(BasicLocalFileConfigSL):
-    """
-    Toml格式处理器
-    """
+    """Toml格式处理器"""
 
     @property
     @override

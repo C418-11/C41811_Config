@@ -1,6 +1,5 @@
 """
-大多数测试经过 :py:class:`RequiredPath` 包装后测试
-所以存放在 `test_main.py`
+大多数测试经过 :py:class:`RequiredPath` 包装后测试所以存放在 `test_main.py`
 
 .. versionadded:: 0.2.0
 """

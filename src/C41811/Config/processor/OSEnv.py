@@ -21,9 +21,7 @@ from ..main import BasicConfigSL
 
 
 class OSEnvSL(BasicConfigSL):
-    """
-    :py:data:`os.environ` 格式处理器
-    """
+    """:py:data:`os.environ` 格式处理器"""
 
     @property
     @override

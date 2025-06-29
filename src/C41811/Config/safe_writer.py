@@ -133,9 +133,11 @@ else:  # pragma: no cover
 
 def replace_atomic(src: PathLike, dst: PathLike) -> None:
     """
-    移动 ``src`` 到 ``dst`` 。如果 ``dst`` 存在，它将被静默覆盖。
+    移动 ``src`` 到 ``dst``
 
-    两个路径必须位于同一个文件系统上，这样操作才能是原子的。
+    如果 ``dst`` 存在，它将被静默覆盖
+
+    两个路径必须位于同一个文件系统上，这样操作才能是原子的
 
     :param src: 源
     :type src: str
@@ -147,10 +149,14 @@ def replace_atomic(src: PathLike, dst: PathLike) -> None:
 
 def move_atomic(src: PathLike, dst: PathLike) -> None:  # pragma: no cover
     """
-    移动 ``src`` 到 ``dst`` 。可能存在两个文件系统条目同时存在的时间窗口。如果 ``dst`` 已经存在，将引发：
-    py:exc:`FileExistsError`。
+    移动 ``src`` 到 ``dst``
 
-    两个路径必须位于同一个文件系统上，这样操作才能是原子的。
+    可能存在两个文件系统条目同时存在的时间窗口
+
+    如果 ``dst`` 已经存在，将引发：
+    py:exc:`FileExistsError`
+
+    两个路径必须位于同一个文件系统上，这样操作才能是原子的
 
     :param src: 源
     :type src: str
@@ -161,55 +167,39 @@ def move_atomic(src: PathLike, dst: PathLike) -> None:  # pragma: no cover
 
 
 class ABCTempIOManager[F: AIO](ABC):
-    """
-    管理临时文件。
-    """
+    """管理临时文件"""
 
     @abstractmethod
     def from_file(self, file: F) -> F:
-        """
-        为给定的文件创建一个临时文件。
-        """
+        """为给定的文件创建一个临时文件"""
 
     @abstractmethod
     def from_path(self, path: Path | str, mode: str) -> F:
-        """
-        为给定的路径创建一个临时文件。
-        """
+        """为给定的路径创建一个临时文件"""
 
     @staticmethod
     @abstractmethod
     def sync(file: F) -> None:
-        """
-        负责在提交之前清除尽可能多的文件缓存。
-        """
+        """负责在提交之前清除尽可能多的文件缓存"""
 
     @staticmethod
     @abstractmethod
     def rollback(file: F) -> None:
-        """
-        清理所有临时资源。
-        """
+        """清理所有临时资源"""
 
     @staticmethod
     @abstractmethod
     def commit(temp_file: F, file: F) -> None:
-        """
-        将临时文件移动到目标位置。
-        """
+        """将临时文件移动到目标位置"""
 
     @staticmethod
     @abstractmethod
     def commit_by_path(temp_file: F, path: PathLike, mode: str) -> None:
-        """
-        将临时文件移动到目标位置。
-        """
+        """将临时文件移动到目标位置"""
 
 
 class TempTextIOManager[F: TextIO](ABCTempIOManager[F]):
-    """
-    管理 ``TextIO`` 对象。
-    """
+    """管理 ``TextIO`` 对象"""
 
     def __init__(self, prefix: str = "", suffix: str = ".tmp", **open_kwargs: Any):
         """
@@ -218,7 +208,7 @@ class TempTextIOManager[F: TextIO](ABCTempIOManager[F]):
         :param suffix: 临时文件后缀
         :type suffix: str
         :param open_kwargs: 传递给 ``open`` 的额外参数
-        """
+        """  # noqa: D205
         self._prefix = prefix
         self._suffix = suffix
         self._open_kwargs = open_kwargs
@@ -280,9 +270,7 @@ class TempTextIOManager[F: TextIO](ABCTempIOManager[F]):
 
 
 class LockFlags(IntEnum):
-    """
-    文件锁标志
-    """
+    """文件锁标志"""
 
     EXCLUSIVE = portalocker.LOCK_EX | portalocker.LOCK_NB
     SHARED = portalocker.LOCK_SH | portalocker.LOCK_NB
@@ -299,9 +287,7 @@ GlobalModifyLock = Lock()
 
 
 class SafeOpen[F: AIO]:
-    """
-    安全的打开文件
-    """
+    """安全的打开文件"""
 
     def __init__(
         self, io_manager: ABCTempIOManager[Any], timeout: float | None = 1, flag: LockFlags = LockFlags.EXCLUSIVE
@@ -313,8 +299,7 @@ class SafeOpen[F: AIO]:
         :type timeout: Optional[float]
         :param flag: 锁标志
         :type flag: LockFlags
-        """
-
+        """  # noqa: D205
         self._manager = io_manager
         self._timeout = timeout
         self._flag = flag

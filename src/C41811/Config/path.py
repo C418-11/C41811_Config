@@ -1,9 +1,7 @@
 # cython: language_level = 3
 
 
-"""
-配置数据路径
-"""
+"""配置数据路径"""
 
 import warnings
 from abc import ABC
@@ -48,9 +46,7 @@ class IndexMixin[K, D: Indexed[Any, Any]](ABCKey[K, D], ABC):
 
 
 class AttrKey(IndexMixin[str, Mapping[str, Any]], ABCKey[str, Mapping[str, Any]]):
-    """
-    属性键
-    """
+    """属性键"""
 
     _key: str
 
@@ -62,7 +58,7 @@ class AttrKey(IndexMixin[str, Mapping[str, Any]], ABCKey[str, Mapping[str, Any]]
         :type meta: Optional[str]
 
         :raise TypeError: key不为str时抛出
-        """
+        """  # noqa: D205
         if not isinstance(key, str):
             msg = f"key must be str, not {type(key).__name__}"
             raise TypeError(msg)
@@ -100,9 +96,7 @@ class AttrKey(IndexMixin[str, Mapping[str, Any]], ABCKey[str, Mapping[str, Any]]
 
 
 class IndexKey(IndexMixin[int, Sequence[Any]], ABCKey[int, Sequence[Any]]):
-    """
-    下标键
-    """
+    """下标键"""
 
     _key: int
 
@@ -114,7 +108,7 @@ class IndexKey(IndexMixin[int, Sequence[Any]], ABCKey[int, Sequence[Any]]):
         :type meta: Optional[str]
 
         :raise TypeError: key不为int时抛出
-        """
+        """  # noqa: D205
         if not isinstance(key, int):
             msg = f"key must be int, not {type(key).__name__}"
             raise TypeError(msg)
@@ -143,9 +137,7 @@ class IndexKey(IndexMixin[int, Sequence[Any]], ABCKey[int, Sequence[Any]]):
 
 
 class Path(ABCPath[AttrKey | IndexKey]):
-    """
-    配置数据路径
-    """
+    """配置数据路径"""
 
     @classmethod
     def from_str(cls, string: str) -> Self:
@@ -205,9 +197,7 @@ def _count_backslash(s: str) -> int:
 
 
 class PathSyntaxParser:
-    """
-    路径语法解析器
-    """
+    """路径语法解析器"""
 
     @staticmethod
     @lru_cache

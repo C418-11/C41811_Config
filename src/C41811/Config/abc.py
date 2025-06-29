@@ -1,9 +1,7 @@
 # cython: language_level = 3
 
 
-"""
-配置抽象基类
-"""
+"""配置抽象基类"""
 
 import os
 from abc import ABC
@@ -31,9 +29,7 @@ type AnyKey = ABCKey[Any, Any]
 
 
 class ABCKey[K, D](ABC):
-    """
-    用于获取配置的键
-    """
+    """用于获取配置的键"""
 
     def __init__(self, key: K, meta: str | None = None):
         """
@@ -41,20 +37,20 @@ class ABCKey[K, D](ABC):
         :type key: str
         :param meta: 元信息
         :type meta: Optional[str]
-        """
+        """  # noqa: D205
         self._key = deepcopy(key)
         self._meta: None | str = meta
 
     @property
     def key(self) -> K:
-        """
-        键
-        """
+        """键"""
         return deepcopy(self._key)
 
     @property
     def meta(self) -> str | None:
         """
+        元信息
+
         .. versionadded:: 0.2.0
         """
         return self._meta
@@ -179,22 +175,25 @@ class ABCKey[K, D](ABC):
 
 
 class ABCPath[K: AnyKey](ABC, Iterable[K]):
-    """
-    用于获取数据的路径
-    """
+    """用于获取数据的路径"""
 
     def __init__(self, keys: Iterable[K]):
         """
         :param keys: 路径的键
         :type keys: Iterable[K]
-        """
+        """  # noqa: D205
         self._keys = deepcopy(tuple(keys))
 
     @property
     def keys(self) -> tuple[K, ...]:
         """
+        键列表
+
+        .. note::
+           返回的是深拷贝副本，修改不会影响路径
+
         .. versionadded:: 0.2.0
-        """
+        """  # noqa: RUF002
         return deepcopy(self._keys)
 
     @abstractmethod
@@ -597,7 +596,6 @@ class ABCProcessorHelper(ABC):  # noqa: B024
         :return: 配置文件路径
         :rtype: str
         """  # noqa: RUF002
-
         if file_name is None:
             file_name = ""
 
@@ -605,15 +603,13 @@ class ABCProcessorHelper(ABC):  # noqa: B024
 
 
 class ABCSLProcessorPool(ABC):
-    """
-    SL处理器池
-    """
+    """SL处理器池"""
 
     def __init__(self, root_path: str = "./.config"):
         """
         :param root_path: 保存的根目录
         :type root_path: str
-        """
+        """  # noqa: D205
         self.SLProcessors: dict[str, ABCConfigSL] = {}
         """
         处理器注册表
@@ -649,22 +645,16 @@ class ABCSLProcessorPool(ABC):
     @property
     @abstractmethod
     def helper(self) -> ABCProcessorHelper:
-        """
-        处理器助手
-        """
+        """处理器助手"""
 
     @property
     def root_path(self) -> str:
-        """
-        :return: 配置文件根目录
-        """
+        """配置文件根目录"""
         return self._root_path
 
 
 class ABCConfigFile[D: ABCConfigData[Any]](ABC):
-    """
-    配置文件类
-    """
+    """配置文件类"""
 
     def __init__(self, initial_config: D, *, config_format: str | None = None) -> None:
         """
@@ -678,8 +668,7 @@ class ABCConfigFile[D: ABCConfigData[Any]](ABC):
 
         .. versionchanged:: 0.2.0
            重命名参数 ``config_data`` 为 ``initial_config``
-        """  # noqa: RUF002
-
+        """  # noqa: RUF002, D205
         self._config: D = initial_config
 
         self._config_format: str | None = config_format
@@ -696,9 +685,7 @@ class ABCConfigFile[D: ABCConfigData[Any]](ABC):
 
     @property
     def config_format(self) -> str | None:
-        """
-        :return: 配置文件的格式
-        """
+        """配置文件的格式"""
         return self._config_format
 
     @abstractmethod
@@ -817,9 +804,7 @@ class ABCConfigFile[D: ABCConfigData[Any]](ABC):
 
 
 class ABCConfigPool(ABCSLProcessorPool):
-    """
-    配置池抽象类
-    """
+    """配置池抽象类"""
 
     @overload
     def get(self, namespace: str) -> dict[str, ABCConfigFile[Any]] | None: ...
@@ -1030,15 +1015,13 @@ class ABCConfigSL(ABC):
         """
         :param reg_alias: sl处理器注册别名
         :type reg_alias: Optional[str]
-        """
+        """  # noqa: D205
         self._reg_alias: str | None = reg_alias
 
     @property
     @abstractmethod
     def processor_reg_name(self) -> str:
-        """
-        :return: SL处理器的默认注册名
-        """
+        """SL处理器的默认注册名"""
 
     @property
     @abstractmethod
@@ -1051,16 +1034,12 @@ class ABCConfigSL(ABC):
 
     @property
     def reg_alias(self) -> str | None:
-        """
-        :return: 处理器的别名
-        """
+        """处理器的别名"""
         return self._reg_alias
 
     @property
     def reg_name(self) -> str:
-        """
-        :return: 处理器的注册名
-        """
+        """处理器的注册名"""
         return self.processor_reg_name if self._reg_alias is None else self._reg_alias
 
     @property
@@ -1086,7 +1065,6 @@ class ABCConfigSL(ABC):
         .. versionchanged:: 0.3.0
            返回当前实例便于链式调用
         """
-
         config_pool.SLProcessors[self.reg_name] = self
         for match in self.supported_file_patterns:
             config_pool.FileNameProcessors.setdefault(match, []).append(self.reg_name)
@@ -1245,9 +1223,7 @@ class ABCMetaParser[D: ABCConfigData[Any], M](ABC):
 
     @abstractmethod
     def validator(self, meta: M, *args: Any) -> M:
-        """
-        元数据验证器
-        """
+        """元数据验证器"""
 
 
 __all__ = (

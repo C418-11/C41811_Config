@@ -111,7 +111,7 @@ class MappingConfigData[D: Mapping[Any, Any]](BasicIndexedConfigData[D], Mutable
         """
         :param data: 映射数据
         :type data: D | None
-        """
+        """  # noqa: D205
         if data is None:
             data = {}  # type: ignore[assignment]
         super().__init__(cast(D, data))
@@ -191,7 +191,6 @@ class MappingConfigData[D: Mapping[Any, Any]](BasicIndexedConfigData[D], Mutable
         .. versionchanged:: 0.2.0
            添加 ``strict`` 参数
         """  # noqa: RUF002
-
         if recursive:
             return OrderedDict.fromkeys(
                 x for x in _keys_recursive(self._data, strict=strict, end_point_only=end_point_only)

@@ -89,8 +89,7 @@ class BasicSingleConfigData[D](BasicConfigData[D], ABC):
         """
         :param data: 配置的原始数据
         :type data: Any
-        """
-
+        """  # noqa: D205
         self._data: D = deepcopy(data)
 
     @property
@@ -353,9 +352,7 @@ class ConfigData(ABC):
 
 
 class ConfigFile[D: ABCConfigData[Any]](ABCConfigFile[D]):
-    """
-    配置文件类
-    """
+    """配置文件类"""
 
     def __init__(self, initial_config: D | Any, *, config_format: str | None = None) -> None:
         """
@@ -371,8 +368,7 @@ class ConfigFile[D: ABCConfigData[Any]](ABCConfigFile[D]):
            现在会自动尝试转换 ``initial_config`` 参数为 :py:class:`ConfigData`
 
            重命名参数 ``config_data`` 为 ``initial_config``
-        """  # noqa: RUF002
-
+        """  # noqa: RUF002, D205
         super().__init__(cast(D, ConfigData(initial_config)), config_format=config_format)
 
     @override
@@ -442,9 +438,7 @@ class ConfigFile[D: ABCConfigData[Any]](ABCConfigFile[D]):
 
 
 class PHelper(ABCProcessorHelper):
-    """
-    处理器助手类
-    """
+    """处理器助手类"""
 
 
 class BasicConfigPool(ABCConfigPool, ABC):
@@ -461,7 +455,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
         """
         :param root_path: 配置根路径
         :type root_path: str
-        """
+        """  # noqa: D205
         super().__init__(root_path)
         self._configs: dict[str, dict[str, ABCConfigFile[Any]]] = {}
         self._helper = PHelper()
@@ -521,6 +515,10 @@ class BasicConfigPool(ABCConfigPool, ABC):
         """
         从给定参数计算所有可能的配置格式
 
+        .. attention::
+           返回所有可能的配置格式，不会检查配置格式是否存在！
+           可迭代对象的产生顺序即为配置格式优先级，优先级逻辑见下表
+
         :param file_name: 文件名
         :type file_name: str
         :param config_formats: 配置格式
@@ -534,10 +532,9 @@ class BasicConfigPool(ABCConfigPool, ABC):
               :py:attr:`ABCConfigFile.config_format`
 
         :return: 配置格式
-        :rtype: set[str]
+        :rtype: Iterable[str]
 
         :raise UnsupportedConfigFormatError: 不支持的配置格式
-        :raise FailedProcessConfigFileError: 处理配置文件失败
 
         格式计算优先级
         --------------
@@ -546,7 +543,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
 
         2.文件名注册了对应的SL处理器
 
-        3.file_config_format非None
+        3.configfile_format非None
 
         .. versionadded:: 0.2.0
         """  # noqa: RUF002
@@ -578,7 +575,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
 
         if not result_formats:
             msg = "Unknown"
-            raise UnsupportedConfigFormatError(msg)
+            raise UnsupportedConfigFormatError(msg)  # TODO 返回空的Iterable & 记得同步修改文档
 
         return OrderedDict.fromkeys(result_formats)
 
@@ -782,9 +779,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
         return deepcopy(self.configs[item])
 
     def __contains__(self, item: Any) -> bool:
-        """
-        .. versionadded:: 0.1.2
-        """
+        """.. versionadded:: 0.1.2"""
         if isinstance(item, str):
             return item in self._configs
         if isinstance(item, Iterable):
@@ -797,16 +792,12 @@ class BasicConfigPool(ABCConfigPool, ABC):
         return (item[0] in self._configs) and (item[1] in self._configs[item[0]])
 
     def __len__(self) -> int:
-        """
-        配置文件总数
-        """
+        """配置文件总数"""
         return sum(len(v) for v in self._configs.values())
 
     @property
     def configs(self) -> dict[str, dict[str, ABCConfigFile[Any]]]:
-        """
-        配置文件字典
-        """
+        """配置文件字典"""
         return deepcopy(self._configs)
 
     @override

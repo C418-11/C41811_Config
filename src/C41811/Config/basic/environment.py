@@ -27,9 +27,7 @@ from ..utils import Unset
 
 @dataclass
 class Difference:
-    """
-    与初始化数据的差异
-    """
+    """与初始化数据的差异"""
 
     updated: set[str] = field(default_factory=set)
     """
@@ -44,9 +42,7 @@ class Difference:
     """
 
     def clear(self) -> None:
-        """
-        清空差异
-        """
+        """清空差异"""
         self.updated.clear()
         self.removed.clear()
 
@@ -80,6 +76,7 @@ def diff_keys[F: Callable[..., Any]](func: F) -> F:
     :return: 方法
     :rtype: F
     """
+
     @wrapt.decorator  # type: ignore[misc]
     def wrapper(wrapped: F, instance: Any, args: tuple[Any, ...], kwargs: dict[str, Any]) -> Any:
         if not isinstance(instance, EnvironmentConfigData):  # pragma: no cover
@@ -127,7 +124,7 @@ class EnvironmentConfigData(MappingConfigData[MutableMapping[str, str]]):
         """
         :param data: 环境变量数据
         :type data: MutableMapping[str, str] | None
-        """
+        """  # noqa: D205
         super().__init__(data)
         self.difference = Difference()
 

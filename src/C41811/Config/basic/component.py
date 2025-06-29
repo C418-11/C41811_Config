@@ -92,7 +92,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
         :type meta: Optional[ComponentMeta]
         :param members: 组件成员
         :type members: Optional[MutableMapping[str, ABCIndexedConfigData]]
-        """
+        """  # noqa: D205
         if meta is None:
             meta = ComponentMeta()  # type: ignore[assignment]
         if members is None:
@@ -153,23 +153,17 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
     @property
     @override
     def data_read_only(self) -> bool | None:
-        """
-        组件数据是否为只读
-        """
+        """组件数据是否为只读"""
         return not isinstance(self._members, MutableMapping)
 
     @property
     def filename2meta(self) -> Mapping[str, ComponentMember]:
-        """
-        文件名到成员元信息的映射
-        """
+        """文件名到成员元信息的映射"""
         return deepcopy(self._filename2meta)
 
     @property
     def alias2filename(self) -> Mapping[str, str]:
-        """
-        别名到文件名的映射
-        """
+        """别名到文件名的映射"""
         return deepcopy(self._alias2filename)
 
     def _member(self, member: str) -> D:

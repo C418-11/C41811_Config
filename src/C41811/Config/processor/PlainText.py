@@ -22,9 +22,7 @@ from ..main import BasicLocalFileConfigSL
 
 
 class PlainTextSL(BasicLocalFileConfigSL):
-    """
-    纯文本格式处理器
-    """
+    """纯文本格式处理器"""
 
     @property
     @override

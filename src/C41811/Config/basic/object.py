@@ -24,8 +24,7 @@ class NoneConfigData(BasicSingleConfigData[None]):
         """
         :param data: 配置的原始数据
         :type data: None
-        """
-
+        """  # noqa: D205
         if data is not None:
             msg = f"{type(self).__name__} can only accept None as data"
             raise ValueError(msg)
@@ -37,9 +36,7 @@ class NoneConfigData(BasicSingleConfigData[None]):
 
 
 class ObjectConfigData[D: object](BasicSingleConfigData[D]):
-    """
-    对象配置数据
-    """
+    """对象配置数据"""
 
     _data: D
 
@@ -50,7 +47,7 @@ class ObjectConfigData[D: object](BasicSingleConfigData[D]):
 
         .. caution::
            未默认做深拷贝，可能导致非预期行为
-        """  # noqa: RUF002
+        """  # noqa: RUF002, D205
         super().__init__(None)  # type: ignore[arg-type]
 
         self._data: D = data

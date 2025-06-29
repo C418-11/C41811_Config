@@ -1,9 +1,7 @@
 # cython: language_level = 3  # noqa: N999
 
 
-"""
-Ruamel YAML配置文件处理器
-"""
+"""Ruamel YAML配置文件处理器"""
 
 from typing import Any
 from typing import override

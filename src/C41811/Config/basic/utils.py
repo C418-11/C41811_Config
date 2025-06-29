@@ -47,7 +47,7 @@ def check_read_only[F: Callable[..., Any]](func: F) -> F:
     """
     装饰 :py:class:`ABCConfigData` 的方法提供 :py:attr:`ABCConfigData.read_only` 的便捷检查，当其不为 :py:const:`True`
     时抛出 :py:exc:`TypeError`
-    """  # noqa: RUF002
+    """  # noqa: RUF002, D205
 
     @wrapt.decorator  # type: ignore[misc]
     def wrapper(wrapped: F, instance: ABCConfigData[Any] | None, args: tuple[Any, ...], kwargs: dict[str, Any]) -> Any:

@@ -13,9 +13,7 @@ from typing import override
 
 
 def singleton[C: Any](target_cls: type[C], /) -> type[C]:
-    """
-    单例模式类装饰器
-    """
+    """单例模式类装饰器"""
 
     def __new__(cls: type[C], /, *args: Any, **kwargs: Any) -> C:  # noqa: N807
         if not hasattr(cls, "__singleton_instance__"):
@@ -39,9 +37,7 @@ def singleton[C: Any](target_cls: type[C], /) -> type[C]:
 
 @singleton
 class UnsetType:
-    """
-    用于填充默认值的特殊值
-    """
+    """用于填充默认值的特殊值"""
 
     @override
     def __str__(self) -> str:
@@ -71,7 +67,7 @@ class Ref[T]:
         """
         :param value: 引用对象
         :type value: T
-        """
+        """  # noqa: D205
         self.value = value
 
     @override

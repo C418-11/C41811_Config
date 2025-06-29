@@ -1,9 +1,7 @@
 # cython: language_level = 3
 
 
-"""
-配置验证器
-"""
+"""配置验证器"""
 
 import dataclasses
 import re
@@ -53,9 +51,7 @@ from .utils import singleton
 
 
 class ValidatorTypes(Enum):
-    """
-    验证器类型
-    """
+    """验证器类型"""
 
     DEFAULT = None
     NO_VALIDATION = "no-validation"
@@ -72,9 +68,7 @@ class ValidatorTypes(Enum):
 
 @dataclass(kw_only=True)
 class ValidatorFactoryConfig:
-    """
-    验证器配置
-    """
+    """验证器配置"""
 
     allow_modify: bool = True
     """
@@ -239,7 +233,7 @@ class FieldDefinition[T: type | types.UnionType | types.EllipsisType | types.Gen
            重命名参数 ``annotation`` 为 ``default``
 
            添加参数 ``default_factory``
-        """
+        """  # noqa: D205
         kwargs: dict[str, Any] = {}
         if default is not Unset:
             kwargs["default"] = default
@@ -283,9 +277,7 @@ class RecursiveMapping(BaseModel):
 
 
 def _is_mapping(typ: Any) -> bool:
-    """
-    判断是否为 Mapping 类型
-    """
+    """判断是否为 Mapping 类型"""
     if typ is Any:
         return True
     try:
@@ -296,9 +288,7 @@ def _is_mapping(typ: Any) -> bool:
 
 
 def _allow_recursive(typ: Any) -> bool:
-    """
-    判断是否允许递归处理字段值（键全为字符串则视为允许）
-    """  # noqa: RUF002
+    """判断是否允许递归处理字段值（键全为字符串则视为允许）"""  # noqa: RUF002
     try:
         RecursiveMapping(value=typ)
     except (ValidationError, TypeError):
@@ -307,9 +297,7 @@ def _allow_recursive(typ: Any) -> bool:
 
 
 class DefaultValidatorFactory[D: MCD | NoneConfigData]:
-    """
-    默认的验证器工厂
-    """
+    """默认的验证器工厂"""
 
     def __init__(self, validator: Iterable[str] | Mapping[str, Any], validator_config: ValidatorFactoryConfig):
         # noinspection GrazieInspection
@@ -339,8 +327,7 @@ class DefaultValidatorFactory[D: MCD | NoneConfigData]:
 
         .. versionchanged:: 0.1.4
            支持验证器非字符串键 (含有非字符串键的子验证器不会被递归处理)
-        """  # noqa: RUF002
-
+        """  # noqa: RUF002, D205
         validator = deepcopy(validator)
         if isinstance(validator, Mapping):  # 先检查Mapping因为Mapping可以是Iterable
             ...
@@ -371,15 +358,12 @@ class DefaultValidatorFactory[D: MCD | NoneConfigData]:
         :return: 格式化后的映射键和被覆盖的Mapping父路径
         :rtype: tuple[Mapping[str, Any], set[str]]
         """
-
         iterator = iter(validator.items())
         key: str = None  # type: ignore[assignment]
         value: Any = None
 
         def _next() -> bool:
-            """
-            获取下一个键值对
-            """
+            """获取下一个键值对"""
             nonlocal key, value
             try:
                 key, value = next(iterator)
@@ -493,9 +477,7 @@ class DefaultValidatorFactory[D: MCD | NoneConfigData]:
         )
 
     def _compile(self) -> None:
-        """
-        编译模板
-        """
+        """编译模板"""
         fmt_validator, father_set = self._fmt_mapping_key(self.validator)
         # 所有重复存在的父路径都将允许其下存在多余的键
         model_config: MCD = MappingConfigData()
@@ -607,8 +589,7 @@ class ComponentValidatorFactory[D: ComponentConfigData[Any, Any] | NoneConfigDat
              - 组件元数据验证器
              - 尝试从传入的组件元数据获得，若不存在(值为None)则放弃验证
              - Callable[[ComponentMeta, ValidatorFactoryConfig], ComponentMeta]
-        """  # noqa: RUF002
-
+        """  # noqa: RUF002, D205
         self.validator = validator
         self.validator_config = validator_config
 

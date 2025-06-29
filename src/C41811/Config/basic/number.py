@@ -36,7 +36,7 @@ class NumberConfigData[D: Number](BasicSingleConfigData[D]):
         """
         :param data: 数值数据
         :type data: D | None
-        """
+        """  # noqa: D205
         if data is None:
             data = 0  # type: ignore[assignment]
         super().__init__(cast(D, data))
@@ -193,7 +193,7 @@ class BoolConfigData[D: bool](NumberConfigData[D]):  # type: ignore[type-var]  #
         """
         :param data: 布尔值数据
         :type data: D | None
-        """
+        """  # noqa: D205
         super().__init__(cast(D, bool(data)))
 
 

@@ -130,6 +130,7 @@ select = [
     "YTT", # flake8-2020
 
     # 独立功能插件
+    "D",    # pydocstyle (文档格式)
     "FLY",  # flynt (f-string转换)
     "FURB", # refurb (代码简化)
     "I",    # isort (导入排序)
@@ -148,10 +149,15 @@ select = [
 
     # 其他规则
     "ISC001", # 隐式字符串连接
-    "D1",     # 缺少文档字符串
+    "D213",   # multi-line-summary-second-line
 ]
 ignore = [
+    # 项目文档格式
     "D105", # undocumented-magic-method
+    "D212", # multi-line-summary-first-line
+    "D400", # missing-trailing-period
+    "D415", # missing-terminal-punctuation
+    "D203", # incorrect-blank-line-before-class
 
     # ruff推荐忽略以避免和formatter冲突
     # https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
@@ -159,6 +165,8 @@ ignore = [
     "E111", # indentation-with-invalid-multiples
     "E114", # indentation-with-invalid-multiple-comment
     "E117", # over-indented
+    "D206", # docstring-tab-indentation
+    "D300", # triple-single-quotes
 ]
 
 [tool.ruff.lint.per-file-ignores]

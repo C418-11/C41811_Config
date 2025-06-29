@@ -1,9 +1,7 @@
 # cython: language_level = 3  # noqa: N999
 
 
-"""
-PyYaml配置文件处理器
-"""
+"""PyYaml配置文件处理器"""
 
 from typing import Any
 from typing import override
@@ -23,9 +21,7 @@ except ImportError:
 
 
 class PyYamlSL(BasicLocalFileConfigSL):
-    """
-    基于PyYaml的yaml处理器
-    """
+    """基于PyYaml的yaml处理器"""
 
     @property
     @override

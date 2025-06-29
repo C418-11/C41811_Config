@@ -40,7 +40,7 @@ class SequenceConfigData[D: Sequence[Any]](BasicIndexedConfigData[D], MutableSeq
         """
         :param data: 序列数据
         :type data: D | None
-        """
+        """  # noqa: D205
         if data is None:
             data = []  # type: ignore[assignment]
         super().__init__(cast(D, data))
@@ -114,9 +114,7 @@ class SequenceConfigData[D: Sequence[Any]](BasicIndexedConfigData[D], MutableSeq
 
 @generate
 class StringConfigData[D: str | bytes](BasicSingleConfigData[D]):
-    """
-    字符/字节串配置数据
-    """
+    """字符/字节串配置数据"""
 
     _data: D
     data: D
@@ -125,7 +123,7 @@ class StringConfigData[D: str | bytes](BasicSingleConfigData[D]):
         """
         :param data: 配置数据
         :type data: D | None
-        """
+        """  # noqa: D205
         if data is None:
             data = ""  # type: ignore[assignment]
         super().__init__(cast(D, data))

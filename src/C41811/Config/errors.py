@@ -1,9 +1,7 @@
 # cython: language_level = 3
 
 
-"""
-错误类
-"""
+"""错误类"""
 
 from collections import OrderedDict
 from collections.abc import Iterable
@@ -22,9 +20,7 @@ from .abc import AnyKey
 
 @dataclass
 class TokenInfo:
-    """
-    一段标记的相关信息 用于快速定位到指定标记
-    """
+    """一段标记的相关信息 用于快速定位到指定标记"""
 
     tokens: tuple[str, ...]
     """
@@ -41,16 +37,12 @@ class TokenInfo:
 
     @property
     def raw_string(self) -> str:
-        """
-        标记的原始字符串
-        """
+        """标记的原始字符串"""
         return "".join(self.tokens)
 
 
 class ConfigDataPathSyntaxException(Exception):  # noqa: N818
-    """
-    配置数据检索路径语法错误
-    """
+    """配置数据检索路径语法错误"""
 
     msg: str
 
@@ -67,7 +59,7 @@ class ConfigDataPathSyntaxException(Exception):  # noqa: N818
            1.msg参数
 
            2.类字段msg (供快速创建子类)
-        """
+        """  # noqa: D205
         self.token_info = token_info
 
         if msg is not None:
@@ -97,9 +89,7 @@ class UnknownTokenTypeError(ConfigDataPathSyntaxException):
 
 
 class ConfigOperate(Enum):
-    """
-    对配置的操作类型
-    """
+    """对配置的操作类型"""
 
     Delete = "Delete"
     Read = "Read"
@@ -109,9 +99,7 @@ class ConfigOperate(Enum):
 
 @dataclass
 class KeyInfo[K: AnyKey]:
-    """
-    一段路径的相关信息 用于快速定位到指定键
-    """
+    """一段路径的相关信息 用于快速定位到指定键"""
 
     path: ABCPath[K]
     """
@@ -128,9 +116,7 @@ class KeyInfo[K: AnyKey]:
 
     @property
     def relative_keys(self) -> Iterable[K]:
-        """
-        从根到当前键的相对路径
-        """
+        """从根到当前键的相对路径"""
         return self.path[: self.index]
 
 
@@ -152,7 +138,7 @@ class RequiredPathNotFoundError(LookupError):
         :type key_info: KeyInfo
         :param operate: 何种操作过程中发生的该错误
         :type operate: ConfigOperate
-        """
+        """  # noqa: D205
         self.key_info = key_info
         self.operate = ConfigOperate(operate)
 
@@ -178,16 +164,14 @@ class ConfigDataReadOnlyError(TypeError):
         """
         :param msg: 错误信息
         :type msg: Optional[str]
-        """
+        """  # noqa: D205
         if msg is None:
             msg = "ConfigData is read-only"
         super().__init__(msg)
 
 
 class ConfigDataTypeError(ValueError):
-    """
-    配置数据类型错误
-    """
+    """配置数据类型错误"""
 
     def __init__(
         self,
@@ -208,7 +192,7 @@ class ConfigDataTypeError(ValueError):
 
         .. versionchanged:: 0.2.0
            重命名参数 ``now_type`` 为 ``current_type``
-        """
+        """  # noqa: D205
         if isinstance(required_type, Sequence) and (len(required_type) == 1):
             required_type = required_type[0]
 
@@ -234,7 +218,8 @@ class CyclicReferenceError(ValueError):
     def __init__(self, key_info: KeyInfo[Any]):
         """
         :param key_info: 检测到循环引用的键信息
-        """
+        :type key_info: KeyInfo[Any]
+        """  # noqa: D205
         self.key_info = key_info
 
     @override
@@ -258,20 +243,18 @@ class UnknownErrorDuringValidateError(Exception):
         """
         :param args: 未知错误信息
         :param kwargs: 未知错误信息
-        """
+        """  # noqa: D205
         super().__init__(f"Args: {args}, Kwargs: {kwargs}")
 
 
 class UnsupportedConfigFormatError(Exception):
-    """
-    不支持的配置文件格式错误
-    """
+    """不支持的配置文件格式错误"""
 
     def __init__(self, format_: str):
         """
         :param format_: 不支持的配置的文件格式
         :type format_: str
-        """
+        """  # noqa: D205
         super().__init__(f"Unsupported config format: {format_}")
         self.format = format_
 
@@ -297,8 +280,7 @@ class FailedProcessConfigFileError[E: BaseException](BaseExceptionGroup, Excepti
         :type reason: BaseException | Iterable[BaseException] | Mapping[str, BaseException]
         :param msg: 提示信息
         :type msg: str
-        """
-
+        """  # noqa: D205
         reasons: tuple[E, ...] | OrderedDict[str, E]
         message: str
         exceptions: tuple[E, ...]

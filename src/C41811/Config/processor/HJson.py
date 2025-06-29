@@ -25,9 +25,7 @@ except ImportError:
 
 
 class HJsonSL(BasicLocalFileConfigSL):
-    """
-    基于hjson的json处理器
-    """
+    """基于hjson的json处理器"""
 
     @property
     @override

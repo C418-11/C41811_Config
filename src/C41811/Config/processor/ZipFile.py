@@ -23,9 +23,7 @@ from ..safe_writer import safe_open
 
 @dataclass(frozen=True)
 class ZipCompressionType:
-    """
-    压缩类型数据结构
-    """
+    """压缩类型数据结构"""
 
     full_name: str
     short_name: str | None
@@ -33,9 +31,7 @@ class ZipCompressionType:
 
 
 class ZipCompressionTypes(ZipCompressionType, ReprEnum):
-    """
-    压缩类型
-    """
+    """压缩类型"""
 
     ONLY_STORAGE = ("only-storage", None, zipfile.ZIP_STORED)
 
@@ -45,9 +41,7 @@ class ZipCompressionTypes(ZipCompressionType, ReprEnum):
 
 
 class ZipFileSL(BasicCompressedConfigSL):
-    """
-    zip格式处理器
-    """
+    """zip格式处理器"""
 
     def __init__(
         self,
@@ -66,7 +60,7 @@ class ZipFileSL(BasicCompressedConfigSL):
         :type compression: ZipCompressionTypes | str | int | None
         :param compress_level: 压缩等级
         :type compress_level: Optional[Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9] | int]
-        """
+        """  # noqa: D205
         super().__init__(reg_alias=reg_alias, create_dir=create_dir)
 
         if compression is None:

@@ -1,9 +1,7 @@
 # cython: language_level = 3  # noqa: N999
 
 
-"""
-Json配置文件处理器
-"""
+"""Json配置文件处理器"""
 
 import json
 from typing import Any
@@ -17,9 +15,7 @@ from ..main import BasicLocalFileConfigSL
 
 
 class JsonSL(BasicLocalFileConfigSL):
-    """
-    json格式处理器
-    """
+    """json格式处理器"""
 
     @property
     @override

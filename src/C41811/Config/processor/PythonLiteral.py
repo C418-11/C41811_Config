@@ -1,9 +1,7 @@
 # cython: language_level = 3  # noqa: N999
 
 
-"""
-Python字面量配置文件处理器
-"""
+"""Python字面量配置文件处理器"""
 
 import pprint
 from ast import literal_eval
@@ -18,9 +16,7 @@ from ..main import BasicLocalFileConfigSL
 
 
 class PythonLiteralSL(BasicLocalFileConfigSL):
-    """
-    Python 字面量序列化处理器
-    """
+    """Python 字面量序列化处理器"""
 
     @property
     @override

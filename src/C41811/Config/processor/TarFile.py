@@ -33,9 +33,7 @@ class TarCompressionType:
 
 
 class TarCompressionTypes(TarCompressionType, ReprEnum):
-    """
-    压缩类型
-    """
+    """压缩类型"""
 
     ONLY_STORAGE = ("only-storage", None)
 
@@ -50,9 +48,7 @@ type ExtractionFilter = (
 
 
 class TarFileSL(BasicCompressedConfigSL):
-    """
-    tar格式处理器
-    """
+    """tar格式处理器"""
 
     def __init__(
         self,
@@ -75,7 +71,7 @@ class TarFileSL(BasicCompressedConfigSL):
         :param extraction_filter: 解压过滤器
         :type extraction_filter:
             Optional[Literal["fully_trusted", "tar", "data"] | Callable[[tarfile.TarInfo, str], tarfile.TarInfo | None]]
-        """
+        """  # noqa: D205
         super().__init__(reg_alias=reg_alias, create_dir=create_dir)
 
         if compression is None:
