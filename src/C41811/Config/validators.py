@@ -94,19 +94,20 @@ class ValidatorFactoryConfig:
 type MCD = MappingConfigData[Any]
 
 
-def _fill_not_exits(from_obj: MCD, to_obj: MCD) -> None:
+def _remove_skip_missing[D: dict[str, Any] | list[Any]](data: D) -> D:
     """
-    填充不存在的路径
+    递归删除值为 :py:const:`SkipMissing` 的项
 
-    :param to_obj: 被填充的对象
-    :type to_obj: MappingConfigData[Any]
-    :param from_obj: 提供填充值的对象
-    :type from_obj: MappingConfigData[Any]
+    :param data: 配置数据
+    :type data: dict | list
+
+    .. versionadded:: 0.3.0
     """
-    all_leaf = {"recursive": True, "end_point_only": True}
-    diff_keys = from_obj.keys(**all_leaf) - to_obj.keys(**all_leaf)
-    for key in diff_keys:
-        to_obj.modify(key, from_obj.retrieve(key, return_raw_value=True))
+    if isinstance(data, dict):
+        return type(data)((k, _remove_skip_missing(v)) for k, v in data.items() if v is not SkipMissing)  # type: ignore[return-value]
+    if isinstance(data, list):
+        return type(data)(_remove_skip_missing(item) for item in data if item is not SkipMissing)
+    return data
 
 
 def _process_pydantic_exceptions(err: ValidationError) -> Exception:
@@ -505,15 +506,15 @@ class DefaultValidatorFactory[D: MCD]:
         except ValidationError as err:
             raise _process_pydantic_exceptions(err) from err
 
-        config_obj = data.from_data(dict_obj)
+        # 处理 SkipMissing 项
         if self.validator_config.skip_missing:
-            for key in config_obj.keys(recursive=True, end_point_only=True):
-                if config_obj.retrieve(key) is SkipMissing:
-                    config_obj.delete(key)
+            dict_obj = _remove_skip_missing(dict_obj)
 
+        # 完全替换原始数据
         if self.validator_config.allow_modify:
-            _fill_not_exits(config_obj, data)
-        return config_obj
+            data._data = dict_obj
+            return data
+        return data.from_data(dict_obj)
 
 
 def pydantic_validator[D: MCD](
@@ -543,10 +544,11 @@ def pydantic_validator[D: MCD](
         except ValidationError as err:
             raise _process_pydantic_exceptions(err) from err
 
-        config_obj = data.from_data(dict_obj)
+        # 完全替换原始数据
         if cfg.allow_modify:
-            _fill_not_exits(config_obj, data)
-        return config_obj
+            data._data = dict_obj
+            return data
+        return data.from_data(dict_obj)
 
     return _builder
 
@@ -626,9 +628,12 @@ class ComponentValidatorFactory[D: ComponentConfigData[Any, Any]]:
             if member not in component_data and self.validator_config.extra.get("allow_initialize", True):
                 component_data[member] = MappingConfigData()
             member_data_ref = Ref(component_data[member])
-            validated_members[member] = validator(member_data_ref)
+            validated_member = validator(member_data_ref)
+            validated_members[member] = validated_member
+
+            # 完全替换成员数据
             if self.validator_config.allow_modify:
-                component_ref.value[member] = member_data_ref.value
+                component_data[member] = validated_member
 
         meta = deepcopy(component_data.meta)
         if should_validate_meta:
@@ -638,8 +643,10 @@ class ComponentValidatorFactory[D: ComponentConfigData[Any, Any]]:
             meta_validator = self.validator_config.extra.get("meta_validator", meta_validator)
             if meta_validator is not None:
                 meta = meta_validator(meta, self.validator_config)
+
+        # 完全替换元数据
         if self.validator_config.allow_modify:
-            component_ref.value._meta = meta
+            component_data._meta = meta
 
         return component_data.from_data(meta, validated_members)
 
