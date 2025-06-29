@@ -296,7 +296,7 @@ def _allow_recursive(typ: Any) -> bool:
     return True
 
 
-class DefaultValidatorFactory[D: MCD | NoneConfigData]:
+class DefaultValidatorFactory[D: MCD]:
     """默认的验证器工厂"""
 
     def __init__(self, validator: Iterable[str] | Mapping[str, Any], validator_config: ValidatorFactoryConfig):
@@ -486,7 +486,7 @@ class DefaultValidatorFactory[D: MCD | NoneConfigData]:
 
         self.model = self._mapping2model(fmt_validator, model_config.data)
 
-    def __call__(self, config_ref: Ref[D]) -> D:
+    def __call__(self, config_ref: Ref[D | NoneConfigData]) -> D:
         """
         验证配置数据
 
@@ -498,15 +498,14 @@ class DefaultValidatorFactory[D: MCD | NoneConfigData]:
         """
         if isinstance(config_ref.value, NoneConfigData):
             config_ref.value = MappingConfigData()  # type: ignore[assignment]
-        data: MCD = config_ref.value  # type: ignore[assignment]
+        data: D = config_ref.value  # type: ignore[assignment]
 
         try:
             dict_obj = self.model(**data.data).model_dump()
         except ValidationError as err:
             raise _process_pydantic_exceptions(err) from err
 
-        # noinspection PyTypeChecker
-        config_obj: MCD = data.from_data(dict_obj)
+        config_obj = data.from_data(dict_obj)
         if self.validator_config.skip_missing:
             for key in config_obj.keys(recursive=True, end_point_only=True):
                 if config_obj.retrieve(key) is SkipMissing:
@@ -514,12 +513,12 @@ class DefaultValidatorFactory[D: MCD | NoneConfigData]:
 
         if self.validator_config.allow_modify:
             _fill_not_exits(config_obj, data)
-        return cast(D, config_obj)
+        return config_obj
 
 
-def pydantic_validator[D: MCD | NoneConfigData](
+def pydantic_validator[D: MCD](
     validator: type[BaseModel], cfg: ValidatorFactoryConfig
-) -> Callable[[Ref[D]], D]:
+) -> Callable[[Ref[D | NoneConfigData]], D]:
     """
     验证器工厂配置 ``skip_missing`` 无效
 
@@ -534,26 +533,25 @@ def pydantic_validator[D: MCD | NoneConfigData](
     if cfg.skip_missing:
         warnings.warn("skip_missing is not supported in pydantic validator", stacklevel=2)
 
-    def _builder(config_ref: Ref[D]) -> D:
+    def _builder(config_ref: Ref[D | NoneConfigData]) -> D:
         if isinstance(config_ref.value, NoneConfigData):
             config_ref.value = MappingConfigData()  # type: ignore[assignment]
-        data: MCD = config_ref.value  # type: ignore[assignment]
+        data: D = config_ref.value  # type: ignore[assignment]
 
         try:
             dict_obj = validator(**data).model_dump()
         except ValidationError as err:
             raise _process_pydantic_exceptions(err) from err
 
-        # noinspection PyTypeChecker
-        config_obj: MCD = data.from_data(dict_obj)
+        config_obj = data.from_data(dict_obj)
         if cfg.allow_modify:
             _fill_not_exits(config_obj, data)
-        return cast(D, config_obj)
+        return config_obj
 
     return _builder
 
 
-class ComponentValidatorFactory[D: ComponentConfigData[Any, Any] | NoneConfigData]:
+class ComponentValidatorFactory[D: ComponentConfigData[Any, Any]]:
     """
     组件验证器工厂
 
@@ -602,7 +600,7 @@ class ComponentValidatorFactory[D: ComponentConfigData[Any, Any] | NoneConfigDat
         for member, validator in self.validator.items():
             self.validators[member] = self.validator_factory(validator, self.validator_config)
 
-    def __call__(self, config_ref: Ref[D]) -> D:
+    def __call__(self, config_ref: Ref[D | NoneConfigData]) -> D:
         """
         验证配置数据
 
@@ -615,7 +613,7 @@ class ComponentValidatorFactory[D: ComponentConfigData[Any, Any] | NoneConfigDat
         if isinstance(config_ref.value, NoneConfigData):
             config_ref.value = ComponentConfigData()  # type: ignore[assignment]
 
-        component_ref: Ref[ComponentConfigData[Any, Any]] = config_ref  # type: ignore[assignment]
+        component_ref: Ref[D] = config_ref  # type: ignore[assignment]
         component_data = component_ref.value
 
         should_validate_meta: bool = False
@@ -643,7 +641,7 @@ class ComponentValidatorFactory[D: ComponentConfigData[Any, Any] | NoneConfigDat
         if self.validator_config.allow_modify:
             component_ref.value._meta = meta
 
-        return cast(D, component_data.from_data(meta, validated_members))
+        return component_data.from_data(meta, validated_members)
 
 
 __all__ = (
