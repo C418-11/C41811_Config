@@ -268,10 +268,12 @@ class TestRequiredPath:
         (
             ("foo", {"bar": 123, "bar1": 456}, {}, (), ()),
             ("foo\\.bar", 123, {}, (), ()),
+            ("foo\\.bar", 123, {"allow_modify": False}, (), ()),
             ("foo.bar", 123, {}, (RequiredPathNotFoundError,), ()),
             ("foo1", 114, {}, (), ()),
             ("foo2", ["bar"], {}, (), ()),
             ("foo2", ["bar"], {"allow_modify": True}, (), ()),
+            ("foo2", ["bar"], {"allow_modify": False}, (), ()),
             ("foo.bar", None, {"skip_missing": True}, (RequiredPathNotFoundError,), (UserWarning,)),
         ),
     )
@@ -349,6 +351,12 @@ class TestRequiredPath:
                 {},
                 (),
             ),
+            (
+                ["foo\\.bar", "foo"],
+                [123, {"bar": 123, "bar1": 456}],
+                {"allow_modify": False},
+                (),
+            ),
             (["foo2\\.bar"], [987], {}, (ConfigDataTypeError,)),
             (["foo\\.bar2"], [987], {}, (RequiredPathNotFoundError,)),
             (
@@ -356,6 +364,12 @@ class TestRequiredPath:
                 [987],
                 {"allow_modify": True},
                 (RequiredPathNotFoundError,),  # 因为没有默认值所以即便allow_modify=True也会报错
+            ),
+            (
+                ["foo\\.bar2"],
+                [987],
+                {"allow_modify": False},
+                (RequiredPathNotFoundError,),
             ),
             (
                 ["foo\\.bar2", "foo1"],
@@ -424,6 +438,17 @@ class TestRequiredPath:
             (
                 OrderedDict(
                     (
+                        ("foo", dict),
+                        ("foo\\.bar", int),
+                    )
+                ),
+                {"foo": {"bar": 123, "bar1": 456}},
+                {"allow_modify": False},
+                (),
+            ),
+            (
+                OrderedDict(
+                    (
                         ("foo\\.bar", int),
                         ("foo", dict),
                     )
@@ -445,6 +470,12 @@ class TestRequiredPath:
                 {"foo": {"bar": 2, 3: 4}},  # 遇到键不完全为字符串时禁止递归检查
                 {"foo": {"bar": 123, "bar1": 456}},
                 {},
+                (),
+            ),
+            (
+                {"foo": {"bar": 2, 3: 4}},  # 遇到键不完全为字符串时禁止递归检查
+                {"foo": {"bar": 123, "bar1": 456}},
+                {"allow_modify": False},
                 (),
             ),
             (
@@ -498,6 +529,41 @@ class TestRequiredPath:
                 (),
             ),
             (
+                {
+                    "foo": dict,
+                    "foo\\.bar": 111,
+                    "foo1": 222,
+                    "foo2": [333],
+                    "foo3\\.bar": 789,
+                    "foo3\\.test\\.value": 101112,
+                    "foo4": {
+                        "bar": 789,
+                        "test": {
+                            "value": 101112,
+                        },
+                    },
+                },
+                {
+                    "foo": {"bar": 123, "bar1": 456},
+                    "foo1": 114,
+                    "foo2": ["bar"],
+                    "foo3": {
+                        "bar": 789,
+                        "test": {
+                            "value": 101112,
+                        },
+                    },
+                    "foo4": {
+                        "bar": 789,
+                        "test": {
+                            "value": 101112,
+                        },
+                    },
+                },
+                {"allow_modify": False},
+                (),
+            ),
+            (
                 OrderedDict(
                     (
                         ("foo", str),
@@ -517,6 +583,17 @@ class TestRequiredPath:
                 ),
                 None,
                 {},
+                (ConfigDataTypeError, UserWarning),
+            ),
+            (
+                OrderedDict(
+                    (
+                        ("foo\\.bar", int),
+                        ("foo", str),
+                    )
+                ),
+                None,
+                {"allow_modify": False},
                 (ConfigDataTypeError, UserWarning),
             ),
             (
@@ -543,6 +620,32 @@ class TestRequiredPath:
                     },
                 },
                 {"skip_missing": True},
+                (),
+            ),
+            (
+                {
+                    "foo\\.bar": int,
+                    "foo": dict,
+                    "foo1": int,
+                    "foo2": list[str],
+                    "foo3": {
+                        "bar": int,
+                        "test": {
+                            "value": 101112,
+                        },
+                    },
+                },
+                {
+                    "foo": {"bar": 123, "bar1": 456},
+                    "foo1": 114,
+                    "foo2": ["bar"],
+                    "foo3": {
+                        "test": {
+                            "value": 101112,
+                        }
+                    },
+                },
+                {"skip_missing": True, "allow_modify": False},
                 (),
             ),
             (
@@ -643,6 +746,31 @@ class TestRequiredPath:
                 (),
             ),
             (
+                ComponentConfigData(ComponentMeta(parser=ComponentMetaParser()), {}),
+                #                                   ↑ 一般情况是由ComponentSL的initialize|load在构造时自动传入parser参数
+                {
+                    None: {"members": ["foo.json", "bar.json"]},
+                    "foo.json": {
+                        "first\\.second\\.third": 4,
+                    },
+                    "bar.json": {
+                        "key": {"value"},
+                    },
+                },
+                ComponentConfigData(
+                    ComponentMeta(
+                        members=[ComponentMember("foo.json"), ComponentMember("bar.json")],
+                        orders=ComponentOrders(*([["foo.json", "bar.json"]] * 4)),
+                    ),
+                    {
+                        "foo.json": MappingConfigData({"first": {"second": {"third": 4}}}),
+                        "bar.json": MappingConfigData({"key": {"value"}}),
+                    },
+                ),
+                {"allow_modify": False},
+                (),
+            ),
+            (
                 NoneConfigData(),
                 {
                     None: {"members": ["foo.json"]},
@@ -657,6 +785,23 @@ class TestRequiredPath:
                     },
                 ),
                 {"meta_validator": ComponentMetaParser().validator},
+                (),
+            ),
+            (
+                NoneConfigData(),
+                {
+                    None: {"members": ["foo.json"]},
+                    "foo.json": {
+                        "first\\.second\\.third": 4,
+                    },
+                },
+                ComponentConfigData(
+                    ComponentMeta(members=[ComponentMember("foo.json")], orders=ComponentOrders(*([["foo.json"]] * 4))),
+                    {
+                        "foo.json": MappingConfigData({"first": {"second": {"third": 4}}}),
+                    },
+                ),
+                {"meta_validator": ComponentMetaParser().validator, "allow_modify": False},
                 (),
             ),
             (
