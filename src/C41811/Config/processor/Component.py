@@ -108,6 +108,7 @@ class ComponentSL(BasicChainConfigSL):
         reg_alias: str | None = None,
         create_dir: bool = True,
         meta_parser: ABCMetaParser[Any, ComponentMeta[Any]] | None = None,
+        meta_file: str = "__meta__",
     ):
         """
         :param reg_alias: 处理器别名
@@ -116,6 +117,11 @@ class ComponentSL(BasicChainConfigSL):
         :type create_dir: bool
         :param meta_parser: 元数据解析器
         :type meta_parser: basic.mapping.ABCMetaParser | None
+        :param meta_file: 元信息文件名
+        :type meta_file: str
+
+        .. versionchanged:: 0.3.0
+           重构属性 ``initial_file`` 为参数 ``meta_file`` 并更改默认值 ``__init__`` 为 ``__meta__``
         """  # noqa: D205
         super().__init__(reg_alias=reg_alias, create_dir=create_dir)
 
@@ -123,6 +129,7 @@ class ComponentSL(BasicChainConfigSL):
             meta_parser = ComponentMetaParser()
 
         self.meta_parser: ABCMetaParser[Any, ComponentMeta[Any]] = meta_parser
+        self.meta_file = meta_file
 
     @property
     @override
@@ -139,11 +146,6 @@ class ComponentSL(BasicChainConfigSL):
         return os.path.normpath(os.path.join(namespace, self.filename_formatter(file_name)))
 
     supported_file_classes = [ConfigFile]  # noqa: RUF012
-
-    @property
-    def initial_file(self) -> str:  # TODO 重命名为 meta_file 并更改默认值为 __meta__
-        """元信息文件"""
-        return "__init__"
 
     @override
     def save_file(
@@ -166,7 +168,7 @@ class ComponentSL(BasicChainConfigSL):
         meta_config = self.meta_parser.convert_meta2config(config_data.meta)
         file_name, file_ext = os.path.splitext(file_name)
         super().save_file(
-            config_pool, ConfigFile(meta_config), namespace, self.initial_file + file_ext, *args, **kwargs
+            config_pool, ConfigFile(meta_config), namespace, self.meta_file + file_ext, *args, **kwargs
         )
 
         for member in config_data.meta.members:
@@ -185,7 +187,7 @@ class ComponentSL(BasicChainConfigSL):
     ) -> ConfigFile[ComponentConfigData[Any, Any]]:
         file_name, file_ext = os.path.splitext(file_name)
 
-        initial_file = super().load_file(config_pool, namespace, self.initial_file + file_ext, *args, **kwargs)
+        initial_file = super().load_file(config_pool, namespace, self.meta_file + file_ext, *args, **kwargs)
         initial_data = initial_file.config
 
         if not isinstance(initial_data, MappingConfigData):

@@ -269,7 +269,7 @@ ComponentTests: tuple[
         tuple[
             tuple[ABCConfigSL, ...],
             dict[str, Any],
-            dict[str, ConfigData],
+            dict[str, MappingConfigData[Any]],
             tuple[EE, ...],
             dict[str, Any],
         ],
@@ -281,35 +281,35 @@ ComponentTests: tuple[
         (
             (JsonSL(s_arg={"indent": 2}),),
             {"members": ["test.json"]},
-            {"test.json": ConfigData({"test": "test"})},
+            {"test.json": MappingConfigData({"test": "test"})},
             (),
             {},
         ),
         (
             (JsonSL(s_arg={"indent": 2}),),
             {"members": [{"filename": "test", "config_format": "json"}]},
-            {"test": ConfigData({"test": "test"})},
+            {"test": MappingConfigData({"test": "test"})},
             (),
             {},
         ),
         (
             (JsonSL(s_arg={"indent": 2}),),
             {"members": ["test.json"], "orders": {"create": ["test.json"]}, "order": ["test.json"]},
-            {"test.json": ConfigData({"test": "test"})},
+            {"test.json": MappingConfigData({"test": "test"})},
             (),
             {},
         ),
         (
             (JsonSL(s_arg={"indent": 2}),),
             {"members": [{"filename": "test.json", "alies": "t"}], "orders": {"create": ["t"]}, "order": ["t"]},
-            {"test.json": ConfigData({"test": "test"})},
+            {"test.json": MappingConfigData({"test": "test"})},
             (),
             {},
         ),
         (
             (JsonSL(s_arg={"indent": 2}),),
             {"members": ["test.json"], "orders": {"create": ["test.json", "test.json"]}},
-            {"test.json": ConfigData({"test": "test"})},
+            {"test.json": MappingConfigData({"test": "test"})},
             ((ValueError,), (), ()),
             {},
         ),
@@ -321,9 +321,42 @@ ComponentTests: tuple[
                 TarFileSL(compression=TarCompressionTypes.GZIP),
             ),
             {"members": ["test.json.zip", "test.py.tar.gz"], "order": ["test.py.tar.gz", "test.json.zip"]},
-            {"test.json.zip": ConfigData({"test": "test"}), "test.py.tar.gz": ConfigData({"test": "test"})},
+            {"test.json.zip": MappingConfigData({"test": "test"}), "test.py.tar.gz": MappingConfigData({"test": "test"})},
             (),
             {},
+        ),
+        (
+            (JsonSL(s_arg={"indent": 2}),),
+            {"members": ["test.json"]},
+            {"test.json": MappingConfigData({"test": "test"})},
+            (),
+            {"meta_file": "meta"},
+        ),
+        (
+            (JsonSL(s_arg={"indent": 2}),),
+            {"members": [{"filename": "test", "config_format": "json"}]},
+            {"test": MappingConfigData({"test": "test"})},
+            (),
+            {"meta_file": "sth.sth"},
+        ),
+        (
+            (JsonSL(s_arg={"indent": 2}),),
+            {"members": ["test.json"], "orders": {"create": ["test.json"]}, "order": ["test.json"]},
+            {"test.json": MappingConfigData({"test": "test"})},
+            (),
+            {"meta_file": "a meta file!"},
+        ),
+        (
+            (
+                JsonSL(s_arg={"indent": 2}),
+                PythonLiteralSL(),
+                ZipFileSL(compress_level=9),
+                TarFileSL(compression=TarCompressionTypes.GZIP),
+            ),
+            {"members": ["test.json.zip", "test.py.tar.gz"], "order": ["test.py.tar.gz", "test.json.zip"]},
+            {"test.json.zip": MappingConfigData({"test": "test"}), "test.py.tar.gz": MappingConfigData({"test": "test"})},
+            (),
+            {"meta_file": "$meta"},
         ),
     ),
 )
@@ -409,7 +442,7 @@ def test_component_wrong_config_data(pool: ConfigPool) -> None:
     pool.discard("", file_name)
     pool.save(
         comp_sl.namespace_formatter("", file_name),
-        comp_sl.initial_file + json_sl.supported_file_patterns[0],
+        comp_sl.meta_file + json_sl.supported_file_patterns[0],
         config=ConfigFile(ConfigData([])),
     )
     with raises(FailedProcessConfigFileError, match="is not a"):
