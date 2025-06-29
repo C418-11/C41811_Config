@@ -236,7 +236,7 @@ commands = [
     [
         "python", "-c", """
 import os
-exit(os.system("ruff check --exit-zero 2>&1 | ansi2html > ./docs/_static/_ruff.html"))
+exit(os.system("ruff check --exit-zero --no-fix 2>&1 | ansi2html > ./docs/_static/_ruff.html"))
 """,
     ],
 ]
