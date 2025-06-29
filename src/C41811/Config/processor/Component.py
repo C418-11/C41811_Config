@@ -167,9 +167,7 @@ class ComponentSL(BasicChainConfigSL):
 
         meta_config = self.meta_parser.convert_meta2config(config_data.meta)
         file_name, file_ext = os.path.splitext(file_name)
-        super().save_file(
-            config_pool, ConfigFile(meta_config), namespace, self.meta_file + file_ext, *args, **kwargs
-        )
+        super().save_file(config_pool, ConfigFile(meta_config), namespace, self.meta_file + file_ext, *args, **kwargs)
 
         for member in config_data.meta.members:
             super().save_file(

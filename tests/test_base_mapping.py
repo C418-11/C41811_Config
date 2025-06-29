@@ -255,7 +255,7 @@ class TestMappingConfigData:
         ignore_config_data_type_error = any(issubclass(exc, ConfigDataTypeError) for exc in ignore_excs)
 
         if has_index_key and (not data.exists(path, ignore_wrong_type=ignore_config_data_type_error)):
-            print(f"Skipping test because cannot set default value for non-existent index key: {path}")
+            print(f"Skipping test because cannot set default value for non-existent index key: {path}")  # noqa: T201
             return
 
         ignore_excs = tuple(exc for exc in ignore_excs if not issubclass(exc, LookupError))

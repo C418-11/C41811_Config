@@ -749,14 +749,14 @@ class TestRequiredPath:
         assert total_static_time < total_dynamic_time
         average_static_time = total_static_time / times
         average_dynamic_time = total_dynamic_time / times
-        print()
-        print(static_config)
-        print(f"total_static_time: {total_static_time}ms")
-        print(f"total_dynamic_time: {total_dynamic_time}ms")
-        print(f"times: {times}")
-        print(f"average_static_time: {average_static_time}ms")
-        print(f"average_dynamic_time: {average_dynamic_time}ms")
-        print(f"speedup: {average_dynamic_time / average_static_time}")
+        print()  # noqa: T201
+        print(static_config)  # noqa: T201
+        print(f"total_static_time: {total_static_time}ms")  # noqa: T201
+        print(f"total_dynamic_time: {total_dynamic_time}ms")  # noqa: T201
+        print(f"times: {times}")  # noqa: T201
+        print(f"average_static_time: {average_static_time}ms")  # noqa: T201
+        print(f"average_dynamic_time: {average_dynamic_time}ms")  # noqa: T201
+        print(f"speedup: {average_dynamic_time / average_static_time}")  # noqa: T201
 
     @staticmethod
     @fixture

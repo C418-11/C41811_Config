@@ -321,7 +321,10 @@ ComponentTests: tuple[
                 TarFileSL(compression=TarCompressionTypes.GZIP),
             ),
             {"members": ["test.json.zip", "test.py.tar.gz"], "order": ["test.py.tar.gz", "test.json.zip"]},
-            {"test.json.zip": MappingConfigData({"test": "test"}), "test.py.tar.gz": MappingConfigData({"test": "test"})},
+            {
+                "test.json.zip": MappingConfigData({"test": "test"}),
+                "test.py.tar.gz": MappingConfigData({"test": "test"}),
+            },
             (),
             {},
         ),
@@ -354,7 +357,10 @@ ComponentTests: tuple[
                 TarFileSL(compression=TarCompressionTypes.GZIP),
             ),
             {"members": ["test.json.zip", "test.py.tar.gz"], "order": ["test.py.tar.gz", "test.json.zip"]},
-            {"test.json.zip": MappingConfigData({"test": "test"}), "test.py.tar.gz": MappingConfigData({"test": "test"})},
+            {
+                "test.json.zip": MappingConfigData({"test": "test"}),
+                "test.py.tar.gz": MappingConfigData({"test": "test"}),
+            },
             (),
             {"meta_file": "$meta"},
         ),

@@ -55,7 +55,7 @@ def _compile(
         for i, src in enumerate(ext.sources):
             rel_src, file_ext = os.path.splitext(os.path.relpath(src, tempdir))
             # temp/root/path/to/file.c -> path/to/file
-            print("", files, files_indexing, rel_src, ext, sep="\n-------------------\n")
+            print("", files, files_indexing, rel_src, ext, sep="\n-------------------\n")  # noqa: T201
             rel_project = f"{tempdir}{os.sep}{files[files_indexing[rel_src]]}{file_ext}"
             # path/to/file -> C:/root/path/to/file.py -> temp/path/to/file.c
 
