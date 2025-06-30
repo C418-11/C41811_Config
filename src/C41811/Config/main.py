@@ -170,6 +170,9 @@ class ConfigRequirementDecorator:
 
     .. versionchanged:: 0.2.0
        重命名 ``RequireConfigDecorator`` 为 ``ConfigRequirementDecorator``
+
+    .. versionchanged:: 0.3.0
+       修正配置加载逻辑，现在会在每一次获取配置数据时尝试加载而不是仅在初始化时尝试加载
     """  # noqa: RUF002
 
     def __init__[D: ABCConfigData[Any]](
@@ -206,14 +209,12 @@ class ConfigRequirementDecorator:
 
            重命名参数 ``allow_create`` 为 ``allow_initialize``
         """  # noqa: RUF002, D205
-        config = config_pool.load(
-            namespace, file_name, config_formats=config_formats, allow_initialize=allow_initialize
-        )
-
         if filter_kwargs is None:
             filter_kwargs = {}
 
-        self._config_file: ABCConfigFile[Any] = config
+        self._config_loader: Callable[[], ABCConfigFile[D]] = lambda: config_pool.load(
+            namespace, file_name, config_formats=config_formats, allow_initialize=allow_initialize
+        )
         self._required = required
         self._filter_kwargs = filter_kwargs
         self._config_cacher: Callable[[Callable[..., D], VarArg(), KwArg()], D] = (
@@ -233,12 +234,15 @@ class ConfigRequirementDecorator:
         :param filter_kwargs: RequiredConfig.filter的参数
         :return: 得到的配置数据
         :rtype: Any
+
         """
         kwargs = self._filter_kwargs | filter_kwargs
-        config_ref = Ref(self._config_file.config)
+
         if ignore_cache:
+            config_ref = Ref((config_file := self._config_loader()).config)
             result = self._required.filter(config_ref, **kwargs)
-            self._config_file._config = config_ref.value
+            config_file._config = config_ref.value
+
             return result
         return self._wrapped_filter(**kwargs)
 
@@ -267,10 +271,10 @@ class ConfigRequirementDecorator:
         return cast(Callable[..., Any], wrapper(func))
 
     def _wrapped_filter(self, **kwargs: Any) -> ABCConfigData[Any]:
-        config_ref = Ref(self._config_file.config)
+        config_ref = Ref((config_file := self._config_loader()).config)
 
         result = self._config_cacher(self._required.filter, config_ref, **kwargs)
-        self._config_file._config = config_ref.value
+        config_file._config = config_ref.value
         return result
 
 
