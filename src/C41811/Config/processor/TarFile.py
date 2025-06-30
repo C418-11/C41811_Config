@@ -136,7 +136,7 @@ class TarFileSL(BasicCompressedConfigSL):
             ) as tar,
         ):
             # py3.12不传入filter会发出警告 https://peps.python.org/pep-0706/#defaults-and-their-configuration
-            tar.extractall(extract_dir, filter=self._extraction_filter)
+            tar.extractall(extract_dir, filter=self._extraction_filter)  # noqa: S202
 
 
 __all__ = (

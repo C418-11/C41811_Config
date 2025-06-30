@@ -301,10 +301,10 @@ class PathSyntaxParser:
                         f"closing parenthesis '{tk_close}' does not match opening parenthesis '{top}': ",
                     )
 
-            if token_type == "}":
+            if token_type == "}":  # noqa: S105
                 _token_closed("{", "}", token, index)
                 continue
-            if token_type == "]":
+            if token_type == "]":  # noqa: S105
                 _token_closed("[", "]", token, index)
                 try:
                     path.append(IndexKey(int(item), meta))  # type: ignore[arg-type]
@@ -320,15 +320,15 @@ class PathSyntaxParser:
                     TokenInfo(tokenized_path, token, index), f"'{token_stack.pop()}' was never closed: "
                 )
 
-            if token_type == "[":
+            if token_type == "[":  # noqa: S105
                 token_stack.append("[")
                 item = content
                 continue
-            if token_type == "{":
+            if token_type == "{":  # noqa: S105
                 token_stack.append("{")
                 meta = content
                 continue
-            if token_type == ".":
+            if token_type == ".":  # noqa: S105
                 path.append(AttrKey(content, meta))
                 meta = None
                 continue

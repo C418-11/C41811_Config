@@ -47,7 +47,7 @@ class PythonSL(BasicLocalFileConfigSL):
     ) -> ConfigFile[MappingConfigData[dict[str, Any]]]:
         names: dict[str, Any] = {}
         with self.raises():
-            exec(source_file.read(), {}, names)
+            exec(source_file.read(), {}, names)  # noqa: S102
 
         return cast(
             ConfigFile[MappingConfigData[dict[str, Any]]], ConfigFile(names, config_format=self.processor_reg_name)

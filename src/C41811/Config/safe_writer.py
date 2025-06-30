@@ -335,7 +335,7 @@ class SafeOpen[F: AIO]:
             if f is not None:
                 try:
                     self._manager.rollback(f)
-                except Exception:  # pragma: no cover
+                except Exception:  # pragma: no cover  # noqa: BLE001
                     raise err from None
             raise
         finally:
@@ -373,7 +373,7 @@ class SafeOpen[F: AIO]:
             if f is not None:
                 try:
                     self._manager.rollback(f)
-                except Exception:
+                except Exception:  # noqa: BLE001
                     raise err from None
             raise
         finally:
