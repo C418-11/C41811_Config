@@ -8,15 +8,45 @@
 """
 
 from collections.abc import Callable
-from textwrap import dedent
 from typing import Any
-from typing import Self
 
 import wrapt  # type: ignore[import-untyped]
 
 from .core import BasicSingleConfigData
 from .core import ConfigData
 from .utils import check_read_only
+
+type Operator = Callable[[Any, Any], Any]
+type InplaceOperator[S] = Callable[[S, Any], S]
+
+
+def _generate_operators[S: Any](
+    operate_func: Operator, inplace_func: InplaceOperator[S]
+) -> tuple[Operator, Operator, InplaceOperator[S]]:
+    """
+    闭包绑定操作函数
+
+    :param operate_func: 操作函数
+    :type operate_func: Operator
+    :param inplace_func: 原地操作函数
+    :type inplace_func: InplaceOperator[S]
+
+    :return: 绑定后的操作符实现
+    :rtype: tuple[Operator, Operator, InplaceOperator[S]]
+    """
+
+    def forward_op(self: Any, other: Any) -> Any:
+        return ConfigData(operate_func(self._data, other))
+
+    def reverse_op(self: Any, other: Any) -> Any:
+        return ConfigData(operate_func(other, self._data))
+
+    # noinspection PyTypeHints
+    def inplace_op(self: S, other: Any) -> S:
+        self._data = inplace_func(self._data, other)
+        return self
+
+    return forward_op, reverse_op, inplace_op
 
 
 def generate[C](cls: type[C]) -> type[C]:
@@ -26,7 +56,10 @@ def generate[C](cls: type[C]) -> type[C]:
     需要使用 :py:deco:`operate` 装饰器标记要自动生成的操作符
 
     :param cls: 类
-    :type cls: type
+    :type cls: C
+
+    :return: 原样返回类
+    :rtype: C
     """
     for name, func in dict(vars(cls)).items():
         if not hasattr(func, "__generate_operators__"):
@@ -34,50 +67,43 @@ def generate[C](cls: type[C]) -> type[C]:
         operator_funcs = func.__generate_operators__
         delattr(func, "__generate_operators__")
 
+        # 动态创建函数
+        forward_op, reverse_op, inplace_op = _generate_operators(
+            operator_funcs["operate_func"], operator_funcs["inplace_func"]
+        )
+
+        # 设置函数标识符
         i_name = f"__i{name[2:-2]}__"
         r_name = f"__r{name[2:-2]}__"
+        forward_op.__qualname__ = func.__qualname__
+        reverse_op.__qualname__ = f"{cls.__qualname__}.{r_name}"
+        inplace_op.__qualname__ = f"{cls.__qualname__}.{i_name}"
 
-        code = dedent(f"""
-        def {name}(self, other: Any) -> Any:
-            return ConfigData(operate_func(self._data, other))
-        def {r_name}(self, other: Any) -> Any:
-            return ConfigData(operate_func(other, self._data))
-        def {i_name}(self, other: Any) -> Self:
-            self._data = inplace_func(self._data, other)
-            return self
-        """)
-
-        funcs: dict[str, Any] = {}
-        exec(code, {**operator_funcs, "ConfigData": ConfigData, "Any": Any, "Self": Self}, funcs)
-
-        funcs[name].__qualname__ = func.__qualname__
-        funcs[r_name].__qualname__ = f"{cls.__qualname__}.{r_name}"
-        funcs[i_name].__qualname__ = f"{cls.__qualname__}.{i_name}"
-
+        # 应用装饰器
         @wrapt.decorator  # type: ignore[misc]
         def wrapper(wrapped: Callable[..., Any], _instance: C, args: tuple[Any, ...], kwargs: dict[str, Any]) -> Any:
             if isinstance(args[0], BasicSingleConfigData):
-                args = args[0].data, *args[1:]
+                args = (args[0].data,) + args[1:]
             return wrapped(*args, **kwargs)
 
-        setattr(cls, name, wrapper(funcs[name]))
-        setattr(cls, r_name, funcs[r_name])
-        setattr(cls, i_name, wrapper(check_read_only(funcs[i_name])))
+        setattr(cls, name, wrapper(forward_op))
+        setattr(cls, r_name, reverse_op)
+        setattr(cls, i_name, wrapper(check_read_only(inplace_op)))
 
     return cls
 
 
-def operate[F: Callable[[Any, Any], Any]](
-    operate_func: Callable[[Any, Any], Any],
-    inplace_func: Callable[[Any, Any], Any],
+def operate[F: Operator](
+    operate_func: Operator,
+    inplace_func: InplaceOperator[Any],
 ) -> Callable[[F], F]:
     """
     将方法标记为需要生成标记符
 
     :param operate_func: 操作函数
-    :type operate_func: Callable[[Any, Any], Any]
+    :type operate_func: Operator
     :param inplace_func: 原地操作函数
-    :type inplace_func: Callable[[Any, Any], Any]
+    :type inplace_func: InplaceOperator[Any]
 
     :return: 装饰器
     :rtype: Callable[[F], F]
