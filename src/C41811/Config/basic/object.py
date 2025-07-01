@@ -67,7 +67,7 @@ class ObjectConfigData[D: object](BasicSingleConfigData[D]):
         :rtype: Any
 
         .. caution::
-           直接返回了原始对象，未默认进行深拷贝
+           未默认做深拷贝，可能导致非预期的行为
         """  # noqa: RUF002
         return self._data
 

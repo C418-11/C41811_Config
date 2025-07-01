@@ -120,15 +120,20 @@ select = [
 
     # flake8插件
     "A",   # flake8-builtins
+    "ARG", # flake8-unused-arguments
     "B",   # flake8-bugbear
     "BLE", # flake8-blind-except
     "C4",  # flake8-comprehensions
     "EM",  # flake8-errmsg
+    "FBT", # flake8-boolean-trap
+    "INP", # flake8-no-pep420
+    "ISC", # flake8-implicit-str-concat
     "PIE", # flake8-pie
     "RET", # flake8-return
     "RSE", # flake8-raise
     "S",   # flake8-bandit
     "SIM", # flake8-simplify
+    "SLF", # flake8-self
     "T10", # flake8-debugger
     "T20", # flake8-print
     "YTT", # flake8-2020
@@ -152,8 +157,8 @@ select = [
     "PLW", # pylint (warnings)
 
     # 其他规则
+    "COM818", # trailing-comma-on-bare-tuple
     "D213",   # multi-line-summary-second-line
-    "ISC001", # single-line-implicit-string-concatenation
 ]
 ignore = [
     # 项目文档格式
@@ -175,8 +180,9 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "!src/**.py" = [
-    "D1",   # undocumented-public-*
-    "S101", # assert
+    "D1",     # undocumented-public-*
+    "INP001", # implicit-namespace-package
+    "S101",   # assert
 ]
 
 [tool.mypy]

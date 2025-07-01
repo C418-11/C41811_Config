@@ -849,7 +849,7 @@ class TestComponentConfigData:
 
     @staticmethod
     @mark.parametrize(*ExistsTests)
-    def test_exists(data: CCD, path: str, is_exists: bool, ignore_excs: EE, kwargs: dict[str, Any]) -> None:
+    def test_exists(data: CCD, path: str, is_exists: bool, ignore_excs: EE, kwargs: dict[str, Any]) -> None:  # noqa: FBT001
         with safe_raises(ignore_excs):
             assert data.exists(path, **kwargs) is is_exists
 

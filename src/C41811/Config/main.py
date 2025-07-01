@@ -241,7 +241,7 @@ class ConfigRequirementDecorator:
         if ignore_cache:
             config_ref = Ref((config_file := self._config_loader()).config)
             result = self._required.filter(config_ref, **kwargs)
-            config_file._config = config_ref.value
+            config_file._config = config_ref.value  # noqa: SLF001
 
             return result
         return self._wrapped_filter(**kwargs)
@@ -274,7 +274,7 @@ class ConfigRequirementDecorator:
         config_ref = Ref((config_file := self._config_loader()).config)
 
         result = self._config_cacher(self._required.filter, config_ref, **kwargs)
-        config_file._config = config_ref.value
+        config_file._config = config_ref.value  # noqa: SLF001
         return result
 
 
@@ -677,7 +677,7 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
 
     raises = staticmethod(raises)
 
-    def namespace_formatter(self, namespace: str, file_name: str) -> str:
+    def namespace_formatter(self, namespace: str, file_name: str) -> str:  # noqa: ARG002
         """
         格式化命名空间以传递给其他SL处理器
 

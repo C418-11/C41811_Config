@@ -115,7 +115,7 @@ class TestConfigFile:
 
     @staticmethod
     @mark.parametrize(*EQTests)
-    def test_eq(a: ConfigFile[D_MCD], b: ConfigFile[D_MCD], is_eq: bool) -> None:
+    def test_eq(a: ConfigFile[D_MCD], b: ConfigFile[D_MCD], is_eq: bool) -> None:  # noqa: FBT001
         assert (a == b) is is_eq
 
     @staticmethod
@@ -130,7 +130,7 @@ class TestConfigFile:
             ({"foo": 123}, False),
         ),
     )
-    def test_bool(raw_data: D_MCD, is_empty: bool) -> None:
+    def test_bool(raw_data: D_MCD, is_empty: bool) -> None:  # noqa: FBT001
         assert bool(ConfigFile(ConfigData(raw_data))) is not is_empty
 
     @staticmethod

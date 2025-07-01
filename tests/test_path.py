@@ -154,7 +154,7 @@ class TestPath:
             (AttrKey("fff"), False),
         ),
     )
-    def test_contains(path: Path, key: AnyKey, is_contained: bool) -> None:
+    def test_contains(path: Path, key: AnyKey, is_contained: bool) -> None:  # noqa: FBT001
         assert (key in path) == is_contained
 
     @staticmethod

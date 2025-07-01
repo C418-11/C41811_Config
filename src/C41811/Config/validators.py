@@ -512,7 +512,7 @@ class DefaultValidatorFactory[D: MCD]:
 
         # 完全替换原始数据
         if self.validator_config.allow_modify:
-            data._data = dict_obj
+            data._data = dict_obj  # noqa: SLF001
             return data
         return data.from_data(dict_obj)
 
@@ -546,7 +546,7 @@ def pydantic_validator[D: MCD](
 
         # 完全替换原始数据
         if cfg.allow_modify:
-            data._data = dict_obj
+            data._data = dict_obj  # noqa: SLF001
             return data
         return data.from_data(dict_obj)
 
@@ -646,7 +646,7 @@ class ComponentValidatorFactory[D: ComponentConfigData[Any, Any]]:
 
         # 完全替换元数据
         if self.validator_config.allow_modify:
-            component_data._meta = meta
+            component_data._meta = meta  # noqa: SLF001
 
         return component_data.from_data(meta, validated_members)
 

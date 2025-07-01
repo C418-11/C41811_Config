@@ -37,12 +37,12 @@ class TestNumberConfigData:
         readonly_data.freeze()
         assert data.read_only is True
         assert readonly_data.read_only is False
-        data.freeze(True)
-        readonly_data.freeze(True)
+        data.freeze(True)  # noqa: FBT003
+        readonly_data.freeze(True)  # noqa: FBT003
         assert data.read_only is True
         assert readonly_data.read_only is True
-        data.freeze(False)
-        readonly_data.freeze(False)
+        data.freeze(False)  # noqa: FBT003
+        readonly_data.freeze(False)  # noqa: FBT003
         assert data.read_only is False
         assert readonly_data.read_only is False
 
@@ -92,7 +92,7 @@ class TestNumberConfigData:
             (0.1j, True),
         ),
     )
-    def test_bool(number: Number, value: bool) -> None:
+    def test_bool(number: Number, value: bool) -> None:  # noqa: FBT001
         assert bool(NumberConfigData(number)) == value
 
     @staticmethod

@@ -399,7 +399,7 @@ class ABCIndexedConfigData[D: Indexed[Any, Any]](ABCConfigData[D], MutableIndexe
         :raise RequiredPathNotFoundError: 需求的键不存在
 
         .. caution::
-           ``value`` 参数未默认做深拷贝，可能导致非预期的行为
+           ``value`` 参数未默认做深拷贝，可能导致非预期行为
 
         .. attention::
            ``allow_create`` 时，使用与 `self.data` 一样的类型新建路径
@@ -664,7 +664,7 @@ class ABCConfigFile[D: ABCConfigData[Any]](ABC):
         :type config_format: Optional[str]
 
         .. caution::
-           ``initial_config`` 参数未默认做深拷贝，可能导致非预期的行为
+           ``initial_config`` 参数未默认做深拷贝，可能导致非预期行为
 
         .. versionchanged:: 0.2.0
            重命名参数 ``config_data`` 为 ``initial_config``
@@ -678,9 +678,12 @@ class ABCConfigFile[D: ABCConfigData[Any]](ABC):
         """
         :return: 配置数据
 
+        .. caution::
+            未默认做深拷贝，可能导致非预期行为
+
         .. versionchanged:: 0.2.0
            重命名属性 ``data`` 为 ``config``
-        """
+        """  # noqa: RUF002
         return self._config
 
     @property
@@ -891,7 +894,9 @@ class ABCConfigPool(ABCSLProcessorPool):
         """  # noqa: RUF002
 
     @abstractmethod
-    def save_all(self, ignore_err: bool = False) -> None | dict[str, dict[str, tuple[ABCConfigFile[Any], Exception]]]:
+    def save_all(
+        self, *, ignore_err: bool = False
+    ) -> None | dict[str, dict[str, tuple[ABCConfigFile[Any], Exception]]]:
         """
         保存所有配置
 
@@ -900,6 +905,9 @@ class ABCConfigPool(ABCSLProcessorPool):
 
         :return: ignore_err为True时返回{Namespace: {FileName: (ConfigObj, Exception)}}，否则返回None
         :rtype: None | dict[str, dict[str, tuple[ABCConfigFile, Exception]]]
+
+        .. versionchanged:: 0.3.0
+           更改参数 ``ignore_err`` 为仅关键字参数
         """  # noqa: RUF002
 
     @abstractmethod

@@ -199,7 +199,7 @@ class TestMappingConfigData:
 
     @staticmethod
     @mark.parametrize(*ExistsTests)
-    def test_exists(data: M_MCD, path: str, is_exist: bool, ignore_excs: EE, kwargs: dict[str, Any]) -> None:
+    def test_exists(data: M_MCD, path: str, is_exist: bool, ignore_excs: EE, kwargs: dict[str, Any]) -> None:  # noqa: FBT001
         with safe_raises(ignore_excs):
             assert data.exists(path, **kwargs) is is_exist
 
@@ -345,7 +345,7 @@ class TestMappingConfigData:
             ("foo3", False),
         ),
     )
-    def test_contains(data: M_MCD, path: str, is_exist: bool) -> None:
+    def test_contains(data: M_MCD, path: str, is_exist: bool) -> None:  # noqa: FBT001
         assert (path in data) == is_exist
 
     IterTests: tuple[str, tuple[dict[str, Any], ...]] = (

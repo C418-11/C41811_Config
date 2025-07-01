@@ -666,7 +666,9 @@ class BasicConfigPool(ABCConfigPool, ABC):
         return self
 
     @override
-    def save_all(self, ignore_err: bool = False) -> None | dict[str, dict[str, tuple[ABCConfigFile[Any], Exception]]]:
+    def save_all(
+        self, *, ignore_err: bool = False
+    ) -> None | dict[str, dict[str, tuple[ABCConfigFile[Any], Exception]]]:
         errors: dict[str, dict[str, tuple[ABCConfigFile[Any], Exception]]] = {}
         for namespace, configs in deepcopy(self._configs).items():
             errors[namespace] = {}

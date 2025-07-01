@@ -79,9 +79,9 @@ def test_unary_operator(a: Any, op: Callable[[Any], Any]) -> None:
 DyadicOperatorTests = (
     "a, b, op, iop, convert_raw",
     (
-        *_insert_operator(TestMappingConfigData.MergeTests, operator.or_, operator.ior, True),
-        *_insert_operator(TestSequenceConfigData.RepeatTests, operator.mul, operator.imul, False),
-        *_insert_operator(TestSequenceConfigData.ExtendTests, operator.add, operator.iadd, False),
+        *_insert_operator(TestMappingConfigData.MergeTests, operator.or_, operator.ior, True),  # noqa: FBT003
+        *_insert_operator(TestSequenceConfigData.RepeatTests, operator.mul, operator.imul, False),  # noqa: FBT003
+        *_insert_operator(TestSequenceConfigData.ExtendTests, operator.add, operator.iadd, False),  # noqa: FBT003
     ),
 )
 
@@ -92,7 +92,7 @@ def test_dyadic_operator(
     b: ConfigData,
     op: Callable[[Any, Any], Any],
     iop: Callable[[Any, Any], Any],
-    convert_raw: bool,
+    convert_raw: bool,  # noqa: FBT001
 ) -> None:
     converter: Callable[[Any], Any] = (lambda _: _) if convert_raw else ConfigData
     assert op(ConfigData(a), ConfigData(b)) == ConfigData(op(a, b)), (

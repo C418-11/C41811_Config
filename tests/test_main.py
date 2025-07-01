@@ -128,7 +128,7 @@ class TestConfigPool:
             pool.save("", "test", config_formats={""})
 
     @staticmethod
-    def test_wrong_load(pool: ConfigPool, data: MCD) -> None:
+    def test_wrong_load(pool: ConfigPool) -> None:
         with raises(UnsupportedConfigFormatError, match="Unsupported config format: Unknown"):
             pool.load("", "test")
 

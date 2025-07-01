@@ -191,7 +191,7 @@ class TestSequenceConfigData:
 
     @staticmethod
     @mark.parametrize(*ExistsTests)
-    def test_exists(data: SCD, path: str, is_exist: bool, ignore_excs: EE, kwargs: dict[str, Any]) -> None:
+    def test_exists(data: SCD, path: str, is_exist: bool, ignore_excs: EE, kwargs: dict[str, Any]) -> None:  # noqa: FBT001
         with safe_raises(ignore_excs):
             assert data.exists(path, **kwargs) is is_exist
 
@@ -336,7 +336,7 @@ class TestSequenceConfigData:
             ("bar", False),
         ),
     )
-    def test_contains(data: SCD, item: Any, is_exist: bool) -> None:
+    def test_contains(data: SCD, item: Any, is_exist: bool) -> None:  # noqa: FBT001
         assert (item in data) == is_exist
 
     IterTests: tuple[str, tuple[list[Any], ...]] = (
@@ -478,7 +478,7 @@ class TestSequenceConfigData:
         assert cfg.data == data
 
     @staticmethod
-    def test_reversed(data: SCD, readonly_data: RSCD) -> None:
+    def test_reversed(data: SCD) -> None:
         assert list(reversed(data)) == list(reversed(data))
 
     @staticmethod
@@ -564,7 +564,7 @@ class TestStringConfigData:
             ("aabb", "ab", True),
         ),
     )
-    def test_contains(data: str, string: str, result: bool) -> None:
+    def test_contains(data: str, string: str, result: bool) -> None:  # noqa: FBT001
         data = StringConfigData(data)
         assert (string in data) is result
 
