@@ -1,4 +1,4 @@
-# cython: language_level = 3
+# cython: language_level = 3  # noqa: ERA001
 
 
 """配置验证器"""
@@ -334,7 +334,7 @@ class DefaultValidatorFactory[D: MCD]:
             ...
         elif isinstance(validator, Iterable):
             # 预处理为
-            # k: Any
+            # k: Any  # noqa: ERA001
             validator = OrderedDict((k, Any) for k in validator)
         else:
             msg = f"Invalid validator type '{type(validator).__name__}'"
@@ -431,23 +431,23 @@ class DefaultValidatorFactory[D: MCD]:
         fmt_data: OrderedDict[str, Any] = OrderedDict()
         for key, value in mapping.items():
             definition: FieldDefinition[Any]
-            # foo = FieldInfo()
+            # foo = FieldInfo()  # noqa: ERA001
             if isinstance(value, FieldInfo):
-                # foo: FieldInfo().annotation = FieldInfo()
+                # foo: FieldInfo().annotation = FieldInfo()  # noqa: ERA001
                 definition = FieldDefinition(value.annotation, value)
-            # foo: int
+            # foo: int  # noqa: ERA001
             # 如果是仅类型就填上空值
             elif issubclass(type(value), self.typehint_types):
-                # foo: int = FieldInfo()
+                # foo: int = FieldInfo()  # noqa: ERA001
                 definition = FieldDefinition(value, FieldInfo())
-            # foo = FieldDefinition(int, FieldInfo())
+            # foo = FieldDefinition(int, FieldInfo())  # noqa: ERA001
             # 已经是处理好的字段定义不需要特殊处理
             elif isinstance(value, FieldDefinition):
                 definition = value
-            # foo = 1
+            # foo = 1  # noqa: ERA001
             # 如果是仅默认值就补上类型
             else:
-                # foo: int = 1
+                # foo: int = 1  # noqa: ERA001
                 definition = FieldDefinition(type(value), FieldInfo(default=value))
 
             # 递归处理
@@ -455,7 +455,7 @@ class DefaultValidatorFactory[D: MCD]:
                 (
                     definition.allow_recursive,
                     _allow_recursive(definition.value.default),
-                    # foo.bar = {}
+                    # foo.bar = {}  # noqa: ERA001
                     # 这种情况下不进行递归解析 即捕获所有键(foo.bar.*)如果进行了解析就会忽略所有内容即返回foo.bar={}
                     definition.value.default,
                 )

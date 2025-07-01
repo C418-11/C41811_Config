@@ -112,11 +112,11 @@ def test_compile(tmpdir: Path, files: dict[str, str]) -> None:
             )
             for s in f
         ):
-            # def func[T](arg: T) -> T: ...
+            # def func[T](arg: T) -> T: ...  # noqa: ERA001
             #         ^^^
-            # def func[T: ...](arg: T) -> T: ...
+            # def func[T: ...](arg: T) -> T: ...  # noqa: ERA001
             #         ^^^^^^^^
-            # type D = Mapping | Sequence
+            # type D = Mapping | Sequence  # noqa: ERA001
             # ^^^^^^
             skip("cython unsupported syntax")
             compiler = _mypyc_compiler

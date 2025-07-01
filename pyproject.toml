@@ -112,6 +112,7 @@ docstring-code-format = true
 [tool.ruff.lint]
 isort.force-single-line = true
 isort.relative-imports-order = "closest-to-furthest"
+pydocstyle.convention = "google"
 select = [
     # 基础规则
     "F", # flake8
@@ -140,6 +141,7 @@ select = [
 
     # 独立功能插件
     "D",    # pydocstyle (文档格式)
+    "ERA",  # eradicate (无用代码)
     "FLY",  # flynt (f-string转换)
     "FURB", # refurb (代码简化)
     "I",    # isort (导入排序)

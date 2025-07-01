@@ -1,4 +1,4 @@
-# cython: language_level = 3
+# cython: language_level = 3  # noqa: ERA001
 
 """
 杂项实用程序

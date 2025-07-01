@@ -1,4 +1,4 @@
-# cython: language_level = 3
+# cython: language_level = 3  # noqa: ERA001
 
 
 """配置数据路径"""
