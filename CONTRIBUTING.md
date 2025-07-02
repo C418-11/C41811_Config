@@ -20,7 +20,7 @@ pip install -r requirements.txt tox
 ## 质量保障
 
 ### 代码规范
-- 严格遵守[项目规范](docs/Tutorial/project-specification.rst)
+- 严格遵守[项目规范](docs/project-specification.rst)
 - 在线文档：[最新规范](https://c41811config.readthedocs.io/zh-cn/latest/Tutorial/project-specification.html)
 
 ### 测试要求
