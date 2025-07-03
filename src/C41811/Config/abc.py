@@ -318,7 +318,7 @@ class ABCConfigData[D](ABC):
         :raise ConfigDataReadOnlyError: 配置数据为只读
         """
 
-    def freeze(self, freeze: bool | None = None) -> Self:
+    def freeze(self, freeze: bool | None = None) -> Self:  # noqa: FBT001
         """
         冻结配置数据 (切换只读模式)
 
@@ -791,6 +791,8 @@ class ABCConfigFile[D: ABCConfigData[Any]](ABC):
             return NotImplemented
 
         return all(getattr(self, field) == getattr(other, field) for field in ["_config_format", "_config"])
+
+    __hash__ = None
 
     @override
     def __repr__(self) -> str:
