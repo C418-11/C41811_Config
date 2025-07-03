@@ -108,6 +108,8 @@ class BasicSingleConfigData[D](BasicConfigData[D], ABC):
             return NotImplemented
         return self._data == other._data
 
+    __hash__ = None  # type: ignore[assignment]
+
     @override
     def __str__(self) -> str:
         return str(self._data)

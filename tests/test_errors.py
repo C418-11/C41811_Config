@@ -147,12 +147,18 @@ def test_unknown_error_during_validate_error() -> None:
 
 
 def test_unsupported_config_format_error() -> None:
-    with raises(UnsupportedConfigFormatError, match="json"):
-        raise UnsupportedConfigFormatError("json")  # noqa: EM101
-
     cls = UnsupportedConfigFormatError
+    with raises(cls, match="json"):
+        raise cls("json")  # noqa: EM101
+
+    with raises(AttributeError, match="object has no setter"):
+        cls("json").format = "readonly"
+
+    assert cls("json").format == "json"
     assert cls("json") == cls("json")
     assert cls("json") != cls("pickle")
+    assert hash(cls("json")) == hash(cls("json"))
+    assert hash(cls("json")) != hash(cls("pickle"))
 
 
 def test_failed_process_config_file_error() -> None:

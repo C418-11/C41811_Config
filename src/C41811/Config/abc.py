@@ -792,7 +792,7 @@ class ABCConfigFile[D: ABCConfigData[Any]](ABC):
 
         return all(getattr(self, field) == getattr(other, field) for field in ["_config_format", "_config"])
 
-    __hash__ = None
+    __hash__ = None  # type: ignore[assignment]
 
     @override
     def __repr__(self) -> str:

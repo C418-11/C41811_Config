@@ -83,7 +83,7 @@ def generate[C](cls: type[C]) -> type[C]:
         @wrapt.decorator  # type: ignore[misc]
         def wrapper(wrapped: Callable[..., Any], _instance: C, args: tuple[Any, ...], kwargs: dict[str, Any]) -> Any:
             if isinstance(args[0], BasicSingleConfigData):
-                args = (args[0].data,) + args[1:]
+                args = (args[0].data, *args[1:])
             return wrapped(*args, **kwargs)
 
         setattr(cls, name, wrapper(forward_op))

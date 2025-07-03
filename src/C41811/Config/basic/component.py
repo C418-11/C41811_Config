@@ -392,6 +392,8 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
             return NotImplemented
         return all((self._meta == other._meta, self._members == other._members))
 
+    __hash__ = None  # type: ignore[assignment]
+
     @override
     def __str__(self) -> str:
         return str(self._members)
