@@ -152,7 +152,7 @@ def test_unsupported_config_format_error() -> None:
         raise cls("json")  # noqa: EM101
 
     with raises(AttributeError, match="object has no setter"):
-        cls("json").format = "readonly"
+        cls("json").format = "readonly"  # type: ignore[misc]
 
     assert cls("json").format == "json"
     assert cls("json") == cls("json")
