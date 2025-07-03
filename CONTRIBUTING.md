@@ -9,6 +9,9 @@ python -m venv .venv
 
 # 安装开发依赖
 pip install -r requirements.txt
+
+# 初始化pre-commit（推荐）
+pre-commit install
 ```
 
 ## 开发流程

@@ -889,4 +889,3 @@ ComponentMetaParser
            # 会抛出RequiredPathNotFoundError且未找到路径一定为根键
        },
    }
-
