@@ -250,17 +250,33 @@ class UnknownErrorDuringValidateError(Exception):
 class UnsupportedConfigFormatError(Exception):
     """不支持的配置文件格式错误"""
 
-    def __init__(self, format_: str):
+    def __init__(self, _format: str):
         """
-        :param format_: 不支持的配置的文件格式
-        :type format_: str
+        :param _format: 不支持的配置的文件格式
+        :type _format: str
+
+        .. versionchanged:: 0.3.0
+           重命名参数 ``format_`` 为 ``_format``
         """  # noqa: D205
-        super().__init__(f"Unsupported config format: {format_}")
-        self.format = format_
+        self._format = _format
+
+    @property
+    def format(self) -> str:
+        """不支持的配置的文件格式"""
+        return self._format
+
+    @override
+    def __str__(self) -> str:
+        return f"Unsupported config format: {self._format}"
 
     @override
     def __eq__(self, other: Any) -> bool:
-        return isinstance(other, UnsupportedConfigFormatError) and self.format == other.format
+        return isinstance(other, UnsupportedConfigFormatError) and self._format == other._format
+
+    @override
+    def __hash__(self) -> int:
+        """.. versionadded:: 0.3.0"""
+        return hash(self._format)
 
 
 class FailedProcessConfigFileError[E: BaseException](BaseExceptionGroup, Exception):
