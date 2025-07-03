@@ -3,12 +3,12 @@
 ## 环境准备
 
 ### 开发环境配置
-```bash
+```shell
 # 创建虚拟环境（推荐）
 python -m venv .venv
 
 # 安装开发依赖
-pip install -r requirements.txt tox
+pip install -r requirements.txt
 ```
 
 ## 开发流程
@@ -24,17 +24,18 @@ pip install -r requirements.txt tox
 - 在线文档：[最新规范](https://c41811config.readthedocs.io/zh-cn/latest/Tutorial/project-specification.html)
 
 ### 测试要求
-```bash
+```shell
 # 运行完整测试套件
 tox
 
-# 单独运行mypy类型检查
+# 可用的tox环境: py312,py313,ruff,mypy
+# 例: 单独运行mypy类型检查
 tox -e mypy
 ```
 ❌ 禁止合并未通过全部测试的PR
 
 ## 文档贡献
-```bash
+```shell
 # 本地构建文档
 tox -e doc
 ```

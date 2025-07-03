@@ -52,7 +52,7 @@ C41811.Config is suitable for a variety of configuration management scenarios, e
 
 ## Installation
 
-```commandline
+```shell
 pip install C41811.Config
 ```
 

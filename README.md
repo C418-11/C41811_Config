@@ -41,7 +41,7 @@ C41811.Config 适用于多种配置管理场景，特别是以下几种情况：
 
 ## 安装
 
-```commandline
+```shell
 pip install C41811.Config
 ```
 
