@@ -45,7 +45,7 @@ C41811.Config 的文档
           :target: https://github.com/C418-11/C41811_Config/
           :alt: Github
 
-       .. image:: https://img.shields.io/github/actions/workflow/status/C418-11/C41811_Config/python-publish.yml?logo=github&label=Pubilsh
+       .. image:: https://img.shields.io/github/actions/workflow/status/C418-11/C41811_Config/python-publish.yml?logo=github&label=Publish
           :target: https://github.com/C418-11/C41811_Config/actions/workflows/python-publish.yml
           :alt: 发布工作流状态
    * - 代码质量-主分支

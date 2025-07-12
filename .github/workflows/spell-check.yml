@@ -1,0 +1,28 @@
+name: Spell Check
+
+on:
+  push:
+    paths:
+      - '**'
+  pull_request:
+    paths:
+      - '**'
+
+jobs:
+  codespell:
+    name: Run Codespell
+    runs-on: ubuntu-latest
+
+    permissions: {}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Run Codespell
+        uses: codespell-project/actions-codespell@fad9339798e1ee3fe979ae0a022c931786a408b8
+        with:
+          check_filenames: true
+          check_hidden: true
