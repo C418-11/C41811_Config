@@ -100,6 +100,11 @@ version_scheme = "release-branch-semver"
 local_scheme = "node-and-date"
 fallback_version = "0.0+UNKNOWN"
 
+[tool.codespell]
+skip = './.git,./.tox,./.venv*,.mypy_cache,./docs/_static,./docs/_build'
+check-filenames = true
+check-hidden = true
+
 [tool.pytest.ini_options]
 addopts = "-v --doctest-modules --ignore-glob=docs/conf.py --color yes"
 
