@@ -14,10 +14,11 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: sync-gitee
+    permissions: {}
     steps:
       - name: Sync to Gitee
         # noinspection SpellCheckingInspection
-        uses: wearerequired/git-mirror-action@master
+        uses: wearerequired/git-mirror-action@c44c68aebe42de49a80a8dfd557416b6a0cafdad
         env:
           SSH_PRIVATE_KEY: ${{ secrets.GITEE_PRIVATE_KEY }}
         with:
