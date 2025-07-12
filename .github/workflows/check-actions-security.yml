@@ -23,3 +23,5 @@ jobs:
 
       - name: Run Actions Security Scan
         uses: zizmorcore/zizmor-action@f52a838cfabf134edcbaa7c8b3677dde20045018
+        with:
+          advanced-security: false
