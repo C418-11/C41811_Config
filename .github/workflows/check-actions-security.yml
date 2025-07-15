@@ -1,4 +1,4 @@
-name: GitHub Actions Security Scan
+name: 🛡️ GitHub Actions Security Scan
 
 on:
   push:
@@ -12,7 +12,7 @@ permissions: {}
 
 jobs:
   zizmor-scan:
-    name: Security Scan
+    name: 🛡️ Security Scan
     runs-on: ubuntu-latest
 
     steps:

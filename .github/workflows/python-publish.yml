@@ -1,4 +1,4 @@
-name: Publish Python Package
+name: 🚀 Publish Python Package
 
 on:
   workflow_dispatch:
@@ -7,14 +7,14 @@ on:
 
 jobs:
   build:
-    name: Build Python Package
+    name: 📦 Build
     uses: ./.github/workflows/python-build.yml
     permissions:
       id-token: write
       contents: write
 
   test-pypi-publish:
-    name: publish to test PyPI
+    name: 🧪 Publish to TestPyPI
     runs-on: ubuntu-latest
     needs: build
 
@@ -39,7 +39,7 @@ jobs:
           skip-existing: true
 
   pypi-publish:
-    name: publish to PyPI
+    name: 🚀 Publish to PyPI
     runs-on: ubuntu-latest
     needs: test-pypi-publish
     if: github.event_name == 'release' && github.event.action == 'published'

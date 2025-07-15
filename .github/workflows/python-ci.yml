@@ -1,4 +1,4 @@
-name: Python CI
+name: 🐍 Python CI
 
 on:
   workflow_dispatch:
@@ -17,7 +17,7 @@ on:
 
 jobs:
   ruff:
-    name: Ruff
+    name: ⚡ Ruff
     runs-on: ubuntu-latest
 
     permissions:
@@ -50,7 +50,7 @@ jobs:
         python-version: [ '3.12', '3.13' ]
         # python-version: [ '3.12', '3.13', '3.14.0-beta.1' ]  # todo uncomment when pydantic supports 3.14
       fail-fast: false
-    name: PyTest py${{ matrix.python-version }} on ${{ matrix.os }}
+    name: 🧪 PyTest py${{ matrix.python-version }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     needs: ruff
 
@@ -92,7 +92,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
   mypy:
-    name: MyPy
+    name: 🔎 MyPy
     runs-on: ubuntu-latest
     needs: ruff
 

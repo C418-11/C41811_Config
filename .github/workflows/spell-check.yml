@@ -1,4 +1,4 @@
-name: Spell Check
+name: 📝 Spell Check
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
 
 jobs:
   codespell:
-    name: Run Codespell
+    name: 📝 Run Codespell
     runs-on: ubuntu-latest
 
     permissions: {}

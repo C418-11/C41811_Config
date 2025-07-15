@@ -1,4 +1,4 @@
-name: Build Python Package
+name: 📦 Build Python Package
 
 on:
   workflow_dispatch:
@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    name: Build Python Package
+    name: 📦 Build
     runs-on: ubuntu-latest
     permissions:
       contents: read  # for setup-python
@@ -41,7 +41,7 @@ jobs:
           overwrite: true
 
   sig-python-package:
-    name: Sig Python Package
+    name: 🔏 Sign
     needs: build
     runs-on: ubuntu-latest
     permissions:
