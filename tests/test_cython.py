@@ -34,7 +34,7 @@ except ImportError:
 
 
 def src_files() -> Iterable[dict[str, str]]:
-    source_dir = os.path.dirname(c41811.Config.__file__)
+    source_dir = os.path.dirname(c41811.config.__file__)
 
     for root, _, files in os.walk(source_dir):
         for file in files:

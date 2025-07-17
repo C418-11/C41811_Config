@@ -107,6 +107,7 @@ check-hidden = true
 
 [tool.pytest.ini_options]
 addopts = "-v --doctest-modules --ignore-glob=docs/conf.py --color yes"
+testpaths = ["src", "tests"]
 
 [tool.ruff]
 line-length = 120
