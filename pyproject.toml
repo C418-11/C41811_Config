@@ -262,12 +262,7 @@ commands = [
         "--html=./docs/_static/_pytest/index.html",
         "--cov=src", "--cov-report=term-missing", "--cov-report=html:docs/_static/_coverage",
     ],
-    [
-        "python", "-c", """
-import os
-exit(os.system("ruff check --exit-zero --no-fix 2>&1 | ansi2html > ./docs/_static/_ruff.html"))
-""",
-    ],
+    ["python", "./docs/ruff2html.py"],
 ]
 
 [tool.tox.env.doc]
