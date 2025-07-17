@@ -95,7 +95,7 @@ mypy = [
 where = ["src"]
 
 [tool.setuptools_scm]
-version_file = "src/C41811/Config/_version.py"
+version_file = "src/c41811/config/_version.py"
 version_scheme = "release-branch-semver"
 local_scheme = "node-and-date"
 fallback_version = "0.0+UNKNOWN"
