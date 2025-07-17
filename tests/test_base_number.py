@@ -6,8 +6,8 @@ from typing import Any
 from pytest import fixture
 from pytest import mark
 
-from C41811.Config import BoolConfigData
-from C41811.Config import NumberConfigData
+from c41811.config import BoolConfigData
+from c41811.config import NumberConfigData
 
 
 class TestNumberConfigData:

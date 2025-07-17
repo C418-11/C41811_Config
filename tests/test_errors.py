@@ -9,21 +9,21 @@ from pytest import fixture
 from pytest import mark
 from pytest import raises
 
-from C41811.Config import AttrKey
-from C41811.Config import IndexKey
-from C41811.Config import Path
-from C41811.Config.abc import ABCPath
-from C41811.Config.errors import ConfigDataPathSyntaxException
-from C41811.Config.errors import ConfigDataReadOnlyError
-from C41811.Config.errors import ConfigDataTypeError
-from C41811.Config.errors import ConfigOperate
-from C41811.Config.errors import FailedProcessConfigFileError
-from C41811.Config.errors import KeyInfo
-from C41811.Config.errors import RequiredPathNotFoundError
-from C41811.Config.errors import TokenInfo
-from C41811.Config.errors import UnknownErrorDuringValidateError
-from C41811.Config.errors import UnknownTokenTypeError
-from C41811.Config.errors import UnsupportedConfigFormatError
+from c41811.config import AttrKey
+from c41811.config import IndexKey
+from c41811.config import Path
+from c41811.config.abc import ABCPath
+from c41811.config.errors import ConfigDataPathSyntaxException
+from c41811.config.errors import ConfigDataReadOnlyError
+from c41811.config.errors import ConfigDataTypeError
+from c41811.config.errors import ConfigOperate
+from c41811.config.errors import FailedProcessConfigFileError
+from c41811.config.errors import KeyInfo
+from c41811.config.errors import RequiredPathNotFoundError
+from c41811.config.errors import TokenInfo
+from c41811.config.errors import UnknownErrorDuringValidateError
+from c41811.config.errors import UnknownTokenTypeError
+from c41811.config.errors import UnsupportedConfigFormatError
 
 
 @mark.parametrize(

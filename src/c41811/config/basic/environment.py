@@ -113,7 +113,7 @@ class EnvironmentConfigData(MappingConfigData[MutableMapping[str, str]]):
     内部维护了与初始化参数的键差异
 
     .. note::
-       :py:class:`~Config.processor.OSEnv.OSEnvSL` 在保存时会重置差异数据
+       :py:class:`~config.processor.OSEnv.OSEnvSL` 在保存时会重置差异数据
 
     .. warning::
        当前实现 `不会验证值的类型` ，当值不是字符串类型时，在实际写入 :py:data:`os.environ` 时会抛出错误，

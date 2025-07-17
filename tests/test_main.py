@@ -21,25 +21,25 @@ from utils import EW
 from utils import safe_raises
 from utils import safe_warns
 
-from C41811.Config import ComponentConfigData
-from C41811.Config import ComponentMember
-from C41811.Config import ComponentMeta
-from C41811.Config import ComponentOrders
-from C41811.Config import ConfigData
-from C41811.Config import ConfigFile
-from C41811.Config import ConfigPool
-from C41811.Config import FieldDefinition
-from C41811.Config import JsonSL  # type: ignore[attr-defined]
-from C41811.Config import MappingConfigData
-from C41811.Config import NoneConfigData
-from C41811.Config import Path as DPath
-from C41811.Config import RequiredPath
-from C41811.Config import ValidatorFactoryConfig
-from C41811.Config.abc import ABCConfigFile
-from C41811.Config.errors import ConfigDataTypeError
-from C41811.Config.errors import RequiredPathNotFoundError
-from C41811.Config.errors import UnsupportedConfigFormatError
-from C41811.Config.processor.Component import ComponentMetaParser
+from c41811.config import ComponentConfigData
+from c41811.config import ComponentMember
+from c41811.config import ComponentMeta
+from c41811.config import ComponentOrders
+from c41811.config import ConfigData
+from c41811.config import ConfigFile
+from c41811.config import ConfigPool
+from c41811.config import FieldDefinition
+from c41811.config import JsonSL  # type: ignore[attr-defined]
+from c41811.config import MappingConfigData
+from c41811.config import NoneConfigData
+from c41811.config import Path as DPath
+from c41811.config import RequiredPath
+from c41811.config import ValidatorFactoryConfig
+from c41811.config.abc import ABCConfigFile
+from c41811.config.errors import ConfigDataTypeError
+from c41811.config.errors import RequiredPathNotFoundError
+from c41811.config.errors import UnsupportedConfigFormatError
+from c41811.config.processor.Component import ComponentMetaParser
 
 type MCD = MappingConfigData[Mapping[Any, Any]]
 

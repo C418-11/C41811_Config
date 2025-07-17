@@ -1,8 +1,8 @@
 from pytest import raises
 
-from C41811.Config import ConfigData
-from C41811.Config import NoneConfigData
-from C41811.Config import ObjectConfigData
+from c41811.config import ConfigData
+from c41811.config import NoneConfigData
+from c41811.config import ObjectConfigData
 
 
 def test_none_config_data() -> None:

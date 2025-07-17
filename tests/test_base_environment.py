@@ -5,9 +5,9 @@ from pytest import mark
 from utils import EE
 from utils import safe_raises
 
-from C41811.Config import EnvironmentConfigData
-from C41811.Config import MappingConfigData
-from C41811.Config.basic.environment import Difference
+from c41811.config import EnvironmentConfigData
+from c41811.config import MappingConfigData
+from c41811.config.basic.environment import Difference
 
 type ECD = EnvironmentConfigData
 type DIFF = tuple[set[str], set[str]]

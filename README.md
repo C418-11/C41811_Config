@@ -48,10 +48,10 @@ pip install C41811.Config
 ## 一个简单的示例
 
 ```python
-from C41811.Config import MappingConfigData
-from C41811.Config import JsonSL
-from C41811.Config import requireConfig
-from C41811.Config import saveAll
+from c41811.config import MappingConfigData
+from c41811.config import JsonSL
+from c41811.config import requireConfig
+from c41811.config import saveAll
 
 JsonSL().register_to()
 

@@ -12,15 +12,15 @@ from pytest import raises
 from utils import EE
 from utils import safe_raises
 
-from C41811.Config import ConfigData
-from C41811.Config import IndexKey
-from C41811.Config import MappingConfigData
-from C41811.Config import Path as DPath
-from C41811.Config import SequenceConfigData
-from C41811.Config import StringConfigData
-from C41811.Config.errors import ConfigDataReadOnlyError
-from C41811.Config.errors import ConfigDataTypeError
-from C41811.Config.errors import RequiredPathNotFoundError
+from c41811.config import ConfigData
+from c41811.config import IndexKey
+from c41811.config import MappingConfigData
+from c41811.config import Path as DPath
+from c41811.config import SequenceConfigData
+from c41811.config import StringConfigData
+from c41811.config.errors import ConfigDataReadOnlyError
+from c41811.config.errors import ConfigDataTypeError
+from c41811.config.errors import RequiredPathNotFoundError
 
 type SCD = SequenceConfigData[Sequence[Any]]
 # noinspection SpellCheckingInspection

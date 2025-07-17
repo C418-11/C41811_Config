@@ -2,10 +2,10 @@ from typing import cast
 
 from pytest import mark
 
-from C41811.Config.utils import Ref
-from C41811.Config.utils import Unset
-from C41811.Config.utils import UnsetType
-from C41811.Config.utils import singleton
+from c41811.config.utils import Ref
+from c41811.config.utils import Unset
+from c41811.config.utils import UnsetType
+from c41811.config.utils import singleton
 
 
 @mark.parametrize("cls", [singleton(cast(type[object], type("A", (), {}))), UnsetType])

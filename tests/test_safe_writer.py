@@ -10,10 +10,10 @@ from typing import Any
 from pytest import mark
 from pytest import raises
 
-from C41811.Config.safe_writer import LockFlags
-from C41811.Config.safe_writer import acquire_lock
-from C41811.Config.safe_writer import release_lock
-from C41811.Config.safe_writer import safe_open
+from c41811.config.safe_writer import LockFlags
+from c41811.config.safe_writer import acquire_lock
+from c41811.config.safe_writer import release_lock
+from c41811.config.safe_writer import safe_open
 
 
 @contextmanager

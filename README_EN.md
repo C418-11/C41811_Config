@@ -59,22 +59,22 @@ pip install C41811.Config
 ## A simple example
 
 ```python
-from C41811.Config import MappingConfigData
-from C41811.Config import JsonSL
-from C41811.Config import requireConfig
-from C41811.Config import saveAll
+from c41811.config import MappingConfigData
+from c41811.config import JsonSL
+from c41811.config import requireConfig
+from c41811.config import saveAll
 
 JsonSL().register_to()
 
 cfg: MappingConfigData = requireConfig(
-    '', "Hello World.json",
-    {  # Simple and powerful configuration data validator
-        "Hello": "World",
-        "foo": dict,  # Contains all keys under foo
-        "foo\\.bar": {  # foo.bar contains only the baz key
-            "baz": "qux"
-        }
+  '', "Hello World.json",
+  {  # Simple and powerful configuration data validator
+    "Hello": "World",
+    "foo": dict,  # Contains all keys under foo
+    "foo\\.bar": {  # foo.bar contains only the baz key
+      "baz": "qux"
     }
+  }
 ).check()
 saveAll()
 

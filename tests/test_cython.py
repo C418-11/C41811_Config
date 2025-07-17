@@ -11,7 +11,7 @@ from pytest import importorskip
 from pytest import mark
 from pytest import skip
 
-import C41811.Config
+import c41811.config
 
 try:
     from setuptools import Extension
@@ -34,7 +34,7 @@ except ImportError:
 
 
 def src_files() -> Iterable[dict[str, str]]:
-    source_dir = os.path.dirname(C41811.Config.__file__)
+    source_dir = os.path.dirname(c41811.Config.__file__)
 
     for root, _, files in os.walk(source_dir):
         for file in files:

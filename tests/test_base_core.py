@@ -12,11 +12,11 @@ from pytest import fixture
 from pytest import mark
 from pytest import raises
 
-from C41811.Config import ConfigData
-from C41811.Config import ConfigFile
-from C41811.Config import ConfigPool
-from C41811.Config import MappingConfigData
-from C41811.Config.errors import UnsupportedConfigFormatError
+from c41811.config import ConfigData
+from c41811.config import ConfigFile
+from c41811.config import ConfigPool
+from c41811.config import MappingConfigData
+from c41811.config.errors import UnsupportedConfigFormatError
 
 type D_MCD = MappingConfigData[dict[Any, Any]]
 

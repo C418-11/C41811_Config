@@ -6,7 +6,7 @@ from typing import Any
 
 from pytest import mark
 
-from C41811.Config import ConfigData
+from c41811.config import ConfigData
 
 
 class TestMappingConfigData:

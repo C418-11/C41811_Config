@@ -475,7 +475,7 @@ class ABCIndexedConfigData[D: Indexed[Any, Any]](ABCConfigData[D], MutableIndexe
         例子
         ----
 
-           >>> from C41811.Config import ConfigData
+           >>> from c41811.config import ConfigData
            >>> data = ConfigData({"key": "value"})
 
            路径存在时返回值
@@ -518,7 +518,7 @@ class ABCIndexedConfigData[D: Indexed[Any, Any]](ABCConfigData[D], MutableIndexe
         例子
         ----
 
-           >>> from C41811.Config import ConfigData
+           >>> from c41811.config import ConfigData
            >>> data = ConfigData({"key": "value"})
 
            路径存在时返回值

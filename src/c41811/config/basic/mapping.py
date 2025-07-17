@@ -146,7 +146,7 @@ class MappingConfigData[D: Mapping[Any, Any]](BasicIndexedConfigData[D], Mutable
         例子
         ----
 
-           >>> from C41811.Config import ConfigData
+           >>> from c41811.config import ConfigData
            >>> data = ConfigData({"foo": {"bar": {"baz": "value"}, "bar1": "value1"}, "foo1": "value2"})
 
            不带参数行为与普通字典一样
@@ -178,7 +178,7 @@ class MappingConfigData[D: Mapping[Any, Any]](BasicIndexedConfigData[D], Mutable
            >>> cyclic.keys(recursive=True)  # 默认为严格模式
            Traceback (most recent call last):
                ...
-           C41811.Config.errors.CyclicReferenceError: Cyclic reference detected at \.cyclic -> \.cyclic (1/1)
+           c41811.config.errors.CyclicReferenceError: Cyclic reference detected at \.cyclic -> \.cyclic (1/1)
 
            否则静默跳过循环引用
 

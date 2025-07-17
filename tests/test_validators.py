@@ -6,13 +6,13 @@
 
 from pytest import raises
 
-from C41811.Config import FieldDefinition
+from c41811.config import FieldDefinition
 
 # noinspection PyProtectedMember
-from C41811.Config.validators import SkipMissing
+from c41811.config.validators import SkipMissing
 
 # noinspection PyProtectedMember
-from C41811.Config.validators import SkipMissingType
+from c41811.config.validators import SkipMissingType
 
 
 def test_field_definition() -> None:

@@ -9,13 +9,13 @@ from utils import EW
 from utils import safe_raises
 from utils import safe_warns
 
-from C41811.Config import AttrKey
-from C41811.Config import IndexKey
-from C41811.Config import Path
-from C41811.Config import PathSyntaxParser
-from C41811.Config.abc import AnyKey
-from C41811.Config.errors import ConfigDataPathSyntaxException
-from C41811.Config.errors import UnknownTokenTypeError
+from c41811.config import AttrKey
+from c41811.config import IndexKey
+from c41811.config import Path
+from c41811.config import PathSyntaxParser
+from c41811.config.abc import AnyKey
+from c41811.config.errors import ConfigDataPathSyntaxException
+from c41811.config.errors import UnknownTokenTypeError
 
 
 class TestKey:
