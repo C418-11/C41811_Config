@@ -781,10 +781,10 @@ SL处理器
      - 基于内置 :py:mod:`json` 模块
 
    * - HJSON
-      - :py:class:`~config.processor.hjson.HjsonSL`
-      - hjson
-      - .hjson
-      - 基于第三方库 ``hjson``
+     - :py:class:`~config.processor.hjson.HJsonSL`
+     - hjson
+     - .hjson
+     - 基于第三方库 ``hjson``
 
    * - Pickle
      - :py:class:`~config.processor.pickle.PickleSL`
