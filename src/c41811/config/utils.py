@@ -6,7 +6,10 @@
 .. versionadded:: 0.2.0
 """
 
+import inspect
+from collections.abc import Callable
 from contextlib import suppress
+from importlib import import_module
 from typing import Any
 from typing import cast
 from typing import override
@@ -75,9 +78,35 @@ class Ref[T]:
         return f"<{type(self).__name__} ({self.value!r})>"
 
 
+def lazy_import(properties: dict[str, str], /) -> tuple[tuple[str, ...], Callable[[str], Any]]:
+    """
+    为 `__init__` 文件生成 `__all__` 和 `__getattr__`
+
+    :param properties: 属性字典 ``dict[属性, 模块]``
+    :type properties: dict[str, str]
+
+    :return: 返回 ``tuple[__all__, __getattr__]``
+    :rtype: tuple[tuple[str, ...], Callable[[str], Any]]
+
+    .. versionadded:: 0.3.0
+    """
+    caller_package = inspect.getmodule(inspect.stack()[1][0]).__name__  # type: ignore[union-attr]
+
+    def __getattr__(name: str) -> Any:  # noqa: N807
+        try:
+            sub_pkg = properties[name]
+        except KeyError:
+            msg = f"module '{__name__}' has no attribute '{name}'"
+            raise AttributeError(msg) from None
+        return getattr(import_module(sub_pkg, package=caller_package), name)
+
+    return tuple(properties.keys()), __getattr__
+
+
 __all__ = (
     "Ref",
     "Unset",
     "UnsetType",
+    "lazy_import",
     "singleton",
 )
