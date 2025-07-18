@@ -7,7 +7,7 @@
 -----------------
 
 一种简便的配置数据访问路径表示方法，
-在一些高级方法如 :py:func:`~Config.abc.ABCIndexedConfigData.retrieve` 中使用
+在一些高级方法如 :py:func:`~config.abc.ABCIndexedConfigData.retrieve` 中使用
 
 由三种语法组成
 
@@ -91,7 +91,7 @@ requireConfig
    提供参数 ``static_config`` 以获得更高性能
 
    .. seealso::
-      :py:class:`~Config.main.RequiredPath`
+      :py:class:`~config.main.RequiredPath`
 
 有手动调用和装饰器两种获取验证数据的方式
 
@@ -99,9 +99,9 @@ requireConfig
     :caption: 手动调用和装饰器
     :linenos:
 
-    from C41811.Config import ConfigData
-    from C41811.Config import JsonSL
-    from C41811.Config import requireConfig
+    from c41811.config import ConfigData
+    from c41811.config import JsonSL
+    from c41811.config import requireConfig
 
     JsonSL().register_to()
 
@@ -152,7 +152,7 @@ Pydantic验证器工厂
    这是因为pydantic自带该功能
    如果提供了该参数会产生一个警告 不会起到任何实际作用
 
-``validator_factory`` 参数设为 :py:attr:`~Config.validators.ValidatorTypes.PYDANTIC` 或 ``"pydantic"`` 时使用该验证工厂
+``validator_factory`` 参数设为 :py:attr:`~config.validators.ValidatorTypes.PYDANTIC` 或 ``"pydantic"`` 时使用该验证工厂
 
 ``validator`` 参数为任意合法的 :py:class:`~pydantic.main.BaseModel`
 
@@ -163,11 +163,11 @@ Pydantic验证器工厂
     from pydantic import BaseModel
     from pydantic import Field
 
-    from C41811.Config import ConfigData
-    from C41811.Config import ConfigFile
-    from C41811.Config import JsonSL
-    from C41811.Config import requireConfig
-    from C41811.Config import save
+    from c41811.config import ConfigData
+    from c41811.config import ConfigFile
+    from c41811.config import JsonSL
+    from c41811.config import requireConfig
+    from c41811.config import save
 
     JsonSL().register_to()
 
@@ -188,7 +188,7 @@ Pydantic验证器工厂
 默认验证器工厂
 ^^^^^^^^^^^^^^
 
-``validator_factory`` 参数设为 :py:attr:`~Config.validators.ValidatorTypes.DEFAULT` 或 :py:const:`None` 时使用该验证工厂
+``validator_factory`` 参数设为 :py:attr:`~config.validators.ValidatorTypes.DEFAULT` 或 :py:const:`None` 时使用该验证工厂
 
 ``validator`` 参数可以为 ``Iterable[str]`` 或 ``Mapping[str | ABCPath, Any]``
 
@@ -212,11 +212,11 @@ Pydantic验证器工厂
         :caption: 例
         :linenos:
 
-        from C41811.Config import ConfigData
-        from C41811.Config import ConfigFile
-        from C41811.Config import JsonSL
-        from C41811.Config import requireConfig
-        from C41811.Config import save
+        from c41811.config import ConfigData
+        from c41811.config import ConfigFile
+        from c41811.config import JsonSL
+        from c41811.config import requireConfig
+        from c41811.config import save
 
         JsonSL().register_to()
 
@@ -243,11 +243,11 @@ Iterable[str]
     :caption: 例
     :linenos:
 
-    from C41811.Config import ConfigData
-    from C41811.Config import ConfigFile
-    from C41811.Config import JsonSL
-    from C41811.Config import requireConfig
-    from C41811.Config import save
+    from c41811.config import ConfigData
+    from c41811.config import ConfigFile
+    from c41811.config import JsonSL
+    from c41811.config import requireConfig
+    from c41811.config import save
 
     JsonSL().register_to()
 
@@ -280,11 +280,11 @@ Mapping[str | ABCPath, Any]
         :caption: 路径与嵌套字典的等价操作
         :linenos:
 
-        from C41811.Config import ConfigData
-        from C41811.Config import ConfigFile
-        from C41811.Config import JsonSL
-        from C41811.Config import requireConfig
-        from C41811.Config import save
+        from c41811.config import ConfigData
+        from c41811.config import ConfigFile
+        from c41811.config import JsonSL
+        from c41811.config import requireConfig
+        from c41811.config import save
 
         JsonSL().register_to()
 
@@ -322,11 +322,11 @@ Mapping[str | ABCPath, Any]
     :caption: 两种验证器语法
     :linenos:
 
-    from C41811.Config import ConfigData
-    from C41811.Config import ConfigFile
-    from C41811.Config import JsonSL
-    from C41811.Config import requireConfig
-    from C41811.Config import save
+    from c41811.config import ConfigData
+    from c41811.config import ConfigFile
+    from c41811.config import JsonSL
+    from c41811.config import requireConfig
+    from c41811.config import save
 
     JsonSL().register_to()
 
@@ -375,13 +375,13 @@ Mapping[str | ABCPath, Any]
 
     from typing import Sequence
 
-    from C41811.Config import ConfigData
-    from C41811.Config import ConfigFile
-    from C41811.Config import FieldDefinition
-    from C41811.Config import JsonSL
-    from C41811.Config import requireConfig
-    from C41811.Config import save
-    from C41811.Config.errors import ConfigDataTypeError
+    from c41811.config import ConfigData
+    from c41811.config import ConfigFile
+    from c41811.config import FieldDefinition
+    from c41811.config import JsonSL
+    from c41811.config import requireConfig
+    from c41811.config import save
+    from c41811.config.errors import ConfigDataTypeError
 
     JsonSL().register_to()
 
@@ -451,12 +451,12 @@ Mapping[str | ABCPath, Any]
     :caption: 关键字参数
     :linenos:
 
-    from C41811.Config import ConfigData
-    from C41811.Config import ConfigFile
-    from C41811.Config import JsonSL
-    from C41811.Config import requireConfig
-    from C41811.Config import save
-    from C41811.Config.errors import RequiredPathNotFoundError
+    from c41811.config import ConfigData
+    from c41811.config import ConfigFile
+    from c41811.config import JsonSL
+    from c41811.config import requireConfig
+    from c41811.config import save
+    from c41811.config.errors import RequiredPathNotFoundError
 
     JsonSL().register_to()
 
@@ -504,12 +504,12 @@ Mapping[str | ABCPath, Any]
     print(data.exists("not\\.exists"))  # 打印：False
 
 .. seealso::
-   :py:class:`~Config.validators.DefaultValidatorFactory`
+   :py:class:`~config.validators.DefaultValidatorFactory`
 
 不使用验证器工厂
 ^^^^^^^^^^^^^^^^
 
-``validator_factory`` 参数设为 :py:attr:`~Config.validators.ValidatorTypes.NO_VALIDATION` 或 ``"no-validation"`` 时采用该策略
+``validator_factory`` 参数设为 :py:attr:`~config.validators.ValidatorTypes.NO_VALIDATION` 或 ``"no-validation"`` 时采用该策略
 
 这将直接把 ``validator`` 参数当作 ``Callable[[ABCConfigData], ABCConfigData]`` 来使用
 
@@ -517,12 +517,12 @@ Mapping[str | ABCPath, Any]
     :caption: 一个修改所有值为"modified!"的验证器
     :linenos:
 
-    from C41811.Config import ConfigData
-    from C41811.Config import ConfigFile
-    from C41811.Config import JsonSL
-    from C41811.Config import requireConfig
-    from C41811.Config import save
-    from C41811.Config.abc import ABCConfigData
+    from c41811.config import ConfigData
+    from c41811.config import ConfigFile
+    from c41811.config import JsonSL
+    from c41811.config import requireConfig
+    from c41811.config import save
+    from c41811.config.abc import ABCConfigData
 
 
     def modify_value_validator[D: ABCConfigData](data: D) -> D:
@@ -544,28 +544,28 @@ Mapping[str | ABCPath, Any]
 组件验证工厂
 ^^^^^^^^^^^^^^^
 
-``validator_factory`` 参数设为 :py:attr:`~Config.validators.ValidatorTypes.COMPONENT` 或 ``"component"`` 时使用该验证工厂
+``validator_factory`` 参数设为 :py:attr:`~config.validators.ValidatorTypes.COMPONENT` 或 ``"component"`` 时使用该验证工厂
 
 ``validator`` 参数为 ``Mapping[str | None, Any]``
 
 键为组件成员文件名，值为成员对应的验证器，组件成员文件名为None则为元配置信息验证器
 
 .. danger::
-   永远不应该尝试验证 :py:class:`~Config.basic.object.NoneConfigData` ，这将创建一个
-   :py:attr:`~Config.basic.component.ComponentMeta.parser` 为
-   :py:const:`None` 的 :py:class:`~Config.basic.component.ComponentMeta`，如果你没有在
+   永远不应该尝试验证 :py:class:`~config.basic.object.NoneConfigData` ，这将创建一个
+   :py:attr:`~config.basic.component.ComponentMeta.parser` 为
+   :py:const:`None` 的 :py:class:`~config.basic.component.ComponentMeta`，如果你没有在
    :py:class:`额外验证器工厂配置参数 <Config.validators.ComponentValidatorFactory>` 传入新的
    `组件元数据验证器` 这将可能导致(至少目前默认情况下会)无法将组件元配置同步到组件元信息，最终导致元信息和组件成员不匹配抛出错误
 
 .. seealso::
-   :py:class:`~Config.validators.ComponentValidatorFactory`
+   :py:class:`~config.validators.ComponentValidatorFactory`
 
 ConfigData
 ------------------
 
 此类本身不提供任何实际配置数据操作，仅根据传入的参数类型从注册表中选择对应的子类实例化并返回
 
-注册表存储在 :py:attr:`~Config.basic.ConfigData.TYPES`
+注册表存储在 :py:attr:`~config.basic.ConfigData.TYPES`
 
 .. rubric:: 传入的数据类型及其对应子类
 
@@ -578,34 +578,34 @@ ConfigData
    * - 数据类型
      - 子类
 
-   * - :py:class:`~Config.abc.ABCConfigData`
+   * - :py:class:`~config.abc.ABCConfigData`
      - 原样返回
 
    * - :py:class:`types.NoneType`
-     - :py:class:`~Config.basic.object.NoneConfigData`
+     - :py:class:`~config.basic.object.NoneConfigData`
 
    * - :py:class:`~collections.abc.Mapping`
-     - :py:class:`~Config.basic.mapping.MappingConfigData`
+     - :py:class:`~config.basic.mapping.MappingConfigData`
 
    * - :py:class:`str` , :py:class:`bytes`
-     - :py:class:`~Config.basic.sequence.StringConfigData`
+     - :py:class:`~config.basic.sequence.StringConfigData`
 
    * - :py:class:`~collections.abc.Sequence`
-     - :py:class:`~Config.basic.sequence.SequenceConfigData`
+     - :py:class:`~config.basic.sequence.SequenceConfigData`
 
    * - :py:class:`bool`
-     - :py:class:`~Config.basic.number.BoolConfigData`
+     - :py:class:`~config.basic.number.BoolConfigData`
 
    * - :py:class:`numbers.Number`
-     - :py:class:`~Config.basic.number.NumberConfigData`
+     - :py:class:`~config.basic.number.NumberConfigData`
 
    * - :py:class:`object`
-     - :py:class:`~Config.basic.object.ObjectConfigData`
+     - :py:class:`~config.basic.object.ObjectConfigData`
 
 .. note::
-   是的， :py:class:`~Config.basic.component.ComponentConfigData` 不在这里面，仅由
-   :py:class:`~Config.processor.ComponentSL` 或
-   :py:class:`~Config.validators.ComponentValidatorFactory` 创建
+   是的， :py:class:`~config.basic.component.ComponentConfigData` 不在这里面，仅由
+   :py:class:`~config.processor.ComponentSL` 或
+   :py:class:`~config.validators.ComponentValidatorFactory` 创建
 
    .. seealso::
       具体原因与 :ref:`component-validator-factory` 所述大同小异
@@ -619,21 +619,21 @@ ConfigData
    * - 配置数据类型
      - 描述
 
-   * - :py:class:`~Config.abc.ABCConfigData`
-     - 所有配置数据的抽象基类，仅提供了最基础的 :py:meth:`~Config.abc.ABCConfigData.freeze`
-       :py:meth:`~Config.abc.ABCConfigData.from_data` 等方法
+   * - :py:class:`~config.abc.ABCConfigData`
+     - 所有配置数据的抽象基类，仅提供了最基础的 :py:meth:`~config.abc.ABCConfigData.freeze`
+       :py:meth:`~config.abc.ABCConfigData.from_data` 等方法
 
-   * - :py:class:`~Config.abc.ABCIndexedConfigData`
-     - 支持复杂嵌套数据的抽象基类，提供了 :py:meth:`~Config.abc.ABCIndexedConfigData.retrieve`
-       :py:meth:`~Config.abc.ABCIndexedConfigData.modify` 等高级嵌套数据访问方法
+   * - :py:class:`~config.abc.ABCIndexedConfigData`
+     - 支持复杂嵌套数据的抽象基类，提供了 :py:meth:`~config.abc.ABCIndexedConfigData.retrieve`
+       :py:meth:`~config.abc.ABCIndexedConfigData.modify` 等高级嵌套数据访问方法
 
-   * - :py:class:`~Config.basic.core.BasicSingleConfigData`
-     - 单文件配置数据的基类，提供的单文件配置数据的基本实现，如 :py:attr:`~Config.basic.core.BasicSingleConfigData.data`
+   * - :py:class:`~config.basic.core.BasicSingleConfigData`
+     - 单文件配置数据的基类，提供的单文件配置数据的基本实现，如 :py:attr:`~config.basic.core.BasicSingleConfigData.data`
 
 NoneConfigData
 ^^^^^^^^^^^^^^^^^^
 
-无参数调用 :py:class:`~Config.basic.ConfigData` 的默认值，也是 :py:meth:`~Config.main.BasicConfigSL.initialize` 的默认返回值
+无参数调用 :py:class:`~config.basic.ConfigData` 的默认值，也是 :py:meth:`~config.main.BasicConfigSL.initialize` 的默认返回值
 
 初始化参数永远必须为 :py:const:`None` 或压根不传，允许传参更大是为了兼容父类接口
 
@@ -642,18 +642,18 @@ MappingConfigData
 
 最常见的配置数据类型，提供了 :py:class:`~collections.abc.MutableMapping` 的完整实现。
 
-:py:meth:`~Config.abc.ABCIndexedConfigData.retrieve` 等高级方法当返回值为 :py:class:`~collections.abc.Mapping` 或
-:py:class:`~collections.abc.Sequence` 时， :py:meth:`~Config.abc.ABCIndexedConfigData.retrieve` 会返回
-:py:class:`~Config.basic.mapping.MappingConfigData` 或 :py:class:`~Config.basic.sequence.SequenceConfigData`
+:py:meth:`~config.abc.ABCIndexedConfigData.retrieve` 等高级方法当返回值为 :py:class:`~collections.abc.Mapping` 或
+:py:class:`~collections.abc.Sequence` 时， :py:meth:`~config.abc.ABCIndexedConfigData.retrieve` 会返回
+:py:class:`~config.basic.mapping.MappingConfigData` 或 :py:class:`~config.basic.sequence.SequenceConfigData`
 
 SequenceConfigData
 ^^^^^^^^^^^^^^^^^^^
 
 提供了 :py:class:`~collections.abc.MutableSequence` 的完整实现
 
-:py:meth:`~Config.abc.ABCIndexedConfigData.retrieve` 等高级方法当返回值为 :py:class:`~collections.abc.Mapping` 或
-:py:class:`~collections.abc.Sequence` 时， :py:meth:`~Config.abc.ABCIndexedConfigData.retrieve` 会返回
-:py:class:`~Config.basic.mapping.MappingConfigData` 或 :py:class:`~Config.basic.sequence.SequenceConfigData`
+:py:meth:`~config.abc.ABCIndexedConfigData.retrieve` 等高级方法当返回值为 :py:class:`~collections.abc.Mapping` 或
+:py:class:`~collections.abc.Sequence` 时， :py:meth:`~config.abc.ABCIndexedConfigData.retrieve` 会返回
+:py:class:`~config.basic.mapping.MappingConfigData` 或 :py:class:`~config.basic.sequence.SequenceConfigData`
 
 StringConfigData
 ^^^^^^^^^^^^^^^^^^^
@@ -670,7 +670,7 @@ NumberConfigData
 BoolConfigData
 ^^^^^^^^^^^^^^^^^^^
 
-继承自 :py:class:`~Config.basic.number.NumberConfigData` ，提供了 :py:class:`bool` 的实现
+继承自 :py:class:`~config.basic.number.NumberConfigData` ，提供了 :py:class:`bool` 的实现
 
 ComponentConfigData
 ^^^^^^^^^^^^^^^^^^^^
@@ -686,7 +686,7 @@ ComponentConfigData
 :ref:`component-meta-parser` 几部分必须的值。
 
 .. seealso::
-   :py:class:`~Config.basic.component.ComponentMeta`
+   :py:class:`~config.basic.component.ComponentMeta`
 
 .. rubric:: 元配置
    :name: term-component-meta-config
@@ -696,7 +696,7 @@ ComponentConfigData
 .. attention::
    原始配置数据结构完全由 :ref:`component-meta-parser` 定义，除非是处理额外附加数据，否则不应该直接对其进行操作
 
-以 :py:class:`~Config.basic.mapping.MappingConfigData` 存储
+以 :py:class:`~config.basic.mapping.MappingConfigData` 存储
 
 .. rubric:: 成员定义
    :name: component-meta-member
@@ -710,15 +710,15 @@ ComponentConfigData
 `配置格式` 会在保存加载期间优先使用
 
 .. seealso::
-   :py:class:`~Config.basic.component.ComponentMember`
+   :py:class:`~config.basic.component.ComponentMember`
 
 .. rubric:: 处理顺序
    :name: component-meta-order
 
-:py:meth:`~Config.basic.ComponentConfigData.retrieve` 等方法从成员的搜索顺序
+:py:meth:`~config.basic.ComponentConfigData.retrieve` 等方法从成员的搜索顺序
 
 .. seealso::
-   :py:class:`~Config.basic.component.ComponentOrder`
+   :py:class:`~config.basic.component.ComponentOrder`
 
 .. rubric:: 解析器
    :name: component-meta-parser
@@ -726,19 +726,19 @@ ComponentConfigData
 负责将 :ref:`term-component-meta-config` 与 :ref:`component-meta` 以一定格式互相转换
 
 .. seealso::
-   :py:class:`~Config.processor.Component.ComponentMetaParser`
+   :py:class:`~config.processor.Component.ComponentMetaParser`
 
 .. _component-member:
 
 成员
 ...........
 
-成员配置文件的配置数据，支持所有 :py:class:`~Config.abc.ABCIndexedConfigData` 的子类
+成员配置文件的配置数据，支持所有 :py:class:`~config.abc.ABCIndexedConfigData` 的子类
 
 .. _component-member-path-meta-syntax:
 .. rubric:: 键元信息语法指定成员进行操作
 
-:py:meth:`~Config.basic.ComponentConfigData.retrieve` 等方法支持使用 :ref:`键元信息 <term-key-meta>` 指定成员进行操作
+:py:meth:`~config.basic.ComponentConfigData.retrieve` 等方法支持使用 :ref:`键元信息 <term-key-meta>` 指定成员进行操作
 
 .. code-block:: python
    :caption: 指定从成员member.json读取数据
@@ -754,10 +754,10 @@ ComponentConfigData
 EnvironmentConfigData
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-继承自 :py:class:`~Config.basic.mapping.MappingConfigData` ，内部维护了与初始化参数的键差异
+继承自 :py:class:`~config.basic.mapping.MappingConfigData` ，内部维护了与初始化参数的键差异
 
 .. seealso::
-   :py:class:`~Config.basic.environment.Difference`
+   :py:class:`~config.basic.environment.Difference`
 
 SL处理器
 -------------
@@ -775,50 +775,50 @@ SL处理器
      - 简介
 
    * - JSON
-     - :py:class:`~Config.processor.Json.JsonSL`
+     - :py:class:`~config.processor.Json.JsonSL`
      - json
      - .json
      - 基于内置 :py:mod:`json` 模块
 
    * - Pickle
-     - :py:class:`~Config.processor.Pickle.PickleSL`
+     - :py:class:`~config.processor.Pickle.PickleSL`
      - pickle
      - .pickle .pkl
      - 基于内置 :py:mod:`pickle` 模块
 
    * - YAML
-     - :py:class:`~Config.processor.PyYaml.PyYamlSL`
+     - :py:class:`~config.processor.PyYaml.PyYamlSL`
      - yaml
      - .yaml .yml
      - 基于第三方库PyYaml
 
    * - YAML
-     - :py:class:`~Config.processor.RuamelYaml.RuamelYamlSL`
+     - :py:class:`~config.processor.RuamelYaml.RuamelYamlSL`
      - ruamel_yaml
      - .yaml .yml
      - 基于第三方库RuamelYaml
 
    * - TOML
-     - :py:class:`~Config.processor.Toml.TomlSL`
+     - :py:class:`~config.processor.Toml.TomlSL`
      - toml
      - .toml
      - 基于第三方库toml
 
    * - Python
-     - :py:class:`~Config.processor.Python.PythonSL`
+     - :py:class:`~config.processor.Python.PythonSL`
      - python
      - .py
      - 基于 :py:func:`exec`，尝试保存会抛出 :py:exc:`NotImplementedError` ，建议与
-       :py:class:`~Config.processor.PlainText` 搭配使用
+       :py:class:`~config.processor.PlainText` 搭配使用
 
    * - PythonLiteral
-     - :py:class:`~Config.processor.PythonLiteral.PythonLiteralSL`
+     - :py:class:`~config.processor.PythonLiteral.PythonLiteralSL`
      - python_literal
      - .python_literal .pyl .py
      - 基于 :py:func:`~ast.literal_eval` 与 :py:func:`~pprint.pformat`
 
    * - PlainText
-     - :py:class:`~Config.processor.PlainText.PlainTextSL`
+     - :py:class:`~config.processor.PlainText.PlainTextSL`
      - plaintext
      - .txt
      - 纯文本格式，支持额外参数
@@ -827,13 +827,13 @@ SL处理器
        ``remove_linesep: str`` 在加载时使用 :py:meth:`str.removesuffix` 移除换行符
 
    * - TarFile
-     - :py:class:`~Config.processor.TarFile.TarFileSL`
+     - :py:class:`~config.processor.TarFile.TarFileSL`
      - tarfile:$compression_shortname$
      - .tar .tar.$compression_shortname$ .tar.$compression_fullname$
      - 基于内置 :py:mod:`tarfile` 模块
 
    * - ZipFile
-     - :py:class:`~Config.processor.ZipFile.ZipFileSL`
+     - :py:class:`~config.processor.ZipFile.ZipFileSL`
      - zipfile:$compression_shortname$-$compress_level$
      - .$compress_level$.zip .zip
        .$compress_level$.$compression_fullname$ .$compress_level$.$compression_shortname$
@@ -841,13 +841,13 @@ SL处理器
      - 基于内置 :py:mod:`zipfile` 模块
 
    * - Component
-     - :py:class:`~Config.processor.Component.ComponentSL`
+     - :py:class:`~config.processor.Component.ComponentSL`
      - component
      - .component .comp
-     - 组合多个 :py:class:`~Config.abc.ABCIndexedConfigData` 为一个 :py:class:`~Config.basic.component.ComponentConfigData`
+     - 组合多个 :py:class:`~config.abc.ABCIndexedConfigData` 为一个 :py:class:`~config.basic.component.ComponentConfigData`
 
    * - OSEnv
-     - :py:class:`~Config.processor.OSEnv.OSEnvSL`
+     - :py:class:`~config.processor.OSEnv.OSEnvSL`
      - os.environ
      - .os.env .os.environ
      - 基于内置 :py:data:`os.environ`
@@ -855,7 +855,7 @@ SL处理器
 ComponentMetaParser
 --------------------
 
-:py:class:`~Config.processor.Component.ComponentSL` 的默认 :ref:`term-component-meta-config` 解析器。
+:py:class:`~config.processor.Component.ComponentSL` 的默认 :ref:`term-component-meta-config` 解析器。
 
 .. rubric:: 元配置数据结构
 

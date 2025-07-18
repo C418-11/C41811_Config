@@ -7,10 +7,10 @@
 .. code-block:: python
    :caption: main.py
 
-   from C41811.Config import JsonSL
-   from C41811.Config import requireConfig
-   from C41811.Config import MappingConfigData
-   from C41811.Config import saveAll
+   from c41811.config import JsonSL
+   from c41811.config import requireConfig
+   from c41811.config import MappingConfigData
+   from c41811.config import saveAll
 
    JsonSL().register_to()
    cfg: MappingConfigData = requireConfig('', "main.json", {"plugins": ["database"]}).check()
@@ -21,10 +21,10 @@
 .. code-block:: python
    :caption: plugins/database.py
 
-   from C41811.Config import JsonSL
-   from C41811.Config import requireConfig
-   from C41811.Config import MappingConfigData
-   from C41811.Config import save
+   from c41811.config import JsonSL
+   from c41811.config import requireConfig
+   from c41811.config import MappingConfigData
+   from c41811.config import save
 
    JsonSL(s_arg=dict(indent=4), reg_alias="plugin/database.json")
 
@@ -54,11 +54,11 @@
 .. code-block:: python
    :caption: main.py
 
-   from C41811.Config import JsonSL
-   from C41811.Config import MappingConfigData
-   from C41811.Config import TarFileSL
-   from C41811.Config import requireConfig
-   from C41811.Config import saveAll
+   from c41811.config import JsonSL
+   from c41811.config import MappingConfigData
+   from c41811.config import TarFileSL
+   from c41811.config import requireConfig
+   from c41811.config import saveAll
 
    TarFileSL().register_to()
    JsonSL().register_to()
@@ -92,12 +92,12 @@
 .. code-block:: python
    :caption: main.py
 
-   from C41811.Config import ComponentSL
-   from C41811.Config import JsonSL
-   from C41811.Config import MappingConfigData
-   from C41811.Config import TarFileSL
-   from C41811.Config import requireConfig
-   from C41811.Config import saveAll
+   from c41811.config import ComponentSL
+   from c41811.config import JsonSL
+   from c41811.config import MappingConfigData
+   from c41811.config import TarFileSL
+   from c41811.config import requireConfig
+   from c41811.config import saveAll
 
    ComponentSL().register_to()
    TarFileSL(compression="gz").register_to()
