@@ -17,7 +17,7 @@ from c41811.config import SequenceConfigData
 from c41811.config.abc import ABCIndexedConfigData
 from c41811.config.errors import ConfigDataTypeError
 from c41811.config.errors import RequiredPathNotFoundError
-from c41811.config.processor.Component import ComponentMetaParser
+from c41811.config.processor.component import ComponentMetaParser
 from c41811.config.utils import Unset
 
 type D_MCD = MappingConfigData[dict[Any, Any]]

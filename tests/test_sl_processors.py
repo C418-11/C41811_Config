@@ -35,13 +35,13 @@ from c41811.config import ZipFileSL  # type: ignore[attr-defined]
 from c41811.config.abc import ABCConfigSL
 from c41811.config.errors import FailedProcessConfigFileError
 from c41811.config.main import BasicCompressedConfigSL
-from c41811.config.processor.Component import ComponentMetaParser
-from c41811.config.processor.HJson import HJsonSL
-from c41811.config.processor.PyYaml import PyYamlSL
-from c41811.config.processor.RuamelYaml import RuamelYamlSL
-from c41811.config.processor.TarFile import TarCompressionTypes
-from c41811.config.processor.Toml import TomlSL
-from c41811.config.processor.ZipFile import ZipCompressionTypes
+from c41811.config.processor.component import ComponentMetaParser
+from c41811.config.processor.hjson import HJsonSL
+from c41811.config.processor.pyyaml import PyYamlSL
+from c41811.config.processor.ruamel_yaml import RuamelYamlSL
+from c41811.config.processor.tarfile import TarCompressionTypes
+from c41811.config.processor.toml import TomlSL
+from c41811.config.processor.zipfile import ZipCompressionTypes
 
 JsonTests: tuple[tuple[Any, tuple[EE, ...], tuple[dict[str, Any], ...]], ...] = (
     ({"a": 1, "b": {"c": 2}}, (), ()),

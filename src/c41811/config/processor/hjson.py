@@ -1,10 +1,12 @@
-# cython: language_level = 3  # noqa: ERA001, N999
+# cython: language_level = 3  # noqa: ERA001
 
 
-"""Python字面量配置文件处理器"""
+"""
+HJson配置文件处理器
 
-import pprint
-from ast import literal_eval
+.. versionadded:: 0.3.0
+"""
+
 from typing import Any
 from typing import override
 
@@ -14,19 +16,26 @@ from ..abc import ABCConfigFile
 from ..basic import ConfigFile
 from ..main import BasicLocalFileConfigSL
 
+try:
+    # noinspection PyPackageRequirements, PyUnresolvedReferences
+    import hjson  # type: ignore[import-not-found]
+except ImportError:
+    msg = "HumanJson is not installed. Please install it with `pip install hjson`"
+    raise ImportError(msg) from None
 
-class PythonLiteralSL(BasicLocalFileConfigSL):
-    """Python 字面量序列化处理器"""
+
+class HJsonSL(BasicLocalFileConfigSL):
+    """基于hjson的json处理器"""
 
     @property
     @override
     def processor_reg_name(self) -> str:
-        return "python_literal"
+        return "human_json"
 
     @property
     @override
     def supported_file_patterns(self) -> tuple[str, ...]:
-        return ".python_literal", ".pyl", ".py"
+        return ".hjson", ".json"
 
     supported_file_classes = [ConfigFile]  # noqa: RUF012
 
@@ -35,16 +44,16 @@ class PythonLiteralSL(BasicLocalFileConfigSL):
         self, config_file: ABCConfigFile[Any], target_file: SupportsWrite[str], *merged_args: Any, **merged_kwargs: Any
     ) -> None:
         with self.raises():
-            target_file.write(pprint.pformat(config_file.config.data, *merged_args, **merged_kwargs))
+            hjson.dump(config_file.config.data, target_file, *merged_args, **merged_kwargs)
 
     @override
     def load_file(
         self, source_file: SupportsReadAndReadline[str], *merged_args: Any, **merged_kwargs: Any
     ) -> ConfigFile[Any]:
         with self.raises():
-            data = literal_eval(source_file.read())
+            data = hjson.load(source_file, *merged_args, **merged_kwargs)
 
         return ConfigFile(data, config_format=self.processor_reg_name)
 
 
-__all__ = ("PythonLiteralSL",)
+__all__ = ("HJsonSL",)

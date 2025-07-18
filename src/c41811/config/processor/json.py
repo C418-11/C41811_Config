@@ -1,12 +1,9 @@
-# cython: language_level = 3  # noqa: ERA001, N999
+# cython: language_level = 3  # noqa: ERA001
 
 
-"""
-HJson配置文件处理器
+"""Json配置文件处理器"""
 
-.. versionadded:: 0.3.0
-"""
-
+import json
 from typing import Any
 from typing import override
 
@@ -16,26 +13,19 @@ from ..abc import ABCConfigFile
 from ..basic import ConfigFile
 from ..main import BasicLocalFileConfigSL
 
-try:
-    # noinspection PyPackageRequirements, PyUnresolvedReferences
-    import hjson  # type: ignore[import-not-found]
-except ImportError:
-    msg = "HumanJson is not installed. Please install it with `pip install hjson`"
-    raise ImportError(msg) from None
 
-
-class HJsonSL(BasicLocalFileConfigSL):
-    """基于hjson的json处理器"""
+class JsonSL(BasicLocalFileConfigSL):
+    """json格式处理器"""
 
     @property
     @override
     def processor_reg_name(self) -> str:
-        return "human_json"
+        return "json"
 
     @property
     @override
     def supported_file_patterns(self) -> tuple[str, ...]:
-        return ".hjson", ".json"
+        return (".json",)
 
     supported_file_classes = [ConfigFile]  # noqa: RUF012
 
@@ -44,16 +34,16 @@ class HJsonSL(BasicLocalFileConfigSL):
         self, config_file: ABCConfigFile[Any], target_file: SupportsWrite[str], *merged_args: Any, **merged_kwargs: Any
     ) -> None:
         with self.raises():
-            hjson.dump(config_file.config.data, target_file, *merged_args, **merged_kwargs)
+            json.dump(config_file.config.data, target_file, *merged_args, **merged_kwargs)
 
     @override
     def load_file(
         self, source_file: SupportsReadAndReadline[str], *merged_args: Any, **merged_kwargs: Any
     ) -> ConfigFile[Any]:
         with self.raises():
-            data = hjson.load(source_file, *merged_args, **merged_kwargs)
+            data = json.load(source_file, *merged_args, **merged_kwargs)
 
         return ConfigFile(data, config_format=self.processor_reg_name)
 
 
-__all__ = ("HJsonSL",)
+__all__ = ("JsonSL",)

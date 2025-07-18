@@ -20,8 +20,8 @@
 
 其他SL处理器同理
 
-如果这不能解决问题，请检查是否为如 :py:class:`~config.processor.ZipFile.ZipFileSL` 或
-:py:class:`~config.processor.Component.ComponentSL` 这类链式处理器，这类处理器在自动推断成员的配置格式时需求文件为类似
+如果这不能解决问题，请检查是否为如 :py:class:`~config.processor.zipfile.ZipFileSL` 或
+:py:class:`~config.processor.component.ComponentSL` 这类链式处理器，这类处理器在自动推断成员的配置格式时需求文件为类似
 ``filename.json.zip`` 或 ``component-config.json.component`` 的文件名以推导内部成员或其 :ref:`term-component-meta-config`
 的配置格式
 

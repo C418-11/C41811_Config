@@ -1,4 +1,4 @@
-# cython: language_level = 3  # noqa: ERA001, N999
+# cython: language_level = 3  # noqa: ERA001
 
 
 """Toml配置文件处理器"""

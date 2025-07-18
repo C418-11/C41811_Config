@@ -1,9 +1,8 @@
-# cython: language_level = 3  # noqa: ERA001, N999
+# cython: language_level = 3  # noqa: ERA001
 
 
-"""Json配置文件处理器"""
+"""PyYaml配置文件处理器"""
 
-import json
 from typing import Any
 from typing import override
 
@@ -13,19 +12,26 @@ from ..abc import ABCConfigFile
 from ..basic import ConfigFile
 from ..main import BasicLocalFileConfigSL
 
+try:
+    # noinspection PyPackageRequirements, PyUnresolvedReferences
+    import yaml
+except ImportError:
+    msg = "PyYaml is not installed. Please install it with `pip install PyYaml`"
+    raise ImportError(msg) from None
 
-class JsonSL(BasicLocalFileConfigSL):
-    """json格式处理器"""
+
+class PyYamlSL(BasicLocalFileConfigSL):
+    """基于PyYaml的yaml处理器"""
 
     @property
     @override
     def processor_reg_name(self) -> str:
-        return "json"
+        return "yaml"
 
     @property
     @override
     def supported_file_patterns(self) -> tuple[str, ...]:
-        return (".json",)
+        return ".yaml", ".yml"
 
     supported_file_classes = [ConfigFile]  # noqa: RUF012
 
@@ -34,16 +40,16 @@ class JsonSL(BasicLocalFileConfigSL):
         self, config_file: ABCConfigFile[Any], target_file: SupportsWrite[str], *merged_args: Any, **merged_kwargs: Any
     ) -> None:
         with self.raises():
-            json.dump(config_file.config.data, target_file, *merged_args, **merged_kwargs)
+            yaml.safe_dump(config_file.config.data, target_file, *merged_args, **merged_kwargs)
 
     @override
     def load_file(
         self, source_file: SupportsReadAndReadline[str], *merged_args: Any, **merged_kwargs: Any
     ) -> ConfigFile[Any]:
         with self.raises():
-            data = json.load(source_file, *merged_args, **merged_kwargs)
+            data = yaml.safe_load(source_file)
 
         return ConfigFile(data, config_format=self.processor_reg_name)
 
 
-__all__ = ("JsonSL",)
+__all__ = ("PyYamlSL",)

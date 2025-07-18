@@ -1,7 +1,7 @@
-# cython: language_level = 3  # noqa: ERA001, N999
+# cython: language_level = 3  # noqa: ERA001
 
 
-"""PyYaml配置文件处理器"""
+"""Ruamel YAML配置文件处理器"""
 
 from typing import Any
 from typing import override
@@ -14,19 +14,25 @@ from ..main import BasicLocalFileConfigSL
 
 try:
     # noinspection PyPackageRequirements, PyUnresolvedReferences
-    import yaml
+    from ruamel.yaml import YAML
 except ImportError:
-    msg = "PyYaml is not installed. Please install it with `pip install PyYaml`"
+    msg = "ruamel.yaml is not installed. Please install it with `pip install ruamel.yaml`"
     raise ImportError(msg) from None
 
 
-class PyYamlSL(BasicLocalFileConfigSL):
-    """基于PyYaml的yaml处理器"""
+class RuamelYamlSL(BasicLocalFileConfigSL):
+    """
+    基于ruamel.yaml的yaml处理器
+
+    默认尝试最大限度保留yaml中的额外信息(如注释
+    """
+
+    yaml = YAML(typ="rt", pure=True)
 
     @property
     @override
     def processor_reg_name(self) -> str:
-        return "yaml"
+        return "ruamel_yaml"
 
     @property
     @override
@@ -40,16 +46,16 @@ class PyYamlSL(BasicLocalFileConfigSL):
         self, config_file: ABCConfigFile[Any], target_file: SupportsWrite[str], *merged_args: Any, **merged_kwargs: Any
     ) -> None:
         with self.raises():
-            yaml.safe_dump(config_file.config.data, target_file, *merged_args, **merged_kwargs)
+            self.yaml.dump(config_file.config.data, target_file)
 
     @override
     def load_file(
         self, source_file: SupportsReadAndReadline[str], *merged_args: Any, **merged_kwargs: Any
     ) -> ConfigFile[Any]:
         with self.raises():
-            data = yaml.safe_load(source_file)
+            data = self.yaml.load(source_file)
 
         return ConfigFile(data, config_format=self.processor_reg_name)
 
 
-__all__ = ("PyYamlSL",)
+__all__ = ("RuamelYamlSL",)

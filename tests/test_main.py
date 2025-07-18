@@ -39,7 +39,7 @@ from c41811.config.abc import ABCConfigFile
 from c41811.config.errors import ConfigDataTypeError
 from c41811.config.errors import RequiredPathNotFoundError
 from c41811.config.errors import UnsupportedConfigFormatError
-from c41811.config.processor.Component import ComponentMetaParser
+from c41811.config.processor.component import ComponentMetaParser
 
 type MCD = MappingConfigData[Mapping[Any, Any]]
 

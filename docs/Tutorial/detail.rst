@@ -604,7 +604,7 @@ ConfigData
 
 .. note::
    是的， :py:class:`~config.basic.component.ComponentConfigData` 不在这里面，仅由
-   :py:class:`~config.processor.ComponentSL` 或
+   :py:class:`~config.processor.componentSL` 或
    :py:class:`~config.validators.ComponentValidatorFactory` 创建
 
    .. seealso::
@@ -726,7 +726,7 @@ ComponentConfigData
 负责将 :ref:`term-component-meta-config` 与 :ref:`component-meta` 以一定格式互相转换
 
 .. seealso::
-   :py:class:`~config.processor.Component.ComponentMetaParser`
+   :py:class:`~config.processor.component.ComponentMetaParser`
 
 .. _component-member:
 
@@ -775,50 +775,56 @@ SL处理器
      - 简介
 
    * - JSON
-     - :py:class:`~config.processor.Json.JsonSL`
+     - :py:class:`~config.processor.json.JsonSL`
      - json
      - .json
      - 基于内置 :py:mod:`json` 模块
 
+   * - HJSON
+      - :py:class:`~config.processor.hjson.HjsonSL`
+      - hjson
+      - .hjson
+      - 基于第三方库 ``hjson``
+
    * - Pickle
-     - :py:class:`~config.processor.Pickle.PickleSL`
+     - :py:class:`~config.processor.pickle.PickleSL`
      - pickle
      - .pickle .pkl
      - 基于内置 :py:mod:`pickle` 模块
 
    * - YAML
-     - :py:class:`~config.processor.PyYaml.PyYamlSL`
+     - :py:class:`~config.processor.pyyaml.PyYamlSL`
      - yaml
      - .yaml .yml
-     - 基于第三方库PyYaml
+     - 基于第三方库 ``PyYAML``
 
    * - YAML
-     - :py:class:`~config.processor.RuamelYaml.RuamelYamlSL`
+     - :py:class:`~config.processor.ruamel_yaml.RuamelYamlSL`
      - ruamel_yaml
      - .yaml .yml
-     - 基于第三方库RuamelYaml
+     - 基于第三方库 ``ruamel.yaml``
 
    * - TOML
-     - :py:class:`~config.processor.Toml.TomlSL`
+     - :py:class:`~config.processor.toml.TomlSL`
      - toml
      - .toml
-     - 基于第三方库toml
+     - 基于第三方库 ``toml``
 
    * - Python
-     - :py:class:`~config.processor.Python.PythonSL`
+     - :py:class:`~config.processor.python.PythonSL`
      - python
      - .py
      - 基于 :py:func:`exec`，尝试保存会抛出 :py:exc:`NotImplementedError` ，建议与
-       :py:class:`~config.processor.PlainText` 搭配使用
+       :py:class:`~config.processor.plaintext` 搭配使用
 
    * - PythonLiteral
-     - :py:class:`~config.processor.PythonLiteral.PythonLiteralSL`
+     - :py:class:`~config.processor.python_literal.PythonLiteralSL`
      - python_literal
      - .python_literal .pyl .py
      - 基于 :py:func:`~ast.literal_eval` 与 :py:func:`~pprint.pformat`
 
    * - PlainText
-     - :py:class:`~config.processor.PlainText.PlainTextSL`
+     - :py:class:`~config.processor.plaintext.PlainTextSL`
      - plaintext
      - .txt
      - 纯文本格式，支持额外参数
@@ -827,13 +833,13 @@ SL处理器
        ``remove_linesep: str`` 在加载时使用 :py:meth:`str.removesuffix` 移除换行符
 
    * - TarFile
-     - :py:class:`~config.processor.TarFile.TarFileSL`
+     - :py:class:`~config.processor.tarfile.TarFileSL`
      - tarfile:$compression_shortname$
      - .tar .tar.$compression_shortname$ .tar.$compression_fullname$
      - 基于内置 :py:mod:`tarfile` 模块
 
    * - ZipFile
-     - :py:class:`~config.processor.ZipFile.ZipFileSL`
+     - :py:class:`~config.processor.zipfile.ZipFileSL`
      - zipfile:$compression_shortname$-$compress_level$
      - .$compress_level$.zip .zip
        .$compress_level$.$compression_fullname$ .$compress_level$.$compression_shortname$
@@ -841,13 +847,13 @@ SL处理器
      - 基于内置 :py:mod:`zipfile` 模块
 
    * - Component
-     - :py:class:`~config.processor.Component.ComponentSL`
+     - :py:class:`~config.processor.component.ComponentSL`
      - component
      - .component .comp
      - 组合多个 :py:class:`~config.abc.ABCIndexedConfigData` 为一个 :py:class:`~config.basic.component.ComponentConfigData`
 
    * - OSEnv
-     - :py:class:`~config.processor.OSEnv.OSEnvSL`
+     - :py:class:`~config.processor.os_env.OSEnvSL`
      - os.environ
      - .os.env .os.environ
      - 基于内置 :py:data:`os.environ`
@@ -855,7 +861,7 @@ SL处理器
 ComponentMetaParser
 --------------------
 
-:py:class:`~config.processor.Component.ComponentSL` 的默认 :ref:`term-component-meta-config` 解析器。
+:py:class:`~config.processor.component.ComponentSL` 的默认 :ref:`term-component-meta-config` 解析器。
 
 .. rubric:: 元配置数据结构
 
