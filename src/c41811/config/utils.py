@@ -18,22 +18,22 @@ from typing import override
 def singleton[C: Any](target_cls: type[C], /) -> type[C]:
     """单例模式类装饰器"""
 
-    def __new__(cls: type[C], /, *args: Any, **kwargs: Any) -> C:  # noqa: N807
+    def new_singleton(cls: type[C], /, *args: Any, **kwargs: Any) -> C:
         if not hasattr(cls, "__singleton_instance__"):
             cls.__singleton_instance__ = cls.__singleton_new__(cls, *args, **kwargs)
 
         # noinspection PyProtectedMember
         return cast(C, cls.__singleton_instance__)
 
-    __new__.__name__ = target_cls.__new__.__name__
-    __new__.__qualname__ = target_cls.__new__.__qualname__
-    __new__.__doc__ = target_cls.__new__.__doc__
-    __new__.__module__ = target_cls.__new__.__module__
+    new_singleton.__name__ = target_cls.__new__.__name__
+    new_singleton.__qualname__ = target_cls.__new__.__qualname__
+    new_singleton.__doc__ = target_cls.__new__.__doc__
+    new_singleton.__module__ = target_cls.__new__.__module__
     with suppress(AttributeError):
-        __new__.__annotations__ = target_cls.__new__.__annotations__
+        new_singleton.__annotations__ = target_cls.__new__.__annotations__
 
     target_cls.__singleton_new__ = target_cls.__new__
-    target_cls.__new__ = staticmethod(__new__)  # type: ignore[assignment]
+    target_cls.__new__ = staticmethod(new_singleton)  # type: ignore[assignment]
 
     return target_cls
 
@@ -90,9 +90,12 @@ def lazy_import(properties: dict[str, str], /) -> tuple[tuple[str, ...], Callabl
 
     .. versionadded:: 0.3.0
     """
-    caller_package = inspect.getmodule(inspect.stack()[1][0]).__name__  # type: ignore[union-attr]
+    if (caller_module := inspect.getmodule(inspect.stack()[1][0])) is None:
+        msg = "Cannot find caller module"
+        raise RuntimeError(msg)
+    caller_package = caller_module.__name__
 
-    def __getattr__(name: str) -> Any:  # noqa: N807
+    def attr_getter(name: str) -> Any:
         try:
             sub_pkg = properties[name]
         except KeyError:
@@ -100,7 +103,11 @@ def lazy_import(properties: dict[str, str], /) -> tuple[tuple[str, ...], Callabl
             raise AttributeError(msg) from None
         return getattr(import_module(sub_pkg, package=caller_package), name)
 
-    return tuple(properties.keys()), __getattr__
+    attr_getter.__name__ = "__getattr__"
+    attr_getter.__qualname__ = "__getattr__"
+    attr_getter.__module__ = caller_package
+
+    return tuple(properties.keys()), attr_getter
 
 
 __all__ = (
