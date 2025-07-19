@@ -90,7 +90,7 @@ def lazy_import(properties: dict[str, str], /) -> tuple[tuple[str, ...], Callabl
 
     .. versionadded:: 0.3.0
     """
-    if (caller_module := inspect.getmodule(inspect.stack()[1][0])) is None:
+    if (caller_module := inspect.getmodule(inspect.stack()[1][0])) is None:  # pragma: no cover
         msg = "Cannot find caller module"
         raise RuntimeError(msg)
     caller_package = caller_module.__name__
