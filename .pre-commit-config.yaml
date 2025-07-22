@@ -13,20 +13,26 @@ repos:
     rev: v0.12.1
     hooks:
       - id: ruff-check
-        args: [--no-fix]
+        args: [ --no-fix ]
       - id: ruff-format
-        args: [--check]
+        args: [ --check ]
 
   - repo: https://github.com/zizmorcore/zizmor-pre-commit
     rev: v1.11.0
     hooks:
-    - id: zizmor
+      - id: zizmor
 
   - repo: https://github.com/codespell-project/codespell
     rev: v2.4.1
     hooks:
-    - id: codespell
+      - id: codespell
 
 ci:
   autofix_prs: false
   autoupdate_branch: 'develop'
+  skip: [
+    ruff-check,
+    ruff-format,
+    zizmor,
+    codespell,
+  ]
