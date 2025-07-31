@@ -12,7 +12,7 @@ from pytest import fixture
 from pytest import mark
 from pytest import raises
 
-from c41811.config import ConfigData
+from c41811.config import ConfigDataFactory
 from c41811.config import ConfigFile
 from c41811.config import ConfigPool
 from c41811.config import MappingConfigData
@@ -22,11 +22,11 @@ type D_MCD = MappingConfigData[dict[Any, Any]]
 
 
 def test_wrong_type_config_data() -> None:
-    class EmptyTypesConfigData(ConfigData):
+    class EmptyTypesConfigDataFactory(ConfigDataFactory):
         TYPES: ClassVar[OrderedDict[tuple[type, ...], Callable[[Any], Any] | type]] = OrderedDict()
 
     with raises(TypeError, match="Unsupported type"):
-        EmptyTypesConfigData(type)
+        EmptyTypesConfigDataFactory(type)
 
 
 type P = ConfigPool
@@ -131,7 +131,7 @@ class TestConfigFile:
         ),
     )
     def test_bool(raw_data: D_MCD, is_empty: bool) -> None:  # noqa: FBT001
-        assert bool(ConfigFile(ConfigData(raw_data))) is not is_empty
+        assert bool(ConfigFile(ConfigDataFactory(raw_data))) is not is_empty
 
     @staticmethod
     def test_repr(file: ConfigFile[D_MCD], data: D_MCD) -> None:

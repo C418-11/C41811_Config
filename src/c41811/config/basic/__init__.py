@@ -11,12 +11,11 @@
    重命名 ``base`` 为 ``basic``
 """
 
-import builtins
+from builtins import object as __object
 from collections import OrderedDict as __OrderedDict
 from collections.abc import Mapping as __Mapping
 from collections.abc import Sequence as __Sequence
 from numbers import Number as __Number
-from typing import Any as __Any
 
 from .component import ComponentConfigData
 from .component import ComponentMember
@@ -26,7 +25,7 @@ from .core import BasicConfigData
 from .core import BasicConfigPool
 from .core import BasicIndexedConfigData
 from .core import BasicSingleConfigData
-from .core import ConfigData
+from .core import ConfigDataFactory
 from .core import ConfigFile
 from .core import PHelper
 from .environment import EnvironmentConfigData
@@ -38,21 +37,8 @@ from .object import ObjectConfigData
 from .sequence import SequenceConfigData
 from .sequence import StringConfigData
 from ..abc import ABCConfigData
-from ..abc import ABCIndexedConfigData
 
-type AnyConfigData = (
-    ABCConfigData[__Any]
-    | ABCIndexedConfigData[__Any]
-    | NoneConfigData
-    | MappingConfigData[__Any]
-    | StringConfigData[__Any]
-    | SequenceConfigData[__Any]
-    | BoolConfigData[__Any]
-    | NumberConfigData[__Any]
-    | ObjectConfigData[__Any]
-)
-
-ConfigData.TYPES = __OrderedDict(
+ConfigDataFactory.TYPES = __OrderedDict(
     (
         ((ABCConfigData,), lambda _: _),
         ((type(None),), NoneConfigData),
@@ -61,19 +47,9 @@ ConfigData.TYPES = __OrderedDict(
         ((__Sequence,), SequenceConfigData),
         ((bool,), BoolConfigData),
         ((__Number,), NumberConfigData),
-        ((builtins.object,), ObjectConfigData),
+        ((__object,), ObjectConfigData),
     )
 )
-
-ConfigData.register(NoneConfigData)
-ConfigData.register(MappingConfigData)
-ConfigData.register(SequenceConfigData)
-ConfigData.register(NumberConfigData)
-ConfigData.register(BoolConfigData)
-ConfigData.register(StringConfigData)
-ConfigData.register(ObjectConfigData)
-ConfigData.register(ComponentConfigData)
-ConfigData.register(EnvironmentConfigData)
 
 __all__ = (
     "BasicConfigData",
@@ -85,7 +61,7 @@ __all__ = (
     "ComponentMember",
     "ComponentMeta",
     "ComponentOrders",
-    "ConfigData",
+    "ConfigDataFactory",
     "ConfigFile",
     "EnvironmentConfigData",
     "MappingConfigData",

@@ -25,7 +25,7 @@ from c41811.config import ComponentConfigData
 from c41811.config import ComponentMember
 from c41811.config import ComponentMeta
 from c41811.config import ComponentOrders
-from c41811.config import ConfigData
+from c41811.config import ConfigDataFactory
 from c41811.config import ConfigFile
 from c41811.config import ConfigPool
 from c41811.config import FieldDefinition
@@ -108,7 +108,7 @@ class TestConfigPool:
             pool.load("", "test", config_formats="json")
 
         assert pool.load("", "test", config_formats="json", allow_initialize=True) == ConfigFile(
-            ConfigData(), config_format="json"
+            ConfigDataFactory(), config_format="json"
         )
 
     @staticmethod
@@ -159,16 +159,16 @@ class TestConfigPool:
 
     @staticmethod
     def test_require(pool: ConfigPool) -> None:
-        cfg_data: ConfigData = pool.require("", "test.json", {"foo\\.bar": "test", "foo\\.baz": "test"}).check()
-        assert cfg_data == ConfigData({"foo": {"bar": "test", "baz": "test"}})
+        cfg_data: MCD = pool.require("", "test.json", {"foo\\.bar": "test", "foo\\.baz": "test"}).check()
+        assert cfg_data == ConfigDataFactory({"foo": {"bar": "test", "baz": "test"}})
         cfg_data = pool.require("", "test.json", {"foo\\.bar": "test", "foo\\.baz": "test"}).check(ignore_cache=True)
-        assert cfg_data == ConfigData({"foo": {"bar": "test", "baz": "test"}})
+        assert cfg_data == ConfigDataFactory({"foo": {"bar": "test", "baz": "test"}})
 
         @pool.require(  # type: ignore[arg-type]
             "", "test.json", {"foo\\.bar": "test", "foo\\.baz": "test"}
         )
         def func(cfg: MCD) -> None:
-            assert cfg == ConfigData({"foo": {"bar": "test", "baz": "test"}})
+            assert cfg == ConfigDataFactory({"foo": {"bar": "test", "baz": "test"}})
 
         func()
 

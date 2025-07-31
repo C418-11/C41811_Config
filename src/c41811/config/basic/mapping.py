@@ -146,8 +146,8 @@ class MappingConfigData[D: Mapping[Any, Any]](BasicIndexedConfigData[D], Mutable
         例子
         ----
 
-           >>> from c41811.config import ConfigData
-           >>> data = ConfigData({"foo": {"bar": {"baz": "value"}, "bar1": "value1"}, "foo1": "value2"})
+           >>> from c41811.config import MappingConfigData
+           >>> data = MappingConfigData({"foo": {"bar": {"baz": "value"}, "bar1": "value1"}, "foo1": "value2"})
 
            不带参数行为与普通字典一样
 
@@ -173,7 +173,7 @@ class MappingConfigData[D: Mapping[Any, Any]](BasicIndexedConfigData[D], Mutable
 
            >>> cyclic: dict[str, Any] = {"cyclic": None, "key": "value"}
            >>> cyclic["cyclic"] = cyclic
-           >>> cyclic = ConfigData(cyclic)
+           >>> cyclic: MappingConfigData[dict[str, Any]] = MappingConfigData(cyclic)
 
            >>> cyclic.keys(recursive=True)  # 默认为严格模式
            Traceback (most recent call last):

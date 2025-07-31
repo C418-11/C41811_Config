@@ -14,7 +14,6 @@ from pytest import raises
 from utils import EE
 from utils import safe_raises
 
-from c41811.config import ConfigData
 from c41811.config import IndexKey
 from c41811.config import MappingConfigData
 from c41811.config import Path as DPath
@@ -312,7 +311,7 @@ class TestMappingConfigData:
         assert path in data
         assert (
             cast(MappingConfigData[Any], data[path]).data == new_value
-            if isinstance(data[path], ConfigData)
+            if isinstance(data[path], MappingConfigData | SequenceConfigData)
             else data[path] == new_value
         )
 

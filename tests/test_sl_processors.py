@@ -19,7 +19,7 @@ from c41811.config import BasicLocalFileConfigSL
 from c41811.config import ComponentConfigData
 from c41811.config import ComponentMeta
 from c41811.config import ComponentSL  # type: ignore[attr-defined]
-from c41811.config import ConfigData
+from c41811.config import ConfigDataFactory
 from c41811.config import ConfigFile
 from c41811.config import ConfigPool
 from c41811.config import EnvironmentConfigData
@@ -30,6 +30,7 @@ from c41811.config import PickleSL  # type: ignore[attr-defined]
 from c41811.config import PlainTextSL  # type: ignore[attr-defined]
 from c41811.config import PythonLiteralSL  # type: ignore[attr-defined]
 from c41811.config import PythonSL  # type: ignore[attr-defined]
+from c41811.config import SequenceConfigData
 from c41811.config import TarFileSL  # type: ignore[attr-defined]
 from c41811.config import ZipFileSL  # type: ignore[attr-defined]
 from c41811.config.abc import ABCConfigSL
@@ -182,7 +183,7 @@ def test_local_file_sl_processors(
     sl_obj = sl_cls(*sl_args)
     sl_obj.register_to(pool)
 
-    file: ConfigFile[Any] = ConfigFile(ConfigData(raw_data), config_format=sl_obj.reg_name)
+    file: ConfigFile[Any] = ConfigFile(ConfigDataFactory(raw_data), config_format=sl_obj.reg_name)
     file_name = f"TestConfigFile{sl_obj.supported_file_patterns[0]}"
 
     if not ignore_excs:
@@ -245,7 +246,7 @@ def test_compressed_file_sl_processors(
     local_sl = JsonSL(s_arg={"indent": 2})
     local_sl.register_to(pool)
 
-    file: ConfigFile[Any] = ConfigFile(ConfigData(raw_data), config_format=local_sl.reg_name)
+    file: ConfigFile[Any] = ConfigFile(ConfigDataFactory(raw_data), config_format=local_sl.reg_name)
     file_name = f"TestConfigFile{local_sl.supported_file_patterns[0]}{compressed_sl.supported_file_patterns[0]}"
 
     if not ignore_excs:
@@ -419,7 +420,7 @@ def test_save_none_component(pool: ConfigPool) -> None:
     json_sl.register_to(pool)
 
     file_name = f"TestConfigFile{json_sl.supported_file_patterns[0]}{comp_sl.supported_file_patterns[0]}"
-    pool.save("", file_name, config=ConfigFile(ConfigData(), config_format=comp_sl.reg_name))
+    pool.save("", file_name, config=ConfigFile(ConfigDataFactory(), config_format=comp_sl.reg_name))
 
 
 def test_component_initialize(pool: ConfigPool) -> None:
@@ -443,13 +444,13 @@ def test_component_wrong_config_data(pool: ConfigPool) -> None:
         pool.save(
             "",
             file_name,
-            config=ConfigFile(ConfigData([])),
+            config=ConfigFile(SequenceConfigData()),
         )
     pool.discard("", file_name)
     pool.save(
         comp_sl.namespace_formatter("", file_name),
         comp_sl.meta_file + json_sl.supported_file_patterns[0],
-        config=ConfigFile(ConfigData([])),
+        config=ConfigFile(SequenceConfigData()),
     )
     with raises(FailedProcessConfigFileError, match="is not a"):
         pool.load("", file_name)

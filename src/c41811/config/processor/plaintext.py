@@ -14,7 +14,7 @@ from typing import override
 
 from .._protocols import SupportsWrite
 from ..abc import ABCConfigFile
-from ..basic import ConfigData
+from ..basic import ConfigDataFactory
 from ..basic import ConfigFile
 from ..basic import SequenceConfigData
 from ..basic import StringConfigData
@@ -72,7 +72,7 @@ class PlainTextSL(BasicLocalFileConfigSL):
                 content: str = source_file.read()  # type: ignore[no-redef]
 
         return ConfigFile(
-            cast(StringConfigData[str] | SequenceConfigData[list[Any]], ConfigData(content)),
+            cast(StringConfigData[str] | SequenceConfigData[list[Any]], ConfigDataFactory(content)),
             config_format=self.processor_reg_name,
         )
 

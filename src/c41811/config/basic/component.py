@@ -22,7 +22,7 @@ from typing import cast
 from typing import override
 
 from .core import BasicConfigData
-from .core import ConfigData
+from .core import ConfigDataFactory
 from .utils import check_read_only
 from .utils import fmt_path
 from ..abc import ABCConfigData
@@ -71,7 +71,7 @@ class ComponentMeta[D: ABCConfigData[Any]]:
     .. versionadded:: 0.2.0
     """
 
-    config: D = field(default_factory=cast(Callable[[], D], ConfigData))
+    config: D = field(default_factory=cast(Callable[[], D], ConfigDataFactory))
     orders: ComponentOrders = field(default_factory=ComponentOrders)
     members: list[ComponentMember] = field(default_factory=list)
     parser: ABCMetaParser[Any, Any] | None = field(default=None)
@@ -98,8 +98,8 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
         if members is None:
             members = {}
 
+        # 准备元数据
         self._meta: M = cast(M, deepcopy(meta))
-
         self._filename2meta: dict[str, ComponentMember] = {
             member_meta.filename: member_meta for member_meta in self._meta.members
         }
@@ -110,6 +110,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
         }
         self._members: Mapping[str, D] = deepcopy(members)
 
+        # 验证成员是否与元数据匹配
         if len(self._filename2meta) != len(self._meta.members):
             msg = "repeated filename in meta"
             raise ValueError(msg)

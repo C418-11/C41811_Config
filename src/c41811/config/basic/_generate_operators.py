@@ -13,7 +13,7 @@ from typing import Any
 import wrapt  # type: ignore[import-untyped]
 
 from .core import BasicSingleConfigData
-from .core import ConfigData
+from .core import ConfigDataFactory
 from .utils import check_read_only
 
 type Operator = Callable[[Any, Any], Any]
@@ -36,10 +36,10 @@ def _generate_operators[S: Any](
     """
 
     def forward_op(self: Any, other: Any) -> Any:
-        return ConfigData(operate_func(self._data, other))
+        return ConfigDataFactory(operate_func(self._data, other))
 
     def reverse_op(self: Any, other: Any) -> Any:
-        return ConfigData(operate_func(other, self._data))
+        return ConfigDataFactory(operate_func(other, self._data))
 
     # noinspection PyTypeHints
     def inplace_op(self: S, other: Any) -> S:

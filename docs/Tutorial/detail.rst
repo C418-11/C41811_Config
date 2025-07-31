@@ -99,7 +99,7 @@ requireConfig
     :caption: 手动调用和装饰器
     :linenos:
 
-    from c41811.config import ConfigData
+    from c41811.config import MappingConfigData
     from c41811.config import JsonSL
     from c41811.config import requireConfig
 
@@ -112,7 +112,7 @@ requireConfig
     )
 
     # 调用check手动获取配置数据
-    config: ConfigData = require.check()
+    config: MappingConfigData = require.check()
     print(config)  # 打印：{'config': 'data'}
 
 
@@ -163,7 +163,7 @@ Pydantic验证器工厂
     from pydantic import BaseModel
     from pydantic import Field
 
-    from c41811.config import ConfigData
+    from c41811.config import MappingConfigData
     from c41811.config import ConfigFile
     from c41811.config import JsonSL
     from c41811.config import requireConfig
@@ -171,7 +171,7 @@ Pydantic验证器工厂
 
     JsonSL().register_to()
 
-    save('', "test.json", config=ConfigFile(ConfigData({
+    save('', "test.json", config=ConfigFile(MappingConfigData({
         "key": "value"
     })))
 
@@ -212,7 +212,7 @@ Pydantic验证器工厂
         :caption: 例
         :linenos:
 
-        from c41811.config import ConfigData
+        from c41811.config import MappingConfigData
         from c41811.config import ConfigFile
         from c41811.config import JsonSL
         from c41811.config import requireConfig
@@ -220,7 +220,7 @@ Pydantic验证器工厂
 
         JsonSL().register_to()
 
-        save('', "test.json", config=ConfigFile(ConfigData({
+        save('', "test.json", config=ConfigFile(MappingConfigData({
             "first": {
                 "second": {
                     "third": 111,
@@ -243,7 +243,7 @@ Iterable[str]
     :caption: 例
     :linenos:
 
-    from c41811.config import ConfigData
+    from c41811.config import MappingConfigData
     from c41811.config import ConfigFile
     from c41811.config import JsonSL
     from c41811.config import requireConfig
@@ -251,7 +251,7 @@ Iterable[str]
 
     JsonSL().register_to()
 
-    save('', "test.json", config=ConfigFile(ConfigData({
+    save('', "test.json", config=ConfigFile(MappingConfigData({
         "foo": {
             "bar": {
                 "baz": "value"
@@ -280,7 +280,7 @@ Mapping[str | ABCPath, Any]
         :caption: 路径与嵌套字典的等价操作
         :linenos:
 
-        from c41811.config import ConfigData
+        from c41811.config import MappingConfigData
         from c41811.config import ConfigFile
         from c41811.config import JsonSL
         from c41811.config import requireConfig
@@ -288,7 +288,7 @@ Mapping[str | ABCPath, Any]
 
         JsonSL().register_to()
 
-        save('', "test.json", config=ConfigFile(ConfigData({
+        save('', "test.json", config=ConfigFile(MappingConfigData({
             "first": {
                 "second": {
                     "third": 111,
@@ -322,7 +322,7 @@ Mapping[str | ABCPath, Any]
     :caption: 两种验证器语法
     :linenos:
 
-    from c41811.config import ConfigData
+    from c41811.config import MappingConfigData
     from c41811.config import ConfigFile
     from c41811.config import JsonSL
     from c41811.config import requireConfig
@@ -330,7 +330,7 @@ Mapping[str | ABCPath, Any]
 
     JsonSL().register_to()
 
-    save('', "test.json", config=ConfigFile(ConfigData({
+    save('', "test.json", config=ConfigFile(MappingConfigData({
         "first": {
             "second": {
                 "third": 111,
@@ -375,7 +375,7 @@ Mapping[str | ABCPath, Any]
 
     from typing import Sequence
 
-    from c41811.config import ConfigData
+    from c41811.config import MappingConfigData
     from c41811.config import ConfigFile
     from c41811.config import FieldDefinition
     from c41811.config import JsonSL
@@ -385,7 +385,7 @@ Mapping[str | ABCPath, Any]
 
     JsonSL().register_to()
 
-    save('', "test.json", config=ConfigFile(ConfigData({
+    save('', "test.json", config=ConfigFile(MappingConfigData({
         "first": {
             "second": {
                 "third": 111,
@@ -451,7 +451,7 @@ Mapping[str | ABCPath, Any]
     :caption: 关键字参数
     :linenos:
 
-    from c41811.config import ConfigData
+    from c41811.config import MappingConfigData
     from c41811.config import ConfigFile
     from c41811.config import JsonSL
     from c41811.config import requireConfig
@@ -460,7 +460,7 @@ Mapping[str | ABCPath, Any]
 
     JsonSL().register_to()
 
-    raw_data = ConfigData({
+    raw_data = MappingConfigData({
         "first": {
             "second": {
                 "third": 111,
@@ -497,7 +497,7 @@ Mapping[str | ABCPath, Any]
     except RequiredPathNotFoundError as err:
         print(err)  # 打印：\.not\.exists -> \.exists (2 / 2) Operate: Read
 
-    data: ConfigData = requireConfig('', "test.json", {
+    data: MappingConfigData = requireConfig('', "test.json", {
         "not\\.exists": int
     }).check(skip_missing=True)
 
@@ -517,7 +517,7 @@ Mapping[str | ABCPath, Any]
     :caption: 一个修改所有值为"modified!"的验证器
     :linenos:
 
-    from c41811.config import ConfigData
+    from c41811.config import MappingConfigData
     from c41811.config import ConfigFile
     from c41811.config import JsonSL
     from c41811.config import requireConfig
@@ -533,7 +533,7 @@ Mapping[str | ABCPath, Any]
 
     JsonSL().register_to()
 
-    save('', "test.json", config=ConfigFile(ConfigData({
+    save('', "test.json", config=ConfigFile(MappingConfigData({
         "key": "value"
     })))
     print(requireConfig('', "test.json", modify_value_validator, "ignore").check())
@@ -560,16 +560,16 @@ Mapping[str | ABCPath, Any]
 .. seealso::
    :py:class:`~config.validators.ComponentValidatorFactory`
 
-ConfigData
+ConfigDataFactory
 ------------------
 
 此类本身不提供任何实际配置数据操作，仅根据传入的参数类型从注册表中选择对应的子类实例化并返回
 
-注册表存储在 :py:attr:`~config.basic.ConfigData.TYPES`
+注册表存储在 :py:attr:`~config.basic.ConfigDataFactory.TYPES`
 
 .. rubric:: 传入的数据类型及其对应子类
 
-优先级从上倒下，ConfigData未传入参数时取 :py:const:`None` ，取初始化参数的第一个参数的类型进行判断
+优先级从上倒下，取初始化参数的第一个参数的类型进行判断，未传入参数时取 :py:const:`None`
 
 .. list-table::
    :widths: auto
@@ -633,7 +633,7 @@ ConfigData
 NoneConfigData
 ^^^^^^^^^^^^^^^^^^
 
-无参数调用 :py:class:`~config.basic.ConfigData` 的默认值，也是 :py:meth:`~config.main.BasicConfigSL.initialize` 的默认返回值
+无参数调用 :py:class:`~config.basic.ConfigDataFactory` 的默认值，也是 :py:meth:`~config.main.BasicConfigSL.initialize` 的默认返回值
 
 初始化参数永远必须为 :py:const:`None` 或压根不传，允许传参更大是为了兼容父类接口
 

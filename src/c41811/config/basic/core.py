@@ -185,13 +185,13 @@ class BasicIndexedConfigData[D: Indexed[Any, Any]](BasicSingleConfigData[D], ABC
                     KeyInfo(cast(ABCPath[Any], path), current_key, key_index), ConfigOperate.Read
                 )
 
-        def process_return[V: Any](current_data: V) -> V | ConfigData:
+        def process_return[V: Any](current_data: V) -> V | ABCConfigData[Any]:
             if return_raw_value:
                 return deepcopy(current_data)
 
             is_sequence = isinstance(current_data, Sequence) and not isinstance(current_data, str | bytes)
             if isinstance(current_data, Mapping) or is_sequence:
-                return ConfigData(current_data)
+                return ConfigDataFactory(current_data)  # type: ignore[return-value]
 
             return deepcopy(current_data)
 
@@ -306,7 +306,7 @@ class BasicIndexedConfigData[D: Indexed[Any, Any]](BasicSingleConfigData[D], ABC
         data = self._data[index]
         is_sequence = isinstance(data, Sequence) and not isinstance(data, str | bytes)
         if isinstance(data, Mapping) or is_sequence:
-            return cast(Self, ConfigData(data))
+            return cast(Self, ConfigDataFactory(data))
         return cast(D, deepcopy(data))
 
     @override
@@ -318,15 +318,19 @@ class BasicIndexedConfigData[D: Indexed[Any, Any]](BasicSingleConfigData[D], ABC
         del self._data[index]  # type: ignore[attr-defined]
 
 
-class ConfigData(ABC):
+class ConfigDataFactory:
     """
     配置数据类
 
     .. versionchanged:: 0.1.5
        会自动根据传入的配置数据类型选择对应的子类
+
+    .. versionchanged:: 0.3.0
+       不再作为所有 `ConfigData` 的虚拟父类
+       重命名 ``ConfigData`` 为 ``ConfigDataFactory``
     """
 
-    TYPES: ClassVar[OrderedDict[tuple[type, ...], Callable[[Any], Any] | type]]
+    TYPES: ClassVar[OrderedDict[tuple[type, ...], Callable[[Any], ABCConfigData[Any]] | type]]
     """
     存储配置数据类型对应的子类
 
@@ -334,7 +338,7 @@ class ConfigData(ABC):
        现在使用 ``OrderedDict`` 来保证顺序
     """
 
-    def __new__(cls, *args: Any, **kwargs: Any) -> Any:
+    def __new__(cls, *args: Any, **kwargs: Any) -> ABCConfigData[Any]:  # type: ignore[misc]
         """
         将根据第一个位置参数决定配置数据类型
 
@@ -364,14 +368,14 @@ class ConfigFile[D: ABCConfigData[Any]](ABCConfigFile[D]):
         :type config_format: Optional[str]
 
         .. caution::
-           本身并未对 ``initial_config`` 参数进行深拷贝，但是 :py:class:`ConfigData` 可能会将其深拷贝
+           本身并未对 ``initial_config`` 参数进行深拷贝，但是 :py:class:`ConfigDataFactory` 可能会将其深拷贝
 
         .. versionchanged:: 0.2.0
-           现在会自动尝试转换 ``initial_config`` 参数为 :py:class:`ConfigData`
+           现在会自动尝试转换 ``initial_config`` 参数为 :py:class:`ConfigDataFactory`
 
            重命名参数 ``config_data`` 为 ``initial_config``
         """  # noqa: RUF002, D205
-        super().__init__(cast(D, ConfigData(initial_config)), config_format=config_format)
+        super().__init__(cast(D, ConfigDataFactory(initial_config)), config_format=config_format)
 
     @override
     def save(
@@ -814,7 +818,7 @@ __all__ = (
     "BasicConfigPool",
     "BasicIndexedConfigData",
     "BasicSingleConfigData",
-    "ConfigData",
+    "ConfigDataFactory",
     "ConfigFile",
     "PHelper",
 )

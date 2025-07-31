@@ -34,7 +34,7 @@ from .abc import ABCConfigSL
 from .abc import ABCSLProcessorPool
 from .abc import SLArgument
 from .basic import BasicConfigPool
-from .basic import ConfigData
+from .basic import ConfigDataFactory
 from .basic import ConfigFile
 from .errors import FailedProcessConfigFileError
 from .safe_writer import safe_open
@@ -382,7 +382,7 @@ class BasicConfigSL(ABCConfigSL, ABC):
         *args: Any,
         **kwargs: Any,
     ) -> ABCConfigFile[Any]:
-        return ConfigFile(ConfigData(), config_format=self.reg_name)
+        return ConfigFile(ConfigDataFactory(), config_format=self.reg_name)
 
 
 def _merge_args(

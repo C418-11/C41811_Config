@@ -6,7 +6,8 @@ from typing import Any
 
 from pytest import mark
 
-from c41811.config import ConfigData
+from c41811.config import ConfigDataFactory as CDFactory
+from c41811.config.abc import ABCConfigData
 
 
 class TestMappingConfigData:
@@ -73,7 +74,7 @@ UnaryOperatorTests = (
 
 @mark.parametrize(*UnaryOperatorTests)
 def test_unary_operator(a: Any, op: Callable[[Any], Any]) -> None:
-    assert op(ConfigData(a)) == op(a), f"op({ConfigData(a):r}) != {op(a)}"
+    assert op(CDFactory(a)) == op(a), f"op({CDFactory(a):r}) != {op(a)}"
 
 
 DyadicOperatorTests = (
@@ -88,31 +89,31 @@ DyadicOperatorTests = (
 
 @mark.parametrize(*DyadicOperatorTests)
 def test_dyadic_operator(
-    a: ConfigData,
-    b: ConfigData,
+    a: ABCConfigData[Any],
+    b: ABCConfigData[Any],
     op: Callable[[Any, Any], Any],
     iop: Callable[[Any, Any], Any],
     convert_raw: bool,  # noqa: FBT001
 ) -> None:
-    converter: Callable[[Any], Any] = (lambda _: _) if convert_raw else ConfigData
-    assert op(ConfigData(a), ConfigData(b)) == ConfigData(op(a, b)), (
-        f"op({ConfigData(a):r}, {ConfigData(b):r}) != {ConfigData(op(a, b)):r}"
+    converter: Callable[[Any], Any] = (lambda _: _) if convert_raw else CDFactory
+    assert op(CDFactory(a), CDFactory(b)) == CDFactory(op(a, b)), (
+        f"op({CDFactory(a):r}, {CDFactory(b):r}) != {CDFactory(op(a, b)):r}"
     )
-    assert op(a, ConfigData(b)) == ConfigData(op(a, b)), f"op({a}, {ConfigData(b):r}) != {ConfigData(op(a, b)):r}"
-    assert op(ConfigData(a), b) == ConfigData(op(a, b)), f"op({ConfigData(a):r}, {b}) != {ConfigData(op(a, b)):r}"
+    assert op(a, CDFactory(b)) == CDFactory(op(a, b)), f"op({a}, {CDFactory(b):r}) != {CDFactory(op(a, b)):r}"
+    assert op(CDFactory(a), b) == CDFactory(op(a, b)), f"op({CDFactory(a):r}, {b}) != {CDFactory(op(a, b)):r}"
 
-    assert op(ConfigData(b), ConfigData(a)) == ConfigData(op(b, a)), (
-        f"op({ConfigData(b):r}, {ConfigData(a):r}) != {ConfigData(op(b, a)):r}"
+    assert op(CDFactory(b), CDFactory(a)) == CDFactory(op(b, a)), (
+        f"op({CDFactory(b):r}, {CDFactory(a):r}) != {CDFactory(op(b, a)):r}"
     )
-    assert op(b, ConfigData(a)) == ConfigData(op(b, a)), f"op({b}, {ConfigData(a):r}) != {ConfigData(op(b, a)):r}"
-    assert op(ConfigData(b), a) == ConfigData(op(b, a)), f"op({ConfigData(b):r}, {a}) != {ConfigData(op(b, a)):r}"
+    assert op(b, CDFactory(a)) == CDFactory(op(b, a)), f"op({b}, {CDFactory(a):r}) != {CDFactory(op(b, a)):r}"
+    assert op(CDFactory(b), a) == CDFactory(op(b, a)), f"op({CDFactory(b):r}, {a}) != {CDFactory(op(b, a)):r}"
 
-    assert iop(ConfigData(deepcopy(a)), ConfigData(b)) == ConfigData(iop(deepcopy(a), b)), (
-        f"iop({ConfigData(deepcopy(a)):r}, {ConfigData(b):r}) != {ConfigData(iop(deepcopy(a), b)):r}"
+    assert iop(CDFactory(deepcopy(a)), CDFactory(b)) == CDFactory(iop(deepcopy(a), b)), (
+        f"iop({CDFactory(deepcopy(a)):r}, {CDFactory(b):r}) != {CDFactory(iop(deepcopy(a), b)):r}"
     )
-    assert iop(deepcopy(a), ConfigData(b)) == converter(iop(deepcopy(a), b)), (
-        f"iop({deepcopy(a)}, {ConfigData(b):r}) != {converter(iop(deepcopy(a), b)):r}"
+    assert iop(deepcopy(a), CDFactory(b)) == converter(iop(deepcopy(a), b)), (
+        f"iop({deepcopy(a)}, {CDFactory(b):r}) != {converter(iop(deepcopy(a), b)):r}"
     )
-    assert iop(ConfigData(deepcopy(a)), b) == ConfigData(iop(deepcopy(a), b)), (
-        f"iop({ConfigData(deepcopy(a)):r}, {b}) != {ConfigData(iop(deepcopy(a), b)):r}"
+    assert iop(CDFactory(deepcopy(a)), b) == CDFactory(iop(deepcopy(a), b)), (
+        f"iop({CDFactory(deepcopy(a)):r}, {b}) != {CDFactory(iop(deepcopy(a), b)):r}"
     )
