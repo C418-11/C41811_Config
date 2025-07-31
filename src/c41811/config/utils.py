@@ -42,6 +42,8 @@ def singleton[C: Any](target_cls: type[C], /) -> type[C]:
 class UnsetType:
     """用于填充默认值的特殊值"""
 
+    __slots__ = ()
+
     @override
     def __str__(self) -> str:
         return "<Unset Argument>"
@@ -65,6 +67,8 @@ class Ref[T]:
 
        重命名字段 ``cell_contents`` 为 ``value``
     """
+
+    __slots__ = ("value",)
 
     def __init__(self, value: T):
         """
