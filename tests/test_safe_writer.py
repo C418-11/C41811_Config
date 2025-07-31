@@ -62,7 +62,7 @@ class TestSafeOpen:
             file.write("test")
             raise RuntimeError
         with cleanup(file):
-            assert not os.path.exists(tmp_path / "test.txt")
+            assert not (tmp_path / "test.txt").exists()
 
     if os.name == "nt":
 
