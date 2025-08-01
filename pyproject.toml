@@ -83,7 +83,7 @@ ruff = [
     "ruff~=0.12.1",
 ]
 mypy = [
-    "mypy~=1.18",
+    "mypy~=1.17",
     "pytest>=8.3.5,<8.5.0",
     "ruamel.yaml~=0.18.10",
     "types-PyYAML",
