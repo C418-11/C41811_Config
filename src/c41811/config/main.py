@@ -65,14 +65,9 @@ class RequiredPath[V, D: ABCConfigData[Any]]:
         :type validator: Any
         :param validator_factory: 数据验证器工厂
         :type validator_factory:
-            Optional[
-            Callable[
-            [Any, validators.ValidatorFactoryConfig],
-            Callable[[Ref[ABCConfigData]], ABCConfigData]
-            ] | validators.ValidatorTypes | Literal["ignore", "pydantic", "component"]
-            ]
+            VALIDATOR_FACTORY[V, D] | validators.ValidatorTypes | Literal["ignore", "pydantic", "component"] | None
         :param static_config: 静态配置
-        :type static_config: Optional[validators.ValidatorFactoryConfig]
+        :type static_config: validators.ValidatorFactoryConfig | None
 
         .. tip::
            提供 ``static_config`` 参数可以避免在 :py:meth:`~RequiredPath.filter` 中反复调用 ``validator_factory``
@@ -112,18 +107,18 @@ class RequiredPath[V, D: ABCConfigData[Any]]:
         检查过滤需求的键
 
         :param data: 要过滤的原始数据
-        :type data: Ref[ABCConfigData] | ABCConfigData
+        :type data: D | Ref[D]
         :param allow_modify:
            是否允许值不存在时修改 ``data`` 参数对象填充默认值(即使为False仍然会在结果中填充默认值，但不会修改 ``data``
            参数对象)
-        :type allow_modify: Optional[bool]
+        :type allow_modify: bool | None
         :param skip_missing: 忽略丢失的键
-        :type skip_missing: Optional[bool]
+        :type skip_missing: bool | None
         :param extra: 额外参数
         :type extra: Any
 
         :return: 处理后的配置数据*快照*
-        :rtype: ABCConfigData
+        :rtype: D
 
         :raise ConfigDataTypeError: 配置数据类型错误
         :raise RequiredPathNotFoundError: 必要的键未找到
@@ -194,13 +189,13 @@ class ConfigRequirementDecorator:
         :param namespace: 详见 :py:meth:`ConfigPool.load`
         :param file_name: 详见 :py:meth:`ConfigPool.load`
         :param required: 需求的键
-        :type required: RequiredPath
+        :type required: RequiredPath[Any, D]
         :param config_formats: 详见 :py:meth:`ConfigPool.load`
         :param allow_initialize: 详见 :py:meth:`ConfigPool.load`
         :param config_cacher: 缓存配置的装饰器，默认为None，即不缓存
-        :type config_cacher: Optional[Callable[[Callable[..., ABCConfigData]], ABCConfigData]]
+        :type config_cacher: Callable[[Callable[..., D], VarArg(), KwArg()], D] | None
         :param filter_kwargs: :py:meth:`RequiredPath.filter` 要绑定的默认参数，这会导致 ``static_config`` 失效
-        :type filter_kwargs: dict[str, Any]
+        :type filter_kwargs: dict[str, Any] | None
 
         :raise UnsupportedConfigFormatError: 不支持的配置格式
 
@@ -232,6 +227,7 @@ class ConfigRequirementDecorator:
         :param ignore_cache: 是否忽略缓存
         :type ignore_cache: bool
         :param filter_kwargs: RequiredConfig.filter的参数
+
         :return: 得到的配置数据
         :rtype: Any
 
@@ -359,7 +355,7 @@ class BasicConfigSL(ABCConfigSL, ABC):
         注册到配置池中
 
         :param config_pool: 配置池
-        :type config_pool: Optional[ABCSLProcessorPool]
+        :type config_pool: ABCSLProcessorPool | None
 
         :return: 返回当前实例便于链式调用
         :rtype: Self
@@ -396,7 +392,7 @@ def _merge_args(
     :param args: 新参数
     :type args: tuple
     :param kwargs: 新参数
-    :type kwargs: dict
+    :type kwargs: dict[str, Any]
 
     :return: 合并后的参数
     :rtype: tuple[tuple, PMap[str, Any]]
@@ -457,9 +453,9 @@ class BasicLocalFileConfigSL(BasicConfigSL, ABC):
         # noinspection GrazieInspection
         """
         :param s_arg: 保存器默认参数
-        :type s_arg: Optional[Sequence | Mapping | tuple[Sequence, Mapping[str, Any]]]
+        :type s_arg: SLArgument
         :param l_arg: 加载器默认参数
-        :type l_arg: Optional[Sequence | Mapping | tuple[Sequence, Mapping[str, Any]]]
+        :type l_arg: SLArgument
         :param reg_alias: 详见 :py:class:`BasicConfigSL`
         :param create_dir: 是否允许创建目录
         :type create_dir: bool
@@ -682,9 +678,9 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
         格式化命名空间以传递给其他SL处理器
 
         :param namespace: 配置的命名空间
-        :type namespace: Optional[str]
+        :type namespace: str
         :param file_name: 配置文件名
-        :type file_name: Optional[str]
+        :type file_name: str
 
         :return: 格式化后的命名空间
         :rtype: str

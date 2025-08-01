@@ -133,12 +133,12 @@ class BasicIndexedConfigData[D: Indexed[Any, Any]](BasicSingleConfigData[D], ABC
        重命名 ``BaseSupportsIndexConfigData`` 为 ``BasicIndexedConfigData``
     """
 
-    def _process_path(
+    def _process_path[X, Y](
         self,
         path: ABCPath[Any],
-        path_checker: Callable[[Any, AnyKey, ABCPath[Any], int], Any],
-        process_return: Callable[[Any], Any],
-    ) -> Any:
+        path_checker: Callable[[Any, AnyKey, ABCPath[Any], int], X],
+        process_return: Callable[[Any], Y],
+    ) -> X | Y:
         # noinspection GrazieInspection
         """
         处理键路径的通用函数
@@ -146,13 +146,13 @@ class BasicIndexedConfigData[D: Indexed[Any, Any]](BasicSingleConfigData[D], ABC
         :param path: 键路径
         :type path: ABCPath
         :param path_checker: 检查并处理每个路径段，返回值非None时结束操作并返回值
-        :type path_checker: Callable[(current_data: Any, current_key: ABCKey, last_path: list[ABCKey], path_index: int),
-                            Any]
+        :type path_checker:
+            Callable[(current_data: Any, current_key: ABCKey, last_path: ABCPath, path_index: int), X]
         :param process_return: 处理最终结果，该函数返回值会被直接返回
-        :type process_return: Callable[(current_data: Any), Any]
+        :type process_return: Callable[(current_data: Any), Y]
 
         :return: 处理结果
-        :rtype: Any
+        :rtype: X | Y
 
         .. versionchanged:: 0.2.0
            重命名参数 ``process_check`` 为 ``path_checker``
@@ -320,10 +320,10 @@ class BasicIndexedConfigData[D: Indexed[Any, Any]](BasicSingleConfigData[D], ABC
 
 class ConfigDataFactory:
     """
-    配置数据类
+    配置数据工厂类
 
     .. versionchanged:: 0.1.5
-       会自动根据传入的配置数据类型选择对应的子类
+       会自动根据传入的数据类型选择对应的配置数据类
 
     .. versionchanged:: 0.3.0
        不再作为所有 `ConfigData` 的虚拟父类
@@ -346,6 +346,9 @@ class ConfigDataFactory:
         :type args: Any
         :param kwargs: 配置数据
         :type kwargs: Any
+
+        :return: 配置数据类
+        :rtype: ABCConfigData
         """
         if not args:
             args = (None,)
@@ -363,9 +366,9 @@ class ConfigFile[D: ABCConfigData[Any]](ABCConfigFile[D]):
     def __init__(self, initial_config: D | Any, *, config_format: str | None = None) -> None:
         """
         :param initial_config: 配置数据
-        :type initial_config: Any
+        :type initial_config: D
         :param config_format: 配置文件的格式
-        :type config_format: Optional[str]
+        :type config_format: str | None
 
         .. caution::
            本身并未对 ``initial_config`` 参数进行深拷贝，但是 :py:class:`ConfigDataFactory` 可能会将其深拷贝
@@ -525,7 +528,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
         :param file_name: 文件名
         :type file_name: str
         :param config_formats: 配置格式
-        :type config_formats: Optional[str | Iterable[str]]
+        :type config_formats: str | Iterable[str] | None
         :param configfile_format:
            该配置文件对象本身配置格式属性的值
            可选项，一般在保存时填入
@@ -597,11 +600,11 @@ class BasicConfigPool(ABCConfigPool, ABC):
         :param file_name: 文件名
         :type file_name: str
         :param config_formats: 配置格式
-        :type config_formats: Optional[str | Iterable[str]]
+        :type config_formats: str | Iterable[str] | None
         :param processor:
            处理器，参数为[配置池对象, 命名空间, 文件名, 配置格式]返回值会被直接返回，
            出现意料内的SL处理器无法处理需抛出FailedProcessConfigFileError以允许继续尝试别的SL处理器
-        :type processor: Callable[[Self, str, str, str], Any]
+        :type processor: Callable[[Self, str, str, str], R]
         :param file_config_format:
            该配置文件对象本身配置格式属性的值
            可选项，一般在保存时填入
@@ -609,6 +612,9 @@ class BasicConfigPool(ABCConfigPool, ABC):
 
            .. seealso::
               :py:attr:`ABCConfigFile.config_format`
+
+        :return: 处理器返回值
+        :rtype: R
 
         :raise UnsupportedConfigFormatError: 不支持的配置格式
         :raise FailedProcessConfigFileError: 处理配置文件失败
@@ -670,7 +676,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
     @override
     def save_all(
         self, *, ignore_err: bool = False
-    ) -> None | dict[str, dict[str, tuple[ABCConfigFile[Any], Exception]]]:
+    ) -> dict[str, dict[str, tuple[ABCConfigFile[Any], Exception]]] | None:
         errors: dict[str, dict[str, tuple[ABCConfigFile[Any], Exception]]] = {}
         for namespace, configs in deepcopy(self._configs).items():
             errors[namespace] = {}
@@ -723,7 +729,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
         :param file_name: 文件名
         :type file_name: str
         :param config_formats: 配置格式
-        :type config_formats: Optional[str | Iterable[str]]
+        :type config_formats: str | Iterable[str] | None
         :param allow_initialize: 是否允许初始化配置文件
         :type allow_initialize: bool
 

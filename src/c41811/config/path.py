@@ -55,7 +55,7 @@ class AttrKey(IndexMixin[str, Mapping[str, Any]], ABCKey[str, Mapping[str, Any]]
         :param key: 键名
         :type key: str
         :param meta: 元信息
-        :type meta: Optional[str]
+        :type meta: str | None
 
         :raise TypeError: key不为str时抛出
         """  # noqa: D205
@@ -105,7 +105,7 @@ class IndexKey(IndexMixin[int, Sequence[Any]], ABCKey[int, Sequence[Any]]):
         :param key: 索引值
         :type key: int
         :param meta: 元信息
-        :type meta: Optional[str]
+        :type meta: str
 
         :raise TypeError: key不为int时抛出
         """  # noqa: D205
@@ -148,7 +148,7 @@ class Path(ABCPath[AttrKey | IndexKey]):
         :type string: str
 
         :return: 解析后的路径
-        :rtype: Path
+        :rtype: Self
         """
         return cls(PathSyntaxParser.parse(string))
 
@@ -161,7 +161,7 @@ class Path(ABCPath[AttrKey | IndexKey]):
         :type locate: Iterable[str | int]
 
         :return: 解析后的路径
-        :rtype: Path
+        :rtype: Self
         """
         keys: list[AttrKey | IndexKey] = []
         for loc in locate:
@@ -206,6 +206,12 @@ class PathSyntaxParser:
         r"""
         将字符串分词为以\开头的有意义片段
 
+        :param string: 待分词字符串
+        :type string: str
+
+        :return: 分词结果
+        :rtype: tuple[str, ...]
+
         .. note::
            可以省略字符串开头的 ``\.``
 
@@ -216,12 +222,6 @@ class PathSyntaxParser:
            可以简写为
 
            ``r"first\.second\.third"``
-
-        :param string: 待分词字符串
-        :type string: str
-
-        :return: 分词结果
-        :rtype: tuple[str, ...]
 
         .. versionchanged:: 0.1.4
            允许省略字符串开头的 ``\.``
@@ -273,11 +273,11 @@ class PathSyntaxParser:
         :type string: str
 
         :return: 键列表
-        :rtype: list[ABCKey]
+        :rtype: list[AttrKey | IndexKey]
         """
         path: list[AttrKey | IndexKey] = []
-        item: None | str = None
-        meta: None | str = None
+        item: str | None = None
+        meta: str | None = None
         token_stack: list[str] = []
 
         tokenized_path = cls.tokenize(string)

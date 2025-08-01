@@ -16,7 +16,7 @@ from ..main import BasicLocalFileConfigSL
 
 
 class PythonLiteralSL(BasicLocalFileConfigSL):
-    """Python 字面量序列化处理器"""
+    """Python字面量序列化处理器"""
 
     @property
     @override

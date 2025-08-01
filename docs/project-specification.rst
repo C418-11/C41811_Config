@@ -183,12 +183,12 @@
   .. code-block:: python
      :caption: 例
 
-      from typing import Any, Optional
+      from typing import Any, Literal
 
       # 展开为
 
       from typing import Any
-      from typing import Optional
+      from typing import Literal
 
 自动格式化
 ------------

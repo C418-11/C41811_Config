@@ -220,11 +220,11 @@ class FieldDefinition[T: type | types.UnionType | types.EllipsisType | types.Gen
         # noinspection GrazieInspection
         """
         :param annotation: 用于类型检查的类型
-        :type annotation: type | types.UnionType | types.EllipsisType | types.GenericAlias
+        :type annotation: T
         :param default: 字段默认值
         :type default: Any
         :param default_factory: 字段默认值工厂
-        :type default_factory: Callable[[], Any]
+        :type default_factory: Callable[[], Any] | UnsetType
         :param allow_recursive: 是否允许递归处理字段值
         :type allow_recursive: bool
 
@@ -278,7 +278,15 @@ class RecursiveMapping(BaseModel):
 
 
 def _is_mapping(typ: Any) -> bool:
-    """判断是否为 Mapping 类型"""
+    """
+    判断是否为 :py:class`~collections.abc.Mapping` 类型
+
+    :param typ: 待检测类型
+    :type typ: Any
+
+    :return: 是否为 :py:class`~collections.abc.Mapping` 类型
+    :rtype: bool
+    """
     if typ is Any:
         return True
     try:
@@ -289,7 +297,15 @@ def _is_mapping(typ: Any) -> bool:
 
 
 def _allow_recursive(typ: Any) -> bool:
-    """判断是否允许递归处理字段值（键全为字符串则视为允许）"""  # noqa: RUF002
+    """
+    判断是否允许递归处理字段值（键全为字符串则视为允许）
+
+    :param typ: 待检测值
+    :type typ: Any
+
+    :return: 是否允许递归处理字段值
+    :rtype: bool
+    """  # noqa: RUF002
     try:
         RecursiveMapping(value=typ)
     except (ValidationError, TypeError):
@@ -357,14 +373,19 @@ class DefaultValidatorFactory[D: MCD]:
         :type validator: Mapping[str, Any]
 
         :return: 格式化后的映射键和被覆盖的Mapping父路径
-        :rtype: tuple[Mapping[str, Any], set[str]]
+        :rtype: tuple[Mapping[str, Any], set[str | ABCPath[Any]]]
         """
         iterator = iter(validator.items())
         key: str = None  # type: ignore[assignment]
         value: Any = None
 
         def _next() -> bool:
-            """获取下一个键值对"""
+            """
+            获取下一个键值对
+
+            :return: 是否耗尽迭代器
+            :rtype: bool
+            """
             nonlocal key, value
             try:
                 key, value = next(iterator)
@@ -372,51 +393,55 @@ class DefaultValidatorFactory[D: MCD]:
                 return True
             return False
 
+        # 如果为空则提前返回
         if _next():
             return {}, set()
 
         fmt_data: MappingConfigData[OrderedDict[str, Any]] = MappingConfigData(OrderedDict())
-        father_set: set[str | ABCPath[Any]] = set()
+        parent_set: set[str | ABCPath[Any]] = set()
         while True:
-            # 如果传入了任意路径的父路径那就检查新值和旧值是否都为Mapping
-            # 如果是那就把父路径直接加入father_set不进行后续操作
-            # 否则发出警告提示意外的复写验证器路径
+            # 如果传入了任意路径的父路径那就检查新值和旧值是否都为Mapping子类或Any
             if key in fmt_data:
                 target_value = fmt_data.retrieve(key)
                 if not issubclass(type(target_value), self.typehint_types):
                     target_value = type(target_value)
 
+                # 如果是那就把父路径直接加入parent_set不进行后续操作
                 if _is_mapping(value) and _is_mapping(target_value):
-                    father_set.add(key)
-                    if _next():
+                    parent_set.add(key)
+                    if _next():  # 更新键值对
                         break
                     continue
 
+                # 否则发出警告提示意外的复写验证器路径
                 warnings.warn(
                     f"Overwriting exists validator path with unexpected type"
                     f" '{value}'(new) and '{target_value}'(exists)",
                     stacklevel=2,
                 )
 
+            # 如果可以递归处理字段值那就递归处理
             if _allow_recursive(value):
-                value, sub_fpath = self._fmt_mapping_key(value)
-                father_set.update(f"{key}\\.{sf_path}" for sf_path in sub_fpath)
+                value, inner_path_set = self._fmt_mapping_key(value)
+                parent_set.update(f"{key}\\.{inner_path}" for inner_path in inner_path_set)
 
+            # 记录该键值对
             try:
                 fmt_data.modify(key, value)
-            except ConfigDataTypeError as err:
+            except ConfigDataTypeError as err:  # 如果任意父路径不为Mapping
                 relative_path = Path(err.key_info.relative_keys)
-                # 如果旧类型为Mapping, Any那么就允许新的键创建
+                # 如果旧类型为Mapping子类或Any那么就允许新的键创建
                 if not _is_mapping(fmt_data.retrieve(relative_path)):
                     raise err from None
                 fmt_data.modify(relative_path, OrderedDict())
-                father_set.add(relative_path)
+                parent_set.add(relative_path)
                 continue
 
+            # 获取下一个键值对
             if _next():
                 break
 
-        return fmt_data.data, father_set
+        return fmt_data.data, parent_set
 
     def _mapping2model(self, mapping: Mapping[str, Any], model_config: dict[str, Any]) -> type[BaseModel]:
         """
@@ -430,6 +455,7 @@ class DefaultValidatorFactory[D: MCD]:
         """
         fmt_data: OrderedDict[str, Any] = OrderedDict()
         for key, value in mapping.items():
+            # 将键值对转换为字段定义
             definition: FieldDefinition[Any]
             # foo = FieldInfo()  # noqa: ERA001
             if isinstance(value, FieldInfo):
@@ -450,7 +476,7 @@ class DefaultValidatorFactory[D: MCD]:
                 # foo: int = 1  # noqa: ERA001
                 definition = FieldDefinition(type(value), FieldInfo(default=value))
 
-            # 递归处理
+            # 递归处理Mapping值
             if all(
                 (
                     definition.allow_recursive,
@@ -465,12 +491,13 @@ class DefaultValidatorFactory[D: MCD]:
                 )
                 definition = FieldDefinition(model_cls, FieldInfo(default_factory=model_cls))
 
-            # 如果忽略不存在的键就填充特殊值
+            # 如果忽略不存在的键则填充特殊值
             if all((self.validator_config.skip_missing, definition.value.is_required())):
                 definition = FieldDefinition(definition.annotation | SkipMissingType, FieldInfo(default=SkipMissing))
 
             fmt_data[key] = (definition.annotation, definition.value)
 
+        # 创建验证模型
         return create_model(
             f"{type(self).__name__}.RuntimeTemplate",
             __config__=cast(ConfigDict, model_config.get(self.model_config_key, {})),
@@ -479,10 +506,10 @@ class DefaultValidatorFactory[D: MCD]:
 
     def _compile(self) -> None:
         """编译模板"""
-        fmt_validator, father_set = self._fmt_mapping_key(self.validator)
+        fmt_validator, parent_set = self._fmt_mapping_key(self.validator)
         # 所有重复存在的父路径都将允许其下存在多余的键
         model_config: MCD = MappingConfigData()
-        for path in father_set:
+        for path in parent_set:
             model_config.modify(path, {self.model_config_key: {"extra": "allow"}})
 
         self.model = self._mapping2model(fmt_validator, model_config.data)
@@ -492,7 +519,7 @@ class DefaultValidatorFactory[D: MCD]:
         验证配置数据
 
         :param config_ref: 配置数据引用
-        :type config_ref: Ref[D]
+        :type config_ref: Ref[D | NoneConfigData]
 
         :return: 验证后的配置数据
         :rtype: D
@@ -527,6 +554,9 @@ def pydantic_validator[D: MCD](
     :type validator: type[BaseModel]
     :param cfg: 验证器配置
     :type cfg: ValidatorFactoryConfig
+
+    :return: 验证器
+    :rtype: Callable[[Ref[D | NoneConfigData]], D]
     """
     if not issubclass(validator, BaseModel):
         msg = f"Expected a subclass of BaseModel for parameter 'validator', but got '{validator.__name__}'"
@@ -535,6 +565,15 @@ def pydantic_validator[D: MCD](
         warnings.warn("skip_missing is not supported in pydantic validator", stacklevel=2)
 
     def _builder(config_ref: Ref[D | NoneConfigData]) -> D:
+        """
+        验证配置数据
+
+        :param config_ref: 配置数据引用
+        :type config_ref: Ref[D | NoneConfigData]
+
+        :return: 验证后的配置数据
+        :rtype: D
+        """
         if isinstance(config_ref.value, NoneConfigData):
             config_ref.value = MappingConfigData()  # type: ignore[assignment]
         data: D = config_ref.value  # type: ignore[assignment]
@@ -599,6 +638,7 @@ class ComponentValidatorFactory[D: ComponentConfigData[Any, Any]]:
         self._compile()
 
     def _compile(self) -> None:
+        """编译模板"""
         for member, validator in self.validator.items():
             self.validators[member] = self.validator_factory(validator, self.validator_config)
 
@@ -607,7 +647,7 @@ class ComponentValidatorFactory[D: ComponentConfigData[Any, Any]]:
         验证配置数据
 
         :param config_ref: 配置数据引用
-        :type config_ref: Ref[D]
+        :type config_ref: Ref[D | NoneConfigData]
 
         :return: 验证后的配置数据
         :rtype: D

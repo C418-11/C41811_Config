@@ -37,6 +37,7 @@ def fmt_path(path: PathLike) -> ABCPath[Any] | Path:
     :type path: PathLike
 
     :return: 配置数据
+    :rtype: ABCPath | Path
     """
     if isinstance(path, ABCPath):
         return path
@@ -47,6 +48,12 @@ def check_read_only[F: Callable[..., Any]](func: F) -> F:
     """
     装饰 :py:class:`ABCConfigData` 的方法提供 :py:attr:`ABCConfigData.read_only` 的便捷检查，当其不为 :py:const:`True`
     时抛出 :py:exc:`TypeError`
+
+    :param func: 目标方法
+    :type func: F
+
+    :return: 装饰后方法
+    :rtype: F
     """  # noqa: RUF002, D205
 
     @wrapt.decorator  # type: ignore[misc]

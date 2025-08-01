@@ -19,7 +19,15 @@ from .errors import UnavailableAttribute
 
 
 def singleton[C: Any](target_cls: type[C], /) -> type[C]:
-    """单例模式类装饰器"""
+    """
+    单例模式类装饰器
+
+    :param target_cls: 目标类
+    :type target_cls: type[C]
+
+    :return: 装饰后的类
+    :rtype: type[C]
+    """
 
     def new_singleton(cls: type[C], /, *args: Any, **kwargs: Any) -> C:
         if not hasattr(cls, "__singleton_instance__"):

@@ -192,8 +192,8 @@ Pydantic验证器工厂
 
 ``validator`` 参数可以为 ``Iterable[str]`` 或 ``Mapping[str | ABCPath, Any]``
 
-``Iterable`` 的元素或 ``Mapping`` 的键会被作为 :ref:`term-config-data-path-syntax` 解析，
-如非特殊配置结果将一定包含这些 :ref:`配置数据路径 <term-config-data-path-syntax>`
+:py:class:`~collections.abc.Iterable` 的元素或 :py:class:`~collections.abc.Mapping` 的键会被作为
+:ref:`term-config-data-path-syntax` 解析，如非特殊配置结果将一定包含这些 :ref:`配置数据路径 <term-config-data-path-syntax>`
 
 .. note::
 

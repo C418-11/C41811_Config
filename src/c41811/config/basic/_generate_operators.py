@@ -55,11 +55,11 @@ def generate[C](cls: type[C]) -> type[C]:
 
     需要使用 :py:deco:`operate` 装饰器标记要自动生成的操作符
 
-    :param cls: 类
-    :type cls: C
+    :param cls: 目标类
+    :type cls: type[C]
 
     :return: 原样返回类
-    :rtype: C
+    :rtype: type[C]
     """
     for name, func in dict(vars(cls)).items():
         if not hasattr(func, "__generate_operators__"):

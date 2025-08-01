@@ -44,6 +44,15 @@ class NumberConfigData[D: Number](BasicSingleConfigData[D]):
     @property
     @override
     def data_read_only(self) -> Literal[False]:
+        """
+        配置数据是否为只读
+
+        :return: 配置数据是否为只读
+        :rtype: Literal[False]
+
+        .. note::
+           该配置数据类始终认为配置数据非只读，使其能正确作为配置数据容器使用
+        """  # noqa: RUF002
         return False
 
     def __int__(self) -> int:

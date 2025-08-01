@@ -48,7 +48,7 @@ def _keys_recursive(
     :param data: 配置数据
     :type data: Mapping
     :param seen: 已访问的配置数据的id
-    :type seen: Optional[set[int]]
+    :type seen: set[int] | None
     :param strict: 是否严格模式，如果为 True，则当遇到循环引用时，会抛出异常
     :type strict: bool
     :param end_point_only: 是否只返回叶子节点的键
@@ -127,7 +127,7 @@ class MappingConfigData[D: Mapping[Any, Any]](BasicIndexedConfigData[D], Mutable
         r"""
         获取所有键
 
-        不为 :py:class:`Mapping` 默认行为时键必须为 :py:class:`str` 且返回值会被转换为
+        不为 :py:class:`~collections.abc.Mapping` 默认行为时键必须为 :py:class:`str` 且返回值会被转换为
         :ref:`配置数据路径字符串 <term-config-data-path-syntax>`
 
         :param recursive: 是否递归获取

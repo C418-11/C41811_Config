@@ -89,9 +89,9 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
     def __init__(self, meta: M | None = None, members: MutableMapping[str, D] | None = None):
         """
         :param meta: 组件元数据
-        :type meta: Optional[ComponentMeta]
+        :type meta: M | None
         :param members: 组件成员
-        :type members: Optional[MutableMapping[str, ABCIndexedConfigData]]
+        :type members: MutableMapping[str, D] | None
         """  # noqa: D205
         if meta is None:
             meta = ComponentMeta()  # type: ignore[assignment]
@@ -175,7 +175,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
         :type member: str
 
         :return: 成员数据
-        :rtype: basic.mapping.MappingConfigData
+        :rtype: D
         """
         try:
             return self._members[member]
@@ -191,16 +191,16 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
         逐个尝试解析成员配置数据
 
         :param path: 路径
-        :type path: ABCPath
+        :type path: P
         :param order: 成员处理顺序
         :type order: list[str]
         :param processor: 成员处理函数
-        :type processor: Callable[[ABCPath, basic.mapping.MappingConfigData], Any]
+        :type processor: Callable[[P, D], R]
         :param exception: 顺序为空抛出的错误
         :type exception: Exception
 
         :return: 处理结果
-        :rtype: Any
+        :rtype: R
 
         .. important::
            针对 :py:exc:`RequiredPathNotFoundError` ， :py:exc:`ConfigDataTypeError` 做了特殊处理，
@@ -216,7 +216,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
         if not order:
             raise exception
 
-        error: None | RequiredPathNotFoundError | ConfigDataTypeError = None
+        error: RequiredPathNotFoundError | ConfigDataTypeError | None = None
         for member in order:
             try:
                 return processor(path, self._member(member))

@@ -43,7 +43,7 @@ class ObjectConfigData[D: object](BasicSingleConfigData[D]):
     def __init__(self, data: D):
         """
         :param data: 配置的原始数据
-        :type data: Any
+        :type data: D
 
         .. caution::
            未默认做深拷贝，可能导致非预期行为
@@ -55,6 +55,15 @@ class ObjectConfigData[D: object](BasicSingleConfigData[D]):
     @property
     @override
     def data_read_only(self) -> Literal[False]:
+        """
+        配置数据是否为只读
+
+        :return: 配置数据是否为只读
+        :rtype: Literal[False]
+
+        .. note::
+           该配置数据类始终认为配置数据非只读，使其能正确作为配置数据容器使用
+        """  # noqa: RUF002
         return False
 
     @property
@@ -62,9 +71,6 @@ class ObjectConfigData[D: object](BasicSingleConfigData[D]):
     def data(self) -> D:
         """
         配置的原始数据
-
-        :return: 配置的原始数据
-        :rtype: Any
 
         .. caution::
            未默认做深拷贝，可能导致非预期的行为

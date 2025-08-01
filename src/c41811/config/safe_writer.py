@@ -149,9 +149,9 @@ def replace_atomic(src: PathLike, dst: PathLike) -> None:
     两个路径必须位于同一个文件系统上，这样操作才能是原子的
 
     :param src: 源
-    :type src: str
+    :type src: PathLike
     :param dst: 目标
-    :type dst: str
+    :type dst: PathLike
     """  # noqa: RUF002
     _replace_atomic(src, dst)
 
@@ -168,9 +168,9 @@ def move_atomic(src: PathLike, dst: PathLike) -> None:  # pragma: no cover
     两个路径必须位于同一个文件系统上，这样操作才能是原子的
 
     :param src: 源
-    :type src: str
+    :type src: PathLike
     :param dst: 目标
-    :type dst: str
+    :type dst: PathLike
     """  # noqa: RUF002
     _move_atomic(src, dst)
 
@@ -180,31 +180,75 @@ class ABCTempIOManager[F: AIO](ABC):
 
     @abstractmethod
     def from_file(self, file: F) -> F:
-        """为给定的文件创建一个临时文件"""
+        """
+        为给定的文件创建一个临时文件
+
+        :param file: 文件对象
+        :type file: F
+
+        :return: 临时文件对象
+        :type file: F
+        """
 
     @abstractmethod
     def from_path(self, path: Path | str, mode: str) -> F:
-        """为给定的路径创建一个临时文件"""
+        """
+        为给定的路径创建一个临时文件
+
+        :param path: 文件路径
+        :type path: Path | str
+        :param mode: 打开模式
+        :type mode: str
+
+        :return: 临时文件对象
+        :rtype: F
+        """
 
     @staticmethod
     @abstractmethod
     def sync(file: F) -> None:
-        """负责在提交之前清除尽可能多的文件缓存"""
+        """
+        负责在提交之前清除尽可能多的文件缓存
+
+        :param file: 文件对象
+        :type file: F
+        """
 
     @staticmethod
     @abstractmethod
     def rollback(file: F) -> None:
-        """清理所有临时资源"""
+        """
+        清理所有临时资源
+
+        :param file: 文件对象
+        :type file: F
+        """
 
     @staticmethod
     @abstractmethod
     def commit(temp_file: F, file: F) -> None:
-        """将临时文件移动到目标位置"""
+        """
+        将临时文件移动到目标位置
+
+        :param temp_file: 临时文件对象
+        :type temp_file: F
+        :param file: 文件对象
+        :type file: F
+        """
 
     @staticmethod
     @abstractmethod
     def commit_by_path(temp_file: F, path: PathLike, mode: str) -> None:
-        """将临时文件移动到目标位置"""
+        """
+        将临时文件移动到目标位置
+
+        :param temp_file: 临时文件对象
+        :type temp_file: F
+        :param path: 文件路径
+        :type path: PathLike
+        :param mode: 打开模式
+        :type mode: str
+        """
 
 
 class TempTextIOManager[F: TextIO](ABCTempIOManager[F]):
@@ -305,7 +349,7 @@ class SafeOpen[F: AIO]:
         :param io_manager: IO管理器
         :type io_manager: ABCTempIOManager
         :param timeout: 超时时间
-        :type timeout: Optional[float]
+        :type timeout: float | None
         :param flag: 锁标志
         :type flag: LockFlags
         """  # noqa: D205
@@ -323,6 +367,9 @@ class SafeOpen[F: AIO]:
         :param mode: 打开模式
         :type mode: str
         :return: 返回值为IO对象的上下文管理器
+
+        :return: 上下文管理器
+        :rtype: Generator[F | None, Any, None]
         """
         with GlobalModifyLock:
             lock = FileLocks.setdefault(_path2str(path), Lock())
@@ -359,7 +406,9 @@ class SafeOpen[F: AIO]:
 
         :param file: 文件对象
         :type file: IO
+
         :return: 返回值为IO对象的上下文管理器
+        :rtype: Generator[F | None, Any, None]
         """
         with GlobalModifyLock:
             lock = FileLocks.setdefault(cast(TextIO, file).name, Lock())
@@ -396,18 +445,53 @@ def _timeout_checker(
     interval_increase_speed: Real = 0.03,  # type: ignore[assignment]
     max_interval: Real = 0.5,  # type: ignore[assignment]
 ) -> Generator[None, Any, Any]:  # pragma: no cover # 除了windows其他平台压根不会触发timeout
+    """
+    返回一个可无限迭代对象，在超时时抛出错误，自动处理重试间隔
+
+    :param timeout: 超时时间
+    :type timeout: Real | None
+    :param interval_increase_speed: 间隔增加速度
+    :type interval_increase_speed: Real
+    :param max_interval: 最大间隔
+    :type max_interval: Real
+
+    :return: 可迭代对象
+    :rtype: Generator[None, Any, Any]
+    """  # noqa: RUF002
+
     def _calc_interval(interval: Real) -> Real:
+        """
+        计算重试间隔
+
+        :param interval: 当前间隔
+        :type interval: Real
+
+        :return: 新间隔
+        :rtype: Real
+        """
         interval = min(cast(Real, interval + interval_increase_speed), max_interval)
         time.sleep(float(interval))
         return interval
 
     def _inf_loop() -> Generator[None, Any, Any]:
+        """
+        当超时时间为永久时的无限循环，相对性能消耗更低
+
+        :return: 可迭代对象
+        :rtype: Generator[None, Any, Any]
+        """  # noqa: RUF002
         interval: Real = 0  # type: ignore[assignment]
         while True:
             yield
             interval = _calc_interval(interval)
 
     def _timeout_loop() -> Generator[None, Any, Any]:
+        """
+        拥有超时检测的可迭代对象
+
+        :return: 可迭代对象
+        :rtype: Generator[None, Any, Any]
+        """
         start = time.time() + float(interval_increase_speed)
         interval: Real = 0  # type: ignore[assignment]
         while cast(Real, time.time() - start) < timeout:
@@ -436,7 +520,7 @@ def acquire_lock(
     :param flags: 锁类型
     :type flags: LockFlags
     :param timeout: 超时时间
-    :type timeout: Optional[float]
+    :type timeout: Real | None
     :param immediately_release: 是否立即释放锁
     :type immediately_release: bool
     """
@@ -499,11 +583,11 @@ def safe_open(
     :param mode: 打开模式
     :type mode: str
     :param timeout: 超时时间
-    :type timeout: Optional[float]
+    :type timeout: float | None
     :param flag: 锁类型
     :type flag: LockFlags
     :param io_manager: 临时文件管理器
-    :type io_manager: Optional[ABCTempIOManager]
+    :type io_manager: ABCTempIOManager | None
     :param manager_kwargs: 临时文件管理器参数
     :type manager_kwargs: dict
 

@@ -373,7 +373,7 @@ ComponentTests: tuple[
 def test_component_file_sl_processor(
     pool: ConfigPool,
     sl_clss: list[ABCConfigSL],
-    meta: dict[str | None, MappingConfigData[Any]] | None | ComponentMeta[Any],
+    meta: dict[str | None, MappingConfigData[Any]] | ComponentMeta[Any] | None,
     members: dict[str, Any] | None,
     ignore_excs: tuple[EE, EE, EE],
     init_arguments: dict[str, Any],

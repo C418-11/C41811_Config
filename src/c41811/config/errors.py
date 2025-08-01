@@ -90,7 +90,7 @@ class ConfigDataPathSyntaxException(Exception):  # noqa: N818
         :param token_info: token相关信息
         :type token_info: TokenInfo
         :param msg: 错误信息
-        :type msg: Optional[str]
+        :type msg: str | None
 
         .. tip::
            错误信息获取优先级
@@ -202,7 +202,7 @@ class ConfigDataReadOnlyError(TypeError):
     def __init__(self, msg: str | None = None):
         """
         :param msg: 错误信息
-        :type msg: Optional[str]
+        :type msg: str | None
         """  # noqa: D205
         if msg is None:
             msg = "ConfigData is read-only"
@@ -342,7 +342,7 @@ class FailedProcessConfigFileError[E: BaseException](BaseExceptionGroup, Excepti
     def __new__(cls, reason: E | Iterable[E] | Mapping[str, E], msg: str = "Failed to process config file") -> Self:
         """
         :param reason: 处理配置文件失败的原因
-        :type reason: BaseException | Iterable[BaseException] | Mapping[str, BaseException]
+        :type reason: E | Iterable[E] | Mapping[str, E]
         :param msg: 提示信息
         :type msg: str
         """  # noqa: D205

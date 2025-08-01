@@ -20,7 +20,7 @@ from ..main import BasicLocalFileConfigSL
 
 
 class PythonSL(BasicLocalFileConfigSL):
-    """pyhon格式处理器"""
+    """Python格式处理器"""
 
     @property
     @override

@@ -53,13 +53,13 @@ class ZipFileSL(BasicCompressedConfigSL):
     ):
         """
         :param reg_alias: sl处理器注册别名
-        :type reg_alias: Optional[str]
+        :type reg_alias: str | None
         :param create_dir: 是否创建目录
         :type create_dir: bool
         :param compression: 压缩类型
         :type compression: ZipCompressionTypes | str | int | None
         :param compress_level: 压缩等级
-        :type compress_level: Optional[Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9] | int]
+        :type compress_level: Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9] | int | None
         """  # noqa: D205
         super().__init__(reg_alias=reg_alias, create_dir=create_dir)
 

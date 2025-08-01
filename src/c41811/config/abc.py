@@ -34,12 +34,12 @@ class ABCKey[K, D](ABC):
     def __init__(self, key: K, meta: str | None = None):
         """
         :param key: 键名
-        :type key: str
+        :type key: K
         :param meta: 元信息
-        :type meta: Optional[str]
+        :type meta: str | None
         """  # noqa: D205
         self._key = deepcopy(key)
-        self._meta: None | str = meta
+        self._meta: str | None = meta
 
     @property
     def key(self) -> K:
@@ -69,9 +69,9 @@ class ABCKey[K, D](ABC):
         获取内层元素
 
         :param data: 配置数据
-        :type data: Any
+        :type data: D
         :return: 内层配置数据
-        :rtype: Any
+        :rtype: D
 
         .. versionadded:: 0.1.4
         """
@@ -82,7 +82,7 @@ class ABCKey[K, D](ABC):
         设置内层元素
 
         :param data: 配置数据
-        :type data: Any
+        :type data: D
         :param value: 值
         :type value: Any
 
@@ -95,18 +95,18 @@ class ABCKey[K, D](ABC):
         删除内层元素
 
         :param data: 配置数据
-        :type data: Any
+        :type data: D
 
         .. versionadded:: 0.1.4
         """
 
     @abstractmethod
-    def __contains_inner_element__(self, data: Any) -> bool:
+    def __contains_inner_element__(self, data: D) -> bool:
         """
         是否包含内层元素
 
         :param data: 配置数据
-        :type data: Any
+        :type data: D
         :return: 是否包含内层配置数据
         :rtype: bool
 
@@ -294,6 +294,7 @@ class ABCConfigData[D](ABC):
         :rtype: bool | None
 
         .. versionadded:: 0.1.3
+
         .. versionchanged:: 0.1.5
            改为抽象属性
         """
@@ -323,7 +324,7 @@ class ABCConfigData[D](ABC):
         冻结配置数据 (切换只读模式)
 
         :param freeze: 是否冻结配置数据, 为 :py:const:`None` 时进行切换
-        :type freeze: Optional[bool]
+        :type freeze: bool | None
         :return: 返回当前实例便于链式调用
         :rtype: Self
 
@@ -455,7 +456,7 @@ class ABCIndexedConfigData[D: Indexed[Any, Any]](ABCConfigData[D], MutableIndexe
         """
 
     @abstractmethod
-    def get(self, path: PathLike, default: Any = None, *, return_raw_value: bool = False) -> Any:
+    def get[V](self, path: PathLike, default: V | None = None, *, return_raw_value: bool = False) -> V | Any:
         """
         获取路径的值的*快照*，路径不存在时填充默认值
 
@@ -463,12 +464,12 @@ class ABCIndexedConfigData[D: Indexed[Any, Any]](ABCConfigData[D], MutableIndexe
         :type path: PathLike
 
         :param default: 默认值
-        :type default: Any
+        :type default: V
         :param return_raw_value: 是否获取原始值
         :type return_raw_value: bool
 
         :return: 路径的值
-        :rtype: Any
+        :rtype: V | Any
 
         :raise ConfigDataTypeError: 配置数据类型错误
 
@@ -498,19 +499,19 @@ class ABCIndexedConfigData[D: Indexed[Any, Any]](ABCConfigData[D], MutableIndexe
         """  # noqa: RUF002
 
     @abstractmethod
-    def setdefault(self, path: PathLike, default: Any = None, *, return_raw_value: bool = False) -> Any:
+    def setdefault[V](self, path: PathLike, default: V | None = None, *, return_raw_value: bool = False) -> V | Any:
         """
         如果路径不在配置数据中则填充默认值到配置数据并返回
 
         :param path: 路径
         :type path: PathLike
         :param default: 默认值
-        :type default: Any
+        :type default: V
         :param return_raw_value: 是否获取原始值
         :type return_raw_value: bool
 
         :return: 路径的值
-        :rtype: Any
+        :rtype: V | Any
 
         :raise ConfigDataReadOnlyError: 配置数据为只读
         :raise ConfigDataTypeError: 配置数据类型错误
@@ -589,9 +590,9 @@ class ABCProcessorHelper(ABC):  # noqa: B024
         :param root_path: 保存的根目录
         :type root_path: str
         :param namespace: 配置的命名空间
-        :type namespace: Optional[str]
+        :type namespace: str
         :param file_name: 配置文件名
-        :type file_name: Optional[str]
+        :type file_name: str | None
 
         :return: 配置文件路径
         :rtype: str
@@ -659,9 +660,9 @@ class ABCConfigFile[D: ABCConfigData[Any]](ABC):
     def __init__(self, initial_config: D, *, config_format: str | None = None) -> None:
         """
         :param initial_config: 配置数据
-        :type initial_config: ABCConfigData
+        :type initial_config: D
         :param config_format: 配置文件的格式
-        :type config_format: Optional[str]
+        :type config_format: str | None
 
         .. caution::
            ``initial_config`` 参数未默认做深拷贝，可能导致非预期行为
@@ -711,7 +712,7 @@ class ABCConfigFile[D: ABCConfigData[Any]](ABC):
         :param file_name: 文件名
         :type file_name: str
         :param config_format: 配置文件的格式
-        :type config_format: Optional[str]
+        :type config_format: str | None
 
         :raise UnsupportedConfigFormatError: 不支持的配置格式
 
@@ -881,9 +882,9 @@ class ABCConfigPool(ABCSLProcessorPool):
         :param file_name: 文件名
         :type file_name: str
         :param config_formats: 配置格式
-        :type config_formats: Optional[str | Iterable[str]]
+        :type config_formats: str | Iterable[str] | None
         :param config: 配置文件，可选，提供此参数相当于自动调用了一遍pool.set
-        :type config: Optional[ABCConfigFile]
+        :type config: ABCConfigFile | None
 
         :return: 返回当前实例便于链式调用
         :rtype: Self
@@ -898,7 +899,7 @@ class ABCConfigPool(ABCSLProcessorPool):
     @abstractmethod
     def save_all(
         self, *, ignore_err: bool = False
-    ) -> None | dict[str, dict[str, tuple[ABCConfigFile[Any], Exception]]]:
+    ) -> dict[str, dict[str, tuple[ABCConfigFile[Any], Exception]]] | None:
         """
         保存所有配置
 
@@ -906,7 +907,7 @@ class ABCConfigPool(ABCSLProcessorPool):
         :type ignore_err: bool
 
         :return: ignore_err为True时返回{Namespace: {FileName: (ConfigObj, Exception)}}，否则返回None
-        :rtype: None | dict[str, dict[str, tuple[ABCConfigFile, Exception]]]
+        :rtype: dict[str, dict[str, tuple[ABCConfigFile, Exception]]] | None
 
         .. versionchanged:: 0.3.0
            更改参数 ``ignore_err`` 为仅关键字参数
@@ -929,7 +930,7 @@ class ABCConfigPool(ABCSLProcessorPool):
         :param file_name: 文件名
         :type file_name: str
         :param config_formats: 配置格式
-        :type config_formats: Optional[str | Iterable[str]]
+        :type config_formats: str | Iterable[str] | None
 
         :return: 配置对象
         :rtype: ABCConfigFile
@@ -955,7 +956,7 @@ class ABCConfigPool(ABCSLProcessorPool):
         :param file_name: 文件名
         :type file_name: str
         :param config_formats: 配置格式
-        :type config_formats: Optional[str | Iterable[str]]
+        :type config_formats: str | Iterable[str] | None
         :param allow_initialize: 是否允许初始化配置文件
         :type allow_initialize: bool
 
@@ -978,7 +979,7 @@ class ABCConfigPool(ABCSLProcessorPool):
         :param namespace: 命名空间
         :type namespace: str
         :param file_name: 文件名
-        :type file_name: str
+        :type file_name: str | None
 
         :return: 返回当前实例便于链式调用
         :rtype: Self
@@ -997,7 +998,7 @@ class ABCConfigPool(ABCSLProcessorPool):
         :param namespace: 命名空间
         :type namespace: str
         :param file_name: 文件名
-        :type file_name: Optional[str]
+        :type file_name: str | None
 
         :return: 返回当前实例便于链式调用
         :rtype: Self
@@ -1213,10 +1214,10 @@ class ABCMetaParser[D: ABCConfigData[Any], M](ABC):
         解析元配置
 
         :param meta_config: 元配置
-        :type meta_config: ABCConfigData
+        :type meta_config: D
 
         :return: 元数据
-        :rtype: Any
+        :rtype: M
         """
 
     @abstractmethod
@@ -1225,10 +1226,10 @@ class ABCMetaParser[D: ABCConfigData[Any], M](ABC):
         解析元数据
 
         :param meta: 元数据
-        :type meta: Any
+        :type meta: M
 
         :return: 元配置
-        :rtype: ABCConfigData
+        :rtype: D
         """
 
     @abstractmethod

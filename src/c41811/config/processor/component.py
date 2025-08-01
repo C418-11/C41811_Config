@@ -49,10 +49,10 @@ class ComponentMetaParser[D: MappingConfigData[Any]](ABCMetaParser[D, ComponentM
         解析元配置
 
         :param meta_config: 元配置
-        :type meta_config: basic.mapping.MappingConfigData
+        :type meta_config: D
 
         :return: 元数据
-        :rtype: basic.mapping.ComponentMeta
+        :rtype: ComponentMeta[D]
         """
         meta = self._validator.filter(Ref(meta_config))
 
@@ -87,10 +87,10 @@ class ComponentMetaParser[D: MappingConfigData[Any]](ABCMetaParser[D, ComponentM
         解析元数据
 
         :param meta: 元数据
-        :type meta: basic.mapping.ComponentMeta
+        :type meta: ComponentMeta[D]
 
         :return: 元配置
-        :rtype: basic.mapping.MappingConfigData
+        :rtype: D
         """
         return meta.config
 
@@ -116,7 +116,7 @@ class ComponentSL(BasicChainConfigSL):
         :param create_dir: 是否创建目录
         :type create_dir: bool
         :param meta_parser: 元数据解析器
-        :type meta_parser: basic.mapping.ABCMetaParser | None
+        :type meta_parser: ABCMetaParser[Any, ComponentMeta[Any]] | None
         :param meta_file: 元信息文件名
         :type meta_file: str
 

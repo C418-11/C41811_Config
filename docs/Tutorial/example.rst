@@ -149,6 +149,11 @@
        "component"
    ).check()
 
+   print(cfg.retrieve(r"re-try-interval\.unit"))  # .1s
+   print(cfg.retrieve(r"\{default\}\.re-try-interval\.unit"))  # second
+   print(cfg.retrieve(r"\{dev\}\.re-try-interval\.unit")) # $breakpoint
+   print(cfg.retrieve(r"\{develop.json\}\.re-try-interval\.unit")) # $breakpoint
+
    saveAll()
    print(cfg)
    # {
