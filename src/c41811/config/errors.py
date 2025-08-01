@@ -287,25 +287,35 @@ class UnknownErrorDuringValidateError(Exception):
 
 
 class UnsupportedConfigFormatError(Exception):
-    """不支持的配置文件格式错误"""
+    """
+    不支持的配置文件格式错误
 
-    def __init__(self, _format: str):
+    .. note::
+       :py:attr:`format` 可以为 :py:const:`None` 这表示 `未指定配置格式` 。
+       在一些情况下 :py:const:`None` 是有效的配置格式，如表示 `默认` 。
+       此错误以 :py:const:`None` 为参数抛出时表示 `我找到了配置格式None，但是我不支持None作为配置格式`
+    """  # noqa: RUF002
+
+    def __init__(self, _format: str | None):
         """
         :param _format: 不支持的配置的文件格式
-        :type _format: str
+        :type _format: str | None
 
         .. versionchanged:: 0.3.0
            重命名参数 ``format_`` 为 ``_format``
+           更改 ``_format`` 参数类型为 ``str | None``
         """  # noqa: D205
         self._format = _format
 
     @property
-    def format(self) -> str:
+    def format(self) -> str | None:
         """不支持的配置的文件格式"""
         return self._format
 
     @override
     def __str__(self) -> str:
+        if self.format is None:
+            return "Unspecified config format"
         return f"Unsupported config format: {self._format}"
 
     @override

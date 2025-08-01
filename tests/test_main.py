@@ -114,11 +114,11 @@ class TestConfigPool:
     @staticmethod
     def test_wrong_save(pool: ConfigPool, data: MCD) -> None:
         pool.set("", "test", ConfigFile(data))
-        with raises(UnsupportedConfigFormatError, match="Unsupported config format: Unknown"):
+        with raises(UnsupportedConfigFormatError, match="Unspecified config format"):
             pool.save("", "test")
 
         pool.set("", "test.wrong", ConfigFile(data))
-        with raises(UnsupportedConfigFormatError, match="Unsupported config format: Unknown"):
+        with raises(UnsupportedConfigFormatError, match="Unspecified config format"):
             pool.save("", "test.wrong")
 
         with raises(UnsupportedConfigFormatError, match="Unsupported config format: wrong"):
@@ -129,10 +129,10 @@ class TestConfigPool:
 
     @staticmethod
     def test_wrong_load(pool: ConfigPool) -> None:
-        with raises(UnsupportedConfigFormatError, match="Unsupported config format: Unknown"):
+        with raises(UnsupportedConfigFormatError, match="Unspecified config format"):
             pool.load("", "test")
 
-        with raises(UnsupportedConfigFormatError, match="Unsupported config format: Unknown"):
+        with raises(UnsupportedConfigFormatError, match="Unspecified config format"):
             pool.load("", "test.wrong")
 
         with raises(UnsupportedConfigFormatError, match="Unsupported config format: wrong"):

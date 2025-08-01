@@ -63,7 +63,7 @@ class TestConfigFile:
     @staticmethod
     def test_wrong_save(data: D_MCD, pool: P) -> None:
         file: ConfigFile[D_MCD] = ConfigFile(data)
-        with raises(UnsupportedConfigFormatError, match="Unsupported config format: Unknown"):
+        with raises(UnsupportedConfigFormatError, match="Unspecified config format"):
             file.save(pool, "", ".json")
 
         with raises(UnsupportedConfigFormatError, match="Unsupported config format: json"):

@@ -390,9 +390,6 @@ class ConfigFile[D: ABCConfigData[Any]](ABCConfigFile[D]):
         if config_format is None:
             config_format = self._config_format
 
-        if config_format is None:
-            msg = "Unknown"
-            raise UnsupportedConfigFormatError(msg)
         if config_format not in processor_pool.SLProcessors:
             raise UnsupportedConfigFormatError(config_format)
 
@@ -580,8 +577,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
             result_formats.append(configfile_format)
 
         if not result_formats:
-            msg = "Unknown"
-            raise UnsupportedConfigFormatError(msg)  # TODO 返回空的Iterable & 记得同步修改文档
+            raise UnsupportedConfigFormatError(None)
 
         return OrderedDict.fromkeys(result_formats)
 
