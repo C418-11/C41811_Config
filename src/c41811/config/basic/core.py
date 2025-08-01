@@ -681,10 +681,10 @@ class BasicConfigPool(ABCConfigPool, ABC):
             for file_name, config in configs.items():
                 try:
                     self.save(namespace, file_name)
-                except Exception as e:
+                except Exception as err:
                     if not ignore_err:
                         raise
-                    errors[namespace][file_name] = (config, e)
+                    errors[namespace][file_name] = (config, err)
 
         if not ignore_err:
             return None

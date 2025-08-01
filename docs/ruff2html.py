@@ -23,7 +23,13 @@ def write_ansi2html(text: str, out: str) -> None:
 
 def main():
     write_ansi2html(
-        run_commands([["ruff", "check", "--exit-zero", "--no-fix"], ["ruff", "format", "--check"]]), OUTPUT_FILE
+        run_commands(
+            [
+                ["ruff", "check", "--exit-zero", "--no-fix"],
+                ["ruff", "format", "--check"],
+            ]
+        ),
+        OUTPUT_FILE,
     )
 
 
