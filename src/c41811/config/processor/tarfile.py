@@ -13,7 +13,6 @@ import tarfile
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import ReprEnum
-from typing import IO
 from typing import Any
 from typing import Literal
 from typing import cast
@@ -117,7 +116,7 @@ class TarFileSL(BasicCompressedConfigSL):
             safe_open(file_path, "wb") as file,
             tarfile.open(
                 mode=cast(Literal["w:", "w:gz", "w:bz2", "w:xz"], f"w:{self._short_name}"),
-                fileobj=cast(IO[bytes], file),
+                fileobj=file,
                 **kwargs,
             ) as tar,
         ):
@@ -132,7 +131,7 @@ class TarFileSL(BasicCompressedConfigSL):
             safe_open(file_path, "rb") as file,
             tarfile.open(
                 mode=cast(Literal["r:", "r:gz", "r:bz2", "r:xz"], f"r:{self._short_name}"),
-                fileobj=cast(IO[bytes], file),
+                fileobj=file,
             ) as tar,
         ):
             # py3.12不传入filter会发出警告 https://peps.python.org/pep-0706/#defaults-and-their-configuration

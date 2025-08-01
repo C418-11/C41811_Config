@@ -104,7 +104,7 @@ def _remove_skip_missing[D: dict[str, Any] | list[Any]](data: D) -> D:
     .. versionadded:: 0.3.0
     """
     if isinstance(data, dict):
-        return type(data)((k, _remove_skip_missing(v)) for k, v in data.items() if v is not SkipMissing)  # type: ignore[return-value]
+        return type(data)((k, _remove_skip_missing(v)) for k, v in data.items() if v is not SkipMissing)
     if isinstance(data, list):
         return type(data)(_remove_skip_missing(item) for item in data if item is not SkipMissing)
     return data

@@ -46,13 +46,22 @@ from numbers import Real
 from pathlib import Path
 from threading import Lock
 from typing import IO
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import TextIO
 from typing import cast
+from typing import overload
 from typing import override
 from weakref import WeakValueDictionary
 
 import portalocker
+
+if TYPE_CHECKING:
+    from _typeshed import OpenBinaryMode
+    from _typeshed import OpenTextMode
+else:
+    OpenBinaryMode = Any
+    OpenTextMode = Any
 
 try:
     import fcntl
@@ -447,6 +456,30 @@ def release_lock(file: AIO) -> None:
     :type file: IO
     """
     portalocker.unlock(file)
+
+
+@overload
+def safe_open(
+    path: str | Path,
+    mode: OpenBinaryMode,
+    *,
+    timeout: float | None = 1,
+    flag: LockFlags = LockFlags.EXCLUSIVE,
+    io_manager: ABCTempIOManager[Any] | None = None,
+    **manager_kwargs: Any,
+) -> AbstractContextManager[IO[bytes]]: ...
+
+
+@overload
+def safe_open(
+    path: str | Path,
+    mode: OpenTextMode,
+    *,
+    timeout: float | None = 1,
+    flag: LockFlags = LockFlags.EXCLUSIVE,
+    io_manager: ABCTempIOManager[Any] | None = None,
+    **manager_kwargs: Any,
+) -> AbstractContextManager[IO[str]]: ...
 
 
 def safe_open(
