@@ -108,6 +108,7 @@ check-hidden = true
 [tool.pytest.ini_options]
 addopts = "-v --doctest-modules --ignore-glob=docs/conf.py --color yes"
 testpaths = ["src", "tests"]
+norecursedirs = ["fixtures"]
 
 [tool.ruff]
 line-length = 120
@@ -203,6 +204,9 @@ enable_error_code = [
     "explicit-override",
     "mutable-override",
     "truthy-iterable"
+]
+exclude = [
+    "tests/fixtures/",
 ]
 
 [tool.coverage.run]

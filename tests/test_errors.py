@@ -17,13 +17,28 @@ from c41811.config.errors import ConfigDataPathSyntaxException
 from c41811.config.errors import ConfigDataReadOnlyError
 from c41811.config.errors import ConfigDataTypeError
 from c41811.config.errors import ConfigOperate
+from c41811.config.errors import DependencyNotInstalledError
 from c41811.config.errors import FailedProcessConfigFileError
 from c41811.config.errors import KeyInfo
 from c41811.config.errors import RequiredPathNotFoundError
 from c41811.config.errors import TokenInfo
+from c41811.config.errors import UnavailableAttribute
 from c41811.config.errors import UnknownErrorDuringValidateError
 from c41811.config.errors import UnknownTokenTypeError
 from c41811.config.errors import UnsupportedConfigFormatError
+
+
+def test_unavailable_attribute() -> None:
+    err = DependencyNotInstalledError("dependency")
+    unavailable_attribute = UnavailableAttribute("attribute", err)
+
+    assert "attribute" in repr(unavailable_attribute)
+
+    with raises(DependencyNotInstalledError, match="dependency"):
+        unavailable_attribute("any", "arguments")
+
+    with raises(DependencyNotInstalledError, match="dependency"):
+        unavailable_attribute.any_attribute  # noqa: B018
 
 
 @mark.parametrize(

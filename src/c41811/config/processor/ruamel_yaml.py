@@ -10,14 +10,15 @@ from .._protocols import SupportsReadAndReadline
 from .._protocols import SupportsWrite
 from ..abc import ABCConfigFile
 from ..basic import ConfigFile
+from ..errors import DependencyNotInstalledError
 from ..main import BasicLocalFileConfigSL
 
 try:
     # noinspection PyPackageRequirements, PyUnresolvedReferences
     from ruamel.yaml import YAML
 except ImportError:
-    msg = "ruamel.yaml is not installed. Please install it with `pip install ruamel.yaml`"
-    raise ImportError(msg) from None
+    dependency = "ruamel.yaml"
+    raise DependencyNotInstalledError(dependency) from None
 
 
 class RuamelYamlSL(BasicLocalFileConfigSL):

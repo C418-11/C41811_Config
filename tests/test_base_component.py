@@ -11,13 +11,13 @@ from utils import safe_raises
 from c41811.config import ComponentConfigData
 from c41811.config import ComponentMember
 from c41811.config import ComponentMeta
+from c41811.config import ComponentMetaParser
 from c41811.config import MappingConfigData
 from c41811.config import NoneConfigData
 from c41811.config import SequenceConfigData
 from c41811.config.abc import ABCIndexedConfigData
 from c41811.config.errors import ConfigDataTypeError
 from c41811.config.errors import RequiredPathNotFoundError
-from c41811.config.processor.component import ComponentMetaParser
 from c41811.config.utils import Unset
 
 type D_MCD = MappingConfigData[dict[Any, Any]]
@@ -34,7 +34,7 @@ def _ccd_from_members(members: M) -> CCD:
 
 def _ccd_from_meta(meta: dict[str, Any], members: M) -> CCD:
     return ComponentConfigData(
-        ComponentMetaParser().convert_config2meta(MappingConfigData(meta)),  # type: ignore[arg-type]
+        ComponentMetaParser().convert_config2meta(MappingConfigData(meta)),
         members,
     )
 

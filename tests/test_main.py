@@ -24,12 +24,13 @@ from utils import safe_warns
 from c41811.config import ComponentConfigData
 from c41811.config import ComponentMember
 from c41811.config import ComponentMeta
+from c41811.config import ComponentMetaParser
 from c41811.config import ComponentOrders
 from c41811.config import ConfigDataFactory
 from c41811.config import ConfigFile
 from c41811.config import ConfigPool
 from c41811.config import FieldDefinition
-from c41811.config import JsonSL  # type: ignore[attr-defined]
+from c41811.config import JsonSL
 from c41811.config import MappingConfigData
 from c41811.config import NoneConfigData
 from c41811.config import Path as DPath
@@ -39,7 +40,6 @@ from c41811.config.abc import ABCConfigFile
 from c41811.config.errors import ConfigDataTypeError
 from c41811.config.errors import RequiredPathNotFoundError
 from c41811.config.errors import UnsupportedConfigFormatError
-from c41811.config.processor.component import ComponentMetaParser
 
 type MCD = MappingConfigData[Mapping[Any, Any]]
 

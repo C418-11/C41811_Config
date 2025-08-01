@@ -10,12 +10,51 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any
+from typing import Never
 from typing import Self
 from typing import cast
 from typing import override
 
 from .abc import ABCPath
 from .abc import AnyKey
+
+
+class DependencyNotInstalledError(ImportError):
+    """可选功能依赖缺失"""
+
+    def __init__(self, dep_name: str):
+        """
+        :param dep_name: 依赖名称
+        :type dep_name: str
+        """  # noqa: D205
+        self.dep_name = dep_name
+        super().__init__(f"{dep_name} is not installed. Please install it with `pip install {dep_name}`")
+
+
+class UnavailableAttribute:
+    """占位代理对象，在任意访问时抛出异常"""  # noqa: RUF002
+
+    __slots__ = ("_exception", "_name")
+
+    def __init__(self, name: str, exception: DependencyNotInstalledError):
+        """
+        :param name: 属性名
+        :type name: str
+        :param exception: 抛出的异常
+        :type exception: DependencyNotInstalledError
+        """  # noqa: D205
+        self._name = name
+        self._exception = exception
+
+    def __getattr__(self, name: str) -> Never:
+        raise self._exception
+
+    def __call__(self, *args: Any, **kwargs: Any) -> Never:  # noqa: ARG002, D102
+        raise self._exception
+
+    @override
+    def __repr__(self) -> str:
+        return f"<UnavailableAttribute {self._name} due to {self._exception}>"
 
 
 @dataclass
@@ -325,10 +364,12 @@ __all__ = (
     "ConfigDataTypeError",
     "ConfigOperate",
     "CyclicReferenceError",
+    "DependencyNotInstalledError",
     "FailedProcessConfigFileError",
     "KeyInfo",
     "RequiredPathNotFoundError",
     "TokenInfo",
+    "UnavailableAttribute",
     "UnknownErrorDuringValidateError",
     "UnknownTokenTypeError",
     "UnsupportedConfigFormatError",

@@ -10,14 +10,15 @@ from .._protocols import SupportsReadAndReadline
 from .._protocols import SupportsWrite
 from ..abc import ABCConfigFile
 from ..basic import ConfigFile
+from ..errors import DependencyNotInstalledError
 from ..main import BasicLocalFileConfigSL
 
 try:
     # noinspection PyPackageRequirements, PyUnresolvedReferences
     import yaml
 except ImportError:
-    msg = "PyYaml is not installed. Please install it with `pip install PyYaml`"
-    raise ImportError(msg) from None
+    dependency = "PyYaml"
+    raise DependencyNotInstalledError(dependency) from None
 
 
 class PyYamlSL(BasicLocalFileConfigSL):

@@ -14,14 +14,15 @@ from .._protocols import SupportsReadAndReadline
 from .._protocols import SupportsWrite
 from ..abc import ABCConfigFile
 from ..basic import ConfigFile
+from ..errors import DependencyNotInstalledError
 from ..main import BasicLocalFileConfigSL
 
 try:
     # noinspection PyPackageRequirements, PyUnresolvedReferences
     import hjson  # type: ignore[import-not-found]
 except ImportError:
-    msg = "HumanJson is not installed. Please install it with `pip install hjson`"
-    raise ImportError(msg) from None
+    dependency = "hjson"
+    raise DependencyNotInstalledError(dependency) from None
 
 
 class HJsonSL(BasicLocalFileConfigSL):

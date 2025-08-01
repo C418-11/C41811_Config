@@ -17,8 +17,21 @@ except ImportError:
     __version__ = ""
     __version_tuple__ = ()
 
+
+from typing import TYPE_CHECKING as __TYPE_CHECKING
+
+if __TYPE_CHECKING:  # pragma: no cover
+    from .processor import *  # noqa: F403
+else:
+    from .processor import __all__ as __processor_all
+    from .utils import lazy_import as __lazy_import
+
+    __all__, __getattr__ = __lazy_import(
+        {
+            **dict.fromkeys(__processor_all, ".processor"),
+        }
+    )
 from .basic import *  # noqa: F403
 from .main import *  # noqa: F403
 from .path import *  # noqa: F403
-from .processor import *  # noqa: F403
 from .validators import *  # noqa: F403

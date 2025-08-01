@@ -1,6 +1,7 @@
 from typing import cast
 
 from pytest import mark
+from pytest import raises
 
 from c41811.config.utils import Ref
 from c41811.config.utils import Unset
@@ -34,3 +35,32 @@ def test_ref() -> None:
     assert "abc" in repr(ref)
     ref.value = 321  # type: ignore[assignment]
     assert "321" in repr(ref)
+
+
+def test_lazy_import() -> None:
+    import fixtures.mock_lazy_import as mock_lazy_import  # noqa: PLC0415
+
+    assert mock_lazy_import.__all__ == ["Available", "MissingDependency", "SubAvailable", "SubMissingDependency"]
+    assert mock_lazy_import.sub_pkg.__all__ == ["SubAvailable", "SubMissingDependency"]
+
+    from fixtures.mock_lazy_import import Available  # noqa: PLC0415
+
+    assert Available == "Available"
+    assert mock_lazy_import.__all__ == ["Available", "MissingDependency", "SubAvailable", "SubMissingDependency"]
+    assert mock_lazy_import.sub_pkg.__all__ == ["SubAvailable", "SubMissingDependency"]
+
+    with raises(ImportError, match="MissingDependency"):
+        from fixtures.mock_lazy_import import MissingDependency  # noqa: PLC0415, F401
+    assert mock_lazy_import.__all__ == ["Available", "SubAvailable", "SubMissingDependency"]
+    assert mock_lazy_import.sub_pkg.__all__ == ["SubAvailable", "SubMissingDependency"]
+
+    from fixtures.mock_lazy_import import SubAvailable  # noqa: PLC0415
+
+    assert SubAvailable == "SubAvailable"
+    assert mock_lazy_import.__all__ == ["Available", "SubAvailable", "SubMissingDependency"]
+    assert mock_lazy_import.sub_pkg.__all__ == ["SubAvailable", "SubMissingDependency"]
+
+    with raises(ImportError, match="SubMissingDependency"):
+        from fixtures.mock_lazy_import import SubMissingDependency  # noqa: PLC0415, F401
+    assert mock_lazy_import.__all__ == ["Available", "SubAvailable"]
+    assert mock_lazy_import.sub_pkg.__all__ == ["SubAvailable"]

@@ -14,6 +14,9 @@ from typing import Any
 from typing import cast
 from typing import override
 
+from .errors import DependencyNotInstalledError
+from .errors import UnavailableAttribute
+
 
 def singleton[C: Any](target_cls: type[C], /) -> type[C]:
     """单例模式类装饰器"""
@@ -82,7 +85,7 @@ class Ref[T]:
         return f"<{type(self).__name__} ({self.value!r})>"
 
 
-def lazy_import(properties: dict[str, str], /) -> tuple[tuple[str, ...], Callable[[str], Any]]:
+def lazy_import(properties: dict[str, str], /) -> tuple[list[str], Callable[[str], Any]]:
     """
     为 `__init__` 文件生成 `__all__` 和 `__getattr__`
 
@@ -98,20 +101,31 @@ def lazy_import(properties: dict[str, str], /) -> tuple[tuple[str, ...], Callabl
         msg = "Cannot find caller module"
         raise RuntimeError(msg)
     caller_package = caller_module.__name__
+    property_list = list(properties.keys())
 
     def attr_getter(name: str) -> Any:
         try:
             sub_pkg = properties[name]
         except KeyError:
-            msg = f"module '{__name__}' has no attribute '{name}'"
+            msg = f"module '{caller_package}' has no attribute '{name}'"
             raise AttributeError(msg) from None
-        return getattr(import_module(sub_pkg, package=caller_package), name)
+        try:
+            module = import_module(sub_pkg, package=caller_package)
+        except DependencyNotInstalledError as err:
+            property_list.remove(name)
+            del properties[name]
+            return UnavailableAttribute(name, err)
+        attr = getattr(module, name)
+        if isinstance(attr, UnavailableAttribute):
+            property_list.remove(name)
+            del properties[name]
+        return attr
 
     attr_getter.__name__ = "__getattr__"
     attr_getter.__qualname__ = "__getattr__"
     attr_getter.__module__ = caller_package
 
-    return tuple(properties.keys()), attr_getter
+    return property_list, attr_getter
 
 
 __all__ = (

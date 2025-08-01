@@ -14,35 +14,35 @@ from pytest import raises
 from utils import EE
 from utils import safe_raises
 
+from c41811.config import BasicCompressedConfigSL
 from c41811.config import BasicConfigSL
 from c41811.config import BasicLocalFileConfigSL
 from c41811.config import ComponentConfigData
 from c41811.config import ComponentMeta
-from c41811.config import ComponentSL  # type: ignore[attr-defined]
+from c41811.config import ComponentMetaParser
+from c41811.config import ComponentSL
 from c41811.config import ConfigDataFactory
 from c41811.config import ConfigFile
 from c41811.config import ConfigPool
 from c41811.config import EnvironmentConfigData
-from c41811.config import JsonSL  # type: ignore[attr-defined]
+from c41811.config import HJsonSL
+from c41811.config import JsonSL
 from c41811.config import MappingConfigData
-from c41811.config import OSEnvSL  # type: ignore[attr-defined]
-from c41811.config import PickleSL  # type: ignore[attr-defined]
-from c41811.config import PlainTextSL  # type: ignore[attr-defined]
-from c41811.config import PythonLiteralSL  # type: ignore[attr-defined]
-from c41811.config import PythonSL  # type: ignore[attr-defined]
+from c41811.config import OSEnvSL
+from c41811.config import PickleSL
+from c41811.config import PlainTextSL
+from c41811.config import PythonLiteralSL
+from c41811.config import PythonSL
+from c41811.config import PyYamlSL
+from c41811.config import RuamelYamlSL
 from c41811.config import SequenceConfigData
-from c41811.config import TarFileSL  # type: ignore[attr-defined]
-from c41811.config import ZipFileSL  # type: ignore[attr-defined]
+from c41811.config import TarCompressionTypes
+from c41811.config import TarFileSL
+from c41811.config import TomlSL
+from c41811.config import ZipCompressionTypes
+from c41811.config import ZipFileSL
 from c41811.config.abc import ABCConfigSL
 from c41811.config.errors import FailedProcessConfigFileError
-from c41811.config.main import BasicCompressedConfigSL
-from c41811.config.processor.component import ComponentMetaParser
-from c41811.config.processor.hjson import HJsonSL
-from c41811.config.processor.pyyaml import PyYamlSL
-from c41811.config.processor.ruamel_yaml import RuamelYamlSL
-from c41811.config.processor.tarfile import TarCompressionTypes
-from c41811.config.processor.toml import TomlSL
-from c41811.config.processor.zipfile import ZipCompressionTypes
 
 JsonTests: tuple[tuple[Any, tuple[EE, ...], tuple[dict[str, Any], ...]], ...] = (
     ({"a": 1, "b": {"c": 2}}, (), ()),
@@ -390,7 +390,7 @@ def test_component_file_sl_processor(
         config_data = ComponentConfigData(
             meta
             if isinstance(meta, ComponentMeta)
-            else ComponentMetaParser().convert_config2meta(MappingConfigData(meta)),  # type: ignore[arg-type]
+            else ComponentMetaParser().convert_config2meta(MappingConfigData(meta)),
             members=members,
         )
     if info:
