@@ -89,8 +89,8 @@ DyadicOperatorTests = (
 
 @mark.parametrize(*DyadicOperatorTests)
 def test_dyadic_operator(
-    a: ABCConfigData[Any],
-    b: ABCConfigData[Any],
+    a: ABCConfigData,
+    b: ABCConfigData,
     op: Callable[[Any, Any], Any],
     iop: Callable[[Any, Any], Any],
     convert_raw: bool,  # noqa: FBT001

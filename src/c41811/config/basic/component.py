@@ -64,7 +64,7 @@ class ComponentMember:
 
 
 @dataclass
-class ComponentMeta[D: ABCConfigData[Any]]:
+class ComponentMeta[D: ABCConfigData]:
     """
     组件元数据
 

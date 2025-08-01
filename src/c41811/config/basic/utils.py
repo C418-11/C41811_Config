@@ -57,7 +57,7 @@ def check_read_only[F: Callable[..., Any]](func: F) -> F:
     """  # noqa: RUF002, D205
 
     @wrapt.decorator  # type: ignore[misc]
-    def wrapper(wrapped: F, instance: ABCConfigData[Any] | None, args: tuple[Any, ...], kwargs: dict[str, Any]) -> Any:
+    def wrapper(wrapped: F, instance: ABCConfigData | None, args: tuple[Any, ...], kwargs: dict[str, Any]) -> Any:
         if instance is None:  # pragma: no cover
             msg = "must be called from an instance"
             raise TypeError(msg)

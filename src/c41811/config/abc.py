@@ -247,7 +247,7 @@ class ABCPath[K: AnyKey](ABC, Iterable[K]):
         return f"<{type(self).__name__}{self._keys}>"
 
 
-class ABCConfigData[D](ABC):
+class ABCConfigData(ABC):
     """
     配置数据抽象基类
 
@@ -349,7 +349,7 @@ type PathLike = str | ABCPath[AnyKey]
 """
 
 
-class ABCIndexedConfigData[D: Indexed[Any, Any]](ABCConfigData[D], MutableIndexed[Any, Any], ABC):
+class ABCIndexedConfigData[D: Indexed[Any, Any]](ABCConfigData, MutableIndexed[Any, Any], ABC):
     # noinspection GrazieInspection
     """
     支持 ``索引`` 操作的配置数据
@@ -654,7 +654,7 @@ class ABCSLProcessorPool(ABC):
         return self._root_path
 
 
-class ABCConfigFile[D: ABCConfigData[Any]](ABC):
+class ABCConfigFile[D: ABCConfigData](ABC):
     """配置文件类"""
 
     def __init__(self, initial_config: D, *, config_format: str | None = None) -> None:
@@ -1201,7 +1201,7 @@ class ABCConfigSL(ABC):
         )
 
 
-class ABCMetaParser[D: ABCConfigData[Any], M](ABC):
+class ABCMetaParser[D: ABCConfigData, M](ABC):
     """
     元信息解析器抽象类
 

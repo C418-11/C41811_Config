@@ -47,7 +47,7 @@ from ..errors import RequiredPathNotFoundError
 from ..errors import UnsupportedConfigFormatError
 
 
-class BasicConfigData[D](ABCConfigData[D], ABC):
+class BasicConfigData[D](ABCConfigData, ABC):
     # noinspection GrazieInspection
     """
     配置数据基类
@@ -185,7 +185,7 @@ class BasicIndexedConfigData[D: Indexed[Any, Any]](BasicSingleConfigData[D], ABC
                     KeyInfo(cast(ABCPath[Any], path), current_key, key_index), ConfigOperate.Read
                 )
 
-        def process_return[V: Any](current_data: V) -> V | ABCConfigData[Any]:
+        def process_return[V: Any](current_data: V) -> V | ABCConfigData:
             if return_raw_value:
                 return deepcopy(current_data)
 
@@ -330,7 +330,7 @@ class ConfigDataFactory:
        重命名 ``ConfigData`` 为 ``ConfigDataFactory``
     """
 
-    TYPES: ClassVar[OrderedDict[tuple[type, ...], Callable[[Any], ABCConfigData[Any]] | type]]
+    TYPES: ClassVar[OrderedDict[tuple[type, ...], Callable[[Any], ABCConfigData] | type]]
     """
     存储配置数据类型对应的子类
 
@@ -338,7 +338,7 @@ class ConfigDataFactory:
        现在使用 ``OrderedDict`` 来保证顺序
     """
 
-    def __new__(cls, *args: Any, **kwargs: Any) -> ABCConfigData[Any]:  # type: ignore[misc]
+    def __new__(cls, *args: Any, **kwargs: Any) -> ABCConfigData:  # type: ignore[misc]
         """
         将根据第一个位置参数决定配置数据类型
 
@@ -360,7 +360,7 @@ class ConfigDataFactory:
         raise TypeError(msg)
 
 
-class ConfigFile[D: ABCConfigData[Any]](ABCConfigFile[D]):
+class ConfigFile[D: ABCConfigData](ABCConfigFile[D]):
     """配置文件类"""
 
     def __init__(self, initial_config: D | Any, *, config_format: str | None = None) -> None:

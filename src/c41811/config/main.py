@@ -45,10 +45,10 @@ from .validators import ValidatorFactoryConfig
 from .validators import ValidatorTypes
 from .validators import pydantic_validator
 
-type VALIDATOR_FACTORY[V, D: ABCConfigData[Any]] = Callable[[V, ValidatorFactoryConfig], Callable[[Ref[D]], D]]
+type VALIDATOR_FACTORY[V, D: ABCConfigData] = Callable[[V, ValidatorFactoryConfig], Callable[[Ref[D]], D]]
 
 
-class RequiredPath[V, D: ABCConfigData[Any]]:
+class RequiredPath[V, D: ABCConfigData]:
     """对需求的键进行存在检查、类型检查、填充默认值"""
 
     def __init__(
@@ -170,7 +170,7 @@ class ConfigRequirementDecorator:
        修正配置加载逻辑，现在会在每一次获取配置数据时尝试加载而不是仅在初始化时尝试加载
     """  # noqa: RUF002
 
-    def __init__[D: ABCConfigData[Any]](
+    def __init__[D: ABCConfigData](
         self,
         config_pool: ABCConfigPool,
         namespace: str,
@@ -242,12 +242,12 @@ class ConfigRequirementDecorator:
             return result
         return self._wrapped_filter(**kwargs)
 
-    def __call__(self, func: Callable[[ABCConfigData[Any], Any], Any]) -> Callable[..., Any]:
+    def __call__(self, func: Callable[[ABCConfigData, Any], Any]) -> Callable[..., Any]:
         """
         通过装饰器提供配置数据注入，配置数据将会注入到 ``self`` (如果为方法而不是函数)后的第一个参数
 
         :param func: 需要装饰的函数
-        :type func: Callable[[ABCConfigData[Any], Any], Any]
+        :type func: Callable[[ABCConfigData, Any], Any]
 
         :return: 装饰后的函数
         :rtype: Callable[..., Any]
@@ -266,7 +266,7 @@ class ConfigRequirementDecorator:
 
         return cast(Callable[..., Any], wrapper(func))
 
-    def _wrapped_filter(self, **kwargs: Any) -> ABCConfigData[Any]:
+    def _wrapped_filter(self, **kwargs: Any) -> ABCConfigData:
         config_ref = Ref((config_file := self._config_loader()).config)
 
         result = self._config_cacher(self._required.filter, config_ref, **kwargs)
