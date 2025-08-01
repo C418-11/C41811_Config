@@ -1,3 +1,4 @@
+import statistics
 import time
 from collections import OrderedDict
 from collections.abc import Callable
@@ -846,7 +847,11 @@ class TestRequiredPath:
     @mark.parametrize(
         "validator, static_config, times",
         (
-            ({"foo\\.bar": int, "foo": dict, "foo1": int, "foo2": list[str]}, ValidatorFactoryConfig(), 100),
+            (
+                {"foo\\.bar": int, "foo": dict, "foo1": int, "foo2": list[str]},
+                ValidatorFactoryConfig(),
+                100,
+            ),
             (
                 {
                     "foo\\.bar": int,
@@ -866,7 +871,7 @@ class TestRequiredPath:
                         },
                     },
                 },
-                ValidatorFactoryConfig(allow_modify=True),
+                ValidatorFactoryConfig(),
                 100,
             ),
         ),
@@ -880,28 +885,43 @@ class TestRequiredPath:
         static_filter = cast(Callable[[MCD], MCD], RequiredPath(validator, static_config=static_config).filter)
         dynamic_filter = cast(Callable[[MCD], MCD], RequiredPath(validator).filter)
 
-        def _timeit(cfg_filter: Callable[[MCD], MCD]) -> Decimal:
-            time_used = Decimal(0)
-            for _ in range(times):
-                start = time.perf_counter_ns()
-                cfg_filter(data)
-                end = time.perf_counter_ns()
-                time_used += Decimal(end - start)
-            return time_used
+        # 预热
+        for _ in range(5):
+            copied_data = deepcopy(data)
+            static_filter(copied_data)
+            copied_data = deepcopy(data)
+            dynamic_filter(copied_data)
 
-        total_static_time = _timeit(static_filter) / Decimal(1_000_000)
-        total_dynamic_time = _timeit(dynamic_filter) / Decimal(1_000_000)
-        assert total_static_time < total_dynamic_time
-        average_static_time = total_static_time / times
-        average_dynamic_time = total_dynamic_time / times
+        def _timeit(cfg_filter: Callable[[MCD], MCD]) -> tuple[Decimal, Decimal]:
+            times_list: list[int] = []
+            time_used = 0
+            for _ in range(times):
+                # noinspection PyShadowingNames
+                copied_data = deepcopy(data)
+                start = time.perf_counter_ns()
+                cfg_filter(copied_data)
+                end = time.perf_counter_ns()
+                times_list.append(end - start)
+                time_used += end - start
+            return Decimal(time_used), Decimal(statistics.median(times_list))
+
+        total_static, median_static = _timeit(static_filter)
+        total_dynamic, median_dynamic = _timeit(dynamic_filter)
+
+        total_static_ms = total_static / Decimal(1_000_000)
+        total_dynamic_ms = total_dynamic / Decimal(1_000_000)
+        median_static_ms = median_static / Decimal(1_000_000)
+        median_dynamic_ms = median_dynamic / Decimal(1_000_000)
+        speedup = total_dynamic / total_static
+        assert speedup > Decimal(20)
         print()  # noqa: T201
         print(static_config)  # noqa: T201
-        print(f"total_static_time: {total_static_time}ms")  # noqa: T201
-        print(f"total_dynamic_time: {total_dynamic_time}ms")  # noqa: T201
+        print(f"total_static: {total_static_ms}ms")  # noqa: T201
+        print(f"total_dynamic: {total_dynamic_ms}ms")  # noqa: T201
         print(f"times: {times}")  # noqa: T201
-        print(f"average_static_time: {average_static_time}ms")  # noqa: T201
-        print(f"average_dynamic_time: {average_dynamic_time}ms")  # noqa: T201
-        print(f"speedup: {average_dynamic_time / average_static_time}")  # noqa: T201
+        print(f"median_static: {median_static_ms}ms")  # noqa: T201
+        print(f"median_dynamic: {median_dynamic_ms}ms")  # noqa: T201
+        print(f"speedup: {speedup}")  # noqa: T201
 
     @staticmethod
     @fixture
