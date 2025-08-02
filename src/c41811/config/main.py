@@ -56,7 +56,7 @@ class RequiredPath[V, D: ABCConfigData]:
         validator: V,
         validator_factory: VALIDATOR_FACTORY[V, D]
         | ValidatorTypes
-        | Literal["no-validation", "pydantic", "component"]
+        | Literal["custom", "pydantic", "component"]
         | None = ValidatorTypes.DEFAULT,
         static_config: ValidatorFactoryConfig | None = None,
     ):
@@ -65,7 +65,8 @@ class RequiredPath[V, D: ABCConfigData]:
         :type validator: Any
         :param validator_factory: 数据验证器工厂
         :type validator_factory:
-            VALIDATOR_FACTORY[V, D] | validators.ValidatorTypes | Literal["ignore", "pydantic", "component"] | None
+            VALIDATOR_FACTORY[V, D]
+            | validators.ValidatorTypes | Literal["custom", "pydantic", "component"] | None
         :param static_config: 静态配置
         :type static_config: validators.ValidatorFactoryConfig | None
 
@@ -89,7 +90,7 @@ class RequiredPath[V, D: ABCConfigData]:
 
     ValidatorFactories: ClassVar[dict[ValidatorTypes, VALIDATOR_FACTORY[Any, Any]]] = {
         ValidatorTypes.DEFAULT: cast(VALIDATOR_FACTORY[V, D], DefaultValidatorFactory),
-        ValidatorTypes.NO_VALIDATION: lambda v, *_: v,
+        ValidatorTypes.CUSTOM: lambda v, *_: v,
         ValidatorTypes.PYDANTIC: cast(VALIDATOR_FACTORY[V, D], pydantic_validator),
         ValidatorTypes.COMPONENT: cast(VALIDATOR_FACTORY[V, D], ComponentValidatorFactory),
     }

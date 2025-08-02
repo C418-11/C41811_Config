@@ -509,7 +509,7 @@ Mapping[str | ABCPath, Any]
 不使用验证器工厂
 ^^^^^^^^^^^^^^^^
 
-``validator_factory`` 参数设为 :py:attr:`~config.validators.ValidatorTypes.NO_VALIDATION` 或 ``"no-validation"`` 时采用该策略
+``validator_factory`` 参数设为 :py:attr:`~config.validators.ValidatorTypes.NO_VALIDATION` 或 ``"custom"`` 时采用该策略
 
 这将直接把 ``validator`` 参数当作 ``Callable[[ABCConfigData], ABCConfigData]`` 来使用
 
@@ -536,7 +536,7 @@ Mapping[str | ABCPath, Any]
     save('', "test.json", config=ConfigFile(MappingConfigData({
         "key": "value"
     })))
-    print(requireConfig('', "test.json", modify_value_validator, "ignore").check())
+    print(requireConfig('', "test.json", modify_value_validator, "custom").check())
     # 输出：{'key': 'modified!'}
 
 .. _component-validator-factory:

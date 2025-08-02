@@ -249,8 +249,8 @@ class TestRequiredPath:
             {"allow_modify": True, "skip_missing": True},
         ),
     )
-    def test_no_validation(data: MCD, kwargs: dict[str, Any]) -> None:
-        assert RequiredPath(lambda _: _.value, "no-validation").filter(deepcopy(data), **kwargs) == data  # type: ignore[arg-type]
+    def test_custom(data: MCD, kwargs: dict[str, Any]) -> None:
+        assert RequiredPath(lambda _: _.value, "custom").filter(deepcopy(data), **kwargs) == data  # type: ignore[arg-type]
 
     PydanticTests: tuple[
         str,

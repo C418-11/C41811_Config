@@ -54,10 +54,13 @@ class ValidatorTypes(Enum):
     """验证器类型"""
 
     DEFAULT = None
-    NO_VALIDATION = "no-validation"
+    CUSTOM = "custom"
     """
     .. versionchanged:: 0.2.0
        重命名 ``IGNORE`` 为 ``NO_VALIDATION``
+
+    .. versionchanged:: 0.3.0
+       重命名 ``NO_VALIDATION`` 为 ``CUSTOM``
     """
     PYDANTIC = "pydantic"
     COMPONENT = "component"
