@@ -1,4 +1,4 @@
-from c41811.config.utils import lazy_import
+from c41811.config.lazy_import import lazy_import
 
 __all__, __getattr__ = lazy_import(
     {

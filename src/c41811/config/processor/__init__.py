@@ -11,25 +11,43 @@ SaveLoad处理器
 from typing import TYPE_CHECKING as __TYPE_CHECKING
 
 if __TYPE_CHECKING:  # pragma: no cover
-    from .component import ComponentMetaParser  # noqa: F401
-    from .component import ComponentSL  # noqa: F401
-    from .hjson import HJsonSL  # noqa: F401
-    from .json import JsonSL  # noqa: F401
-    from .os_env import OSEnvSL  # noqa: F401
-    from .pickle import PickleSL  # noqa: F401
-    from .plaintext import PlainTextSL  # noqa: F401
-    from .python import PythonSL  # noqa: F401
-    from .python_literal import PythonLiteralSL  # noqa: F401
-    from .pyyaml import PyYamlSL  # noqa: F401
-    from .ruamel_yaml import RuamelYamlSL  # noqa: F401
-    from .tarfile import TarCompressionTypes  # noqa: F401
-    from .tarfile import TarFileSL  # noqa: F401
-    from .toml import TomlSL  # noqa: F401
-    from .zipfile import ZipCompressionTypes  # noqa: F401
-    from .zipfile import ZipFileSL  # noqa: F401
+    from .component import ComponentMetaParser
+    from .component import ComponentSL
+    from .hjson import HJsonSL
+    from .json import JsonSL
+    from .os_env import OSEnvSL
+    from .pickle import PickleSL
+    from .plaintext import PlainTextSL
+    from .python import PythonSL
+    from .python_literal import PythonLiteralSL
+    from .pyyaml import PyYamlSL
+    from .ruamel_yaml import RuamelYamlSL
+    from .tarfile import TarCompressionTypes
+    from .tarfile import TarFileSL
+    from .toml import TomlSL
+    from .zipfile import ZipCompressionTypes
+    from .zipfile import ZipFileSL
 
+    __all__ = [
+        "ComponentMetaParser",
+        "ComponentSL",
+        "HJsonSL",
+        "JsonSL",
+        "OSEnvSL",
+        "PickleSL",
+        "PlainTextSL",
+        "PyYamlSL",
+        "PythonLiteralSL",
+        "PythonSL",
+        "RuamelYamlSL",
+        "TarCompressionTypes",
+        "TarFileSL",
+        "TomlSL",
+        "ZipCompressionTypes",
+        "ZipFileSL",
+    ]
 else:
-    from ..utils import lazy_import as __lazy_import
+    from ..lazy_import import lazy_import as __lazy_import
 
     __all__, __getattr__ = __lazy_import(
         {

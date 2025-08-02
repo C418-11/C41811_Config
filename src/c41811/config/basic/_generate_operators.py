@@ -13,7 +13,7 @@ from typing import Any
 import wrapt  # type: ignore[import-untyped]
 
 from .core import BasicSingleConfigData
-from .core import ConfigDataFactory
+from .factory import ConfigDataFactory
 from .utils import check_read_only
 
 type Operator = Callable[[Any, Any], Any]

@@ -1,4 +1,4 @@
-from c41811.config.utils import lazy_import
+from c41811.config.lazy_import import lazy_import
 
 from .sub_pkg import __all__ as __sub_pkg_all
 

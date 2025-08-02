@@ -14,8 +14,8 @@ from typing import override
 from .._protocols import SupportsReadAndReadline
 from .._protocols import SupportsWrite
 from ..abc import ABCConfigFile
-from ..basic import ConfigFile
-from ..basic import MappingConfigData
+from ..basic.core import ConfigFile
+from ..basic.mapping import MappingConfigData
 from ..main import BasicLocalFileConfigSL
 
 

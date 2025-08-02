@@ -18,7 +18,7 @@ from typing import Literal
 from typing import cast
 from typing import override
 
-from ..basic import ConfigFile
+from ..basic.core import ConfigFile
 from ..main import BasicCompressedConfigSL
 from ..safe_writer import safe_open
 

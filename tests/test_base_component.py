@@ -34,7 +34,7 @@ def _ccd_from_members(members: M) -> CCD:
 
 def _ccd_from_meta(meta: dict[str, Any], members: M) -> CCD:
     return ComponentConfigData(
-        ComponentMetaParser().convert_config2meta(MappingConfigData(meta)),
+        ComponentMetaParser().convert_config2meta(MappingConfigData(meta)),  # type: ignore[arg-type]
         members,
     )
 

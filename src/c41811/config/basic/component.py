@@ -22,7 +22,7 @@ from typing import cast
 from typing import override
 
 from .core import BasicConfigData
-from .core import ConfigDataFactory
+from .factory import ConfigDataFactory
 from .utils import check_read_only
 from .utils import fmt_path
 from ..abc import ABCConfigData

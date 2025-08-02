@@ -19,13 +19,13 @@ from copy import deepcopy
 from re import Pattern
 from types import NotImplementedType
 from typing import Any
-from typing import ClassVar
 from typing import Literal
 from typing import Self
 from typing import cast
 from typing import overload
 from typing import override
 
+from .factory import ConfigDataFactory
 from .utils import check_read_only
 from .utils import fmt_path
 from .._protocols import Indexed
@@ -316,48 +316,6 @@ class BasicIndexedConfigData[D: Indexed[Any, Any]](BasicSingleConfigData[D], ABC
     @override
     def __delitem__(self, index: Any) -> None:
         del self._data[index]  # type: ignore[attr-defined]
-
-
-class ConfigDataFactory:
-    """
-    配置数据工厂类
-
-    .. versionchanged:: 0.1.5
-       会自动根据传入的数据类型选择对应的配置数据类
-
-    .. versionchanged:: 0.3.0
-       不再作为所有 `ConfigData` 的虚拟父类
-       重命名 ``ConfigData`` 为 ``ConfigDataFactory``
-    """
-
-    TYPES: ClassVar[OrderedDict[tuple[type, ...], Callable[[Any], ABCConfigData] | type]]
-    """
-    存储配置数据类型对应的子类
-
-    .. versionchanged:: 0.2.0
-       现在使用 ``OrderedDict`` 来保证顺序
-    """
-
-    def __new__(cls, *args: Any, **kwargs: Any) -> ABCConfigData:  # type: ignore[misc]
-        """
-        将根据第一个位置参数决定配置数据类型
-
-        :param args: 配置数据
-        :type args: Any
-        :param kwargs: 配置数据
-        :type kwargs: Any
-
-        :return: 配置数据类
-        :rtype: ABCConfigData
-        """
-        if not args:
-            args = (None,)
-        for types, config_data_cls in cls.TYPES.items():
-            if not isinstance(args[0], types):
-                continue
-            return config_data_cls(*args, **kwargs)
-        msg = f"Unsupported type: {args[0]}"
-        raise TypeError(msg)
 
 
 class ConfigFile[D: ABCConfigData](ABCConfigFile[D]):
@@ -820,7 +778,6 @@ __all__ = (
     "BasicConfigPool",
     "BasicIndexedConfigData",
     "BasicSingleConfigData",
-    "ConfigDataFactory",
     "ConfigFile",
     "PHelper",
 )

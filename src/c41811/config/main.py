@@ -33,9 +33,9 @@ from .abc import ABCConfigPool
 from .abc import ABCConfigSL
 from .abc import ABCSLProcessorPool
 from .abc import SLArgument
-from .basic import BasicConfigPool
-from .basic import ConfigDataFactory
-from .basic import ConfigFile
+from .basic.core import BasicConfigPool
+from .basic.core import ConfigFile
+from .basic.factory import ConfigDataFactory
 from .errors import FailedProcessConfigFileError
 from .safe_writer import safe_open
 from .utils import Ref

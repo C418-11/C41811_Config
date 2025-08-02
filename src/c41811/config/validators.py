@@ -33,9 +33,9 @@ from pydantic.fields import FieldInfo
 from pydantic_core import core_schema
 
 from .abc import ABCPath
-from .basic import ComponentConfigData
-from .basic import MappingConfigData
-from .basic import NoneConfigData
+from .basic.component import ComponentConfigData
+from .basic.mapping import MappingConfigData
+from .basic.object import NoneConfigData
 from .errors import ConfigDataTypeError
 from .errors import ConfigOperate
 from .errors import KeyInfo

@@ -9,11 +9,11 @@ from typing import Any
 from typing import cast
 from typing import override
 
-from .. import MappingConfigData
 from .._protocols import SupportsReadAndReadline
 from .._protocols import SupportsWrite
 from ..abc import ABCConfigFile
-from ..basic import ConfigFile
+from ..basic.core import ConfigFile
+from ..basic.mapping import MappingConfigData
 from ..errors import DependencyNotInstalledError
 from ..main import BasicLocalFileConfigSL
 

@@ -390,7 +390,7 @@ def test_component_file_sl_processor(
         config_data = ComponentConfigData(
             meta
             if isinstance(meta, ComponentMeta)
-            else ComponentMetaParser().convert_config2meta(MappingConfigData(meta)),
+            else ComponentMetaParser().convert_config2meta(MappingConfigData(meta)),  # type: ignore[arg-type]
             members=members,
         )
     if info:
