@@ -276,7 +276,7 @@ class MappingType(BaseModel):
     value: type[Mapping]  # type: ignore[type-arg]
 
 
-class RecursiveMapping(BaseModel):
+class NestedMapping(BaseModel):
     value: Mapping[str, Any]
 
 
@@ -310,7 +310,7 @@ def _allow_recursive(typ: Any) -> bool:
     :rtype: bool
     """  # noqa: RUF002
     try:
-        RecursiveMapping(value=typ)
+        NestedMapping(value=typ)
     except (ValidationError, TypeError):
         return False
     return True

@@ -925,7 +925,7 @@ class TestRequiredPath:
 
     @staticmethod
     @fixture
-    def recursive_data() -> MCD:
+    def nested_data() -> MCD:
         return MappingConfigData({"first": {"second": {"third": 111, "foo": 222}, "bar": 333}, "baz": 444})
 
     IncludeSubKeyTests = (
@@ -977,7 +977,7 @@ class TestRequiredPath:
     @staticmethod  # 专门针对保留子键的测试
     @mark.parametrize(*IncludeSubKeyTests)
     def test_include_sub_key(
-        recursive_data: MCD,
+        nested_data: MCD,
         validator: dict[str, Any],
         result: Any,
         ignores: tuple[EW, EE],
@@ -987,7 +987,7 @@ class TestRequiredPath:
         ignore_warns, ignore_excs = ignores
 
         with safe_warns(ignore_warns), safe_raises(ignore_excs) as info:
-            data: MCD = RequiredPath(validator).filter(recursive_data)  # type: ignore[arg-type]
+            data: MCD = RequiredPath(validator).filter(nested_data)  # type: ignore[arg-type]
 
         if info:
             return

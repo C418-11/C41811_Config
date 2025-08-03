@@ -164,7 +164,7 @@ class MappingConfigData[D: Mapping[Any, Any]](BasicIndexedConfigData[D], Mutable
            >>> data.keys(recursive=True)
            odict_keys(['foo\\.bar\\.baz', 'foo\\.bar', 'foo\\.bar1', 'foo', 'foo1'])
 
-           同时提供 ``recursice`` 和 ``end_point_only`` 会产出所有 ``叶子节点`` 的路径
+           同时提供 ``recursive`` 和 ``end_point_only`` 会产出所有 ``叶子节点`` 的路径
 
            >>> data.keys(recursive=True, end_point_only=True)
            odict_keys(['foo\\.bar\\.baz', 'foo\\.bar1', 'foo1'])

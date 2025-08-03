@@ -303,7 +303,7 @@ Mapping[str | ABCPath, Any]
             r"first\.second\.third": int,
             r"first\.bar": int,
         }).check()
-        recursive_dict = requireConfig('', "test.json", {
+        nested_dict = requireConfig('', "test.json", {
             "first": {
                 "second": {
                     "third": int
@@ -313,8 +313,8 @@ Mapping[str | ABCPath, Any]
         }).check()
 
         print(paths)  # 打印: {'first': {'second': {'third': 111}, 'bar': 333}}
-        print(recursive_dict)  # 打印: {'first': {'second': {'third': 111}, 'bar': 333}}
-        print(paths == recursive_dict)  # 打印: True
+        print(nested_dict)  # 打印: {'first': {'second': {'third': 111}, 'bar': 333}}
+        print(paths == nested_dict)  # 打印: True
 
 以下是两种验证器语法
 
