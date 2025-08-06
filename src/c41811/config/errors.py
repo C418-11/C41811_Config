@@ -320,7 +320,7 @@ class UnsupportedConfigFormatError(Exception):
 
     @override
     def __eq__(self, other: Any) -> bool:
-        return isinstance(other, UnsupportedConfigFormatError) and self._format == other._format
+        return isinstance(other, type(self)) and self._format == other._format
 
     @override
     def __hash__(self) -> int:
