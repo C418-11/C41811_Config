@@ -68,7 +68,7 @@ class RequiredPath[V, D: ABCConfigData]:
             VALIDATOR_FACTORY[V, D]
             | validators.ValidatorTypes | Literal["custom", "pydantic", "component"] | None
         :param static_config: 静态配置
-        :type static_config: validators.ValidatorFactoryConfig | None
+        :type static_config: ValidatorFactoryConfig | None
 
         .. tip::
            提供 ``static_config`` 参数可以避免在 :py:meth:`~RequiredPath.filter` 中反复调用 ``validator_factory``
@@ -90,7 +90,7 @@ class RequiredPath[V, D: ABCConfigData]:
 
     ValidatorFactories: ClassVar[dict[ValidatorTypes, VALIDATOR_FACTORY[Any, Any]]] = {
         ValidatorTypes.DEFAULT: cast(VALIDATOR_FACTORY[V, D], DefaultValidatorFactory),
-        ValidatorTypes.CUSTOM: lambda v, *_: v,
+        ValidatorTypes.CUSTOM: lambda v, _: (lambda ref: ref.value) if v is None else v,
         ValidatorTypes.PYDANTIC: cast(VALIDATOR_FACTORY[V, D], pydantic_validator),
         ValidatorTypes.COMPONENT: cast(VALIDATOR_FACTORY[V, D], ComponentValidatorFactory),
     }
@@ -429,7 +429,7 @@ def raises(excs: type[Exception] | tuple[type[Exception], ...] = Exception) -> G
     try:
         yield
     except excs as err:
-        raise FailedProcessConfigFileError(err) from err
+        raise FailedProcessConfigFileError(err) from None
 
 
 class BasicLocalFileConfigSL(BasicConfigSL, ABC):

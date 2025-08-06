@@ -506,12 +506,13 @@ Mapping[str | ABCPath, Any]
 .. seealso::
    :py:class:`~config.validators.DefaultValidatorFactory`
 
-不使用验证器工厂
+自定义验证器
 ^^^^^^^^^^^^^^^^
 
-``validator_factory`` 参数设为 :py:attr:`~config.validators.ValidatorTypes.NO_VALIDATION` 或 ``"custom"`` 时采用该策略
+``validator_factory`` 参数设为 :py:attr:`~config.validators.ValidatorTypes.CUSTOM` 或 ``"custom"`` 时采用该策略
 
-这将直接把 ``validator`` 参数当作 ``Callable[[ABCConfigData], ABCConfigData]`` 来使用
+这将直接把 ``validator`` 参数当作验证器 ``Callable[[Ref[D]], D]`` 来使用，如果 ``validator`` 为 ``None``
+则验证器默认为 ``lambda ref:ref.value`` ，即无验证
 
 .. code-block:: python
     :caption: 一个修改所有值为"modified!"的验证器

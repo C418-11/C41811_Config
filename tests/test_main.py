@@ -250,6 +250,7 @@ class TestRequiredPath:
         ),
     )
     def test_custom(data: MCD, kwargs: dict[str, Any]) -> None:
+        assert RequiredPath(None, "custom").filter(deepcopy(data), **kwargs) == data  # type: ignore[arg-type]
         assert RequiredPath(lambda _: _.value, "custom").filter(deepcopy(data), **kwargs) == data  # type: ignore[arg-type]
 
     PydanticTests: tuple[
