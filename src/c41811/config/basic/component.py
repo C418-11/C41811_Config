@@ -148,7 +148,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
 
         .. caution::
             未默认做深拷贝，可能导致非预期行为
-        """  #  noqa: RUF002
+        """  # noqa: RUF002
         return self._members
 
     @property
@@ -234,16 +234,13 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
         def processor(pth: ABCPath[Any], member: D) -> Any:
             return member.retrieve(pth, *args, **kwargs)
 
-        return cast(
-            Self,
-            self._resolve_members(
-                path,
-                order=self._meta.orders.read,
-                processor=processor,
-                exception=RequiredPathNotFoundError(
-                    key_info=KeyInfo(path, path[0], 0),
-                    operate=ConfigOperate.Read,
-                ),
+        return self._resolve_members(
+            path,
+            order=self._meta.orders.read,
+            processor=processor,
+            exception=RequiredPathNotFoundError(
+                key_info=KeyInfo(path, path[0], 0),
+                operate=ConfigOperate.Read,
             ),
         )
 
@@ -252,55 +249,48 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
     def modify(self, path: PathLike, *args: Any, **kwargs: Any) -> Self:
         path = fmt_path(path)
 
-        def processor(pth: ABCPath[Any], member: D) -> ComponentConfigData[D, M]:
+        def processor(pth: ABCPath[Any], member: D) -> None:
             member.modify(pth, *args, **kwargs)
-            return self
 
-        return cast(
-            Self,
-            self._resolve_members(
-                path,
-                order=self._meta.orders.update,
-                processor=processor,
-                exception=RequiredPathNotFoundError(
-                    key_info=KeyInfo(path, path[0], 0),
-                    operate=ConfigOperate.Write,
-                ),
+        self._resolve_members(
+            path,
+            order=self._meta.orders.update,
+            processor=processor,
+            exception=RequiredPathNotFoundError(
+                key_info=KeyInfo(path, path[0], 0),
+                operate=ConfigOperate.Write,
             ),
         )
+        return self
 
     @override
     @check_read_only
     def delete(self, path: PathLike, *args: Any, **kwargs: Any) -> Self:
         path = fmt_path(path)
 
-        def processor(pth: ABCPath[Any], member: D) -> ComponentConfigData[D, M]:
+        def processor(pth: ABCPath[Any], member: D) -> None:
             # noinspection PyArgumentList
             member.delete(pth, *args, **kwargs)
-            return self
 
-        return cast(
-            Self,
-            self._resolve_members(
-                path,
-                order=self._meta.orders.delete,
-                processor=processor,
-                exception=RequiredPathNotFoundError(
-                    key_info=KeyInfo(path, path[0], 0),
-                    operate=ConfigOperate.Delete,
-                ),
+        self._resolve_members(
+            path,
+            order=self._meta.orders.delete,
+            processor=processor,
+            exception=RequiredPathNotFoundError(
+                key_info=KeyInfo(path, path[0], 0),
+                operate=ConfigOperate.Delete,
             ),
         )
+        return self
 
     @override
     @check_read_only
     def unset(self, path: PathLike, *args: Any, **kwargs: Any) -> Self:
         path = fmt_path(path)
 
-        def processor(pth: ABCPath[Any], member: D) -> ComponentConfigData[D, M]:
+        def processor(pth: ABCPath[Any], member: D) -> None:
             # noinspection PyArgumentList
             member.delete(pth, *args, **kwargs)
-            return self
 
         with suppress(RequiredPathNotFoundError):
             self._resolve_members(
