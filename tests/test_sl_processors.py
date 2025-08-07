@@ -519,7 +519,7 @@ def test_python(pool: ConfigPool) -> None:
         config_formats={"plaintext"},
     )
 
-    pool.discard("", "test-python.py")
+    pool.remove("", "test-python.py")
     cfg: MappingConfigData[Any] = pool.load("", "test-python.py").config
 
     assert cfg["key"] == "value"

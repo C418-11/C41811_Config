@@ -84,6 +84,24 @@ class TestConfigPool:
             "",
         )
         assert pool.get("", "test") is None, "All files should be removed"
+        with raises(KeyError, match="namespace"):
+            pool.remove("namespace")
+
+    @staticmethod
+    def test_set_get_discard(pool: ConfigPool, file: ConfigFile[MCD]) -> None:
+        pool.set("", "test", deepcopy(file))
+        assert pool.get("not", "exists") is None
+        assert pool.get("", "not exists") is None
+        assert pool.get("", "test") == file
+        assert pool.get("") == {"test": file}
+        pool.discard("", "test")
+        assert pool.get("", "test") is None, "File should be removed"
+        pool.set("", "test", deepcopy(file))
+        pool.discard(
+            "",
+        )
+        assert pool.get("", "test") is None, "All files should be removed"
+        pool.discard("namespace")
 
     @staticmethod
     def test_save_load(pool: ConfigPool, file: ConfigFile[MCD]) -> None:
