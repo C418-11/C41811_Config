@@ -815,7 +815,7 @@ SL处理器
      - :py:class:`~config.processor.python.PythonSL`
      - python
      - .py
-     - 基于 :py:func:`exec`，尝试保存会抛出 :py:exc:`NotImplementedError` ，建议与
+     - 基于 :py:func:`exec`，尝试保存会将配置数据作为 :py:func:`locals` 传入 ，建议与
        :py:class:`~config.processor.plaintext` 搭配使用
 
    * - PythonLiteral

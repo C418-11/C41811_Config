@@ -12,7 +12,6 @@ from typing import cast
 from typing import override
 
 from .._protocols import SupportsReadAndReadline
-from .._protocols import SupportsWrite
 from ..abc import ABCConfigFile
 from ..basic.core import ConfigFile
 from ..basic.mapping import MappingConfigData
@@ -20,7 +19,15 @@ from ..main import BasicLocalFileConfigSL
 
 
 class PythonSL(BasicLocalFileConfigSL):
-    """Python格式处理器"""
+    """
+    Python格式处理器
+
+    .. caution::
+       非安全沙箱执行！确保文件为受信任来源！
+
+    .. versionchanged:: 0.3.0
+       支持配置文件保存
+    """  # noqa: RUF002
 
     @property
     @override
@@ -33,13 +40,18 @@ class PythonSL(BasicLocalFileConfigSL):
         return (".py",)
 
     supported_file_classes = [ConfigFile]  # noqa: RUF012
+    _s_open_kwargs = {"mode": "r", "encoding": "utf-8"}  # noqa: RUF012
 
     @override
     def save_file(
-        self, config_file: ABCConfigFile[Any], target_file: SupportsWrite[str], *merged_args: Any, **merged_kwargs: Any
+        self,
+        config_file: ABCConfigFile[MappingConfigData[dict[str, Any]]],
+        target_file: SupportsReadAndReadline[str],
+        *merged_args: Any,
+        **merged_kwargs: Any,
     ) -> None:
         with self.raises():
-            raise NotImplementedError
+            exec(target_file.read(), {}, config_file.config.data)  # noqa: S102
 
     @override
     def load_file(

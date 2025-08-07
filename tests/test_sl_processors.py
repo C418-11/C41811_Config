@@ -36,6 +36,7 @@ from c41811.config import PythonSL
 from c41811.config import PyYamlSL
 from c41811.config import RuamelYamlSL
 from c41811.config import SequenceConfigData
+from c41811.config import StringConfigData
 from c41811.config import TarCompressionTypes
 from c41811.config import TarFileSL
 from c41811.config import TomlSL
@@ -504,16 +505,19 @@ def test_python(pool: ConfigPool) -> None:
         config=ConfigFile(
             dedent(
                 """
+            if __name__ == "__main__": raise NotImplementedError  # 避免被意外执行
+            if locals():  # 如果正在尝试保存数据
+                __data__ = locals()
+                with open(__data__["file_path"], "w", encoding="utf-8") as f:
+                    f.write(str(__data__["data"]))
+
             key = "value"
-
             length = len(key)
-
             repeated = key * length
-
-            from datetime import datetime as _dt
-
-            datetime = _dt.now()
-            """
+            from datetime import datetime
+            time = datetime.now()
+            del datetime  # 避免污染命名空间
+            """[1:]
             )
         ),
         config_formats={"plaintext"},
@@ -525,7 +529,15 @@ def test_python(pool: ConfigPool) -> None:
     assert cfg["key"] == "value"
     assert cfg["length"] == 5
     assert cfg["repeated"] == ("value" * 5)
-    assert isinstance(cfg["datetime"], datetime)
+    assert isinstance(cfg["time"], datetime)
+
+    cfg["file_path"] = pool.helper.calc_path(pool.root_path, "", "test.txt")
+    data = {"key": "value"}
+    cfg["data"] = data
+    pool.save("", "test-python.py", config=ConfigFile(cfg))
+
+    str_cfg: StringConfigData[str] = pool.load("", "test.txt").config
+    assert str_cfg.data == str(data)
 
 
 def test_os_env(pool: ConfigPool) -> None:
