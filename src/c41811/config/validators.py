@@ -12,6 +12,7 @@ from collections.abc import Callable
 from collections.abc import Iterable
 from collections.abc import Mapping
 from collections.abc import MutableMapping
+from contextlib import suppress
 from copy import deepcopy
 from dataclasses import dataclass
 from enum import Enum
@@ -192,10 +193,11 @@ class SkipMissingType:
 
 
 SkipMissing = SkipMissingType()
+type AnyTypeHint = type | types.UnionType | types.EllipsisType | types.GenericAlias | TypeAliasType
 
 
 @dataclass(init=False)
-class FieldDefinition[T: type | types.UnionType | types.EllipsisType | types.GenericAlias | TypeAliasType]:
+class FieldDefinition[T: AnyTypeHint]:
     """
     字段定义，包含类型注解和默认值
 
@@ -316,6 +318,86 @@ def _allow_recursive(typ: Any) -> bool:
     return True
 
 
+def _check_overwriting_exists_path(
+    key: str, value: Any, fmt_data: MappingConfigData[Any], typehint_types: tuple[type, ...]
+) -> bool:
+    """
+    检查是否覆盖了验证器已存在的路径
+
+    :param key: 路径
+    :type key: str
+    :param value: 新值
+    :type value: Any
+    :param fmt_data: 验证器
+    :type fmt_data: MappingConfigData[Any]
+    :param typehint_types: 类型提示类型
+    :type typehint_types: tuple[type, ...]
+
+    .. versionadded:: 0.3.0
+    """
+    # 如果传入了任意路径的父路径
+    if key not in fmt_data:
+        return False
+
+    # 那就检查新值和旧值是否都为Mapping子类或Any
+    target_value = fmt_data.retrieve(key)
+    if not issubclass(type(target_value), typehint_types):
+        target_value = type(target_value)
+
+    # 如果是那就把父路径直接加入parent_set不进行后续操作
+    if _is_mapping(value) and _is_mapping(target_value):
+        return True
+
+    # 否则发出警告提示意外地复写验证器路径
+    warnings.warn(
+        f"Overwriting exists validator path with unexpected type '{value}'(new) and '{target_value}'(exists)",
+        stacklevel=2,
+    )
+    return False
+
+
+@overload
+def _convert2definition[D: FieldDefinition[Any]](value: D, typehint_types: tuple[type, ...]) -> D: ...
+
+
+@overload
+def _convert2definition(value: FieldInfo, typehint_types: tuple[type, ...]) -> FieldDefinition[Any]: ...
+
+
+@overload
+def _convert2definition[T: AnyTypeHint](value: T, typehint_types: tuple[type, ...]) -> FieldDefinition[T]: ...
+
+
+def _convert2definition(value: Any, typehint_types: tuple[type, ...]) -> FieldDefinition[Any]:
+    """
+    将键值换为字段定义
+
+    :param value: 键
+    :type value: Any
+    :param typehint_types: 类型提示类型
+    :type typehint_types: tuple[type, ...]
+
+    .. versionadded:: 0.3.0
+    """
+    # foo = FieldInfo()  # noqa: ERA001
+    if isinstance(value, FieldInfo):
+        # foo: FieldInfo().annotation = FieldInfo()  # noqa: ERA001
+        return FieldDefinition(value.annotation, value)
+    # foo: int  # noqa: ERA001
+    # 如果是仅类型就填上空值
+    if issubclass(type(value), typehint_types):
+        # foo: int = FieldInfo()  # noqa: ERA001
+        return FieldDefinition(value, FieldInfo())
+    # foo = FieldDefinition(int, FieldInfo())  # noqa: ERA001
+    # 已经是处理好的字段定义不需要特殊处理
+    if isinstance(value, FieldDefinition):
+        return value
+    # foo = 1  # noqa: ERA001
+    # 如果是仅默认值就补上类型
+    # foo: int = 1  # noqa: ERA001
+    return FieldDefinition(type(value), FieldInfo(default=value))
+
+
 class DefaultValidatorFactory[D: MCD]:
     """默认的验证器工厂"""
 
@@ -366,9 +448,7 @@ class DefaultValidatorFactory[D: MCD]:
         self._compile()
         self.model: type[BaseModel]
 
-    def _fmt_mapping_key(  # noqa: C901 (ignore complexity)
-        self, validator: Mapping[str, Any]
-    ) -> tuple[Mapping[str, Any], set[str | ABCPath[Any]]]:
+    def _fmt_mapping_key(self, validator: Mapping[str, Any]) -> tuple[Mapping[str, Any], set[str | ABCPath[Any]]]:
         """
         格式化验证器键
 
@@ -377,6 +457,9 @@ class DefaultValidatorFactory[D: MCD]:
 
         :return: 格式化后的映射键和被覆盖的Mapping父路径
         :rtype: tuple[Mapping[str, Any], set[str | ABCPath[Any]]]
+
+        .. versionchanged:: 0.3.0
+           拆分覆盖检查到函数 :py:func:`_check_overwriting_exists_path`
         """
         iterator = iter(validator.items())
         key: str = None  # type: ignore[assignment]
@@ -390,11 +473,10 @@ class DefaultValidatorFactory[D: MCD]:
             :rtype: bool
             """
             nonlocal key, value
-            try:
+            with suppress(StopIteration):
                 key, value = next(iterator)
-            except StopIteration:
-                return True
-            return False
+                return False
+            return True
 
         # 如果为空则提前返回
         if _next():
@@ -404,24 +486,12 @@ class DefaultValidatorFactory[D: MCD]:
         parent_set: set[str | ABCPath[Any]] = set()
         while True:
             # 如果传入了任意路径的父路径那就检查新值和旧值是否都为Mapping子类或Any
-            if key in fmt_data:
-                target_value = fmt_data.retrieve(key)
-                if not issubclass(type(target_value), self.typehint_types):
-                    target_value = type(target_value)
-
-                # 如果是那就把父路径直接加入parent_set不进行后续操作
-                if _is_mapping(value) and _is_mapping(target_value):
-                    parent_set.add(key)
-                    if _next():  # 更新键值对
-                        break
-                    continue
-
-                # 否则发出警告提示意外的复写验证器路径
-                warnings.warn(
-                    f"Overwriting exists validator path with unexpected type"
-                    f" '{value}'(new) and '{target_value}'(exists)",
-                    stacklevel=2,
-                )
+            # 如果是那就把父路径直接加入parent_set不进行后续操作
+            if _check_overwriting_exists_path(key, value, fmt_data, self.typehint_types):
+                parent_set.add(key)
+                if _next():  # 更新键值对
+                    break
+                continue
 
             # 如果可以递归处理字段值那就递归处理
             if _allow_recursive(value):
@@ -438,7 +508,7 @@ class DefaultValidatorFactory[D: MCD]:
                     raise err from None
                 fmt_data.modify(relative_path, OrderedDict())
                 parent_set.add(relative_path)
-                continue
+                fmt_data.modify(key, value)  # 再次记录该键值对
 
             # 获取下一个键值对
             if _next():
@@ -455,29 +525,14 @@ class DefaultValidatorFactory[D: MCD]:
 
         :return: 转换后的Model
         :rtype: type[BaseModel]
+
+        .. versionchanged:: 0.3.0
+           拆分字段定义转换到函数 :py:func:`_convert2definition`
         """
         fmt_data: OrderedDict[str, Any] = OrderedDict()
         for key, value in mapping.items():
             # 将键值对转换为字段定义
-            definition: FieldDefinition[Any]
-            # foo = FieldInfo()  # noqa: ERA001
-            if isinstance(value, FieldInfo):
-                # foo: FieldInfo().annotation = FieldInfo()  # noqa: ERA001
-                definition = FieldDefinition(value.annotation, value)
-            # foo: int  # noqa: ERA001
-            # 如果是仅类型就填上空值
-            elif issubclass(type(value), self.typehint_types):
-                # foo: int = FieldInfo()  # noqa: ERA001
-                definition = FieldDefinition(value, FieldInfo())
-            # foo = FieldDefinition(int, FieldInfo())  # noqa: ERA001
-            # 已经是处理好的字段定义不需要特殊处理
-            elif isinstance(value, FieldDefinition):
-                definition = value
-            # foo = 1  # noqa: ERA001
-            # 如果是仅默认值就补上类型
-            else:
-                # foo: int = 1  # noqa: ERA001
-                definition = FieldDefinition(type(value), FieldInfo(default=value))
+            definition = _convert2definition(value, self.typehint_types)
 
             # 递归处理Mapping值
             if all(
@@ -645,27 +700,19 @@ class ComponentValidatorFactory[D: ComponentConfigData[Any, Any]]:
         for member, validator in self.validator.items():
             self.validators[member] = self.validator_factory(validator, self.validator_config)
 
-    def __call__(self, config_ref: Ref[D | NoneConfigData]) -> D:
+    def _validate_member_metadata(self, component_data: D) -> dict[str, MCD]:
         """
-        验证配置数据
+        验证组件成员元数据
 
-        :param config_ref: 配置数据引用
-        :type config_ref: Ref[D | NoneConfigData]
+        :param component_data: 组件数据
+        :type component_data: D
 
-        :return: 验证后的配置数据
-        :rtype: D
+        :return: 验证后的组件数据
+        :rtype: dict[str | None, MCD]
         """
-        if isinstance(config_ref.value, NoneConfigData):
-            config_ref.value = ComponentConfigData()  # type: ignore[assignment]
-
-        component_ref: Ref[D] = config_ref  # type: ignore[assignment]
-        component_data = component_ref.value
-
-        should_validate_meta: bool = False
-        validated_members: dict[str | None, MCD] = {}
+        validated_members: dict[str, MCD] = {}
         for member, validator in self.validators.items():
             if member is None:
-                should_validate_meta = True
                 continue
 
             if member not in component_data and self.validator_config.extra.get("allow_initialize", True):
@@ -677,9 +724,31 @@ class ComponentValidatorFactory[D: ComponentConfigData[Any, Any]]:
             # 完全替换成员数据
             if self.validator_config.allow_modify:
                 component_data[member] = validated_member
+        return validated_members
+
+    def __call__(self, config_ref: Ref[D | NoneConfigData]) -> D:
+        """
+        验证配置数据
+
+        :param config_ref: 配置数据引用
+        :type config_ref: Ref[D | NoneConfigData]
+
+        :return: 验证后的配置数据
+        :rtype: D
+
+        .. versionchanged:: 0.3.0
+           拆分验证成员元数据到方法 :py:meth:`_validate_member_metadata`
+        """
+        if isinstance(config_ref.value, NoneConfigData):
+            config_ref.value = ComponentConfigData()  # type: ignore[assignment]
+
+        component_ref: Ref[D] = config_ref  # type: ignore[assignment]
+        component_data = component_ref.value
+
+        validated_members: dict[str, MCD] = self._validate_member_metadata(component_data)
 
         meta = deepcopy(component_data.meta)
-        if should_validate_meta:
+        if None in self.validators:
             meta.config = self.validators[None](Ref(meta.config))
 
             meta_validator = None if meta.parser is None else meta.parser.validator

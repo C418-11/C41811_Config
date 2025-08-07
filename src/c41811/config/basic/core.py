@@ -585,7 +585,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
         .. versionadded:: 0.1.2
 
         .. versionchanged:: 0.2.0
-           将格式计算部分提取到单独的函数 :py:meth:`_get_formats`
+           拆分格式计算到方法 :py:meth:`_get_formats`
         """  # noqa: RUF002
 
         def callback_wrapper(cfg_fmt: str) -> R:
