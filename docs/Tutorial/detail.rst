@@ -511,24 +511,31 @@ Mapping[str | ABCPath, Any]
 
 ``validator_factory`` 参数设为 :py:attr:`~config.validators.ValidatorTypes.CUSTOM` 或 ``"custom"`` 时采用该策略
 
-这将直接把 ``validator`` 参数当作验证器 ``Callable[[Ref[D]], D]`` 来使用，如果 ``validator`` 为 ``None``
+这将直接把 ``validator`` 参数当作验证器 ``Callable[[Ref[D], ValidatorFactoryConfig], D]`` 来使用，如果 ``validator`` 为 ``None``
 则验证器默认为 ``lambda ref:ref.value`` ，即无验证
 
 .. code-block:: python
     :caption: 一个修改所有值为"modified!"的验证器
     :linenos:
 
-    from c41811.config import MappingConfigData
+    from copy import deepcopy
+    from typing import Any
+
     from c41811.config import ConfigFile
     from c41811.config import JsonSL
+    from c41811.config import MappingConfigData
+    from c41811.config import ValidatorFactoryConfig
     from c41811.config import requireConfig
     from c41811.config import save
-    from c41811.config.abc import ABCConfigData
+    from c41811.config.utils import Ref
 
 
-    def modify_value_validator[D: ABCConfigData](data: D) -> D:
+    def modify_value_validator[D: MappingConfigData[Any]](ref: Ref[D], cfg: ValidatorFactoryConfig) -> D:
+        data = deepcopy(ref.value)
         for path in data.keys(recursive=True, end_point_only=True):
             data.modify(path, "modified!")
+        if cfg.allow_modify:
+            ref.value = data
         return data
 
 

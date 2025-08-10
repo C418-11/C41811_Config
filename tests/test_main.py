@@ -268,8 +268,13 @@ class TestRequiredPath:
         ),
     )
     def test_custom(data: MCD, kwargs: dict[str, Any]) -> None:
-        assert RequiredPath(None, "custom").filter(deepcopy(data), **kwargs) == data  # type: ignore[arg-type]
-        assert RequiredPath(lambda _: _.value, "custom").filter(deepcopy(data), **kwargs) == data  # type: ignore[arg-type]
+        allow_modify = kwargs.get("allow_modify", True)
+        copied_data = deepcopy(data)
+        assert RequiredPath(None, "custom").filter(copied_data, **kwargs) == data  # type: ignore[arg-type]
+        assert allow_modify or copied_data == data
+        copied_data = deepcopy(data)
+        assert RequiredPath(lambda ref, _: ref.value, "custom").filter(copied_data, **kwargs) == data  # type: ignore[arg-type]
+        assert allow_modify or copied_data == data
 
     PydanticTests: tuple[
         str,

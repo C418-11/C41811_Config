@@ -90,7 +90,7 @@ class RequiredPath[V, D: ABCConfigData]:
 
     ValidatorFactories: ClassVar[dict[ValidatorTypes, VALIDATOR_FACTORY[Any, Any]]] = {
         ValidatorTypes.DEFAULT: cast(VALIDATOR_FACTORY[V, D], DefaultValidatorFactory),
-        ValidatorTypes.CUSTOM: lambda v, _: (lambda ref: ref.value) if v is None else v,
+        ValidatorTypes.CUSTOM: lambda v, cfg: (lambda ref: ref.value) if v is None else lambda ref: v(ref, cfg),
         ValidatorTypes.PYDANTIC: cast(VALIDATOR_FACTORY[V, D], pydantic_validator),
         ValidatorTypes.COMPONENT: cast(VALIDATOR_FACTORY[V, D], ComponentValidatorFactory),
     }
