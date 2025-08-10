@@ -38,6 +38,7 @@ from c41811.config import Path as DPath
 from c41811.config import RequiredPath
 from c41811.config import ValidatorFactoryConfig
 from c41811.config.abc import ABCConfigFile
+from c41811.config.errors import ComponentMemberMismatchError
 from c41811.config.errors import ConfigDataTypeError
 from c41811.config.errors import RequiredPathNotFoundError
 from c41811.config.errors import UnsupportedConfigFormatError
@@ -314,12 +315,15 @@ class TestRequiredPath:
         ignore_excs: EE,
         ignore_warns: EW,
     ) -> None:
+        allow_modify = kwargs.get("allow_modify", True)
+        copied_data = deepcopy(data)
         with safe_raises(ignore_excs), safe_warns(ignore_warns):
             data = cast(
                 MappingConfigData[Any],
-                RequiredPath(pydantic_model, "pydantic").filter(data, **kwargs),  # type: ignore[arg-type]
+                RequiredPath(pydantic_model, "pydantic").filter(copied_data, **kwargs),  # type: ignore[arg-type]
             )
             assert data.retrieve(path, return_raw_value=True) == value
+            assert allow_modify or copied_data == data
 
     @staticmethod
     def test_pydantic_with_none_data() -> None:
@@ -421,19 +425,22 @@ class TestRequiredPath:
         kwargs: dict[str, Any],
         ignore_excs: EE,
     ) -> None:
+        allow_modify = kwargs.get("allow_modify", True)
+        copied_data = deepcopy(data)
         with safe_raises(ignore_excs) as info:
-            data = cast(
+            validated_data = cast(
                 MappingConfigData[Any],
-                RequiredPath(paths).filter(data, **kwargs),  # type: ignore[arg-type]
+                RequiredPath(paths).filter(copied_data, **kwargs),  # type: ignore[arg-type]
             )
         if info:
             return
+        assert allow_modify or copied_data == data
 
         for path, value in zip(paths, values, strict=False):
             if isinstance(value, float) and value == float("-inf"):
-                assert path not in data
+                assert path not in validated_data
                 continue
-            assert data.retrieve(path, return_raw_value=True) == value
+            assert validated_data.retrieve(path, return_raw_value=True) == value
 
     MappingTests: tuple[
         str,
@@ -723,12 +730,16 @@ class TestRequiredPath:
         ignore_warns = tuple(e for e in ignores if issubclass(e, Warning))
         ignore_excs = tuple(set(ignores) - set(ignore_warns))
 
+        allow_modify = kwargs.get("allow_modify", True)
+        copied_data = deepcopy(data)
+
         with safe_raises(ignore_excs), safe_warns(ignore_warns):
-            data = cast(
+            validated_data = cast(
                 MappingConfigData[Any],
-                RequiredPath(mapping).filter(data, **kwargs),  # type: ignore[arg-type]
+                RequiredPath(mapping).filter(copied_data, **kwargs),  # type: ignore[arg-type]
             )
-            assert data.data == result
+            assert validated_data.data == result
+            assert allow_modify or copied_data == data
 
     ComponentTests: tuple[
         str,
@@ -809,7 +820,7 @@ class TestRequiredPath:
                         "foo.json": MappingConfigData({"first": {"second": {"third": 4}}}),
                     },
                 ),
-                {"meta_validator": ComponentMetaParser().validator},
+                {"meta_validator": ComponentMetaParser().validator},  # 手动传入元数据验证器
                 (),
             ),
             (
@@ -839,7 +850,84 @@ class TestRequiredPath:
                 },
                 None,
                 {},
+                (ComponentMemberMismatchError,),
+            ),
+            (
+                NoneConfigData(),
+                {
+                    None: {"members": ["foo.json", {"filename": "bar.json", "alias": "bar.json"}]},
+                    "foo.json": {
+                        "first\\.second\\.third": 4,
+                    },
+                },
+                None,
+                {"meta_validator": ComponentMetaParser().validator},
                 (ValueError,),
+            ),
+            (
+                NoneConfigData(),
+                {
+                    None: {"members": [{"filename": "foo.json", "alias": "bar.json"}, {"filename": "bar.json"}]},
+                    "foo.json": {
+                        "first\\.second\\.third": 4,
+                    },
+                },
+                None,
+                {"meta_validator": ComponentMetaParser().validator},
+                (ValueError,),
+            ),
+            (
+                NoneConfigData(),
+                {
+                    None: {
+                        "members": [
+                            {"filename": "foo.json", "alias": "repeated"},
+                            {"filename": "bar.json", "alias": "repeated"},
+                        ]
+                    },
+                    "foo.json": {
+                        "first\\.second\\.third": 4,
+                    },
+                },
+                None,
+                {"meta_validator": ComponentMetaParser().validator},
+                (ValueError,),
+            ),
+            (
+                NoneConfigData(),
+                {
+                    None: {"members": ["foo.json", "foo.json"]},
+                    "foo.json": {
+                        "first\\.second\\.third": 4,
+                    },
+                },
+                None,
+                {"meta_validator": ComponentMetaParser().validator},
+                (ValueError,),
+            ),
+            (
+                NoneConfigData(),
+                {
+                    None: {"members": ["foo.json", {"filename": "bar.json", "alias": "foo.json"}]},
+                    "foo.json": {
+                        "first\\.second\\.third": 4,
+                    },
+                },
+                None,
+                {"meta_validator": ComponentMetaParser().validator},
+                (ValueError,),
+            ),
+            (
+                NoneConfigData(),
+                {
+                    None: {"members": ["foo.json"]},
+                    "foo.json": {
+                        "first\\.second\\.third": 4,
+                    },
+                },
+                None,
+                {"allow_initialize": False},  # 没有传入元数据验证器是因为该错误在元数据验证之前触发
+                (ComponentMemberMismatchError,),
             ),
         ),
     )
@@ -856,16 +944,21 @@ class TestRequiredPath:
         ignore_warns = tuple(e for e in ignores if issubclass(e, Warning))
         ignore_excs = tuple(set(ignores) - set(ignore_warns))
 
+        allow_modify = kwargs.get("allow_modify", True)
+        copied_data = deepcopy(data)
+
         with safe_raises(ignore_excs), safe_warns(ignore_warns):
-            data = cast(
+            validated_data = cast(
                 CCD,
-                RequiredPath(validator, "component").filter(data, **kwargs),  # type: ignore[arg-type]
+                RequiredPath(validator, "component").filter(copied_data, **kwargs),  # type: ignore[arg-type]
             )
             # noinspection PyUnresolvedReferences
-            assert data.meta.orders == result.meta.orders
+            assert validated_data.meta.orders == result.meta.orders
             # noinspection PyUnresolvedReferences
-            assert data.meta.members == result.meta.members
-            assert data.members == result.members
+            assert validated_data.meta.members == result.meta.members
+            assert validated_data.members == result.members
+
+            assert allow_modify or copied_data == data
 
     @staticmethod
     @mark.parametrize(
@@ -1000,7 +1093,7 @@ class TestRequiredPath:
 
     @staticmethod  # 专门针对保留子键的测试
     @mark.parametrize(*IncludeSubKeyTests)
-    def test_include_sub_key(
+    def test_nested_data(
         nested_data: MCD,
         validator: dict[str, Any],
         result: Any,
@@ -1010,11 +1103,14 @@ class TestRequiredPath:
             ignores = ((), ())
         ignore_warns, ignore_excs = ignores
 
-        with safe_warns(ignore_warns), safe_raises(ignore_excs) as info:
-            data: MCD = RequiredPath(validator).filter(nested_data)  # type: ignore[arg-type]
+        allow_modify = True  # 默认允许修改
+        copied_data = deepcopy(nested_data)
 
+        with safe_warns(ignore_warns), safe_raises(ignore_excs) as info:
+            validated_data: MCD = RequiredPath(validator).filter(copied_data)  # type: ignore[arg-type]
         if info:
             return
+        assert allow_modify or nested_data == validated_data
 
         # noinspection PyTestUnpassedFixture
-        assert data.data == result
+        assert validated_data.data == result

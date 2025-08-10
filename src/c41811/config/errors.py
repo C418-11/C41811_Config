@@ -368,7 +368,35 @@ class FailedProcessConfigFileError[E: BaseException](BaseExceptionGroup, Excepti
         return obj
 
 
+class ComponentMemberMismatchError(LookupError):
+    """
+    组件成员元数据与成员不匹配错误
+
+    .. versionadded:: 0.3.0
+    """
+
+    def __init__(self, missing: set[str], redundant: set[str]):
+        """
+        :param missing: 缺少的成员
+        :type missing: set[str]
+        :param redundant: 冗余的成员
+        :type redundant: set[str]
+        """  # noqa: D205
+        self.missing = missing
+        self.redundant = redundant
+
+    @override
+    def __str__(self) -> str:
+        msg = "Component member metadata does not match members"
+        if self.missing:
+            msg += f", Missing members: {self.missing}"
+        if self.redundant:
+            msg += f", Redundant members: {self.redundant}"
+        return msg
+
+
 __all__ = (
+    "ComponentMemberMismatchError",
     "ConfigDataPathSyntaxException",
     "ConfigDataReadOnlyError",
     "ConfigDataTypeError",

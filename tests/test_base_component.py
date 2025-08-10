@@ -16,9 +16,21 @@ from c41811.config import MappingConfigData
 from c41811.config import NoneConfigData
 from c41811.config import SequenceConfigData
 from c41811.config.abc import ABCIndexedConfigData
+from c41811.config.errors import ComponentMemberMismatchError
 from c41811.config.errors import ConfigDataTypeError
 from c41811.config.errors import RequiredPathNotFoundError
 from c41811.config.utils import Unset
+
+
+class TestComponentMetaParser:
+    @staticmethod
+    def test_eq() -> None:
+        assert ComponentMetaParser() == ComponentMetaParser()
+        parser: ComponentMetaParser[Any] = ComponentMetaParser()
+        parser._validator = None  # type: ignore[assignment]  # noqa: SLF001
+        assert parser != ComponentMetaParser()
+        assert ComponentMetaParser() != NotImplemented
+
 
 type D_MCD = MappingConfigData[dict[Any, Any]]
 type M = dict[str, ABCIndexedConfigData[Any]]
@@ -88,13 +100,13 @@ class TestComponentConfigData:
         with raises(ValueError, match="repeat"):
             ccd(ComponentMeta(members=[*([ComponentMember("repeat")] * 3)]))
 
-        with raises(ValueError, match="alias"):
+        with raises(ValueError, match="same"):
             ccd(ComponentMeta(members=[ComponentMember("same", alias="same")]))
 
-        with raises(ValueError, match="members"):
+        with raises(ComponentMemberMismatchError, match="'not in meta'"):
             ccd(members={"not in meta": MappingConfigData()})
 
-        with raises(ValueError, match="members"):
+        with raises(ComponentMemberMismatchError, match="'not in members'"):
             ccd(meta=ComponentMeta(members=[ComponentMember("not in members")]))
 
     @staticmethod

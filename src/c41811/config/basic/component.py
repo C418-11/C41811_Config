@@ -30,6 +30,7 @@ from ..abc import ABCIndexedConfigData
 from ..abc import ABCMetaParser
 from ..abc import ABCPath
 from ..abc import PathLike
+from ..errors import ComponentMemberMismatchError
 from ..errors import ConfigDataTypeError
 from ..errors import ConfigOperate
 from ..errors import KeyInfo
@@ -86,12 +87,12 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
     .. versionadded:: 0.2.0
     """
 
-    def __init__(self, meta: M | None = None, members: MutableMapping[str, D] | None = None):
+    def __init__(self, meta: M | None = None, members: Mapping[str, D] | None = None):
         """
         :param meta: 组件元数据
         :type meta: M | None
         :param members: 组件成员
-        :type members: MutableMapping[str, D] | None
+        :type members: Mapping[str, D] | None
         """  # noqa: D205
         if meta is None:
             meta = ComponentMeta()  # type: ignore[assignment]
@@ -100,30 +101,31 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
 
         # 准备元数据
         self._meta: M = cast(M, deepcopy(meta))
-        self._filename2meta: dict[str, ComponentMember] = {
-            member_meta.filename: member_meta for member_meta in self._meta.members
-        }
-        self._alias2filename = {
-            member_meta.alias: member_meta.filename
-            for member_meta in self._meta.members
-            if member_meta.alias is not None
-        }
+        self._filename2meta: dict[str, ComponentMember] = {}
+        self._alias2filename: dict[str, str] = {}
+        for member_meta in self._meta.members:
+            if member_meta.filename in self._filename2meta:  # 文件名不能重复
+                msg = f"filename {member_meta.filename} is repeated"
+                raise ValueError(msg)
+            self._filename2meta[member_meta.filename] = member_meta
+            if member_meta.filename in self._alias2filename:  # 别名不能和文件名重复
+                msg = f"alias {member_meta.filename} is same as filename {member_meta.filename}"
+                raise ValueError(msg)
+            if member_meta.alias is None:
+                continue
+            if member_meta.alias in self._alias2filename:  # 别名不能重复
+                msg = f"alias {member_meta.alias} is repeated"
+                raise ValueError(msg)
+            if member_meta.alias in self._filename2meta:  # 别名不能和文件名相同
+                msg = f"alias {member_meta.alias} is same as filename {member_meta.filename}"
+                raise ValueError(msg)
+            self._alias2filename[member_meta.alias] = member_meta.filename
+
         self._members: Mapping[str, D] = deepcopy(members)
-
-        # 验证成员是否与元数据匹配
-        if len(self._filename2meta) != len(self._meta.members):
-            msg = "repeated filename in meta"
-            raise ValueError(msg)
-
-        same_names = self._alias2filename.keys() & self._alias2filename.values()
-        if same_names:
-            msg = f"alias and filename cannot be the same {tuple(same_names)}"
-            raise ValueError(msg)
-
-        unexpected_names = self._members.keys() ^ self._filename2meta.keys()
-        if unexpected_names:
-            msg = f"cannot match members from meta {tuple(unexpected_names)}"
-            raise ValueError(msg)
+        missing = self._filename2meta.keys() - self._members.keys()
+        redundant = self._members.keys() - self._filename2meta.keys()
+        if missing | redundant:
+            raise ComponentMemberMismatchError(missing=missing, redundant=redundant)
 
     @property
     def meta(self) -> M:

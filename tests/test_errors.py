@@ -13,6 +13,7 @@ from c41811.config import AttrKey
 from c41811.config import IndexKey
 from c41811.config import Path
 from c41811.config.abc import ABCPath
+from c41811.config.errors import ComponentMemberMismatchError
 from c41811.config.errors import ConfigDataPathSyntaxException
 from c41811.config.errors import ConfigDataReadOnlyError
 from c41811.config.errors import ConfigDataTypeError
@@ -28,6 +29,7 @@ from c41811.config.errors import UnknownTokenTypeError
 from c41811.config.errors import UnsupportedConfigFormatError
 
 
+# noinspection PyUnreachableCode
 def test_unavailable_attribute() -> None:
     err = DependencyNotInstalledError("dependency")
     unavailable_attribute = UnavailableAttribute("attribute", err)
@@ -38,6 +40,7 @@ def test_unavailable_attribute() -> None:
         unavailable_attribute("any", "arguments")
 
     with raises(DependencyNotInstalledError, match="dependency"):
+        # noinspection PyStatementEffect
         unavailable_attribute.any_attribute  # noqa: B018
 
 
@@ -65,6 +68,7 @@ def token_info() -> TokenInfo:
     return TokenInfo(("abc",), "abc", 0)
 
 
+# noinspection PyUnreachableCode
 def test_config_data_path_syntax_exception(token_info: TokenInfo) -> None:
     with raises(ConfigDataPathSyntaxException):
         raise ConfigDataPathSyntaxException(token_info)
@@ -82,6 +86,7 @@ def test_config_data_path_syntax_exception(token_info: TokenInfo) -> None:
         raise Subclass(token_info, "$$override$$")
 
 
+# noinspection PyUnreachableCode
 def test_unknown_token_type_error(token_info: TokenInfo) -> None:
     with raises(UnknownTokenTypeError, match=UnknownTokenTypeError.msg):
         raise UnknownTokenTypeError(token_info)
@@ -116,6 +121,7 @@ def key_info() -> KeyInfo[AttrKey]:
     return KeyInfo(cast(ABCPath[AttrKey], Path((AttrKey("foo3"),))), AttrKey("foo3"), 0)
 
 
+# noinspection PyUnreachableCode
 def test_required_path_not_found_error(key_info: KeyInfo[Any]) -> None:
     with raises(RequiredPathNotFoundError):
         raise RequiredPathNotFoundError(key_info)
@@ -124,6 +130,7 @@ def test_required_path_not_found_error(key_info: KeyInfo[Any]) -> None:
         raise RequiredPathNotFoundError(key_info, ConfigOperate.Read)
 
 
+# noinspection PyUnreachableCode
 def test_config_data_readonly_error() -> None:
     with raises(ConfigDataReadOnlyError, match="read-only"):
         raise ConfigDataReadOnlyError
@@ -161,6 +168,7 @@ def test_unknown_error_during_validate_error() -> None:
         raise UnknownErrorDuringValidateError
 
 
+# noinspection PyUnreachableCode
 def test_unsupported_config_format_error() -> None:
     cls = UnsupportedConfigFormatError
     with raises(cls, match="json"):
@@ -176,6 +184,7 @@ def test_unsupported_config_format_error() -> None:
     assert hash(cls("json")) != hash(cls("pickle"))
 
 
+# noinspection PyUnreachableCode
 def test_failed_process_config_file_error() -> None:
     cls = FailedProcessConfigFileError
     with raises(cls, match="Failed to process config file"):
@@ -186,3 +195,16 @@ def test_failed_process_config_file_error() -> None:
 
     with raises(cls, match=r"1: 1\n2: 2\n3: 3"):
         raise cls({"1": Exception("1"), "2": Exception(2), "3": Exception(3)})
+
+
+# noinspection PyUnreachableCode
+def test_component_member_mismatch_error() -> None:
+    cls = ComponentMemberMismatchError
+    with raises(cls, match="Missing"):
+        raise cls(missing={"foo"}, redundant=set())
+
+    with raises(cls, match="Redundant"):
+        raise cls(missing=set(), redundant={"foo"})
+
+    with raises(cls, match="Missing .+ Redundant"):
+        raise cls(missing={"foo", "bar"}, redundant={"foo"})

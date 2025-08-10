@@ -37,6 +37,7 @@ from .abc import ABCPath
 from .basic.component import ComponentConfigData
 from .basic.mapping import MappingConfigData
 from .basic.object import NoneConfigData
+from .errors import ComponentMemberMismatchError
 from .errors import ConfigDataTypeError
 from .errors import ConfigOperate
 from .errors import KeyInfo
@@ -716,8 +717,13 @@ class ComponentValidatorFactory[D: ComponentConfigData[Any, Any]]:
                 continue
 
             if member not in component_data and self.validator_config.extra.get("allow_initialize", True):
-                component_data[member] = MappingConfigData()
-            member_data_ref = Ref(component_data[member])
+                if self.validator_config.allow_modify:
+                    component_data[member] = MappingConfigData()
+                    member_data_ref = Ref(component_data[member])
+                else:
+                    member_data_ref = Ref(MappingConfigData())
+            else:
+                raise ComponentMemberMismatchError(missing={member}, redundant=set())
             validated_member = validator(member_data_ref)
             validated_members[member] = validated_member
 

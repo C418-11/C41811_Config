@@ -98,6 +98,14 @@ class ComponentMetaParser[D: MappingConfigData[Any]](ABCMetaParser[D, ComponentM
     def validator(self, meta: ComponentMeta[D], *args: Any) -> ComponentMeta[D]:
         return self.convert_config2meta(meta.config)
 
+    @override
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, type(self)):
+            return NotImplemented
+        return self._validator == other._validator
+
+    __hash__ = None  # type: ignore[assignment]
+
 
 class ComponentSL(BasicChainConfigSL):
     """组件模式配置处理器"""
