@@ -293,12 +293,12 @@ class PathSyntaxParser:
                     top = token_stack.pop()
                 except IndexError:
                     raise ConfigDataPathSyntaxException(
-                        TokenInfo(tokenized_path, tk, i), f"unmatched '{tk_close}': "
+                        TokenInfo(tokenized_path, tk, i), f"unmatched '{tk_close}'"
                     ) from None
                 if top != tk_typ:
                     raise ConfigDataPathSyntaxException(
                         TokenInfo(tokenized_path, tk, i),
-                        f"closing parenthesis '{tk_close}' does not match opening parenthesis '{top}': ",
+                        f"closing parenthesis '{tk_close}' does not match opening parenthesis '{top}'",
                     )
 
             if token_type == "}":  # noqa: S105
@@ -309,15 +309,16 @@ class PathSyntaxParser:
                 try:
                     path.append(IndexKey(int(item), meta))  # type: ignore[arg-type]
                 except ValueError:
-                    msg = "index key must be int"
-                    raise ValueError(msg) from None
+                    raise ConfigDataPathSyntaxException(
+                        TokenInfo(tokenized_path, token, index), f"index key '{item}' must be numeric"
+                    ) from None
                 item = None
                 meta = None
                 continue
 
             if token_stack:
                 raise ConfigDataPathSyntaxException(
-                    TokenInfo(tokenized_path, token, index), f"'{token_stack.pop()}' was never closed: "
+                    TokenInfo(tokenized_path, token, index), f"'{token_stack.pop()}' was never closed"
                 )
 
             if token_type == "[":  # noqa: S105
@@ -338,7 +339,7 @@ class PathSyntaxParser:
         if token_stack:
             raise ConfigDataPathSyntaxException(
                 TokenInfo(tokenized_path, tokenized_path[-1], len(tokenized_path) - 1),
-                f"'{token_stack.pop()}' was never closed: ",
+                f"'{token_stack.pop()}' was never closed",
             )
 
         return path

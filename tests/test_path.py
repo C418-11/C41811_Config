@@ -296,7 +296,7 @@ class TestPathSyntaxParser:
             (r"\[2\]\.3\]", None, (ConfigDataPathSyntaxException,), ()),
             (r"\[2\.3", None, (ConfigDataPathSyntaxException,), ()),
             (r"\[2", None, (ConfigDataPathSyntaxException,), ()),
-            (r"\[a\]", None, (ValueError,), ()),
+            (r"\[a\]", None, (ConfigDataPathSyntaxException,), ()),
             (r"\[4\]abc\[9\]", None, (UnknownTokenTypeError,), ()),
             (r"\[5\]abc", None, (UnknownTokenTypeError,), ()),
             (r"\[5\]\abc", None, (UnknownTokenTypeError,), (SyntaxWarning,)),

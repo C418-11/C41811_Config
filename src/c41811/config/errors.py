@@ -98,18 +98,21 @@ class ConfigDataPathSyntaxException(Exception):  # noqa: N818
            1.msg参数
 
            2.类字段msg (供快速创建子类)
+
+        .. versionchanged:: 0.3.0
+           现在传入的错误消息不再软要求带冒号
         """  # noqa: D205
         self.token_info = token_info
 
         if msg is not None:
             self.msg = msg
         elif not hasattr(self, "msg"):
-            self.msg = "Configuration data path syntax error: "
+            self.msg = "Configuration data path syntax error"
 
     @override
     def __str__(self) -> str:
         return (
-            f"{self.msg}"
+            f"{self.msg}: "
             f"{self.token_info.raw_string} -> {self.token_info.current_token}"
             f" ({self.token_info.index + 1} / {len(self.token_info.tokens)})"
         )
@@ -124,7 +127,7 @@ class UnknownTokenTypeError(ConfigDataPathSyntaxException):
        重命名 ``UnknownTokenType`` 为 ``UnknownTokenTypeError``
     """
 
-    msg = "Unknown token type: "
+    msg = "Unknown token type"
 
 
 class ConfigOperate(Enum):
