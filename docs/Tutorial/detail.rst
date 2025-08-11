@@ -72,7 +72,7 @@
 
    [AttrKey(r"\key", meta=r"1\2"), IndexKey(0, meta=r"2\2")]
 
-可以简单的通过 ``str.replace('\\', '\\\\')`` 来转义
+可以简单的通过 ``str.replace("\\", "\\\\")`` 来转义
 
 .. attention::
    如果没有转义，且 ``\`` 后面的字符不是以上特殊转义字符，则会原样保留并发出警告
@@ -106,7 +106,7 @@ requireConfig
     JsonSL().register_to()
 
     require = requireConfig(
-        '', "config.json", {
+        "", "config.json", {
             "config": "data",
         },
     )
@@ -171,7 +171,7 @@ Pydantic验证器工厂
 
     JsonSL().register_to()
 
-    save('', "test.json", config=ConfigFile(MappingConfigData({
+    save("", "test.json", config=ConfigFile(MappingConfigData({
         "key": "value"
     })))
 
@@ -181,7 +181,7 @@ Pydantic验证器工厂
         unknown_key: dict = Field(default_factory=dict)
 
 
-    print(requireConfig('', "test.json", Config, "pydantic").check())
+    print(requireConfig("", "test.json", Config, "pydantic").check())
     # 打印：{'key': 'value', 'unknown_key': {}}
 
 
@@ -220,7 +220,7 @@ Pydantic验证器工厂
 
         JsonSL().register_to()
 
-        save('', "test.json", config=ConfigFile(MappingConfigData({
+        save("", "test.json", config=ConfigFile(MappingConfigData({
             "first": {
                 "second": {
                     "third": 111,
@@ -231,7 +231,7 @@ Pydantic验证器工厂
             "baz": 444
         })))
 
-        print(requireConfig('', "test.json", ["first", "first\\.second\\.third"]).check())
+        print(requireConfig("", "test.json", ["first", "first\\.second\\.third"]).check())
         # 打印：{'first': {'second': {'third': 111}, 'bar': 333}}
 
 Iterable[str]
@@ -251,7 +251,7 @@ Iterable[str]
 
     JsonSL().register_to()
 
-    save('', "test.json", config=ConfigFile(MappingConfigData({
+    save("", "test.json", config=ConfigFile(MappingConfigData({
         "foo": {
             "bar": {
                 "baz": "value"
@@ -261,7 +261,7 @@ Iterable[str]
         "foo1": "value2"
     })))
 
-    print(requireConfig('', "test.json", ["foo", "foo\\.bar\\.baz", "foo1"]).check())
+    print(requireConfig("", "test.json", ["foo", "foo\\.bar\\.baz", "foo1"]).check())
     # 打印：{'foo': {'bar': {'baz': 'value'}, 'bar1': 'value1'}, 'foo1': 'value2'}
 
 Mapping[str | ABCPath, Any]
@@ -288,7 +288,7 @@ Mapping[str | ABCPath, Any]
 
         JsonSL().register_to()
 
-        save('', "test.json", config=ConfigFile(MappingConfigData({
+        save("", "test.json", config=ConfigFile(MappingConfigData({
             "first": {
                 "second": {
                     "third": 111,
@@ -299,11 +299,11 @@ Mapping[str | ABCPath, Any]
             "baz": 444
         })))
 
-        paths = requireConfig('', "test.json", {
+        paths = requireConfig("", "test.json", {
             r"first\.second\.third": int,
             r"first\.bar": int,
         }).check()
-        nested_dict = requireConfig('', "test.json", {
+        nested_dict = requireConfig("", "test.json", {
             "first": {
                 "second": {
                     "third": int
@@ -330,7 +330,7 @@ Mapping[str | ABCPath, Any]
 
     JsonSL().register_to()
 
-    save('', "test.json", config=ConfigFile(MappingConfigData({
+    save("", "test.json", config=ConfigFile(MappingConfigData({
         "first": {
             "second": {
                 "third": 111,
@@ -342,13 +342,13 @@ Mapping[str | ABCPath, Any]
     })))
 
     # 使用路径字符串
-    print(requireConfig('', "test.json", {
+    print(requireConfig("", "test.json", {
         "first\\.second\\.third": int,
         "first\\.bar": int,
     }).check())  # 打印：{'first': {'second': {'third': 111}, 'bar': 333}}
 
     # 使用嵌套字典
-    print(requireConfig('', "test.json", {
+    print(requireConfig("", "test.json", {
         "first": {
             "second": {
                 "third": int
@@ -358,7 +358,7 @@ Mapping[str | ABCPath, Any]
     }).check())  # 打印：{'first': {'second': {'third': 111}, 'bar': 333}}
 
     # 混搭
-    print(requireConfig('', "test.json", {
+    print(requireConfig("", "test.json", {
         "first": {
             "second\\.third": int,
             "second": dict,
@@ -385,7 +385,7 @@ Mapping[str | ABCPath, Any]
 
     JsonSL().register_to()
 
-    save('', "test.json", config=ConfigFile(MappingConfigData({
+    save("", "test.json", config=ConfigFile(MappingConfigData({
         "first": {
             "second": {
                 "third": 111,
@@ -397,27 +397,27 @@ Mapping[str | ABCPath, Any]
     })))
 
     # 类型检查，如果不满足会报错
-    print(requireConfig('', "test.json", {
+    print(requireConfig("", "test.json", {
         "first\\.second": dict[str, int],
         "baz": list[int],
     }).check())  # 打印：{'first': {'second': {'third': 111, 'foo': 222}}, 'baz': [444]}
 
     try:
-        requireConfig('', "test.json", {
+        requireConfig("", "test.json", {
             "first\\.second": dict[str, str]  # 类型不匹配
         }).check()
     except ConfigDataTypeError as err:
         print(err)  # 打印：\.first\.second\.third -> \.third (3 / 3) Must be '<class 'str'>', Not '<class 'int'>'
 
     try:
-        requireConfig('', "test.json", {
+        requireConfig("", "test.json", {
             "baz": list[str]
         }).check()
     except ConfigDataTypeError as err:
         print(err)  # 打印：\.baz\[0\] -> \[0\] (2 / 2) Must be '<class 'str'>', Not '<class 'int'>'
 
     # 默认值，路径不存在时自动填充
-    print(requireConfig('', "test.json", {
+    print(requireConfig("", "test.json", {
         "first\\.second\\.third": 999,  # 因为路径已存在所以不会填充
         "not\\.exists": 987
     }).check())  # 打印： {'first': {'second': {'third': 111}}, 'not': {'exists': 987}}
@@ -425,12 +425,12 @@ Mapping[str | ABCPath, Any]
     # 在提供默认值的同时提供类型检查
     # 一般情况下用不着，因为会自动根据默认值的类型来设置类型检查
     # 一般在传入的默认值类型与类型检查的类型不同或规避特殊语法时使用
-    print(requireConfig('', "test.json", {
+    print(requireConfig("", "test.json", {
         "first\\.second\\.third": FieldDefinition(int, 999),
         "not\\.exists": FieldDefinition(int, 987),
         "baz": FieldDefinition(Sequence[int], [654]),
     }).check())  # 打印：{'first': {'second': {'third': 111}}, 'not': {'exists': 987}, 'baz': [444]}
-    print(requireConfig('', "test.json", {
+    print(requireConfig("", "test.json", {
         "first\\.second": FieldDefinition(dict, {"key": int}, allow_recursive=False),  # 并不会被递归处理，会被当作默认值处理
         "not exists": FieldDefinition(dict, {"key": int}, allow_recursive=False),
         "type": FieldDefinition(type, frozenset),
@@ -439,7 +439,7 @@ Mapping[str | ABCPath, Any]
     #  {'first': {'second': {'third': 111, 'foo': 222}}, 'not exists': {'key': <class 'int'>}, 'type': <class 'frozenset'>}
 
     # 含有非字符串键的子Mapping不会被递归处理
-    print(requireConfig('', "test.json", {
+    print(requireConfig("", "test.json", {
         "first\\.second": {"third": str, 3: 4},
         # 效果等同于FieldDefinition(dict, {"third": str, 3: 4}, allow_recursive=False)
         "not exists": {1: 2},
@@ -471,10 +471,10 @@ Mapping[str | ABCPath, Any]
         "baz": [444]
     })
 
-    save('', "test.json", config=ConfigFile(raw_data))
+    save("", "test.json", config=ConfigFile(raw_data))
 
     # allow_modify, 在填充默认值时将默认值填充到源数据
-    requireConfig('', "test.json", {
+    requireConfig("", "test.json", {
         "not\\.exists": 987
     }).check(allow_modify=False)
 
@@ -482,7 +482,7 @@ Mapping[str | ABCPath, Any]
     print(raw_data.exists("not\\.exists"))  # 打印：False
 
     # ConfigRequirementDecorator.__init__将allow_modify默认值设为True
-    requireConfig('', "test.json", {
+    requireConfig("", "test.json", {
         "not\\.exists": 987
     }).check()
 
@@ -491,13 +491,13 @@ Mapping[str | ABCPath, Any]
 
     # skip_missing, 在没提供默认值且键不存在时忽略
     try:
-        requireConfig('', "test.json", {
+        requireConfig("", "test.json", {
             "not\\.exists": int
         }).check()
     except RequiredPathNotFoundError as err:
         print(err)  # 打印：\.not\.exists -> \.exists (2 / 2) Operate: Read
 
-    data: MappingConfigData = requireConfig('', "test.json", {
+    data: MappingConfigData = requireConfig("", "test.json", {
         "not\\.exists": int
     }).check(skip_missing=True)
 
@@ -541,10 +541,10 @@ Mapping[str | ABCPath, Any]
 
     JsonSL().register_to()
 
-    save('', "test.json", config=ConfigFile(MappingConfigData({
+    save("", "test.json", config=ConfigFile(MappingConfigData({
         "key": "value"
     })))
-    print(requireConfig('', "test.json", modify_value_validator, "custom").check())
+    print(requireConfig("", "test.json", modify_value_validator, "custom").check())
     # 输出：{'key': 'modified!'}
 
 .. _component-validator-factory:

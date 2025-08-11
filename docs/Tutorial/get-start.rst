@@ -16,7 +16,7 @@
    # 加载并验证配置文件
    cfg = requireConfig(
        # 命名空间，文件名
-       '', "config.json",  # 自动从文件后缀推断处理器
+       "", "config.json",  # 自动从文件后缀推断处理器
        {  # 配置验证规则
            "hello": "world"  # hello字段必须为字符串且默认值为"world"
        },

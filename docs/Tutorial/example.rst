@@ -15,7 +15,7 @@
    from c41811.config import saveAll
 
    JsonSL().register_to()
-   cfg: MappingConfigData = requireConfig('', "main.json", {"plugins": ["database"]}).check()
+   cfg: MappingConfigData = requireConfig("", "main.json", {"plugins": ["database"]}).check()
    print(cfg)  # {'plugins': ['database']}
 
    saveAll()
@@ -66,7 +66,7 @@
    JsonSL().register_to()
 
    cfg: MappingConfigData = requireConfig(
-       '', "config.json.tar", {
+       "", "config.json.tar", {
            "port": 8080,
            "host": "0.0.0.0",
            "interval": {
@@ -108,7 +108,7 @@
    JsonSL(s_arg=dict(indent=4)).register_to()
 
    cfg: MappingConfigData = requireConfig(
-       '', "config.json.comp.tar.gz", {
+       "", "config.json.comp.tar.gz", {
            None: {
                "members": [
                    {"filename": "production.json", "alias": "product"},

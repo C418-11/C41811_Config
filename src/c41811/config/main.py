@@ -702,7 +702,7 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
         默认实现:
             - 遍历 :py:attr:`BasicCompressedConfigSL`
             - 如果为 ``str`` 且 ``file_name.endswith`` 成立则返回移除后缀后的结果
-            - 如果为 ``re.Pattern`` 且 ``Pattern.fullmatch(file_name)`` 成立则返回 ``Pattern.sub(file_name, '')``
+            - 如果为 ``re.Pattern`` 且 ``Pattern.fullmatch(file_name)`` 成立则返回 ``Pattern.sub(file_name, "")``
             - 直接返回
         """
         for match in self.supported_file_patterns:
