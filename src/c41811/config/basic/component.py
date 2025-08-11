@@ -329,7 +329,9 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
         return False
 
     @override
-    def get(self, path: PathLike, default: Any = None, *args: Any, **kwargs: Any) -> Any:
+    def get[V](
+        self, path: PathLike, default: V | None = None, *args: Any, return_raw_value: bool = False, **kwargs: Any
+    ) -> V | Any:
         path = fmt_path(path)
 
         def processor(pth: ABCPath[Any], member: D) -> Any:
@@ -349,7 +351,9 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
 
     @override
     @check_read_only
-    def setdefault(self, path: PathLike, default: Any = None, *args: Any, **kwargs: Any) -> Any:
+    def setdefault[V](
+        self, path: PathLike, default: V | None = None, *args: Any, return_raw_value: bool = False, **kwargs: Any
+    ) -> V | Any:
         path = fmt_path(path)
 
         def _retrieve_processor(pth: ABCPath[Any], member: D) -> Any:

@@ -275,14 +275,14 @@ class BasicIndexedConfigData[D: Indexed[Any, Any]](BasicSingleConfigData[D], ABC
         return cast(bool, self._process_path(path, checker, lambda *_: True))
 
     @override
-    def get(self, path: PathLike, default: Any | None = None, *, return_raw_value: bool = False) -> Any:
+    def get[V](self, path: PathLike, default: V | None = None, *, return_raw_value: bool = False) -> V | Any:
         try:
             return self.retrieve(path, return_raw_value=return_raw_value)
         except RequiredPathNotFoundError:
             return default
 
     @override
-    def setdefault(self, path: PathLike, default: Any | None = None, *, return_raw_value: bool = False) -> Any:
+    def setdefault[V](self, path: PathLike, default: V | None = None, *, return_raw_value: bool = False) -> V | Any:
         try:
             return self.retrieve(path)
         except RequiredPathNotFoundError:

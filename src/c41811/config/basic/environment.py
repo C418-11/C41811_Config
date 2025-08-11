@@ -145,7 +145,7 @@ class EnvironmentConfigData(MappingConfigData[MutableMapping[str, str]]):
 
     @diff_keys
     @override
-    def setdefault(self, path: PathLike, default: Any | None = None, *, return_raw_value: bool = False) -> Any:
+    def setdefault[V](self, path: PathLike, default: V | None = None, *, return_raw_value: bool = False) -> V | Any:
         return super().setdefault(path, default, return_raw_value=return_raw_value)
 
     @diff_keys
