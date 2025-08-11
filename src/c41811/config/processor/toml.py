@@ -63,7 +63,7 @@ class TomlSL(BasicLocalFileConfigSL):
 
         return cast(
             ConfigFile[MappingConfigData[MutableMapping[str, Any]]],
-            ConfigFile(data, config_format=self.processor_reg_name),
+            ConfigFile(data, config_format=self.reg_name),
         )
 
 

@@ -50,7 +50,7 @@ class PyYamlSL(BasicLocalFileConfigSL):
         with self.raises():
             data = yaml.safe_load(source_file)
 
-        return ConfigFile(data, config_format=self.processor_reg_name)
+        return ConfigFile(data, config_format=self.reg_name)
 
 
 __all__ = ("PyYamlSL",)

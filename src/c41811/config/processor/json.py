@@ -43,7 +43,7 @@ class JsonSL(BasicLocalFileConfigSL):
         with self.raises():
             data = json.load(source_file, *merged_args, **merged_kwargs)
 
-        return ConfigFile(data, config_format=self.processor_reg_name)
+        return ConfigFile(data, config_format=self.reg_name)
 
 
 __all__ = ("JsonSL",)

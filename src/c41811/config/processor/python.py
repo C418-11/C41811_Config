@@ -61,9 +61,7 @@ class PythonSL(BasicLocalFileConfigSL):
         with self.raises():
             exec(source_file.read(), {}, names)  # noqa: S102
 
-        return cast(
-            ConfigFile[MappingConfigData[dict[str, Any]]], ConfigFile(names, config_format=self.processor_reg_name)
-        )
+        return cast(ConfigFile[MappingConfigData[dict[str, Any]]], ConfigFile(names, config_format=self.reg_name))
 
 
 __all__ = ("PythonSL",)

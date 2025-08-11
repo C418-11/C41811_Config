@@ -73,7 +73,7 @@ class PlainTextSL(BasicLocalFileConfigSL):
 
         return ConfigFile(
             cast(StringConfigData[str] | SequenceConfigData[list[Any]], ConfigDataFactory(content)),
-            config_format=self.processor_reg_name,
+            config_format=self.reg_name,
         )
 
 

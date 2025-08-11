@@ -56,7 +56,7 @@ class RuamelYamlSL(BasicLocalFileConfigSL):
         with self.raises():
             data = self.yaml.load(source_file)
 
-        return ConfigFile(data, config_format=self.processor_reg_name)
+        return ConfigFile(data, config_format=self.reg_name)
 
 
 __all__ = ("RuamelYamlSL",)

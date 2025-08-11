@@ -57,7 +57,7 @@ class PickleSL(BasicLocalFileConfigSL):
         with self.raises():
             data = pickle.load(source_file, *merged_args, **merged_kwargs)  # noqa: S301
 
-        return ConfigFile(data, config_format=self.processor_reg_name)
+        return ConfigFile(data, config_format=self.reg_name)
 
 
 __all__ = ("PickleSL",)

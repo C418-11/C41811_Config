@@ -44,7 +44,7 @@ class PythonLiteralSL(BasicLocalFileConfigSL):
         with self.raises():
             data = literal_eval(source_file.read())
 
-        return ConfigFile(data, config_format=self.processor_reg_name)
+        return ConfigFile(data, config_format=self.reg_name)
 
 
 __all__ = ("PythonLiteralSL",)
