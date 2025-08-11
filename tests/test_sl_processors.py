@@ -43,6 +43,7 @@ from c41811.config import TomlSL
 from c41811.config import ZipCompressionTypes
 from c41811.config import ZipFileSL
 from c41811.config.abc import ABCConfigSL
+from c41811.config.errors import ComponentMetadataException
 from c41811.config.errors import FailedProcessConfigFileError
 
 JsonTests: tuple[tuple[Any, tuple[EE, ...], tuple[dict[str, Any], ...]], ...] = (
@@ -312,7 +313,7 @@ ComponentTests: tuple[
             (JsonSL(s_arg={"indent": 2}),),
             {"members": ["test.json"], "orders": {"create": ["test.json", "test.json"]}},
             {"test.json": MappingConfigData({"test": "test"})},
-            ((ValueError,), (), ()),
+            ((ComponentMetadataException,), (), ()),
             {},
         ),
         (

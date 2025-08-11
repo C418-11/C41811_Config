@@ -25,6 +25,7 @@ from ..basic.core import ConfigFile
 from ..basic.mapping import MappingConfigData
 from ..basic.object import NoneConfigData
 from ..basic.sequence import SequenceConfigData
+from ..errors import ComponentMetadataException
 from ..main import BasicChainConfigSL
 from ..main import RequiredPath
 from ..utils import Ref
@@ -77,7 +78,7 @@ class ComponentMetaParser[D: MappingConfigData[Any]](ABCMetaParser[D, ComponentM
             o = getattr(orders, attr)
             if len(set(o)) != len(o):
                 msg = f"name(s) repeated in {attr} order"
-                raise ValueError(msg)
+                raise ComponentMetadataException(msg)
 
         return ComponentMeta(meta, orders, members, self)
 

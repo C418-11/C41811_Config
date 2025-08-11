@@ -31,6 +31,7 @@ from ..abc import ABCMetaParser
 from ..abc import ABCPath
 from ..abc import PathLike
 from ..errors import ComponentMemberMismatchError
+from ..errors import ComponentMetadataException
 from ..errors import ConfigDataTypeError
 from ..errors import ConfigOperate
 from ..errors import KeyInfo
@@ -106,19 +107,19 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
         for member_meta in self._meta.members:
             if member_meta.filename in self._filename2meta:  # 文件名不能重复
                 msg = f"filename {member_meta.filename} is repeated"
-                raise ValueError(msg)
+                raise ComponentMetadataException(msg)
             self._filename2meta[member_meta.filename] = member_meta
             if member_meta.filename in self._alias2filename:  # 别名不能和文件名重复
                 msg = f"alias {member_meta.filename} is same as filename {member_meta.filename}"
-                raise ValueError(msg)
+                raise ComponentMetadataException(msg)
             if member_meta.alias is None:
                 continue
             if member_meta.alias in self._alias2filename:  # 别名不能重复
                 msg = f"alias {member_meta.alias} is repeated"
-                raise ValueError(msg)
+                raise ComponentMetadataException(msg)
             if member_meta.alias in self._filename2meta:  # 别名不能和文件名相同
                 msg = f"alias {member_meta.alias} is same as filename {member_meta.filename}"
-                raise ValueError(msg)
+                raise ComponentMetadataException(msg)
             self._alias2filename[member_meta.alias] = member_meta.filename
 
         self._members: Mapping[str, D] = deepcopy(members)

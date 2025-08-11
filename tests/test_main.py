@@ -39,6 +39,7 @@ from c41811.config import RequiredPath
 from c41811.config import ValidatorFactoryConfig
 from c41811.config.abc import ABCConfigFile
 from c41811.config.errors import ComponentMemberMismatchError
+from c41811.config.errors import ComponentMetadataException
 from c41811.config.errors import ConfigDataTypeError
 from c41811.config.errors import RequiredPathNotFoundError
 from c41811.config.errors import UnsupportedConfigFormatError
@@ -862,7 +863,7 @@ class TestRequiredPath:
                 },
                 None,
                 {"meta_validator": ComponentMetaParser().validator},
-                (ValueError,),
+                (ComponentMetadataException,),
             ),
             (
                 NoneConfigData(),
@@ -874,7 +875,7 @@ class TestRequiredPath:
                 },
                 None,
                 {"meta_validator": ComponentMetaParser().validator},
-                (ValueError,),
+                (ComponentMetadataException,),
             ),
             (
                 NoneConfigData(),
@@ -891,7 +892,7 @@ class TestRequiredPath:
                 },
                 None,
                 {"meta_validator": ComponentMetaParser().validator},
-                (ValueError,),
+                (ComponentMetadataException,),
             ),
             (
                 NoneConfigData(),
@@ -903,7 +904,7 @@ class TestRequiredPath:
                 },
                 None,
                 {"meta_validator": ComponentMetaParser().validator},
-                (ValueError,),
+                (ComponentMetadataException,),
             ),
             (
                 NoneConfigData(),
@@ -915,7 +916,7 @@ class TestRequiredPath:
                 },
                 None,
                 {"meta_validator": ComponentMetaParser().validator},
-                (ValueError,),
+                (ComponentMetadataException,),
             ),
             (
                 NoneConfigData(),

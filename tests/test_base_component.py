@@ -17,6 +17,7 @@ from c41811.config import NoneConfigData
 from c41811.config import SequenceConfigData
 from c41811.config.abc import ABCIndexedConfigData
 from c41811.config.errors import ComponentMemberMismatchError
+from c41811.config.errors import ComponentMetadataException
 from c41811.config.errors import ConfigDataTypeError
 from c41811.config.errors import RequiredPathNotFoundError
 from c41811.config.utils import Unset
@@ -97,10 +98,10 @@ class TestComponentConfigData:
     @staticmethod
     def test_wrong_init() -> None:
         ccd = ComponentConfigData
-        with raises(ValueError, match="repeat"):
+        with raises(ComponentMetadataException, match="repeat"):
             ccd(ComponentMeta(members=[*([ComponentMember("repeat")] * 3)]))
 
-        with raises(ValueError, match="same"):
+        with raises(ComponentMetadataException, match="same"):
             ccd(ComponentMeta(members=[ComponentMember("same", alias="same")]))
 
         with raises(ComponentMemberMismatchError, match="'not in meta'"):

@@ -371,7 +371,15 @@ class FailedProcessConfigFileError[E: BaseException](BaseExceptionGroup, Excepti
         return obj
 
 
-class ComponentMemberMismatchError(LookupError):
+class ComponentMetadataException(LookupError):  # noqa: N818
+    """
+    组件元数据异常
+
+    .. versionadded:: 0.3.0
+    """
+
+
+class ComponentMemberMismatchError(ComponentMetadataException):
     """
     组件成员元数据与成员不匹配错误
 
@@ -400,6 +408,7 @@ class ComponentMemberMismatchError(LookupError):
 
 __all__ = (
     "ComponentMemberMismatchError",
+    "ComponentMetadataException",
     "ConfigDataPathSyntaxException",
     "ConfigDataReadOnlyError",
     "ConfigDataTypeError",
