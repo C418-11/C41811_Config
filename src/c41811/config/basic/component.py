@@ -15,7 +15,6 @@ from contextlib import suppress
 from copy import deepcopy
 from dataclasses import dataclass
 from dataclasses import field
-from types import NotImplementedType
 from typing import Any
 from typing import Self
 from typing import cast
@@ -385,7 +384,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
         )
 
     @override
-    def __eq__(self, other: Any) -> bool | NotImplementedType:
+    def __eq__(self, other: Any) -> bool:
         if not isinstance(other, type(self)):
             return NotImplemented
         return all((self._meta == other._meta, self._members == other._members))

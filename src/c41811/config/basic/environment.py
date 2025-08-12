@@ -12,7 +12,6 @@ from collections.abc import Iterable
 from collections.abc import MutableMapping
 from dataclasses import dataclass
 from dataclasses import field
-from types import NotImplementedType
 from typing import Any
 from typing import Self
 from typing import cast
@@ -46,7 +45,7 @@ class Difference:
         self.updated.clear()
         self.removed.clear()
 
-    def __iadd__(self, other: Any) -> Self | NotImplementedType:
+    def __iadd__(self, other: Any) -> Self:
         if not isinstance(other, Iterable):
             return NotImplemented
         other = set(other)
@@ -54,7 +53,7 @@ class Difference:
         self.removed -= other
         return self
 
-    def __isub__(self, other: Any) -> Self | NotImplementedType:
+    def __isub__(self, other: Any) -> Self:
         if not isinstance(other, Iterable):
             return NotImplemented
         other = set(other)

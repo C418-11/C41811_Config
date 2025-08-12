@@ -17,7 +17,6 @@ from collections.abc import Sequence
 from contextlib import suppress
 from copy import deepcopy
 from re import Pattern
-from types import NotImplementedType
 from typing import Any
 from typing import Literal
 from typing import Self
@@ -94,16 +93,11 @@ class BasicSingleConfigData[D](BasicConfigData[D], ABC):
 
     @property
     def data(self) -> D:
-        """
-        配置的原始数据*快照*
-
-        :return: 配置的原始数据*快照*
-        :rtype: Any
-        """
+        """配置的原始数据*快照*"""
         return deepcopy(self._data)
 
     @override
-    def __eq__(self, other: Any) -> bool | NotImplementedType:
+    def __eq__(self, other: Any) -> bool:
         if not isinstance(other, type(self)):
             return NotImplemented
         return self._data == other._data
@@ -321,7 +315,7 @@ class BasicIndexedConfigData[D: Indexed[Any, Any]](BasicSingleConfigData[D], ABC
 class ConfigFile[D: ABCConfigData](ABCConfigFile[D]):
     """配置文件类"""
 
-    def __init__(self, initial_config: D | Any, *, config_format: str | None = None) -> None:
+    def __init__(self, initial_config: D | Any, *, config_format: str | None = None):
         """
         :param initial_config: 配置数据
         :type initial_config: D

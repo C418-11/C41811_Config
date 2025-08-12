@@ -13,7 +13,6 @@ from collections.abc import Mapping
 from collections.abc import Sequence
 from copy import deepcopy
 from re import Pattern
-from types import NotImplementedType
 from typing import Any
 from typing import Self
 from typing import overload
@@ -657,7 +656,7 @@ class ABCSLProcessorPool(ABC):
 class ABCConfigFile[D: ABCConfigData](ABC):
     """配置文件类"""
 
-    def __init__(self, initial_config: D, *, config_format: str | None = None) -> None:
+    def __init__(self, initial_config: D, *, config_format: str | None = None):
         """
         :param initial_config: 配置数据
         :type initial_config: D
@@ -787,7 +786,7 @@ class ABCConfigFile[D: ABCConfigData](ABC):
         return bool(self._config)
 
     @override
-    def __eq__(self, other: Any) -> bool | NotImplementedType:
+    def __eq__(self, other: Any) -> bool:
         if not isinstance(other, type(self)):
             return NotImplemented
 
@@ -1174,7 +1173,7 @@ class ABCConfigSL(ABC):
         """
 
     @override
-    def __eq__(self, other: Any) -> bool | NotImplementedType:
+    def __eq__(self, other: Any) -> bool:
         if not isinstance(other, type(self)):
             return NotImplemented
 
