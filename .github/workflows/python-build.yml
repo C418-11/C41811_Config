@@ -12,7 +12,7 @@ jobs:
       contents: read  # for setup-python
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           persist-credentials: false
 
@@ -50,7 +50,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           persist-credentials: false
 
@@ -61,7 +61,7 @@ jobs:
           path: dist
 
       - name: Sig package
-        uses: sigstore/gh-action-sigstore-python@15ce42889ff1d65509841d7c63480f64affe3a64
+        uses: sigstore/gh-action-sigstore-python@18923f2589f75b82c0c90ba174aba115cef8d38c
         with:
           inputs: |
             dist/*.tar.gz

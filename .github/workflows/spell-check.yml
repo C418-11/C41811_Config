@@ -17,9 +17,9 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           persist-credentials: false
 
       - name: Run Codespell
-        uses: codespell-project/actions-codespell@fad9339798e1ee3fe979ae0a022c931786a408b8
+        uses: codespell-project/actions-codespell@71286cb40fe09b3222aff820311357b4e67cc206
