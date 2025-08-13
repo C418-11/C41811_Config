@@ -50,7 +50,7 @@ dev = [
     "hjson~=3.1.0",
 
     "tox>=4.26,<4.29",
-    "pre-commit~=4.2.0"
+    "pre-commit>=4.2,<4.4"
 ]
 PyYamlSL = ["PyYAML~=6.0.2"]
 RuamelYamlSL = ["ruamel.yaml~=0.18.10"]
