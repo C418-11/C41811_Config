@@ -1,7 +1,7 @@
 # cython: language_level = 3  # noqa: ERA001
 
 
-"""Ruamel YAML配置文件处理器"""
+"""基于ruamel.yaml的YAML格式处理器"""
 
 from typing import Any
 from typing import override
@@ -23,7 +23,7 @@ except ImportError:
 
 class RuamelYamlSL(BasicLocalFileConfigSL):
     """
-    基于ruamel.yaml的yaml处理器
+    基于ruamel.yaml的YAML格式处理器
 
     默认尝试最大限度保留yaml中的额外信息(如注释
     """

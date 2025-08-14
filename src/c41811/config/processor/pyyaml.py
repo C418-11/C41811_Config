@@ -1,7 +1,7 @@
 # cython: language_level = 3  # noqa: ERA001
 
 
-"""PyYaml配置文件处理器"""
+"""基于PyYAML的YAML格式处理器"""
 
 from typing import Any
 from typing import override
@@ -17,12 +17,12 @@ try:
     # noinspection PyPackageRequirements, PyUnresolvedReferences
     import yaml
 except ImportError:
-    dependency = "PyYaml"
+    dependency = "PyYAML"
     raise DependencyNotInstalledError(dependency) from None
 
 
 class PyYamlSL(BasicLocalFileConfigSL):
-    """基于PyYaml的yaml处理器"""
+    """基于PyYAML的YAML格式处理器"""
 
     @property
     @override
