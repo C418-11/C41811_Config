@@ -889,7 +889,8 @@ class ABCConfigPool(ABCSLProcessorPool):
         :rtype: Self
 
         .. versionchanged:: 0.1.2
-           添加 ``config_formats`` 和 ``config`` 参数
+           添加参数 ``config_formats``
+           添加参数 ``config``
 
         .. versionchanged:: 0.2.0
            返回当前实例便于链式调用

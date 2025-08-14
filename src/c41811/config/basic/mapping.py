@@ -189,7 +189,7 @@ class MappingConfigData[D: Mapping[Any, Any]](BasicIndexedConfigData[D], Mutable
            odict_keys(['key'])
 
         .. versionchanged:: 0.2.0
-           添加 ``strict`` 参数
+           添加参数 ``strict``
         """  # noqa: RUF002
         if recursive:
             return OrderedDict.fromkeys(

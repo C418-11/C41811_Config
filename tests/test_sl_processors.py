@@ -1,13 +1,18 @@
 import os
 import re
 from collections import OrderedDict
+from collections.abc import Callable
 from collections.abc import Generator
 from datetime import datetime
+from functools import wraps
 from pathlib import Path
 from textwrap import dedent
 from typing import Any
+from typing import cast
 from typing import override
 
+from mypy_extensions import KwArg
+from mypy_extensions import VarArg
 from pytest import fixture
 from pytest import mark
 from pytest import raises
@@ -541,7 +546,21 @@ def test_python(pool: ConfigPool) -> None:
     assert str_cfg.data == str(data)
 
 
-def test_os_env(pool: ConfigPool) -> None:
+def _restore_environ[F: Callable[[VarArg(Any), KwArg(Any)], Any]](func: F) -> F:
+    @wraps(func)
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
+        environ = os.environ.copy()
+        try:
+            return func(*args, **kwargs)
+        finally:
+            os.environ.clear()
+            os.environ.update(environ)
+
+    return cast(F, wrapper)
+
+
+@_restore_environ
+def test_os_env_basic(pool: ConfigPool) -> None:
     OSEnvSL().register_to(pool)
 
     environ: EnvironmentConfigData = pool.load("", "snapshot.os.env").config
@@ -564,6 +583,58 @@ def test_os_env(pool: ConfigPool) -> None:
     environ.unset("TEST_ENV_VAR")
     pool.save("", "snapshot.os.env")
     assert "TEST_ENV_VAR" not in os.environ
+
+
+@mark.parametrize(
+    "environment_setup, target_environment, strip_prefix, prefix",
+    (
+        (
+            {"TEST_PREFIX_KEY1": "value1", "TEST_PREFIX_KEY2": "value2", "TEST_ENV_VAR": "test"},
+            {"TEST_PREFIX_KEY1": "value1", "TEST_PREFIX_KEY2": "value2"},
+            False,
+            "TEST_PREFIX_",
+        ),
+        (
+            {"TEST_KEY1": "value1", "TEST_KEY2": "value2", "TEST_ENV_VAR": "test"},
+            {"TEST_KEY1": "value1", "TEST_KEY2": "value2"},
+            True,
+            "",
+        ),
+        (
+            {"TEST_PREFIX_KEY1": "value1", "TEST_PREFIX_KEY2": "value2", "TEST_ENV_VAR": "test"},
+            {"KEY1": "value1", "KEY2": "value2"},
+            True,
+            "TEST_PREFIX_",
+        ),
+    ),
+)
+@_restore_environ
+def test_os_env_prefix(
+    pool: ConfigPool,
+    environment_setup: dict[str, str],
+    target_environment: dict[str, str],
+    strip_prefix: bool,  # noqa: FBT001
+    prefix: str,
+) -> None:
+    OSEnvSL(strip_prefix=strip_prefix, prefix=prefix).register_to(pool)
+
+    setup_data = EnvironmentConfigData()
+    setup_data |= target_environment
+    pool.save("", "setup.os.env", config=ConfigFile(setup_data))
+    for key, value in setup_data.items():
+        key = prefix + key if strip_prefix else key  # noqa: PLW2901
+        assert key in os.environ, f"key {key} should be in os.environ"
+        assert os.environ[key] == value, f"key {key} should be equal to {value}"
+
+    for key, value in environment_setup.items():
+        os.environ[key] = value
+
+    environment_snapshot: EnvironmentConfigData = pool.load("", "snapshot.os.env").config
+    for key, value in target_environment.copy().items():
+        assert key in environment_snapshot, f"key {key} should be in environment_snapshot"
+        assert environment_snapshot[key] == value, f"key {key} should be equal to {value}"
+        del environment_snapshot[key]
+    assert not (prefix and environment_snapshot), f"{environment_snapshot:r} should be empty"
 
 
 def test_wrong_sl_arguments() -> None:
