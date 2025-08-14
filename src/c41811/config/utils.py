@@ -6,7 +6,7 @@
 .. versionadded:: 0.2.0
 """
 
-from contextlib import suppress
+from functools import wraps
 from typing import Any
 from typing import cast
 from typing import override
@@ -23,19 +23,13 @@ def singleton[C: Any](target_cls: type[C], /) -> type[C]:
     :rtype: type[C]
     """
 
+    @wraps(target_cls.__new__)
     def new_singleton(cls: type[C], /, *args: Any, **kwargs: Any) -> C:
         if not hasattr(cls, "__singleton_instance__"):
             cls.__singleton_instance__ = cls.__singleton_new__(cls, *args, **kwargs)
 
         # noinspection PyProtectedMember
         return cast(C, cls.__singleton_instance__)
-
-    new_singleton.__name__ = target_cls.__new__.__name__
-    new_singleton.__qualname__ = target_cls.__new__.__qualname__
-    new_singleton.__doc__ = target_cls.__new__.__doc__
-    new_singleton.__module__ = target_cls.__new__.__module__
-    with suppress(AttributeError):
-        new_singleton.__annotations__ = target_cls.__new__.__annotations__
 
     target_cls.__singleton_new__ = target_cls.__new__
     target_cls.__new__ = staticmethod(new_singleton)  # type: ignore[assignment]

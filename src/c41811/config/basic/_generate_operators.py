@@ -8,6 +8,7 @@
 """
 
 from collections.abc import Callable
+from functools import update_wrapper
 from typing import Any
 
 import wrapt  # type: ignore[import-untyped]
@@ -86,9 +87,9 @@ def generate[C](cls: type[C]) -> type[C]:
                 args = (args[0].data, *args[1:])
             return wrapped(*args, **kwargs)
 
-        setattr(cls, name, wrapper(forward_op))
+        setattr(cls, name, update_wrapper(wrapper(forward_op), forward_op))
         setattr(cls, r_name, reverse_op)
-        setattr(cls, i_name, wrapper(check_read_only(inplace_op)))
+        setattr(cls, i_name, update_wrapper(wrapper(check_read_only(inplace_op)), inplace_op))
 
     return cls
 

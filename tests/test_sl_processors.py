@@ -140,16 +140,8 @@ PythonLiteralTests = (
 )
 
 PlainTextTests = (
-    (
-        "A\nB\nC\nD\nE",
-        (),
-        (),
-    ),
-    (
-        ["A", "B", "C", "D", "E"],
-        (),
-        ({"linesep": "\n"}, {"split_line": True, "remove_linesep": "\n"}),
-    ),
+    ("A\nB\nC\nD\nE", (), ()),
+    (["A", "B", "C", "D", "E"], (), ({"linesep": "\n"}, {"split_line": True, "remove_linesep": "\n"})),
 )
 
 
@@ -160,7 +152,7 @@ def _insert_sl_cls(
 
 
 LocalFileTests = (
-    "sl_cls, raw_data, ignore_excs, sl_args",
+    "sl_cls, raw_data, ignore_excs, init_arguments",
     (
         *_insert_sl_cls(JsonSL, JsonTests),
         *_insert_sl_cls(HJsonSL, HJsonTests),
@@ -185,9 +177,9 @@ def test_local_file_sl_processors(
     sl_cls: type[BasicLocalFileConfigSL],
     raw_data: Any,
     ignore_excs: tuple[EE, EE],
-    sl_args: tuple[Any, Any],
+    init_arguments: tuple[Any, Any],
 ) -> None:
-    sl_obj = sl_cls(*sl_args)
+    sl_obj = sl_cls(*init_arguments)
     sl_obj.register_to(pool)
 
     file: ConfigFile[Any] = ConfigFile(ConfigDataFactory(raw_data), config_format=sl_obj.reg_name)

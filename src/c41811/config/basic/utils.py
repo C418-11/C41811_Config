@@ -8,6 +8,7 @@
 """
 
 from collections.abc import Callable
+from functools import update_wrapper
 from typing import Any
 from typing import cast
 from typing import overload
@@ -65,7 +66,7 @@ def check_read_only[F: Callable[..., Any]](func: F) -> F:
             raise ConfigDataReadOnlyError
         return wrapped(*args, **kwargs)
 
-    return cast(F, wrapper(func))
+    return cast(F, update_wrapper(wrapper(func), func))
 
 
 __all__ = (

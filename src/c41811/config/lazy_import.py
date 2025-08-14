@@ -59,7 +59,7 @@ def lazy_import(properties: dict[str, str], /) -> tuple[list[str], Callable[[str
         return attr
 
     attr_getter.__name__ = "__getattr__"
-    attr_getter.__qualname__ = "__getattr__"
+    attr_getter.__qualname__ = f"{caller_package}.__getattr__"
     attr_getter.__module__ = caller_package
 
     return property_list, attr_getter

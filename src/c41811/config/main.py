@@ -14,6 +14,7 @@ from collections.abc import Mapping
 from collections.abc import Sequence
 from contextlib import contextmanager
 from copy import deepcopy
+from functools import update_wrapper
 from typing import Any
 from typing import ClassVar
 from typing import Literal
@@ -265,7 +266,7 @@ class ConfigRequirementDecorator:
 
             return wrapped(config_data, *args, **kwargs)
 
-        return cast(Callable[..., Any], wrapper(func))
+        return cast(Callable[..., Any], update_wrapper(wrapper(func), func))
 
     def _wrapped_filter(self, **kwargs: Any) -> ABCConfigData:
         config_ref = Ref((config_file := self._config_loader()).config)

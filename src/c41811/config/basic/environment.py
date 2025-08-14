@@ -12,6 +12,7 @@ from collections.abc import Iterable
 from collections.abc import MutableMapping
 from dataclasses import dataclass
 from dataclasses import field
+from functools import update_wrapper
 from typing import Any
 from typing import Self
 from typing import cast
@@ -102,7 +103,7 @@ def diff_keys[F: Callable[..., Any]](func: F) -> F:
 
         return result
 
-    return cast(F, wrapper(func))
+    return cast(F, update_wrapper(wrapper(func), func))
 
 
 class EnvironmentConfigData(MappingConfigData[MutableMapping[str, str]]):
