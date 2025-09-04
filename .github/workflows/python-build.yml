@@ -17,7 +17,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.12'
           cache: 'pip'
@@ -61,7 +61,7 @@ jobs:
           path: dist
 
       - name: Sig package
-        uses: sigstore/gh-action-sigstore-python@18923f2589f75b82c0c90ba174aba115cef8d38c
+        uses: sigstore/gh-action-sigstore-python@0f8d709f17368bca8877d8b74b410f9f17ee5a3c
         with:
           inputs: |
             dist/*.tar.gz
