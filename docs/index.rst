@@ -5,9 +5,13 @@ C41811.Config 的文档
    :target: https://pypi.python.org/pypi/C41811.Config/
    :alt: 支持的python版本
 
-.. image:: https://img.shields.io/pypi/l/C41811.Config?color=blue
+.. image:: https://img.shields.io/github/license/C418-11/C41811_Config?color=blue
    :target: https://github.com/C418-11/C41811_Config/blob/main/LICENSE
    :alt: 开源许可证
+
+.. image:: https://img.shields.io/github/commits-since/C418-11/C41811_Config/latest/develop
+   :target: https://github.com/C418-11/C41811_Config/commits/develop/
+   :alt: 自最新版本以来的 GitHub 提交
 
 .. list-table::
    :widths: auto

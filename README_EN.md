@@ -5,7 +5,8 @@ English | [中文](README.md)
 ---
 
 [![PyPI pyversions](https://img.shields.io/pypi/pyversions/c41811.config.svg)](https://pypi.python.org/pypi/C41811.Config/)
-[![PyPI - License](https://img.shields.io/pypi/l/C41811.Config?color=blue)](https://github.com/C418-11/C41811_Config/blob/main/LICENSE)
+[![GitHub License](https://img.shields.io/github/license/C418-11/C41811_Config?color=blue)](https://github.com/C418-11/C41811_Config/blob/main/LICENSE)
+[![GitHub commits since latest release](https://img.shields.io/github/commits-since/C418-11/C41811_Config/latest/develop)](https://github.com/C418-11/C41811_Config/commits/develop/)
 
 |     Documentation      | [![Documentation Status](https://readthedocs.org/projects/c41811config/badge/?version=latest)](https://app.readthedocs.org/projects/c41811config/) [![Get Start](https://img.shields.io/badge/Get-Start-green?logo=googledocs&logoColor=white)](https://c41811config.readthedocs.io/zh-cn/latest/Tutorial/get-start.html) [![FAQ](https://img.shields.io/badge/docs-FAQ-green?logo=googledocs&logoColor=white)](https://c41811config.readthedocs.io/zh-cn/latest/Tutorial/faq.html) |
 |:----------------------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|

@@ -5,7 +5,8 @@
 ---
 
 [![支持的python版本](https://img.shields.io/pypi/pyversions/c41811.config.svg)](https://pypi.python.org/pypi/C41811.Config/)
-[![开源许可证](https://img.shields.io/pypi/l/C41811.Config?color=blue)](https://github.com/C418-11/C41811_Config/blob/main/LICENSE)
+[![开源许可证](https://img.shields.io/github/license/C418-11/C41811_Config?color=blue)](https://github.com/C418-11/C41811_Config/blob/main/LICENSE)
+[![自最新版本以来的 GitHub 提交](https://img.shields.io/github/commits-since/C418-11/C41811_Config/latest/develop)](https://github.com/C418-11/C41811_Config/commits/develop/)
 
 |    文档     | [![文档状态](https://readthedocs.org/projects/c41811config/badge/?version=latest)](https://app.readthedocs.org/projects/c41811config/) [![新手教程](https://img.shields.io/badge/%E6%96%B0%E6%89%8B-%E6%95%99%E7%A8%8B-green?logo=googledocs&logoColor=white)](https://c41811config.readthedocs.io/zh-cn/latest/Tutorial/get-start.html) [![常见问题](https://img.shields.io/badge/%E5%B8%B8%E8%A7%81-%E9%97%AE%E9%A2%98-green?logo=googledocs&logoColor=white)](https://c41811config.readthedocs.io/zh-cn/latest/Tutorial/faq.html) |
 |:---------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
