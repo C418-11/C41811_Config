@@ -3,7 +3,9 @@
 
 """错误类"""
 
+import functools
 from collections import OrderedDict
+from collections.abc import Callable
 from collections.abc import Iterable
 from collections.abc import Mapping
 from collections.abc import Sequence
@@ -31,6 +33,26 @@ class DependencyNotInstalledError(ImportError):
         super().__init__(f"{dep_name} is not installed. Please install it with `pip install {dep_name}`")
 
 
+def _unavailable_method[M: Callable[..., Never]](method: M) -> M:
+    """
+    被装饰的方法在调用时会抛出实例 :py:attr:`~UnavailableAttribute._exception` 上的异常
+
+    :param method: 被装饰的方法
+    :type method: M
+    :return: 被装饰的方法
+    :rtype: M
+
+    .. versionadded:: 0.3.0
+    """
+
+    # noinspection PyUnusedLocal
+    @functools.wraps(method)
+    def wrapper(self: "UnavailableAttribute", *args: Any, **kwargs: Any) -> Never:  # noqa: ARG001
+        raise object.__getattribute__(self, "_exception")
+
+    return cast(M, wrapper)
+
+
 class UnavailableAttribute:
     """占位代理对象，在任意访问时抛出异常"""  # noqa: RUF002
 
@@ -43,18 +65,42 @@ class UnavailableAttribute:
         :param exception: 抛出的异常
         :type exception: DependencyNotInstalledError
         """  # noqa: D205
-        self._name = name
-        self._exception = exception
+        object.__setattr__(self, "_name", name)
+        object.__setattr__(self, "_exception", exception)
 
-    def __getattr__(self, name: str) -> Never:
-        raise self._exception
+    @_unavailable_method
+    @override
+    def __getattribute__(self, name: str) -> Never: ...  # type: ignore[empty-body]
 
-    def __call__(self, *args: Any, **kwargs: Any) -> Never:  # noqa: ARG002, D102
-        raise self._exception
+    @_unavailable_method
+    @override
+    def __setattr__(self, name: str, value: Any) -> Never: ...  # type: ignore[empty-body]
+
+    @_unavailable_method
+    @override
+    def __delattr__(self, name: str) -> Never: ...  # type: ignore[empty-body]
+
+    @_unavailable_method
+    def __call__(self, *args: Any, **kwargs: Any) -> Never: ...  # type: ignore[empty-body]  # noqa: D102
+
+    @_unavailable_method
+    def __getitem__(self, item: Any) -> Never: ...  # type: ignore[empty-body]
+
+    @_unavailable_method
+    def __setitem__(self, key: Any, value: Any) -> Never: ...  # type: ignore[empty-body]
+
+    @_unavailable_method
+    def __delitem__(self, key: Any) -> Never: ...  # type: ignore[empty-body]
+
+    @_unavailable_method
+    def __iter__(self) -> Never: ...  # type: ignore[empty-body]
+
+    @_unavailable_method
+    def __next__(self) -> Never: ...  # type: ignore[empty-body]
 
     @override
     def __repr__(self) -> str:
-        return f"<UnavailableAttribute {self._name} due to {self._exception}>"
+        return f"<{type(self).__name__} {object.__getattribute__(self, '_name')}>"
 
 
 @dataclass
