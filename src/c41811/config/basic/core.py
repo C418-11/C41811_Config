@@ -323,10 +323,10 @@ class ConfigFile[D: ABCConfigData](ABCConfigFile[D]):
         :type config_format: str | None
 
         .. caution::
-           本身并未对 ``initial_config`` 参数进行深拷贝，但是 :py:class:`ConfigDataFactory` 可能会将其深拷贝
+           本身并未对 ``initial_config`` 参数进行深拷贝，但是 :py:class:`ConfigDataFactory` 分发的类可能会将其深拷贝
 
         .. versionchanged:: 0.2.0
-           现在会自动尝试转换 ``initial_config`` 参数为 :py:class:`ConfigDataFactory`
+           现在会自动尝试使用 :py:class:`ConfigDataFactory` 转换 ``initial_config`` 参数
 
            重命名参数 ``config_data`` 为 ``initial_config``
         """  # noqa: RUF002, D205
