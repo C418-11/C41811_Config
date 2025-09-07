@@ -19,6 +19,7 @@ from pytest import raises
 from utils import EE
 from utils import safe_raises
 
+from c41811.config import CBOR2SL
 from c41811.config import BasicCompressedConfigSL
 from c41811.config import BasicConfigSL
 from c41811.config import BasicLocalFileConfigSL
@@ -31,6 +32,8 @@ from c41811.config import ConfigFile
 from c41811.config import ConfigPool
 from c41811.config import EnvironmentConfigData
 from c41811.config import HJsonSL
+from c41811.config import JPropertiesConfigData as JPropCD
+from c41811.config import JPropertiesSL
 from c41811.config import JsonSL
 from c41811.config import MappingConfigData
 from c41811.config import OSEnvSL
@@ -39,19 +42,22 @@ from c41811.config import PlainTextSL
 from c41811.config import PythonLiteralSL
 from c41811.config import PythonSL
 from c41811.config import PyYamlSL
+from c41811.config import RTomlSL
 from c41811.config import RuamelYamlSL
 from c41811.config import SequenceConfigData
 from c41811.config import StringConfigData
 from c41811.config import TarCompressionTypes
 from c41811.config import TarFileSL
-from c41811.config import TomlSL
+from c41811.config import TomlKitSL
 from c41811.config import ZipCompressionTypes
 from c41811.config import ZipFileSL
 from c41811.config.abc import ABCConfigSL
+from c41811.config.abc import SLArgument
 from c41811.config.errors import ComponentMetadataException
 from c41811.config.errors import FailedProcessConfigFileError
 
-JsonTests: tuple[tuple[Any, tuple[EE, ...], tuple[dict[str, Any], ...]], ...] = (
+type LFTests = tuple[tuple[Any, tuple[EE, ...], tuple[SLArgument, ...]], ...]
+JsonTests: LFTests = (
     ({"a": 1, "b": {"c": 2}}, (), ()),
     ({"a": 1, "b": {"c": 2}}, (), ({"indent": 4}, {})),
     (OrderedDict((("a", 1), ("b", 2))), (), ({"indent": 4, "sort_keys": True}, {})),
@@ -66,7 +72,7 @@ JsonTests: tuple[tuple[Any, tuple[EE, ...], tuple[dict[str, Any], ...]], ...] = 
 )
 HJsonTests = JsonTests
 
-PickleTests: tuple[tuple[Any, tuple[EE, ...], tuple[Any, ...]], ...] = (
+PickleTests: LFTests = (
     ({"a": 1, "b": 2}, (), ()),
     ({"a": 1, "b": 2}, (), ({"protocol": 2}, {})),
     ({"a": 1, "b": 2}, (), ((2,), ())),
@@ -81,7 +87,7 @@ PickleTests: tuple[tuple[Any, tuple[EE, ...], tuple[Any, ...]], ...] = (
     (None, ((), (FailedProcessConfigFileError,)), ({}, {"param not exist": None})),
 )
 
-PyYamlTests: tuple[tuple[Any, tuple[EE, ...], tuple[dict[str, Any], ...]], ...] = (
+PyYamlTests: LFTests = (
     ({"a": 1, "b": {"c": 2}}, (), ()),
     ({"a": 1, "b": {"c": 2}}, (), ({"indent": 4}, {})),
     ([1, 2, [3, [4, 5, [6], {"7": 8}]]], (), ({"indent": 2}, {})),
@@ -93,7 +99,7 @@ PyYamlTests: tuple[tuple[Any, tuple[EE, ...], tuple[dict[str, Any], ...]], ...] 
     (OrderedDict((("b", 2), ("a", 1))), ((FailedProcessConfigFileError,), (FailedProcessConfigFileError,)), ()),
 )
 
-RuamelYamlTests: tuple[tuple[Any, tuple[EE, ...], tuple[dict[str, Any], ...]], ...] = (
+RuamelYamlTests: LFTests = (
     ({"a": 1, "b": {"c": 2}}, (), ()),
     ([1, 2, [3, [4, 5, [6], {"7": 8}]]], (), ()),
     ("string", (), ()),
@@ -104,12 +110,41 @@ RuamelYamlTests: tuple[tuple[Any, tuple[EE, ...], tuple[dict[str, Any], ...]], .
     (NotImplemented, ((FailedProcessConfigFileError,), ()), ()),
 )
 
-TOMLTests: tuple[tuple[Any, tuple[EE, ...], tuple[dict[str, Any], ...]], ...] = (
+RTomlTests: LFTests = (
     ({"a": 1, "b": {"c": 2}}, (), ()),
+    (
+        {"a": "1", "b": {"c": 2, "d": [3, True, False, 4.5, "6.7"]}, "e": None},
+        (),
+        ({"pretty": True}, {"none_value": "null"}),
+    ),
+    (
+        {"a": "1", "b": {"c": 2, "d": [3, True, False, 4.5, "6.7"]}, "e": None},
+        (),
+        ({"none_value": "I AM NONE"}, {"none_value": "I AM NONE"}),
+    ),
+    ({"1": [1, 2, 3]}, (), ()),
+    ({}, (), ()),
+    ({"1": [[1, 2], [3, 4], [5, 6]]}, (), ()),
+    ({"a": 1, "b": [2, {"c": 3}]}, ((), (FailedProcessConfigFileError,)), ()),
+    ([1, 2, 3], ((), (FailedProcessConfigFileError,)), ()),
+    ("string", ((), (FailedProcessConfigFileError,)), ()),
+    (True, ((), (FailedProcessConfigFileError,)), ()),
+    (11.45, ((), (FailedProcessConfigFileError,)), ()),
+    (None, ((), (FailedProcessConfigFileError,)), ()),
+    (None, ((), (FailedProcessConfigFileError,)), ({"none_value": "I AM NONE"}, {"none_value": "I AM NONE"})),
+    (OrderedDict((("b", 2), ("a", 1))), ((FailedProcessConfigFileError,), ()), ()),
+    (NotImplemented, ((FailedProcessConfigFileError,), ()), ()),
+)
+
+TomlKitTests: LFTests = (
+    ({"a": 1, "b": {"c": 2}}, (), ()),
+    ({"a": "1", "b": {"c": 2, "d": [3, True, False, 4.5, "6.7"]}}, (), ()),
     ({"1": [1, 2, 3]}, (), ()),
     ({}, (), ()),
     (OrderedDict((("b", 2), ("a", 1))), (), ()),
+    (OrderedDict((("b", 2), ("a", 1))), (), ({"sort_keys": True},)),
     ({"1": [[1, 2], [3, 4], [5, 6]]}, (), ()),
+    ({"a": 1, "b": [2, {"c": 3}]}, (), ()),
     ([1, 2, 3], (FailedProcessConfigFileError,), ()),
     ("string", (FailedProcessConfigFileError,), ()),
     (True, (FailedProcessConfigFileError,), ()),
@@ -119,13 +154,49 @@ TOMLTests: tuple[tuple[Any, tuple[EE, ...], tuple[dict[str, Any], ...]], ...] = 
 )
 
 
+CBOR2Tests: LFTests = (
+    ({"a": 1, "b": {"c": 2}}, (), ()),
+    ({"a": "1", "b": {"c": 2, "d": [3, True, False, 4.5, "6.7"]}}, (), ()),
+    ({"1": [1, 2, 3]}, (), ()),
+    ({1: [1, 2, 3]}, (), ()),
+    ({}, (), ()),
+    (OrderedDict((("b", 2), ("a", 1))), (), ()),
+    ("string", (), ()),
+    ([1, 2, 3], (), ()),
+    (True, (), ()),
+    (11.45, (), ()),
+    (None, (), ()),
+    (NotImplemented, ((FailedProcessConfigFileError,), ()), ()),
+)
+
+# noinspection PyTypeChecker
+JPropertiesTests: LFTests = (
+    (JPropCD(None), (), ()),
+    (
+        JPropCD(
+            {
+                "allow-flight": "true",
+                "difficulty": "hard",
+                "motd": "A Minecraft Server",
+                "online-mode": "true",
+                "pvp": "true",
+                "spawn-protection": "0",
+                "view-distance": "16",
+            }
+        ),
+        (),
+        (),
+    ),
+)
+
+
 class ErrDuringRepr:
     @override
     def __repr__(self) -> str:
         raise Exception("repr error")  # noqa: TRY002, TRY003, EM101
 
 
-PythonLiteralTests = (
+PythonLiteralTests: LFTests = (
     ({"a": 1, "b": 0.5}, (), ()),
     ({"a": True, "b": False, "c": None}, (), ()),
     ({"a": {"c": 2}, "b": {"c", 2}}, (), ()),
@@ -139,14 +210,14 @@ PythonLiteralTests = (
     ({"a": ErrDuringRepr()}, ((FailedProcessConfigFileError,), (FailedProcessConfigFileError,)), ()),
 )
 
-PlainTextTests = (
+PlainTextTests: LFTests = (
     ("A\nB\nC\nD\nE", (), ()),
     (["A", "B", "C", "D", "E"], (), ({"linesep": "\n"}, {"split_line": True, "remove_linesep": "\n"})),
 )
 
 
 def _insert_sl_cls(
-    sl_cls: type[ABCConfigSL], tests: tuple[Any, ...]
+    sl_cls: type[ABCConfigSL], tests: tuple[tuple[Any, ...], ...]
 ) -> Generator[tuple[type[ABCConfigSL], Any], Any, None]:
     yield from ((sl_cls, *test) for test in tests)
 
@@ -154,14 +225,17 @@ def _insert_sl_cls(
 LocalFileTests = (
     "sl_cls, raw_data, ignore_excs, init_arguments",
     (
-        *_insert_sl_cls(JsonSL, JsonTests),
+        *_insert_sl_cls(CBOR2SL, CBOR2Tests),
         *_insert_sl_cls(HJsonSL, HJsonTests),
+        *_insert_sl_cls(JPropertiesSL, JPropertiesTests),
+        *_insert_sl_cls(JsonSL, JsonTests),
         *_insert_sl_cls(PickleSL, PickleTests),
-        *_insert_sl_cls(PyYamlSL, PyYamlTests),
-        *_insert_sl_cls(RuamelYamlSL, RuamelYamlTests),
-        *_insert_sl_cls(TomlSL, TOMLTests),
-        *_insert_sl_cls(PythonLiteralSL, PythonLiteralTests),
         *_insert_sl_cls(PlainTextSL, PlainTextTests),
+        *_insert_sl_cls(PythonLiteralSL, PythonLiteralTests),
+        *_insert_sl_cls(PyYamlSL, PyYamlTests),
+        *_insert_sl_cls(RTomlSL, RTomlTests),
+        *_insert_sl_cls(RuamelYamlSL, RuamelYamlTests),
+        *_insert_sl_cls(TomlKitSL, TomlKitTests),
     ),
 )
 
@@ -635,8 +709,10 @@ def test_wrong_sl_arguments() -> None:
 
 
 SLProcessors = (
+    CBOR2SL,
     ComponentSL,
     HJsonSL,
+    JPropertiesSL,
     JsonSL,
     OSEnvSL,
     PickleSL,
@@ -644,9 +720,10 @@ SLProcessors = (
     PythonLiteralSL,
     PythonSL,
     PyYamlSL,
+    RTomlSL,
     RuamelYamlSL,
     TarFileSL,
-    TomlSL,
+    TomlKitSL,
     ZipFileSL,
 )
 

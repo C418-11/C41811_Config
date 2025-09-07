@@ -7,7 +7,10 @@ mypy-extensions>=1.0,<1.2
 tox>=4.26,<4.29
 pre-commit>=4.2,<4.4
 # 测试对应SL处理器的依赖
-PyYAML~=6.0.2         # PyYamlSL
-ruamel.yaml~=0.18.10  # RuamelYamlSL
-toml~=0.10.2          # TomlSL
+cbor2~=5.7.0          # CBOR2SL
 hjson~=3.1.0          # HJsonSL
+jproperties~=2.1.2    # JPropertiesSL
+PyYAML~=6.0.2         # PyYamlSL
+rtoml~=0.12.0         # RTomlSL
+ruamel.yaml~=0.18.10  # RuamelYamlSL
+tomlkit~=0.13.3       # TomlKitSL

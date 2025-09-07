@@ -26,6 +26,7 @@ if __TYPE_CHECKING:  # pragma: no cover
     from .core import PHelper
     from .environment import EnvironmentConfigData
     from .factory import ConfigDataFactory
+    from .jproperties import JPropertiesConfigData
     from .mapping import MappingConfigData
     from .number import BoolConfigData
     from .number import NumberConfigData
@@ -47,6 +48,7 @@ if __TYPE_CHECKING:  # pragma: no cover
         "ConfigDataFactory",
         "ConfigFile",
         "EnvironmentConfigData",
+        "JPropertiesConfigData",
         "MappingConfigData",
         "NoneConfigData",
         "NumberConfigData",
@@ -64,18 +66,19 @@ else:
             "BasicConfigPool": ".core",
             "BasicIndexedConfigData": ".core",
             "BasicSingleConfigData": ".core",
+            "BoolConfigData": ".number",
             "ComponentConfigData": ".component",
             "ComponentMember": ".component",
             "ComponentMeta": ".component",
             "ComponentOrders": ".component",
             "ConfigFile": ".core",
             "EnvironmentConfigData": ".environment",
-            "PHelper": ".core",
-            "BoolConfigData": ".number",
+            "JPropertiesConfigData": ".jproperties",
             "MappingConfigData": ".mapping",
             "NoneConfigData": ".object",
             "NumberConfigData": ".number",
             "ObjectConfigData": ".object",
+            "PHelper": ".core",
             "SequenceConfigData": ".sequence",
             "StringConfigData": ".sequence",
         }

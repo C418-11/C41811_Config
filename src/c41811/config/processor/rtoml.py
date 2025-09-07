@@ -1,16 +1,19 @@
 # cython: language_level = 3  # noqa: ERA001
 
 
-"""Toml配置文件处理器"""
+"""
+基于rtoml的TOML格式处理器"
+
+.. versionadded:: 0.3.0
+"""
 
 from collections.abc import Mapping
 from collections.abc import MutableMapping
 from typing import Any
+from typing import TextIO
 from typing import cast
 from typing import override
 
-from .._protocols import SupportsReadAndReadline
-from .._protocols import SupportsWrite
 from ..abc import ABCConfigFile
 from ..basic.core import ConfigFile
 from ..basic.mapping import MappingConfigData
@@ -19,19 +22,19 @@ from ..main import BasicLocalFileConfigSL
 
 try:
     # noinspection PyPackageRequirements, PyUnresolvedReferences
-    import toml
+    import rtoml
 except ImportError:
-    dependency = "toml"
+    dependency = "rtoml"
     raise DependencyNotInstalledError(dependency) from None
 
 
-class TomlSL(BasicLocalFileConfigSL):
-    """Toml格式处理器"""
+class RTomlSL(BasicLocalFileConfigSL):
+    """基于rtoml的TOML格式处理器"""
 
     @property
     @override
     def processor_reg_name(self) -> str:
-        return "toml"
+        return "rtoml"
 
     @property
     @override
@@ -44,22 +47,22 @@ class TomlSL(BasicLocalFileConfigSL):
     def save_file(
         self,
         config_file: ABCConfigFile[MappingConfigData[Mapping[str, Any]]],
-        target_file: SupportsWrite[str],
+        target_file: TextIO,
         *merged_args: Any,
         **merged_kwargs: Any,
     ) -> None:
         with self.raises():
-            toml.dump(config_file.config.data, target_file)
+            rtoml.dump(config_file.config.data, target_file, *merged_args, **merged_kwargs)
 
     @override
     def load_file(
         self,
-        source_file: SupportsReadAndReadline[str],
+        source_file: TextIO,
         *merged_args: Any,
         **merged_kwargs: Any,
     ) -> ConfigFile[MappingConfigData[MutableMapping[str, Any]]]:
         with self.raises():
-            data = toml.load(source_file)
+            data = rtoml.load(source_file, *merged_args, **merged_kwargs)
 
         return cast(
             ConfigFile[MappingConfigData[MutableMapping[str, Any]]],
@@ -67,4 +70,4 @@ class TomlSL(BasicLocalFileConfigSL):
         )
 
 
-__all__ = ("TomlSL",)
+__all__ = ("RTomlSL",)

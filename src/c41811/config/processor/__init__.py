@@ -11,9 +11,11 @@ SaveLoad处理器
 from typing import TYPE_CHECKING as __TYPE_CHECKING
 
 if __TYPE_CHECKING:  # pragma: no cover
+    from .cbor2 import CBOR2SL
     from .component import ComponentMetaParser
     from .component import ComponentSL
     from .hjson import HJsonSL
+    from .jproperties import JPropertiesSL
     from .json import JsonSL
     from .os_env import OSEnvSL
     from .pickle import PickleSL
@@ -21,17 +23,20 @@ if __TYPE_CHECKING:  # pragma: no cover
     from .python import PythonSL
     from .python_literal import PythonLiteralSL
     from .pyyaml import PyYamlSL
+    from .rtoml import RTomlSL
     from .ruamel_yaml import RuamelYamlSL
     from .tarfile import TarCompressionTypes
     from .tarfile import TarFileSL
-    from .toml import TomlSL
+    from .tomlkit import TomlKitSL
     from .zipfile import ZipCompressionTypes
     from .zipfile import ZipFileSL
 
     __all__ = [
+        "CBOR2SL",
         "ComponentMetaParser",
         "ComponentSL",
         "HJsonSL",
+        "JPropertiesSL",
         "JsonSL",
         "OSEnvSL",
         "PickleSL",
@@ -39,10 +44,11 @@ if __TYPE_CHECKING:  # pragma: no cover
         "PyYamlSL",
         "PythonLiteralSL",
         "PythonSL",
+        "RTomlSL",
         "RuamelYamlSL",
         "TarCompressionTypes",
         "TarFileSL",
-        "TomlSL",
+        "TomlKitSL",
         "ZipCompressionTypes",
         "ZipFileSL",
     ]
@@ -51,21 +57,24 @@ else:
 
     __all__, __getattr__ = __lazy_import(
         {
-            "ComponentSL": ".component",
+            "CBOR2SL": ".cbor2",
             "ComponentMetaParser": ".component",
+            "ComponentSL": ".component",
             "HJsonSL": ".hjson",
+            "JPropertiesSL": ".jproperties",
             "JsonSL": ".json",
             "OSEnvSL": ".os_env",
             "PickleSL": ".pickle",
             "PlainTextSL": ".plaintext",
-            "PythonSL": ".python",
-            "PythonLiteralSL": ".python_literal",
             "PyYamlSL": ".pyyaml",
+            "PythonLiteralSL": ".python_literal",
+            "PythonSL": ".python",
+            "RTomlSL": ".rtoml",
             "RuamelYamlSL": ".ruamel_yaml",
-            "TarFileSL": ".tarfile",
             "TarCompressionTypes": ".tarfile",
-            "TomlSL": ".toml",
-            "ZipFileSL": ".zipfile",
+            "TarFileSL": ".tarfile",
+            "TomlKitSL": ".tomlkit",
             "ZipCompressionTypes": ".zipfile",
+            "ZipFileSL": ".zipfile",
         }
     )

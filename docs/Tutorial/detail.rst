@@ -813,10 +813,28 @@ SL处理器
      - 基于第三方库 ``ruamel.yaml``
 
    * - TOML
-     - :py:class:`~config.processor.toml.TomlSL`
+     - :py:class:`~config.processor.rtoml.RTomlSL`
      - toml
+     - .rtoml
+     - 基于第三方库 ``rtoml``
+
+   * - TOML
+     - :py:class:`~config.processor.tomlkit.TomlKitSL`
+     - tomlkit
      - .toml
-     - 基于第三方库 ``toml``
+     - 基于第三方库 ``tomlkit``
+
+   * - CBOR
+     - :py:class:`~config.processor.cbor2.CBOR2SL`
+     - cbor2
+     - .cbor
+     - 基于第三方库 ``cbor2``
+
+   * - Properties
+     - :py:class:`~config.processor.jproperties.JPropertiesSL`
+     - jproperties
+     - .properties
+     - 基于第三方库 ``jproperties``
 
    * - Python
      - :py:class:`~config.processor.python.PythonSL`
