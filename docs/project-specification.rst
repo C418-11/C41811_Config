@@ -195,6 +195,9 @@
 
 此项目使用 ``ruff`` 进行代码格式化
 
+.. attention::
+   `这不会检查文档字符串是否符合上述规范！`
+
 .. rubric:: 安装
 
 .. important::
@@ -208,7 +211,7 @@
 .. rubric:: 使用
 
 .. important::
-   格式化后的代码可能存在错误，请先使用以下命令检查格式化后的代码是否正确并运行 ``tox`` 进行全面测试
+   格式化后的代码可能存在错误，可以使用以下命令检查格式化后的代码是否正确或直接运行 ``tox`` 进行全面测试
 
 .. code-block:: shell
    :caption: 检查并格式化代码但是输出diff而不是修改文件
@@ -224,10 +227,12 @@
    ruff check
    ruff format
 
-如果你只是想检查代码是否符合规范可以运行以下代码检查
+或者使用打包好的命令
 
-.. caution::
-   `这不会检查文档字符串是否符合上述规范！`
+.. code-block:: shell
+   :caption: 检查并格式化代码
+
+   tox -e format
 
 .. important::
    以防你忘了安装项目开发依赖，我把安装开发依赖的命令放在了下面
@@ -237,7 +242,9 @@
 
       pip install -e .[dev]
 
+如果你只是想检查代码是否符合规范可以运行以下代码检查
+
 .. code-block:: shell
    :caption: 检查代码
 
-   tox -e ruff
+   tox -e lint

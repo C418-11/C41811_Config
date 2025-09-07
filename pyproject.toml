@@ -232,8 +232,8 @@ exclude_also = [
 ]
 
 [tool.tox]
-envlist = ["py312", "py313", "ruff", "mypy"]
-#envlist = ["py312", "py313", "py314", "ruff", "mypy"]  # todo uncomment when pydantic supports 3.14
+envlist = ["py312", "py313", "lint", "mypy"]
+#envlist = ["py312", "py313", "py314", "lint", "mypy"]  # todo uncomment when pydantic supports 3.14
 
 [tool.tox.env_run_base]
 description = "Run tests"
@@ -243,13 +243,22 @@ commands = [
     ["pytest"],
 ]
 
-[tool.tox.env.ruff]
+[tool.tox.env.lint]
 description = "Check code style"
 dependency_groups = ["ruff"]
 setenv = {CLICOLOR_FORCE="1"}
 commands = [
     ["ruff", "check", "--no-fix"],
     ["ruff", "format", "--check"],
+]
+
+[tool.tox.env.format]
+description = "Format code"
+dependency_groups = ["ruff"]
+setenv = {CLICOLOR_FORCE="1"}
+commands = [
+    ["ruff", "format"],
+    ["ruff", "check"],
 ]
 
 [tool.tox.env.mypy]
