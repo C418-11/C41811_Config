@@ -4,7 +4,7 @@ pyrsistent~=0.20.0
 portalocker>=3.1.1,<3.3.0
 mypy-extensions>=1.0,<1.2
 
-tox>=4.26,<4.29
+tox>=4.26,<4.31
 pre-commit>=4.2,<4.4
 # 测试对应SL处理器的依赖
 cbor2~=5.7.0          # CBOR2SL
