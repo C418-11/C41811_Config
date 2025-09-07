@@ -15,6 +15,9 @@
 | 代码质量-主分支  |                                                                   [![CI状态](https://img.shields.io/github/actions/workflow/status/C418-11/C41811_Config/python-ci.yml?branch=main&logo=github&label=CI)](https://github.com/C418-11/C41811_Config/actions/workflows/python-ci.yml?query=branch%3Amain) [![CodeCov覆盖率](https://codecov.io/gh/C418-11/C41811_Config/branch/main/graph/badge.svg)](https://codecov.io/gh/C418-11/C41811_Config/tree/main)                                                                    |
 | 代码质量-开发分支 |                                                             [![CI状态](https://img.shields.io/github/actions/workflow/status/C418-11/C41811_Config/python-ci.yml?branch=develop&logo=github&label=CI)](https://github.com/C418-11/C41811_Config/actions/workflows/python-ci.yml?query=branch%3Adevelop) [![CodeCov覆盖率](https://codecov.io/gh/C418-11/C41811_Config/branch/develop/graph/badge.svg)](https://codecov.io/gh/C418-11/C41811_Config/tree/develop)                                                              |
 
+文档太烂看不懂？试试AI文档！(不保证正确)<br/>
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/C418-11/C41811_Config)
+
 提示：点击徽章可转到相应页面。
 
 ## 简介

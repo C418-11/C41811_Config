@@ -15,6 +15,9 @@ English | [中文](README.md)
 |  Code Quality - Main   |                                                [![CI Status](https://img.shields.io/github/actions/workflow/status/C418-11/C41811_Config/python-ci.yml?branch=main&logo=github&label=CI)](https://github.com/C418-11/C41811_Config/actions/workflows/python-ci.yml?query=branch%3Amain) [![CodeCov](https://codecov.io/gh/C418-11/C41811_Config/branch/main/graph/badge.svg)](https://codecov.io/gh/C418-11/C41811_Config/tree/main)                                                |
 | Code Quality - Develop |                                          [![CI Status](https://img.shields.io/github/actions/workflow/status/C418-11/C41811_Config/python-ci.yml?branch=develop&logo=github&label=CI)](https://github.com/C418-11/C41811_Config/actions/workflows/python-ci.yml?query=branch%3Adevelop) [![CodeCov](https://codecov.io/gh/C418-11/C41811_Config/branch/develop/graph/badge.svg)](https://codecov.io/gh/C418-11/C41811_Config/tree/develop)                                          |
 
+Is the documentation too confusing? Try AI documentation! (not guaranteed to be correct)<br/>
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/C418-11/C41811_Config)
+
 Tip: Click the badge to goto the page.
 
 ## Description
