@@ -699,7 +699,7 @@ ComponentConfigData
 .. rubric:: 元配置
    :name: term-component-meta-config
 
-元信息默认存储在 ``__init__`` 配置文件内，元配置就是 ``__init__`` 内的原始配置数据
+元信息默认存储在 ``__meta__`` 配置文件内，元配置就是 ``__meta__`` 内的原始配置数据，文件名由 :py:attr:`~config.processor.component.ComponentSL.meta_file` 指定
 
 .. attention::
    原始配置数据结构完全由 :ref:`component-meta-parser` 定义，除非是处理额外附加数据，否则不应该直接对其进行操作

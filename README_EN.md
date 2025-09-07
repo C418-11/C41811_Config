@@ -26,13 +26,17 @@ verification functions to ensure the accuracy and consistency of configuration d
 
 ## Characteristics
 
-* Multi format support: Supports multiple popular configuration formats, including JSON, YAML, TOML, and Pickle, to meet
-  the needs of different projects.
+* Multi format support: Supports 15+ configuration formats, including popular JSON, YAML, TOML, Pickle, and more, to
+  meet the needs of different projects.
 * Modular design: Through modular design, flexible extension mechanisms are provided, allowing developers to add custom
   configuration processors as needed.
 * Verification function: Supports verifying the legitimacy of configuration data through validators to ensure the
   correctness of configuration data.
 * Easy to use: Provides a concise API that allows developers to easily load, modify, and save configuration files.
+* Component configuration data: Supports multiple sources of configuration data through "component configuration data"
+  to achieve complex inheritance, override, and priority relationships.
+* Easy to use: Provides a unified and concise API with comprehensive type annotation support, allowing developers to
+  easily load, modify, and save configuration files.
 
 ## Characteristics
 
@@ -50,6 +54,8 @@ C41811.Config is suitable for a variety of configuration management scenarios, e
   processors based on file extensions, allowing seamless use of configuration files in different formats.
 * Dynamic configuration updates: Supports dynamic updates to configurations at runtime without restarting the
   application to apply new configurations.
+* Type safety: Provides comprehensive type annotation support, reducing boilerplate code and ensuring type-safe
+  configuration access.
 
 ## Installation
 
@@ -68,14 +74,14 @@ from c41811.config import saveAll
 JsonSL().register_to()
 
 cfg: MappingConfigData = requireConfig(
-  '', "Hello World.json",
-  {  # Simple and powerful configuration data validator
-    "Hello": "World",
-    "foo": dict,  # Contains all keys under foo
-    "foo\\.bar": {  # foo.bar contains only the baz key
-      "baz": "qux"
+    "", "Hello World.json",
+    {  # Simple and powerful configuration data validator
+        "Hello": "World",
+        "foo": dict,  # Contains all keys under foo
+        "foo\\.bar": {  # foo.bar contains only the baz key
+            "baz": "qux"
+        }
     }
-  }
 ).check()
 saveAll()
 
