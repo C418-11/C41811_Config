@@ -61,7 +61,7 @@ jobs:
           path: dist
 
       - name: Sig package
-        uses: sigstore/gh-action-sigstore-python@0f8d709f17368bca8877d8b74b410f9f17ee5a3c
+        uses: sigstore/gh-action-sigstore-python@4f91b71268d7a4602628f7abdca1b2a8e443ff4a
         with:
           inputs: |
             dist/*.tar.gz
