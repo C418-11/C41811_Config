@@ -37,7 +37,7 @@ def lazy_import(properties: dict[str, str], /) -> tuple[list[str], Callable[[str
     property_list = list(properties.keys())
 
     def attr_getter(name: str) -> Any:
-        from .errors import DependencyNotInstalledError  # noqa: PLC0415
+        from .errors import DependencyNotFoundError  # noqa: PLC0415
         from .errors import UnavailableAttribute  # noqa: PLC0415
 
         try:
@@ -48,7 +48,7 @@ def lazy_import(properties: dict[str, str], /) -> tuple[list[str], Callable[[str
             raise AttributeError(msg) from None
         try:
             module = import_module(sub_pkg, package=caller_package)
-        except DependencyNotInstalledError as err:
+        except DependencyNotFoundError as err:
             property_list.remove(name)
             del properties[name]
             return UnavailableAttribute(name, err)

@@ -13,7 +13,7 @@ from typing import override
 
 from ..abc import ABCConfigFile
 from ..basic.core import ConfigFile
-from ..errors import DependencyNotInstalledError
+from ..errors import DependencyNotFoundError
 from ..main import BasicLocalFileConfigSL
 
 try:
@@ -21,7 +21,7 @@ try:
     import cbor2
 except ImportError:
     dependency = "cbor2"
-    raise DependencyNotInstalledError(dependency) from None
+    raise DependencyNotFoundError(dependency) from None
 
 
 class CBOR2SL(BasicLocalFileConfigSL):

@@ -18,7 +18,7 @@ from c41811.config.errors import ConfigDataPathSyntaxException
 from c41811.config.errors import ConfigDataReadOnlyError
 from c41811.config.errors import ConfigDataTypeError
 from c41811.config.errors import ConfigOperate
-from c41811.config.errors import DependencyNotInstalledError
+from c41811.config.errors import DependencyNotFoundError
 from c41811.config.errors import FailedProcessConfigFileError
 from c41811.config.errors import KeyInfo
 from c41811.config.errors import RequiredPathNotFoundError
@@ -31,15 +31,15 @@ from c41811.config.errors import UnsupportedConfigFormatError
 
 # noinspection PyUnreachableCode
 def test_unavailable_attribute() -> None:
-    err = DependencyNotInstalledError("dependency")
+    err = DependencyNotFoundError("dependency", "${dep_name}$ For Test!")
     unavailable_attribute = UnavailableAttribute("attribute", err)
 
     assert "attribute" in repr(unavailable_attribute)
 
-    with raises(DependencyNotInstalledError, match="dependency"):
+    with raises(DependencyNotFoundError, match=r"\$dependency\$ For Test!"):
         unavailable_attribute("any", "arguments")
 
-    with raises(DependencyNotInstalledError, match="dependency"):
+    with raises(DependencyNotFoundError, match=r"\$dependency\$ For Test!"):
         # noinspection PyStatementEffect
         unavailable_attribute.any_attribute  # noqa: B018
 

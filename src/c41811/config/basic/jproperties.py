@@ -13,14 +13,14 @@ from typing import Any
 from typing import override
 
 from .mapping import MappingConfigData
-from ..errors import DependencyNotInstalledError
+from ..errors import DependencyNotFoundError
 
 try:
     # noinspection PyPackageRequirements, PyUnresolvedReferences
     import jproperties  # type: ignore[import-not-found]
 except ImportError:
     dependency = "jproperties"
-    raise DependencyNotInstalledError(dependency) from None
+    raise DependencyNotFoundError(dependency) from None
 
 
 class JPropertiesConfigData(MappingConfigData[jproperties.Properties]):

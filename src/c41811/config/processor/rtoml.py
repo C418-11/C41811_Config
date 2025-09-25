@@ -17,7 +17,7 @@ from typing import override
 from ..abc import ABCConfigFile
 from ..basic.core import ConfigFile
 from ..basic.mapping import MappingConfigData
-from ..errors import DependencyNotInstalledError
+from ..errors import DependencyNotFoundError
 from ..main import BasicLocalFileConfigSL
 
 try:
@@ -25,7 +25,7 @@ try:
     import rtoml
 except ImportError:
     dependency = "rtoml"
-    raise DependencyNotInstalledError(dependency) from None
+    raise DependencyNotFoundError(dependency) from None
 
 
 class RTomlSL(BasicLocalFileConfigSL):

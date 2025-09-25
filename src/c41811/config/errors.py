@@ -21,18 +21,32 @@ from .abc import ABCPath
 from .abc import AnyKey
 
 
-class DependencyNotInstalledError(ImportError):
-    """可选功能依赖缺失"""
+class DependencyNotFoundError(ImportError):
+    """
+    依赖缺失
 
-    def __init__(self, dep_name: str):
+    .. versionadded:: 0.3.0
+    """
+
+    def __init__(
+        self,
+        dep_name: str,
+        description: str | None = None,
+    ):
         """
         :param dep_name: 依赖名称
         :type dep_name: str
+        :param description: 描述信息
+        :type description: str | None
         """  # noqa: D205
         self.dep_name = dep_name
-        super().__init__(f"{dep_name} is not installed. Please install it with `pip install {dep_name}`")
+        if description is None:
+            super().__init__(f"`{dep_name}` is required.")
+        else:
+            super().__init__(description.format(dep_name=dep_name))
 
 
+# noinspection PyNewStyleGenericSyntax
 def _unavailable_method[M: Callable[..., Never]](method: M) -> M:
     """
     被装饰的方法在调用时会抛出实例 :py:attr:`~UnavailableAttribute._exception` 上的异常
@@ -48,25 +62,29 @@ def _unavailable_method[M: Callable[..., Never]](method: M) -> M:
     # noinspection PyUnusedLocal
     @functools.wraps(method)
     def wrapper(self: "UnavailableAttribute", *args: Any, **kwargs: Any) -> Never:  # noqa: ARG001
-        raise object.__getattribute__(self, "_exception")
+        raise object.__getattribute__(self, "_reason")
 
     return cast(M, wrapper)
 
 
 class UnavailableAttribute:
-    """占位代理对象，在任意访问时抛出异常"""  # noqa: RUF002
+    """
+    占位代理对象，在任意访问时抛出异常
 
-    __slots__ = ("_exception", "_name")
+    .. versionadded:: 0.3.0
+    """  # noqa: RUF002
 
-    def __init__(self, name: str, exception: DependencyNotInstalledError):
+    __slots__ = ("_name", "_reason")
+
+    def __init__(self, name: str, reason: Exception):
         """
         :param name: 属性名
         :type name: str
-        :param exception: 抛出的异常
-        :type exception: DependencyNotInstalledError
+        :param reason: 抛出的异常
+        :type reason: DependencyNotFoundError
         """  # noqa: D205
         object.__setattr__(self, "_name", name)
-        object.__setattr__(self, "_exception", exception)
+        object.__setattr__(self, "_reason", reason)
 
     @_unavailable_method
     @override
@@ -460,7 +478,7 @@ __all__ = (
     "ConfigDataTypeError",
     "ConfigOperate",
     "CyclicReferenceError",
-    "DependencyNotInstalledError",
+    "DependencyNotFoundError",
     "FailedProcessConfigFileError",
     "KeyInfo",
     "RequiredPathNotFoundError",

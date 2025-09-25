@@ -10,7 +10,7 @@ from .._protocols import SupportsReadAndReadline
 from .._protocols import SupportsWrite
 from ..abc import ABCConfigFile
 from ..basic.core import ConfigFile
-from ..errors import DependencyNotInstalledError
+from ..errors import DependencyNotFoundError
 from ..main import BasicLocalFileConfigSL
 
 try:
@@ -18,7 +18,7 @@ try:
     from ruamel.yaml import YAML
 except ImportError:
     dependency = "ruamel.yaml"
-    raise DependencyNotInstalledError(dependency) from None
+    raise DependencyNotFoundError(dependency) from None
 
 
 class RuamelYamlSL(BasicLocalFileConfigSL):

@@ -1,4 +1,4 @@
-from c41811.config.errors import DependencyNotInstalledError
+from c41811.config.errors import DependencyNotFoundError
 
 dependency = "sub_dependency"
-raise DependencyNotInstalledError(dependency)
+raise DependencyNotFoundError(dependency)
