@@ -562,7 +562,7 @@ Mapping[str | ABCPath, Any]
    永远不应该尝试验证 :py:class:`~config.basic.object.NoneConfigData` ，这将创建一个
    :py:attr:`~config.basic.component.ComponentMeta.parser` 为
    :py:const:`None` 的 :py:class:`~config.basic.component.ComponentMeta`，如果你没有在
-   :py:class:`额外验证器工厂配置参数 <Config.validators.ComponentValidatorFactory>` 传入新的
+   :py:class:`额外验证器工厂配置参数 <Config.validators.ComponentValidatorFactory>` 传入默认的
    `组件元数据验证器` 这将可能导致(至少目前默认情况下会)无法将组件元配置同步到组件元信息，最终导致元信息和组件成员不匹配抛出错误
 
 .. seealso::
@@ -571,11 +571,11 @@ Mapping[str | ABCPath, Any]
 ConfigDataFactory
 ------------------
 
-此类本身不提供任何实际配置数据操作，仅根据传入的参数类型从注册表中选择对应的子类实例化并返回
+此类本身不提供任何实际配置数据操作，仅根据传入的参数类型从注册表中选择对应的类实例化并返回
 
 注册表存储在 :py:attr:`~config.basic.ConfigDataFactory.TYPES`
 
-.. rubric:: 传入的数据类型及其对应子类
+.. rubric:: 传入的数据类型及其对应类
 
 优先级从上倒下，取初始化参数的第一个参数的类型进行判断，未传入参数时取 :py:const:`None`
 
@@ -584,7 +584,7 @@ ConfigDataFactory
    :header-rows: 1
 
    * - 数据类型
-     - 子类
+     - 配置数据类
 
    * - :py:class:`~config.abc.ABCConfigData`
      - 原样返回
@@ -702,7 +702,8 @@ ComponentConfigData
 元信息默认存储在 ``__meta__`` 配置文件内，元配置就是 ``__meta__`` 内的原始配置数据，文件名由 :py:attr:`~config.processor.component.ComponentSL.meta_file` 指定
 
 .. attention::
-   原始配置数据结构完全由 :ref:`component-meta-parser` 定义，除非是处理额外附加数据，否则不应该直接对其进行操作
+   原始配置数据结构完全由 :ref:`component-meta-parser` 定义，除非你能保证数据结构在你的预期内，否则不应该直接对其进行操作(不同
+   :ref:`component-meta-parser` 的实现可能使用完全不同的数据结构甚至数据类型！)
 
 以 :py:class:`~config.basic.mapping.MappingConfigData` 存储
 
@@ -723,18 +724,44 @@ ComponentConfigData
 .. rubric:: 处理顺序
    :name: component-meta-order
 
-:py:meth:`~config.basic.ComponentConfigData.retrieve` 等方法从成员的搜索顺序
+:py:meth:`~config.basic.ComponentConfigData.retrieve` 等方法从成员的搜索顺序，参见下表：
+
+.. list-table::
+   :widths: auto
+   :header-rows: 1
+
+   * - 顺序表
+     - 使用该表的方法
+
+   * - :py:attr:`~config.basic.component.ComponentOrders.create`
+     - :py:meth:`~config.basic.ComponentConfigData.setdefault`
+
+   * - :py:attr:`~config.basic.component.ComponentOrders.read`
+     - :py:meth:`~config.basic.ComponentConfigData.retrieve`, :py:meth:`~config.basic.ComponentConfigData.exists`, :py:meth:`~config.basic.ComponentConfigData.get`, :py:meth:`~config.basic.ComponentConfigData.setdefault`
+
+   * - :py:attr:`~config.basic.component.ComponentOrders.update`
+     - :py:meth:`~config.basic.ComponentConfigData.modify`
+
+   * - :py:attr:`~config.basic.component.ComponentOrders.delete`
+     - :py:meth:`~config.basic.ComponentConfigData.delete`, :py:meth:`~config.basic.ComponentConfigData.unset`
+
+.. attention::
+   当前实现 :py:attr:`~config.basic.component.ComponentOrders.create` 的行为不是很符合预期，此项目前仅控制
+   :py:meth:`~config.basic.ComponentConfigData.setdefault` 方法在路径不存在时的写入顺序，推荐与
+   :py:attr:`~config.basic.component.ComponentOrders.update` 保持一致以避免行为不符合直觉
 
 .. seealso::
-   :py:class:`~config.basic.component.ComponentOrder`
+   :py:class:`~config.basic.component.ComponentOrders`
 
 .. rubric:: 解析器
    :name: component-meta-parser
 
-负责将 :ref:`term-component-meta-config` 与 :ref:`component-meta` 以一定格式互相转换
+负责将 :ref:`term-component-meta-config` 与 :ref:`component-meta` 以一定格式互相转换，由
+:py:class:`~config.basic.component.ComponentMeta.parser` 属性存储，可以在
+:py:meth:`~config.processor.component.ComponentSL` 中通过初始化方法的 `meta_parser` 参数指定
 
 .. seealso::
-   :py:class:`~config.processor.component.ComponentMetaParser`
+   默认实现： :py:class:`~config.processor.component.ComponentMetaParser` 讲解： :ref:`component-meta-parser-default-structure`
 
 .. _component-member:
 
@@ -889,6 +916,8 @@ ComponentMetaParser
 
 :py:class:`~config.processor.component.ComponentSL` 的默认 :ref:`term-component-meta-config` 解析器。
 
+.. _component-meta-parser-default-structure:
+
 .. rubric:: 元配置数据结构
 
 .. code-block:: python
@@ -903,21 +932,22 @@ ComponentMetaParser
                "alias": "na",  # 此成员别名为"na"，可被`键元信息`语法或下面的操作顺序使用
                "config_format": "ruamel_yaml",  # 此成员配置格式为ruamel.yaml的YAML解析器
            },
-           {"filename": "my-member.pickle"},  # 当然这些额外信息是可选的
+           {"filename": "my-member.pickle"},  # 当然上面这些额外信息是可选的
        ],
        # 操作顺序，并没有严格的检查，已经声明的组件成员可以不被使用但是禁止出现完全重复的名称
        "order": [  # 定义基础的操作顺序，若未提供则顺序敏感地使用members所声明的文件名(若存在则优先使用别名)，可以提供一个空列表以禁用默认行为
            # "filename.json",  # 越靠前优先级越高
-           # "na",  # 显然这里是允许别名的
-           # 已经声明的my-member.pickle没有在这里被使用
+           # "na",  # 这里是允许别名的
+           # 这里order为空以禁用默认行为(只要提供了此项就会禁用默认行为，无论是否完全为空列表或只填充了部分/全部成员)
        ],
-       "orders": {  # order会被同步追加到create/read/modify/delete
+       "orders": {  # order会被同步追加到orders的create/read/update/delete，所以orders优先级最高
            # 会简单的检查将要追加的名称是否已经在表中(如果是则跳过)，这并不会同时检查文件名与别名是否同时存在
-           "create": [],  # 禁止创建新的键，create的行为不是很符合预期，此项目前仅控制setdefault方法
+           "create": [],  # 禁止创建新的键，当前实现create的行为不是很符合预期，此项目前仅控制setdefault方法在路径不存在时的写入顺序
+                          # 推荐与update保持一致以避免行为不符合直觉
            "read": ["filename.json", "my-member.pickle"],  # retrieve等方法仅按照此顺序读取配置数据
-           "modify": ["filename.json", "na"],  # 显然这是针对modify一类方法的
+           "update": ["filename.json", "na"],  # 显然这是针对modify一类方法的
            "delete": ["filename.json", "my-member.pickle", "na"],  # delete,unset一类涉及删除路径的操作
            # 注意，当unset等方法最终得到的orders其中某项为空时(例如"delete": [])
            # 会抛出RequiredPathNotFoundError且未找到路径一定为根键
        },
-   }
+   }  # 显然，以上的顺序表都是允许完全为空(且不必包含全部成员)的，这将导致永远无法通过普通的顺序查找检索到未在顺序表中成员，但是仍然可以通过`键元信息`语法指定成员访问
