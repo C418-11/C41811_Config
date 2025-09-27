@@ -808,6 +808,59 @@ class TestRequiredPath:
                 (),
             ),
             (
+                ComponentConfigData(
+                    ComponentMetaParser().convert_config2meta(
+                        MappingConfigData(  # type: ignore[arg-type]  # mypy抽风
+                            {
+                                "members": ["foo.json", "bar.json", "baz.json"],
+                            }
+                        )
+                    ),
+                    {
+                        "foo.json": MappingConfigData(
+                            {
+                                "first": {
+                                    "second": {
+                                        "third": 4,
+                                    }
+                                },
+                                "baz": 5,
+                            }
+                        ),
+                        "bar.json": MappingConfigData({"key": {"value"}}),
+                        "baz.json": MappingConfigData(
+                            {
+                                "anything": {"here": None},
+                                "creeper?": "awwwwwwwwwwwwwwwwwwwwwwwww mannnnnnnnnnnnnnnnnnnnnnnnn",
+                            }
+                        ),
+                    },
+                ),
+                {
+                    None: {"members": ["foo.json", "bar.json", "baz.json"]},
+                    "foo.json": {
+                        "first\\.second\\.third": 4,
+                    },
+                    "bar.json": {
+                        "key": {"value"},
+                    },
+                    "baz.json": {},
+                },
+                ComponentConfigData(
+                    ComponentMeta(
+                        members=[ComponentMember("foo.json"), ComponentMember("bar.json"), ComponentMember("baz.json")],
+                        orders=ComponentOrders(*([["foo.json", "bar.json", "baz.json"]] * 4)),
+                    ),
+                    {
+                        "foo.json": MappingConfigData({"first": {"second": {"third": 4}}}),
+                        "bar.json": MappingConfigData({"key": {"value"}}),
+                        "baz.json": MappingConfigData({}),
+                    },
+                ),
+                {"allow_modify": False},
+                (),
+            ),
+            (
                 NoneConfigData(),
                 {
                     None: {"members": ["foo.json"]},

@@ -350,7 +350,7 @@ ComponentTests: tuple[
         ...,
     ],
 ] = (
-    "sl_clss, meta, members, ignore_excs, init_arguments",
+    "sl_ls, meta, members, ignore_excs, init_arguments",
     (
         (
             (JsonSL(s_arg={"indent": 2}),),
@@ -445,7 +445,7 @@ ComponentTests: tuple[
 @mark.parametrize(*ComponentTests)
 def test_component_file_sl_processor(
     pool: ConfigPool,
-    sl_clss: list[ABCConfigSL],
+    sl_ls: list[ABCConfigSL],
     meta: dict[str | None, MappingConfigData[Any]] | ComponentMeta[Any] | None,
     members: dict[str, Any] | None,
     ignore_excs: tuple[EE, EE, EE],
@@ -453,7 +453,7 @@ def test_component_file_sl_processor(
 ) -> None:
     component_sl = ComponentSL(**init_arguments)
     component_sl.register_to(pool)
-    for sl_cls in sl_clss:
+    for sl_cls in sl_ls:
         sl_cls.register_to(pool)
 
     if not ignore_excs:
@@ -470,7 +470,7 @@ def test_component_file_sl_processor(
         return
 
     file: ConfigFile[Any] = ConfigFile(config_data, config_format=component_sl.reg_name)
-    file_name = f"TestConfigFile{sl_clss[0].supported_file_patterns[0]}{component_sl.supported_file_patterns[0]}"
+    file_name = f"TestConfigFile{sl_ls[0].supported_file_patterns[0]}{component_sl.supported_file_patterns[0]}"
 
     with safe_raises(ignore_excs[1]) as info:
         pool.save("", file_name, config=file)
@@ -484,6 +484,159 @@ def test_component_file_sl_processor(
     assert loaded_data.meta.members == config_data.meta.members
     assert loaded_data.meta.orders == config_data.meta.orders
     assert loaded_data.members == config_data.members
+
+
+NormalComponentTests: tuple[
+    str,
+    tuple[
+        tuple[
+            tuple[ABCConfigSL, ...],
+            dict[str, Any],
+            dict[str, MappingConfigData[Any]],
+            tuple[EE, ...],
+            dict[str, Any],
+            int,
+        ],
+        ...,
+    ],
+] = (
+    "sl_ls, meta, members, ignore_excs, init_arguments, sl_times",
+    (
+        (
+            (JsonSL(s_arg={"indent": 2}),),
+            {"members": ["test.json"]},
+            {"test.json": MappingConfigData({"test": "test"})},
+            (),
+            {},
+            5,
+        ),
+        (
+            (JsonSL(s_arg={"indent": 2}),),
+            {"members": [{"filename": "test", "config_format": "json"}]},
+            {"test": MappingConfigData({"test": "test"})},
+            (),
+            {},
+            3,
+        ),
+        (
+            (JsonSL(s_arg={"indent": 2}),),
+            {"members": ["test.json"], "orders": {"create": ["test.json"]}, "order": ["test.json"]},
+            {"test.json": MappingConfigData({"test": "test"})},
+            (),
+            {},
+            5,
+        ),
+        (
+            (JsonSL(s_arg={"indent": 2}),),
+            {"members": [{"filename": "test.json", "alies": "t"}], "orders": {"create": ["t"]}, "order": ["t"]},
+            {"test.json": MappingConfigData({"test": "test"})},
+            (),
+            {},
+            4,
+        ),
+        (
+            (
+                JsonSL(s_arg={"indent": 2}),
+                PythonLiteralSL(),
+                ZipFileSL(compress_level=9),
+                TarFileSL(compression=TarCompressionTypes.GZIP),
+            ),
+            {"members": ["test.json.zip", "test.py.tar.gz"], "order": ["test.py.tar.gz", "test.json.zip"]},
+            {
+                "test.json.zip": MappingConfigData({"test": "test"}),
+                "test.py.tar.gz": MappingConfigData({"test": "test"}),
+            },
+            (),
+            {},
+            5,
+        ),
+        (
+            (JsonSL(s_arg={"indent": 2}),),
+            {"members": ["test.json"]},
+            {"test.json": MappingConfigData({"test": "test"})},
+            (),
+            {"meta_file": "meta"},
+            3,
+        ),
+        (
+            (JsonSL(s_arg={"indent": 2}),),
+            {"members": [{"filename": "test", "config_format": "json"}]},
+            {"test": MappingConfigData({"test": "test"})},
+            (),
+            {"meta_file": "sth.sth"},
+            2,
+        ),
+        (
+            (JsonSL(s_arg={"indent": 2}),),
+            {"members": ["test.json"], "orders": {"create": ["test.json"]}, "order": ["test.json"]},
+            {"test.json": MappingConfigData({"test": "test"})},
+            (),
+            {"meta_file": "a meta file!"},
+            2,
+        ),
+        (
+            (
+                JsonSL(s_arg={"indent": 2}),
+                PythonLiteralSL(),
+                ZipFileSL(compress_level=9),
+                TarFileSL(compression=TarCompressionTypes.GZIP),
+            ),
+            {"members": ["test.json.zip", "test.py.tar.gz"], "order": ["test.py.tar.gz", "test.json.zip"]},
+            {
+                "test.json.zip": MappingConfigData({"test": "test"}),
+                "test.py.tar.gz": MappingConfigData({"test": "test"}),
+            },
+            (),
+            {"meta_file": "$meta"},
+            5,
+        ),
+    ),
+)
+
+
+@mark.parametrize(*NormalComponentTests)
+def test_multiple_component_sl(
+    pool: ConfigPool,
+    sl_ls: list[ABCConfigSL],
+    meta: dict[str | None, MappingConfigData[Any]] | ComponentMeta[Any] | None,
+    members: dict[str, Any] | None,
+    ignore_excs: tuple[EE, EE, EE],
+    init_arguments: dict[str, Any],
+    sl_times: int,
+) -> None:
+    component_sl = ComponentSL(**init_arguments)
+    component_sl.register_to(pool)
+    for sl_cls in sl_ls:
+        sl_cls.register_to(pool)
+
+    if not ignore_excs:
+        ignore_excs = ((), ())
+
+    config_data = ComponentConfigData(
+        meta if isinstance(meta, ComponentMeta) else ComponentMetaParser().convert_config2meta(MappingConfigData(meta)),  # type: ignore[arg-type]
+        members=members,
+    )
+
+    file: ConfigFile[Any] = ConfigFile(config_data, config_format=component_sl.reg_name)
+    file_name = f"TestConfigFile{sl_ls[0].supported_file_patterns[0]}{component_sl.supported_file_patterns[0]}"
+
+    def _sl_once() -> None:
+        with safe_raises(ignore_excs[0]) as info:
+            pool.save("", file_name, config=file)
+        if info:
+            return
+        pool.remove("", file_name)
+        with safe_raises(ignore_excs[1]) as info:
+            loaded_data: ComponentConfigData[Any, Any] = pool.load("", file_name).config
+        if info:
+            return
+        assert loaded_data.meta.members == config_data.meta.members
+        assert loaded_data.meta.orders == config_data.meta.orders
+        assert loaded_data.members == config_data.members
+        pool.remove("", file_name)
+
+    for _ in range(sl_times):
+        _sl_once()
 
 
 def test_save_none_component(pool: ConfigPool) -> None:
@@ -612,6 +765,7 @@ def test_python(pool: ConfigPool) -> None:
     assert str_cfg.data == str(data)
 
 
+# noinspection PyNewStyleGenericSyntax
 def _restore_environ[F: Callable[[VarArg(Any), KwArg(Any)], Any]](func: F) -> F:
     @wraps(func)
     def wrapper(*args: Any, **kwargs: Any) -> Any:

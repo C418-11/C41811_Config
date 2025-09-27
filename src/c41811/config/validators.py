@@ -33,6 +33,7 @@ from pydantic import create_model
 from pydantic.fields import FieldInfo
 from pydantic_core import core_schema
 
+from .abc import ABCIndexedConfigData
 from .abc import ABCPath
 from .basic.component import ComponentConfigData
 from .basic.mapping import MappingConfigData
@@ -97,8 +98,10 @@ class ValidatorFactoryConfig:
 
 
 type MCD = MappingConfigData[Any]
+type ICD = ABCIndexedConfigData[Any]
 
 
+# noinspection PyNewStyleGenericSyntax
 def _remove_skip_missing[D: dict[str, Any] | list[Any]](data: D) -> D:
     """
     递归删除值为 :py:const:`SkipMissing` 的项
@@ -450,6 +453,7 @@ class DefaultValidatorFactory[D: MCD]:
         self.model: type[BaseModel]
 
     def _fmt_mapping_key(self, validator: Mapping[str, Any]) -> tuple[Mapping[str, Any], set[str | ABCPath[Any]]]:
+        # noinspection GrazieInspection
         """
         格式化验证器键
 
@@ -573,6 +577,7 @@ class DefaultValidatorFactory[D: MCD]:
 
         self.model = self._mapping2model(fmt_validator, model_config.data)
 
+    # noinspection PyTypeHints
     def __call__(self, config_ref: Ref[D | NoneConfigData]) -> D:
         """
         验证配置数据
@@ -603,6 +608,7 @@ class DefaultValidatorFactory[D: MCD]:
         return data.from_data(dict_obj)
 
 
+# noinspection PyTypeHints
 def pydantic_validator[D: MCD](
     validator: type[BaseModel], cfg: ValidatorFactoryConfig
 ) -> Callable[[Ref[D | NoneConfigData]], D]:
@@ -623,6 +629,7 @@ def pydantic_validator[D: MCD](
     if cfg.skip_missing:
         warnings.warn("skip_missing is not supported in pydantic validator", stacklevel=2)
 
+    # noinspection PyTypeHints
     def _builder(config_ref: Ref[D | NoneConfigData]) -> D:
         """
         验证配置数据
@@ -692,7 +699,7 @@ class ComponentValidatorFactory[D: ComponentConfigData[Any, Any]]:
         self.validator_config = validator_config
 
         self.validator_factory = validator_config.extra.get("validator_factory", DefaultValidatorFactory)
-        self.validators: MutableMapping[str | None, Callable[[Ref[MCD]], MCD]] = {}
+        self.validators: MutableMapping[str | None, Callable[[Ref[ICD]], ICD]] = {}
 
         self._compile()
 
@@ -701,7 +708,7 @@ class ComponentValidatorFactory[D: ComponentConfigData[Any, Any]]:
         for member, validator in self.validator.items():
             self.validators[member] = self.validator_factory(validator, self.validator_config)
 
-    def _validate_member_metadata(self, component_data: D) -> dict[str, MCD]:
+    def _validate_member_metadata(self, component_data: D) -> dict[str, ICD]:
         """
         验证组件成员元数据
 
@@ -709,21 +716,23 @@ class ComponentValidatorFactory[D: ComponentConfigData[Any, Any]]:
         :type component_data: D
 
         :return: 验证后的组件数据
-        :rtype: dict[str | None, MCD]
+        :rtype: dict[str | None, ICD]
         """
-        validated_members: dict[str, MCD] = {}
+        validated_members: dict[str, ICD] = {}
         for member, validator in self.validators.items():
             if member is None:
                 continue
 
-            if member not in component_data and self.validator_config.extra.get("allow_initialize", True):
+            member_not_exists = member not in component_data
+            member_data_ref: Ref[ICD]
+            if member_not_exists and self.validator_config.extra.get("allow_initialize", True):
+                member_data_ref = Ref(MappingConfigData())
                 if self.validator_config.allow_modify:
-                    component_data[member] = MappingConfigData()
-                    member_data_ref = Ref(component_data[member])
-                else:
-                    member_data_ref = Ref(MappingConfigData())
-            else:
+                    component_data[member] = member_data_ref.value
+            elif member_not_exists:
                 raise ComponentMemberMismatchError(missing={member}, redundant=set())
+            else:
+                member_data_ref = Ref(component_data[member])
             validated_member = validator(member_data_ref)
             validated_members[member] = validated_member
 
@@ -751,12 +760,13 @@ class ComponentValidatorFactory[D: ComponentConfigData[Any, Any]]:
         component_ref: Ref[D] = config_ref  # type: ignore[assignment]
         component_data = component_ref.value
 
-        validated_members: dict[str, MCD] = self._validate_member_metadata(component_data)
+        validated_members: dict[str, ICD] = self._validate_member_metadata(component_data)
 
         meta = deepcopy(component_data.meta)
         if None in self.validators:
             meta.config = self.validators[None](Ref(meta.config))
 
+            # noinspection PyUnresolvedReferences
             meta_validator = None if meta.parser is None else meta.parser.validator
             meta_validator = self.validator_config.extra.get("meta_validator", meta_validator)
             if meta_validator is not None:
