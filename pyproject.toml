@@ -78,7 +78,7 @@ docs = [
     "sphinx~=8.2.3",
     "sphinx-autoapi~=3.6.0",
     "sphinx-copybutton~=0.5.2",
-    "furo==2025.7.19",
+    "furo==2025.9.25",
 ]
 tox = [
     "tox>=4.26,<4.31",
@@ -86,10 +86,10 @@ tox = [
 test = [
     "pytest>=8.3.5,<8.5.0",
     "pytest-html~=4.1.1",
-    "pytest-cov>=6.0,<6.4",
+    "pytest-cov>=6.0,<7.1",
 ]
 ruff = [
-    "ruff~=0.12.1",
+    "ruff>=0.12.1,<0.14.0",
 ]
 mypy = [
     "mypy~=1.17",
