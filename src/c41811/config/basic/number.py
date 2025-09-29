@@ -22,7 +22,7 @@ from .core import BasicSingleConfigData
 
 
 @generate
-class NumberConfigData[D: Number](BasicSingleConfigData[D]):
+class NumberConfigData[D: int | float | Number](BasicSingleConfigData[D]):
     """
     数值配置数据
 
@@ -30,7 +30,6 @@ class NumberConfigData[D: Number](BasicSingleConfigData[D]):
     """
 
     _data: D
-    data: D
 
     def __init__(self, data: D | None = None):
         """
@@ -55,14 +54,29 @@ class NumberConfigData[D: Number](BasicSingleConfigData[D]):
         """  # noqa: RUF002
         return False
 
+    @property  # type: ignore[explicit-override]  # mypy抽风
+    @override
+    def data(self) -> D:
+        """
+        配置的原始数据
+
+        .. caution::
+           未默认做深拷贝，可能导致非预期的行为
+
+        .. versionchanged:: 0.3.0
+           现在是可写属性
+        """  # noqa: RUF002
+        return self._data
+
+    @data.setter
+    def data(self, data: D) -> None:
+        self._data = data
+
     def __int__(self) -> int:
-        return int(self._data)  # type: ignore[call-overload, no-any-return]
+        return int(self._data)  # type: ignore[arg-type]
 
     def __float__(self) -> float:
         return float(self._data)  # type: ignore[arg-type]
-
-    def __bool__(self) -> bool:
-        return bool(self._data)
 
     @operate(operator.add, operator.iadd)
     def __add__(self, other: Any) -> Self:  # type: ignore[empty-body]
@@ -165,26 +179,26 @@ class NumberConfigData[D: Number](BasicSingleConfigData[D]):
         return +self._data  # type: ignore[operator]
 
     def __abs__(self) -> D:
-        return abs(self._data)  # type: ignore[arg-type]
+        return abs(self._data)  # type: ignore[return-value,arg-type]
 
     # noinspection SpellCheckingInspection
     def __round__(self, ndigits: int | None = None) -> Any:
-        return round(self._data, ndigits)  # type: ignore[call-overload]
+        return round(self._data, ndigits)  # type: ignore[arg-type]
 
     def __trunc__(self) -> Any:
         return math.trunc(self._data)  # type: ignore[arg-type]
 
     def __floor__(self) -> Any:
-        return math.floor(self._data)  # type: ignore[call-overload]
+        return math.floor(self._data)  # type: ignore[arg-type]
 
     def __ceil__(self) -> Any:
-        return math.ceil(self._data)  # type: ignore[call-overload]
+        return math.ceil(self._data)  # type: ignore[arg-type]
 
     def __index__(self) -> Any:
-        return self._data.__index__()  # type: ignore[attr-defined]
+        return self._data.__index__()  # type: ignore[union-attr]
 
 
-class BoolConfigData[D: bool](NumberConfigData[D]):  # type: ignore[type-var]  # bool怎么会不算Number
+class BoolConfigData[D: bool](NumberConfigData[D]):
     # noinspection GrazieInspection
     """
     布尔值配置数据

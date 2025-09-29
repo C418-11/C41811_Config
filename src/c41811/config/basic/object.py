@@ -31,9 +31,6 @@ class NoneConfigData(BasicSingleConfigData[None]):
 
         super().__init__(data)
 
-    def __bool__(self) -> Literal[False]:
-        return False
-
 
 class ObjectConfigData[D: object](BasicSingleConfigData[D]):
     """对象配置数据"""
@@ -66,7 +63,7 @@ class ObjectConfigData[D: object](BasicSingleConfigData[D]):
         """  # noqa: RUF002
         return False
 
-    @property
+    @property  # type: ignore[explicit-override]  # mypy抽风
     @override
     def data(self) -> D:
         """
@@ -74,8 +71,15 @@ class ObjectConfigData[D: object](BasicSingleConfigData[D]):
 
         .. caution::
            未默认做深拷贝，可能导致非预期的行为
+
+        .. versionchanged:: 0.3.0
+           现在是可写属性
         """  # noqa: RUF002
         return self._data
+
+    @data.setter
+    def data(self, data: D) -> None:
+        self._data = data
 
 
 __all__ = (

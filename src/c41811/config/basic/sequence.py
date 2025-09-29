@@ -117,7 +117,6 @@ class StringConfigData[D: str | bytes](BasicSingleConfigData[D]):
     """字符/字节串配置数据"""
 
     _data: D
-    data: D
 
     def __init__(self, data: D | None = None):
         """
@@ -141,6 +140,24 @@ class StringConfigData[D: str | bytes](BasicSingleConfigData[D]):
            该配置数据类始终认为配置数据非只读，使其能正确作为配置数据容器使用
         """  # noqa: RUF002
         return False
+
+    @property  # type: ignore[explicit-override]  # mypy抽风
+    @override
+    def data(self) -> D:
+        """
+        配置的原始数据
+
+        .. caution::
+           未默认做深拷贝，可能导致非预期的行为
+
+        .. versionchanged:: 0.3.0
+           现在是可写属性
+        """  # noqa: RUF002
+        return self._data
+
+    @data.setter
+    def data(self, data: D) -> None:
+        self._data = data
 
     @override
     def __format__(self, format_spec: str) -> str:

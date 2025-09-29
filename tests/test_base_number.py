@@ -29,9 +29,16 @@ class TestNumberConfigData:
         return cfg
 
     @staticmethod
+    def test_data_property() -> None:
+        ncd: NumberConfigData[int | float] = NumberConfigData(1)
+        assert ncd.data == 1
+        ncd.data = 2.3
+        assert ncd.data == 2.3
+
+    @staticmethod
     def test_freeze(
-        data: NumberConfigData[int],  # type: ignore[type-var]
-        readonly_data: NumberConfigData[int],  # type: ignore[type-var]
+        data: NumberConfigData[int],
+        readonly_data: NumberConfigData[int],
     ) -> None:
         data.freeze()
         readonly_data.freeze()
@@ -47,7 +54,7 @@ class TestNumberConfigData:
         assert readonly_data.read_only is False
 
     @staticmethod
-    def test_init(data: NumberConfigData[int], readonly_data: NumberConfigData[int]) -> None:  # type: ignore[type-var]
+    def test_init(data: NumberConfigData[int], readonly_data: NumberConfigData[int]) -> None:
         assert data.data == 0
         assert data.read_only is False
 

@@ -21,3 +21,5 @@ def test_object_config_data() -> None:
     assert isinstance(data, ObjectConfigData)
     assert data.data == obj
     assert data.data_read_only is False
+    data.data = NotImplemented
+    assert data.data is NotImplemented

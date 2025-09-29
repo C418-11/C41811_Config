@@ -505,6 +505,13 @@ class TestStringConfigData:
         assert StringConfigData().data == ""
 
     @staticmethod
+    def test_data_property() -> None:
+        scd = StringConfigData("string")
+        assert scd.data == "string"
+        scd.data = "sth"
+        assert scd.data == "sth"
+
+    @staticmethod
     @mark.parametrize(
         "string, format_spec",
         (
