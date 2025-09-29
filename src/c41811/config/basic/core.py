@@ -104,6 +104,9 @@ class BasicSingleConfigData[D](BasicConfigData[D], ABC):
 
     __hash__ = None  # type: ignore[assignment]
 
+    def __bool__(self) -> bool:
+        return bool(self._data)
+
     @override
     def __str__(self) -> str:
         return str(self._data)
