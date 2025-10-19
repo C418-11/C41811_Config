@@ -1,16 +1,16 @@
-pydantic~=2.11.1
+pydantic>=2.11.1,<2.13.0
 wrapt~=1.17.2
 pyrsistent~=0.20.0
 portalocker>=3.1.1,<3.3.0
 mypy-extensions>=1.0,<1.2
 
-tox>=4.26,<4.31
+tox>=4.26,<4.32
 pre-commit>=4.2,<4.4
 # 测试对应SL处理器的依赖
 cbor2~=5.7.0          # CBOR2SL
 hjson~=3.1.0          # HJsonSL
 jproperties~=2.1.2    # JPropertiesSL
 PyYAML~=6.0.2         # PyYamlSL
-rtoml~=0.12.0         # RTomlSL
+rtoml>=0.12,<0.14         # RTomlSL
 ruamel.yaml~=0.18.10  # RuamelYamlSL
 tomlkit~=0.13.3       # TomlKitSL
