@@ -12,20 +12,21 @@ from typing import cast
 from typing import override
 
 
-def singleton[C: Any](target_cls: type[C], /) -> type[C]:
+def singleton[C: type[Any]](target_cls: C, /) -> C:
     """
     单例模式类装饰器
 
     :param target_cls: 目标类
-    :type target_cls: type[C]
+    :type target_cls: C
 
     :return: 装饰后的类
-    :rtype: type[C]
+    :rtype: C
     """
 
     @wraps(target_cls.__new__)
-    def new_singleton(cls: type[C], /, *args: Any, **kwargs: Any) -> C:
+    def new_singleton(cls: C, /, *args: Any, **kwargs: Any) -> C:
         if not hasattr(cls, "__singleton_instance__"):
+            # noinspection PyUnresolvedReferences
             cls.__singleton_instance__ = cls.__singleton_new__(cls, *args, **kwargs)
 
         # noinspection PyProtectedMember
