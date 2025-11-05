@@ -516,9 +516,7 @@ class BasicConfigPool(ABCConfigPool, ABC):
             config_formats = [config_formats]
         else:
             config_formats = list(config_formats)
-
-        if config_formats:
-            result_formats.extend(config_formats)
+        result_formats.extend(config_formats)
 
         def _check_file_name(match: str | Pattern[str]) -> bool:
             if isinstance(match, str):
