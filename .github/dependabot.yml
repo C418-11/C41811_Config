@@ -11,6 +11,8 @@ updates:
       interval: "daily"
       time: "00:00"
       timezone: "Asia/Shanghai"
+    cooldown:
+      default-days: 4
     target-branch: "develop"
     groups:
       github-actions:
@@ -23,6 +25,8 @@ updates:
       interval: "daily"
       time: "00:00"
       timezone: "Asia/Shanghai"
+    cooldown:
+      default-days: 4
     target-branch: "develop"
     groups:
       python-requirements:

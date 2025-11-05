@@ -164,7 +164,7 @@ def test_config_data_type_error(key_info: KeyInfo[Any], required_type: tuple[typ
 
 
 def test_unknown_error_during_validate_error() -> None:
-    with raises(UnknownErrorDuringValidateError, match="Args:.*Kwargs:.*"):
+    with raises(UnknownErrorDuringValidateError, match=re.compile(r"Args:.*Kwargs:.*")):
         raise UnknownErrorDuringValidateError
 
 
@@ -175,6 +175,7 @@ def test_unsupported_config_format_error() -> None:
         raise cls("json")  # noqa: EM101
 
     with raises(AttributeError, match="object has no setter"):
+        # noinspection PyPropertyAccess
         cls("json").format = "readonly"  # type: ignore[misc]
 
     assert cls("json").format == "json"
@@ -206,5 +207,5 @@ def test_component_member_mismatch_error() -> None:
     with raises(cls, match="Redundant"):
         raise cls(missing=set(), redundant={"foo"})
 
-    with raises(cls, match="Missing .+ Redundant"):
+    with raises(cls, match=re.compile(r"Missing .+ Redundant")):
         raise cls(missing={"foo", "bar"}, redundant={"foo"})
