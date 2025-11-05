@@ -17,6 +17,7 @@
 * 新增tox环境format以使用ruff检测并格式化代码
 * 新增参数OSEnvSL.__init__的prefix,strip_prefix以实现导出特定前缀环境变量
 * 新增反馈错误issue模板
+* 新增可选参数ComponentSL.load_file的config_formats以支持指定成员的配置解析格式
 * 新增哈希支持UnsupportedConfigFormatError
 * 新增安全策略文档
 * 新增属性Ref.\_\_slots\_\_

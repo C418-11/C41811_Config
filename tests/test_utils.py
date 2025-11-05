@@ -1,8 +1,13 @@
+from typing import Any
 from typing import cast
 
 from pytest import mark
 from pytest import raises
 
+from c41811.config import ComponentMember
+
+# noinspection PyProtectedMember
+from c41811.config.processor.component import _component_loader_kwargs_builder as component_loader_kwargs_builder
 from c41811.config.utils import Ref
 from c41811.config.utils import Unset
 from c41811.config.utils import UnsetType
@@ -17,6 +22,7 @@ def test_singleton(cls: type) -> None:
     assert type(cls())() is cls()
 
     assert hasattr(cls, "__singleton_instance__")
+    # noinspection PyUnresolvedReferences
     assert cls() is cls.__singleton_instance__
 
 
@@ -64,3 +70,44 @@ def test_lazy_import() -> None:
         from fixtures.mock_lazy_import import SubMissingDependency  # noqa: PLC0415, F401
     assert mock_lazy_import.__all__ == ["Available", "SubAvailable"]
     assert mock_lazy_import.sub_pkg.__all__ == ["SubAvailable"]
+
+
+@mark.parametrize(
+    "kwargs, member, expected",
+    (
+        ({}, None, {}),
+        ({"config_formats": {None: "json"}, "extra": any}, None, {"config_formats": "json", "extra": any}),
+        ({"config_formats": "json", "extra": any}, None, {"config_formats": "json", "extra": any}),
+        ({"config_formats": {}, "extra": any}, None, {"extra": any}),
+        ({"config_formats": {"foo.json": "json"}, "extra": any}, None, {"extra": any}),
+        ({"config_formats": {"foo": "json"}, "extra": any}, None, {"extra": any}),
+        ({}, ComponentMember("foo.json"), {}),
+        (
+            {"config_formats": "json", "extra": any},
+            ComponentMember("foo.json"),
+            {"config_formats": "json", "extra": any},
+        ),
+        (
+            {"config_formats": "json", "extra": any},
+            ComponentMember("foo.json", config_format="pickle"),
+            {"config_formats": ["json", "pickle"], "extra": any},
+        ),
+        ({"config_formats": {None: "json"}, "extra": any}, ComponentMember("foo.json"), {"extra": any}),
+        ({"config_formats": {}, "extra": any}, ComponentMember("foo.json"), {"extra": any}),
+        (
+            {"config_formats": {"foo.json": "json", "bar": None}, "extra": any},
+            ComponentMember("foo.json"),
+            {"config_formats": "json", "extra": any},
+        ),
+        (
+            {"config_formats": {"foo": "json", "bar": ["python"]}},
+            ComponentMember("foo.json", alias="bar", config_format="json"),
+            {"config_formats": ["python", "json"]},
+        ),
+    ),
+)
+def test_component_loader_kwargs_builder(
+    kwargs: dict[str, Any], member: ComponentMember | None, expected: dict[str, Any]
+) -> None:
+    result = component_loader_kwargs_builder(kwargs)(member)
+    assert result == expected, f"{result} != {expected}"

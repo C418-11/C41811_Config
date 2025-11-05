@@ -8,6 +8,8 @@
 """
 
 import os
+from collections.abc import Callable
+from collections.abc import Mapping
 from copy import deepcopy
 from typing import Any
 from typing import Literal
@@ -69,11 +71,13 @@ class ComponentMetaParser[D: MappingConfigData[Any]](ABCMetaParser[D, ComponentM
         if not isinstance(order, list):
             order = order.data
         for name in order:
+            # noinspection PyUnresolvedReferences
             for attr in orders.__dataclass_fields__:
                 if name in getattr(orders, attr):
                     continue
                 getattr(orders, attr).append(name)
 
+        # noinspection PyUnresolvedReferences
         for attr in orders.__dataclass_fields__:
             o = getattr(orders, attr)
             if len(set(o)) != len(o):
@@ -106,6 +110,56 @@ class ComponentMetaParser[D: MappingConfigData[Any]](ABCMetaParser[D, ComponentM
         return self._validator == other._validator
 
     __hash__ = None  # type: ignore[assignment]
+
+
+def _component_loader_kwargs_builder(kwargs: dict[str, Any]) -> Callable[[ComponentMember | None], dict[str, Any]]:
+    # noinspection GrazieInspection
+    """
+    构建组件加载参数
+
+    :param kwargs: 参数
+    :type kwargs: dict[str, Any]
+    :return: 构建器
+    :rtype: Callable[[ComponentMember | None], dict[str, Any]]
+
+    .. versionadded:: 0.3.0
+    """
+    format_mapping: Mapping[str | None, Any] | None = (
+        fmt if isinstance((fmt := kwargs.get("config_formats")), Mapping) else None
+    )
+
+    def builder(member: ComponentMember | None) -> dict[str, Any]:
+        new_kwargs = deepcopy(kwargs)  # 防止参数里有可变对象被load修改
+        if format_mapping is not None:
+            if member is None and None in format_mapping:
+                new_kwargs["config_formats"] = format_mapping[None]
+            elif isinstance(member, ComponentMember) and member.alias is not None and member.alias in format_mapping:
+                new_kwargs["config_formats"] = format_mapping[member.alias]
+            elif (
+                isinstance(member, ComponentMember)
+                and member.filename is not None
+                and member.filename in format_mapping
+            ):
+                new_kwargs["config_formats"] = format_mapping[member.filename]
+            else:
+                # 更符合语义 即此项不存在视为load未提供config_formats参数
+                # 虽然这种细微的语义差异只有可能在极少数情况下影响自定义子类
+                del new_kwargs["config_formats"]
+        if isinstance(member, ComponentMember) and member.config_format is not None:
+            # noinspection PyUnreachableCode
+            match config_formats := new_kwargs.get("config_formats", None):
+                case str():
+                    config_formats = [config_formats, member.config_format]
+                case None:
+                    config_formats = member.config_format
+                case _:  # 处理 Iterable[str] 顺手报错
+                    config_formats = list(config_formats)
+                    if member.config_format not in config_formats:
+                        config_formats.append(member.config_format)
+            new_kwargs["config_formats"] = config_formats
+        return new_kwargs
+
+    return builder
 
 
 class ComponentSL(BasicChainConfigSL):
@@ -192,9 +246,37 @@ class ComponentSL(BasicChainConfigSL):
     def load_file(
         self, config_pool: ABCConfigPool, namespace: str, file_name: str, *args: Any, **kwargs: Any
     ) -> ConfigFile[ComponentConfigData[Any, Any]]:
-        file_name, file_ext = os.path.splitext(file_name)
+        # noinspection PyIncorrectDocstring
+        """
+        加载指定命名空间的配置
 
-        initial_file = super().load_file(config_pool, namespace, self.meta_file + file_ext, *args, **kwargs)
+        :param config_pool: 配置池
+        :type config_pool: ABCConfigPool
+        :param namespace: 命名空间
+        :type namespace: str
+        :param file_name: 文件名
+        :type file_name: str
+
+        可选参数
+        -----------
+        :param config_formats: 指定成员配置格式
+        :type config_formats: Mapping[str | None, Any]
+
+        :return: 配置文件
+        :rtype: ConfigFile[ComponentConfigData[Any, Any]]
+
+        .. caution::
+           传递SL处理前没有清理已经缓存在配置池里的配置文件，返回的可能不是最新数据
+
+        .. versionchanged:: 0.3.0
+           新增可选参数 ``config_formats`` 以支持指定成员的配置解析格式
+        """  # noqa: RUF002
+        file_name, file_ext = os.path.splitext(file_name)
+        kwargs_builder = _component_loader_kwargs_builder(kwargs)
+
+        initial_file = super().load_file(
+            config_pool, namespace, self.meta_file + file_ext, *args, **kwargs_builder(None)
+        )
         initial_data = initial_file.config
 
         if not isinstance(initial_data, MappingConfigData):
@@ -205,11 +287,8 @@ class ComponentSL(BasicChainConfigSL):
         meta = self.meta_parser.convert_config2meta(initial_data)
         members = {}
         for member in meta.members:
-            merged_kwargs = deepcopy(kwargs)
-            if member.config_format is not None:
-                merged_kwargs.setdefault("config_formats", set()).add(member.config_format)
             members[member.filename] = (
-                super().load_file(config_pool, namespace, member.filename, *args, **merged_kwargs).config
+                super().load_file(config_pool, namespace, member.filename, *args, **kwargs_builder(member)).config
             )
 
         return ConfigFile(ComponentConfigData(meta, members), config_format=self.reg_name)
