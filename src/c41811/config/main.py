@@ -816,6 +816,9 @@ class BasicChainConfigSL(BasicConfigSL, ABC):
         :param file_name: 文件名
         :type file_name: str
 
+        :return: 配置文件
+        :rtype: ABCConfigFile[Any]
+
         .. caution::
            传递SL处理前没有清理已经缓存在配置池里的配置文件，返回的可能不是最新数据
         """  # noqa: RUF002

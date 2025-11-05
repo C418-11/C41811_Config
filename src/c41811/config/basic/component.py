@@ -72,7 +72,7 @@ class ComponentMeta[D: ABCConfigData]:
     .. versionadded:: 0.2.0
     """
 
-    config: D = field(default_factory=cast(Callable[[], D], ConfigDataFactory))
+    config: D = field(default_factory=ConfigDataFactory)  # type: ignore[assignment]
     orders: ComponentOrders = field(default_factory=ComponentOrders)
     members: list[ComponentMember] = field(default_factory=list)
     parser: ABCMetaParser[Any, Any] | None = field(default=None)
