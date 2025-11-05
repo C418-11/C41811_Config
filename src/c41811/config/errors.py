@@ -4,7 +4,6 @@
 """错误类"""
 
 import functools
-from collections import OrderedDict
 from collections.abc import Callable
 from collections.abc import Iterable
 from collections.abc import Mapping
@@ -370,7 +369,7 @@ class UnsupportedConfigFormatError(Exception):
 
         .. versionchanged:: 0.3.0
            重命名参数 ``format_`` 为 ``_format``
-           更改 ``_format`` 参数类型为 ``str | None``
+           更改参数 ``_format`` 类型为 ``str | None``
         """  # noqa: D205
         self._format = _format
 
@@ -395,15 +394,17 @@ class UnsupportedConfigFormatError(Exception):
         return hash(self._format)
 
 
-class FailedProcessConfigFileError[E: BaseException](BaseExceptionGroup, Exception):
+class FailedProcessConfigFileError[E: Exception](ExceptionGroup):
     """
     SL处理器无法正确处理当前配置文件
 
     .. versionchanged:: 0.1.4
-       现在继承自BaseExceptionGroup
-    """
+       现在继承自 :py:class:`BaseExceptionGroup`
 
-    reasons: tuple[E, ...] | OrderedDict[str, E]
+    .. versionchanged:: 0.3.0
+       现在正确的继承自 :py:class:`ExceptionGroup`
+       移除冗余属性 ``reasons``
+    """
 
     @staticmethod
     def __new__(cls, reason: E | Iterable[E] | Mapping[str, E], msg: str = "Failed to process config file") -> Self:
@@ -412,27 +413,23 @@ class FailedProcessConfigFileError[E: BaseException](BaseExceptionGroup, Excepti
         :type reason: E | Iterable[E] | Mapping[str, E]
         :param msg: 提示信息
         :type msg: str
+
+        .. versionchanged:: 0.3.0
+           更改参数 ``reason`` 类型从 :py:class:`BaseException` 改为 :py:class`Exception`
         """  # noqa: D205
-        reasons: tuple[E, ...] | OrderedDict[str, E]
         message: str
-        exceptions: tuple[E, ...]
-        if isinstance(reason, Mapping):
-            reasons = OrderedDict(reason)
+        exceptions: Sequence[E]
+        if isinstance(reason, Exception):
+            reason: E  # type: ignore[no-redef]
+            message = f"{msg}: {reason}"
+            exceptions = (reason,)
+        elif isinstance(reason, Mapping):
             message = "\n".join((msg, *(f"{k}: {v}" for k, v in reason.items())))
             exceptions = tuple(reason.values())
-        elif isinstance(reason, Iterable):
-            reasons = tuple(cast(Iterable[E], reason))
-            message = "\n".join((msg, *map(str, reason)))
-            exceptions = tuple(cast(Iterable[E], reason))
         else:
-            reason: E  # type: ignore[no-redef]
-            reasons = (reason,)
-            message = f"{msg}: {reason}"
-            exceptions = reasons
-
-        obj = super().__new__(cls, message, exceptions)
-        obj.reasons = reasons
-        return obj
+            message = "\n".join((msg, *map(str, reason)))
+            exceptions = tuple(reason)
+        return super().__new__(cls, message, exceptions)
 
 
 class ComponentMetadataException(LookupError):  # noqa: N818

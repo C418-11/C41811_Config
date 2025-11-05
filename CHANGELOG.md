@@ -39,6 +39,7 @@
 * 工作流提升工作流运行速度使用setup-python内置依赖缓存
 * 工作流添加缓存mypy检查
 * 更改为关键字参数ABCConfigPool.save_all的ignore_err
+* 更改参数类型FailedProcessConfigFileError.__new__的reason从BaseException改为Exception
 * 更改参数类型UnsupportedConfigFormatError.__init__的_format为`str | None`
 * 更改只读属性NumberConfigData.data为可写
 * 更改只读属性ObjectConfigData.data为可写
@@ -65,6 +66,7 @@
 ## 移除
 
 * 不再使用flake8进行代码检查
+* 移除冗余属性FailedProcessConfigFileError.reasons
 * 移除功能不完善的TomlSL
 
 ## 修复
@@ -72,6 +74,7 @@
 * ABCConfigData移除冗余泛型
 * ConfigDataPathSyntaxException现在传入的错误消息不再软要求带冒号
 * ConfigRequirementDecorator现在会在每一次获取配置数据时尝试加载配置而不是仅在初始化时尝试加载
+* FailedProcessConfigFileError现在正确的继承自ExceptionGroup
 * 修正子类方法类型注解ABCIndexedConfigData.get,setdefault
 * 统一各个SL处理器返回所使用的配置格式为self.reg_name
 * 重命名文件pygments_darcula为.pygments_darcula以避免sphinx构建结果包含未编译文件
