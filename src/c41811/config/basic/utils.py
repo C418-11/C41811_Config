@@ -13,7 +13,7 @@ from typing import Any
 from typing import cast
 from typing import overload
 
-import wrapt  # type: ignore[import-untyped]
+import wrapt
 
 from ..abc import ABCConfigData
 from ..abc import ABCPath
@@ -45,6 +45,7 @@ def fmt_path(path: PathLike) -> ABCPath[Any] | Path:
     return Path.from_str(path)
 
 
+# noinspection PyNewStyleGenericSyntax
 def check_read_only[F: Callable[..., Any]](func: F) -> F:
     """
     装饰 :py:class:`ABCConfigData` 的方法提供 :py:attr:`ABCConfigData.read_only` 的便捷检查，当其不为 :py:const:`True`
@@ -57,7 +58,7 @@ def check_read_only[F: Callable[..., Any]](func: F) -> F:
     :rtype: F
     """  # noqa: RUF002, D205
 
-    @wrapt.decorator  # type: ignore[misc]
+    @wrapt.decorator  # type: ignore[arg-type]
     def wrapper(wrapped: F, instance: ABCConfigData | None, args: tuple[Any, ...], kwargs: dict[str, Any]) -> Any:
         if instance is None:  # pragma: no cover
             msg = "must be called from an instance"

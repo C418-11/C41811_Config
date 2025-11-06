@@ -11,7 +11,7 @@ from collections.abc import Callable
 from functools import update_wrapper
 from typing import Any
 
-import wrapt  # type: ignore[import-untyped]
+import wrapt
 
 from .core import BasicSingleConfigData
 from .factory import ConfigDataFactory
@@ -81,7 +81,7 @@ def generate[C](cls: type[C]) -> type[C]:
         inplace_op.__qualname__ = f"{cls.__qualname__}.{i_name}"
 
         # 应用装饰器
-        @wrapt.decorator  # type: ignore[misc]
+        @wrapt.decorator
         def wrapper(wrapped: Callable[..., Any], _instance: C, args: tuple[Any, ...], kwargs: dict[str, Any]) -> Any:
             if isinstance(args[0], BasicSingleConfigData):
                 args = (args[0].data, *args[1:])

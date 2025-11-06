@@ -22,7 +22,7 @@ from typing import Self
 from typing import cast
 from typing import override
 
-import wrapt  # type: ignore[import-untyped]
+import wrapt
 from mypy_extensions import KwArg
 from mypy_extensions import VarArg
 from pyrsistent import PMap
@@ -255,7 +255,7 @@ class ConfigRequirementDecorator:
         :rtype: Callable[..., Any]
         """  # noqa: RUF002
 
-        @wrapt.decorator  # type: ignore[misc]
+        @wrapt.decorator
         def wrapper(
             wrapped: Callable[..., Any],
             _instance: object | None,

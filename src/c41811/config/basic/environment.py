@@ -18,7 +18,7 @@ from typing import Self
 from typing import cast
 from typing import override
 
-import wrapt  # type: ignore[import-untyped]
+import wrapt
 
 from .mapping import MappingConfigData
 from ..abc import PathLike
@@ -66,6 +66,7 @@ class Difference:
         return bool(self.updated and self.removed)
 
 
+# noinspection PyNewStyleGenericSyntax
 def diff_keys[F: Callable[..., Any]](func: F) -> F:
     """
     计算执行方法前后配置数据的键差异
@@ -77,7 +78,7 @@ def diff_keys[F: Callable[..., Any]](func: F) -> F:
     :rtype: F
     """
 
-    @wrapt.decorator  # type: ignore[misc]
+    @wrapt.decorator  # type: ignore[arg-type]
     def wrapper(wrapped: F, instance: Any, args: tuple[Any, ...], kwargs: dict[str, Any]) -> Any:
         if not isinstance(instance, EnvironmentConfigData):  # pragma: no cover
             msg = f"instance must be {EnvironmentConfigData.__name__} but got {type(instance).__name__}"
