@@ -73,8 +73,8 @@ class RequiredPath[V, D: ABCConfigData]:
 
         .. tip::
            提供 ``static_config`` 参数可以避免在 :py:meth:`~RequiredPath.filter` 中反复调用 ``validator_factory``
-           以提高性能 ( :py:meth:`~RequiredPath.filter` 配置一切都为默认值的前提下)
-        """  # noqa: D205
+           以提高性能 ( :py:meth:`~RequiredPath.filter` 未传入验证器选项参数时优化生效，如果传入了则回退到默认行为)
+        """  # noqa: RUF002, D205
         if not callable(validator_factory):
             validator_factory = ValidatorTypes(validator_factory)
         if isinstance(validator_factory, ValidatorTypes):
@@ -386,6 +386,7 @@ class BasicConfigSL(ABCConfigSL, ABC):
 def _merge_args(
     base_arguments: tuple[tuple[Any, ...], PMap[str, Any]], args: tuple[Any, ...], kwargs: dict[str, Any]
 ) -> tuple[tuple[Any, ...], PMap[str, Any]]:
+    # noinspection GrazieInspection
     """
     合并参数
 
@@ -458,12 +459,10 @@ class BasicLocalFileConfigSL(BasicConfigSL, ABC):
         :type s_arg: SLArgument
         :param l_arg: 加载器默认参数
         :type l_arg: SLArgument
-        :param reg_alias: 详见 :py:class:`BasicConfigSL`
+        :param reg_alias: sl处理器注册别名
+        :type reg_alias: Optional[str]
         :param create_dir: 是否允许创建目录
         :type create_dir: bool
-
-        .. seealso::
-           :py:class:`BasicConfigSL`
 
         .. versionchanged:: 0.2.0
            将 ``保存加载器参数`` 相关从 :py:class:`BasicConfigSL` 移动到此类

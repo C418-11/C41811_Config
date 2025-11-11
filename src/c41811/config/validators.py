@@ -561,6 +561,7 @@ class DefaultValidatorFactory[D: MCD]:
             fmt_data[key] = (definition.annotation, definition.value)
 
         # 创建验证模型
+        # noinspection PyInvalidCast
         return create_model(
             f"{type(self).__name__}.RuntimeTemplate",
             __config__=cast(ConfigDict, model_config.get(self.model_config_key, {})),

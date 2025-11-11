@@ -4,7 +4,7 @@
 =========
 
 .. important::
-   *随时变更，不一定实现！*
+   *随时变更，不一定实现！* (并非真正的待办列表，准确来说这应该是想法列表)
 
 实现CLIArgSL
 -------------------
@@ -95,7 +95,7 @@ C41811.Config ABCSLProcessorPool
 通过一个Builder从元数据从注册表中提取构建一个对象，假设该对象实现
 了目标接口后使用参数”初始化“(可能为闭包函数)，或许可以考虑对外保留
 现有的(schema, filter) -> Any接口，内部转换为
-Builder({"filter": filter, "schema": schema])(或许是dataclass)
+Builder({"filter": filter, "schema": schema})(或许是dataclass)
 
 (!PipeLine/Workflow名称待定)来提供对外后续考虑的PipLineSL的meta数据驱动原生支持
 除了普通的滤镜外提供一个PipLine滤镜其接受一个filters: list[(构建子滤镜的必须数据
@@ -135,6 +135,7 @@ ConfigFile会导致没有那么“纯粹”，文件和数据的复杂程度不�
 配置池中固定采用.multi或.multi.format后缀以表示
 实际存储后缀优先级：
 指定的.multi.format -> ConfigFile附带格式(上次格式) -> 构造参数声明支持的格式
+好像没必要，配置池本来就能根据文件后缀推导格式，加这个多此一举，直接通过文件后缀区分就行了要不然又引入一堆问题
 
 可以考虑添加一个I18NData/I18NSL来为一些项目集成简易的translatekey+f-string的i18n
 --------------------------------------------------------------------------------------------
@@ -175,7 +176,10 @@ REF: https://deepwiki.com/search/validatorfactoryconfigvalidato_cbd9e80d-3b64-4e
 添加README声明可以“一次学习，处处使用”
 --------------------------------------------------
 声明口号含义为：适用于需求频繁变更无需大规模改动（如配置格式切换
+
 经验可迁移（下一个项目低学习成本
+
+添加示例和详细文档说明如何几乎不影响无关业务代码的情况下切换格式/新项目低学习成本
 
 
 添加一个用于格式迁移的SL处理器

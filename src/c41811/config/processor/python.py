@@ -25,6 +25,9 @@ class PythonSL(BasicLocalFileConfigSL):
     .. caution::
        非安全沙箱执行！确保文件为受信任来源！
 
+    .. hint::
+       仅作抛砖引玉，实际并不见得好用，但是你可以参考这个实现自己的自定义SL处理器
+
     .. versionchanged:: 0.3.0
        支持配置文件保存
     """  # noqa: RUF002
