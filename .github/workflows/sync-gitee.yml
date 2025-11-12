@@ -13,6 +13,7 @@ jobs:
   build:
     name: ♻️ Sync
     runs-on: ubuntu-latest
+    if: github.actor != 'dependabot[bot]' && github.actor != 'pre-commit-ci[bot]'
     environment:
       name: sync-gitee
     permissions: {}
