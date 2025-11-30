@@ -734,6 +734,7 @@ ComponentConfigData
      - 使用该表的方法
 
    * - :py:attr:`~config.basic.component.ComponentOrders.create`
+     - :py:meth:`~config.basic.ComponentConfigData.modify`
      - :py:meth:`~config.basic.ComponentConfigData.setdefault`
 
    * - :py:attr:`~config.basic.component.ComponentOrders.read`
@@ -744,11 +745,6 @@ ComponentConfigData
 
    * - :py:attr:`~config.basic.component.ComponentOrders.delete`
      - :py:meth:`~config.basic.ComponentConfigData.delete`, :py:meth:`~config.basic.ComponentConfigData.unset`
-
-.. attention::
-   当前实现 :py:attr:`~config.basic.component.ComponentOrders.create` 的行为不是很符合预期，此项目前仅控制
-   :py:meth:`~config.basic.ComponentConfigData.setdefault` 方法在路径不存在时的写入顺序，推荐与
-   :py:attr:`~config.basic.component.ComponentOrders.update` 保持一致以避免行为不符合直觉
 
 .. seealso::
    :py:class:`~config.basic.component.ComponentOrders`
@@ -942,10 +938,9 @@ ComponentMetaParser
        ],
        "orders": {  # order会被同步追加到orders的create/read/update/delete，所以orders优先级最高
            # 会简单的检查将要追加的名称是否已经在表中(如果是则跳过)，这并不会同时检查文件名与别名是否同时存在
-           "create": [],  # 禁止创建新的键，当前实现create的行为不是很符合预期，此项目前仅控制setdefault方法在路径不存在时的写入顺序
-                          # 推荐与update保持一致以避免行为不符合直觉
+           "create": [],  # 禁止创建新的键，此项目控制setdefault方法在路径不存在时的写入顺序与modify无法替换一个现有的数据时来创建数据
            "read": ["filename.json", "my-member.pickle"],  # retrieve等方法仅按照此顺序读取配置数据
-           "update": ["filename.json", "na"],  # 显然这是针对modify一类方法的
+           "update": ["filename.json", "na"],  # 显然这是针对modify一类方法替换现有数据的
            "delete": ["filename.json", "my-member.pickle", "na"],  # delete,unset一类涉及删除路径的操作
            # 注意，当unset等方法最终得到的orders其中某项为空时(例如"delete": [])
            # 会抛出RequiredPathNotFoundError且未找到路径一定为根键

@@ -456,6 +456,52 @@ class TestComponentConfigData:
             ),
             (
                 _ccd_from_meta(
+                    {
+                        "members": ["a", "b", "c"],
+                        "order": [],
+                        "orders": {"create": ["b"], "update": ["a", "b", "c"], "read": ["a", "b", "c"]},
+                    },
+                    {"a": MappingConfigData(), "b": MappingConfigData(), "c": MappingConfigData()},
+                ),
+                "key",
+                "value",
+                (),
+                {},
+            ),
+            (
+                _ccd_from_meta(
+                    {
+                        "members": ["a", "b", "c"],
+                        "order": [],
+                        "orders": {"create": ["a", "c", "b"], "update": ["c", "a", "b"], "read": ["a", "b", "c"]},
+                    },
+                    {
+                        "a": MappingConfigData({"foo": []}),
+                        "b": MappingConfigData({"key": False}),
+                        "c": MappingConfigData({"foo": {}}),
+                    },
+                ),
+                r"foo\.bar",
+                "value",
+                (),
+                {},
+            ),
+            (
+                _ccd_from_meta(
+                    {
+                        "members": ["a", "b", "c"],
+                        "order": [],
+                        "orders": {"create": [], "update": ["a", "b", "c"], "read": ["a", "b", "c"]},
+                    },
+                    {"a": MappingConfigData(), "b": MappingConfigData(), "c": MappingConfigData()},
+                ),
+                "key",
+                None,
+                (RequiredPathNotFoundError,),
+                {},
+            ),
+            (
+                _ccd_from_meta(
                     {"members": ["b", {"filename": "a", "alias": "c"}]},
                     {"a": MappingConfigData({"key": False}), "b": MappingConfigData({"key": None})},
                 ),

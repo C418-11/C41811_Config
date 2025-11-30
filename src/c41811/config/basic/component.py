@@ -249,15 +249,65 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
     @override
     @check_read_only
     def modify(self, path: PathLike, *args: Any, **kwargs: Any) -> Self:
+        # noinspection PyIncorrectDocstring
+        """
+        修改路径的值
+
+        :param path: 路径
+        :type path: PathLike
+        :param value: 值
+        :type value: Any
+        :param allow_create: 是否允许创建不存在的路径，默认为True
+        :type allow_create: bool
+
+        :return: 返回当前实例便于链式调用
+        :rtype: Self
+
+        :raise ConfigDataReadOnlyError: 配置数据为只读
+        :raise ConfigDataTypeError: 配置数据类型错误
+        :raise RequiredPathNotFoundError: 需求的键不存在
+
+        .. caution::
+           ``value`` 参数未默认做深拷贝，可能导致非预期行为
+
+        .. attention::
+           ``allow_create`` 时，使用与 `self.data` 一样的类型新建路径
+
+        .. versionchanged:: 0.3.0
+           现在正确的先尝试使用 :py:attr:`~ComponentOrders.update` 对现有数据进行更新再尝试通过
+           :py:attr:`~ComponentOrders.create` 创建新数据
+        """  # noqa: RUF002
         path = fmt_path(path)
 
-        def processor(pth: ABCPath[Any], member: D) -> None:
+        def _update_processor(pth: ABCPath[Any], member: D) -> None:
+            try:
+                member.retrieve(pth, return_raw_value=True)  # 避免转换返回值带来的额外开销
+            except (RequiredPathNotFoundError, ConfigDataTypeError) as err:
+                raise RequiredPathNotFoundError(
+                    key_info=err.key_info,
+                    operate=ConfigOperate.Write,  # 将操作从Read变为Write
+                ) from None
+            member.modify(pth, *args, **kwargs)
+
+        with suppress(RequiredPathNotFoundError):
+            self._resolve_members(
+                path,
+                order=self._meta.orders.update,
+                processor=_update_processor,
+                exception=RequiredPathNotFoundError(
+                    key_info=KeyInfo(path, path[0], 0),
+                    operate=ConfigOperate.Write,
+                ),
+            )
+            return self
+
+        def _create_processor(pth: ABCPath[Any], member: D) -> None:
             member.modify(pth, *args, **kwargs)
 
         self._resolve_members(
             path,
-            order=self._meta.orders.update,
-            processor=processor,
+            order=self._meta.orders.create,
+            processor=_create_processor,
             exception=RequiredPathNotFoundError(
                 key_info=KeyInfo(path, path[0], 0),
                 operate=ConfigOperate.Write,

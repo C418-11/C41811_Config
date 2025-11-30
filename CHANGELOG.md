@@ -75,6 +75,7 @@
 ## 修复
 
 * ABCConfigData移除冗余泛型
+* ComponentConfigData.modify现在正确的先尝试使用update对现有数据进行更新再尝试通过create创建新数据
 * ConfigDataPathSyntaxException现在传入的错误消息不再软要求带冒号
 * ConfigRequirementDecorator现在会在每一次获取配置数据时尝试加载配置而不是仅在初始化时尝试加载
 * FailedProcessConfigFileError现在正确的继承自ExceptionGroup
