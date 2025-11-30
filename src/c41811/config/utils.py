@@ -127,7 +127,7 @@ class FrozenArguments:
         return OrderedDict(deepcopy(self._kwargs))
 
     # noinspection PyTypeHints
-    def __or__(self, other: Any) -> Self | NotImplementedType:
+    def __or__(self, other: tuple[Sequence[Any], Mapping[str, Any]] | Self) -> Self | NotImplementedType:
         if isinstance(other, tuple):
             other = type(self)(*other)
         if not isinstance(other, FrozenArguments):

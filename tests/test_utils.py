@@ -8,6 +8,7 @@ from c41811.config import ComponentMember
 
 # noinspection PyProtectedMember
 from c41811.config.processor.component import _component_loader_kwargs_builder as component_loader_kwargs_builder
+from c41811.config.utils import FrozenArguments
 from c41811.config.utils import Ref
 from c41811.config.utils import Unset
 from c41811.config.utils import UnsetType
@@ -111,3 +112,30 @@ def test_component_loader_kwargs_builder(
 ) -> None:
     result = component_loader_kwargs_builder(kwargs)(member)
     assert result == expected, f"{result} != {expected}"
+
+
+def test_frozen_arguments() -> None:
+    efa = FrozenArguments()
+    assert efa.args == ()
+    assert efa.kwargs == {}
+
+    arg: tuple[()] = ()
+    kwarg: dict[str, Any] = {}
+    efa = FrozenArguments(arg, kwarg)
+    assert tuple(efa) == (arg, kwarg)
+    assert efa | ((), {}) == FrozenArguments(arg, kwarg)
+    assert efa | ((), {"a": 1}) == FrozenArguments(arg, {"a": 1})
+    assert efa | ((1,), {}) == FrozenArguments((1,), kwarg)
+    assert efa | ((1,), {"a": 1}) == FrozenArguments((1,), {"a": 1})
+
+    fa = FrozenArguments((1, 2, 3, 4), {"a": 1, "b": 2})
+    assert fa.args == (1, 2, 3, 4)
+    assert fa.kwargs == {"a": 1, "b": 2}
+    assert tuple(fa) == ((1, 2, 3, 4), {"a": 1, "b": 2})
+    assert fa | ((), {}) == fa
+    assert fa | ((-1,), {}) == FrozenArguments((-1, 2, 3, 4), {"a": 1, "b": 2})
+    assert fa | ((-1, -2), {"a": 0}) == FrozenArguments((-1, -2, 3, 4), {"a": 0, "b": 2})
+
+    with raises(TypeError):
+        fa | None  # type: ignore[operator]
+    assert fa != NotImplemented
