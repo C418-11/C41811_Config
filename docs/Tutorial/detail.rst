@@ -734,8 +734,7 @@ ComponentConfigData
      - 使用该表的方法
 
    * - :py:attr:`~config.basic.component.ComponentOrders.create`
-     - :py:meth:`~config.basic.ComponentConfigData.modify`
-     - :py:meth:`~config.basic.ComponentConfigData.setdefault`
+     - :py:meth:`~config.basic.ComponentConfigData.modify`, :py:meth:`~config.basic.ComponentConfigData.setdefault`
 
    * - :py:attr:`~config.basic.component.ComponentOrders.read`
      - :py:meth:`~config.basic.ComponentConfigData.retrieve`, :py:meth:`~config.basic.ComponentConfigData.exists`, :py:meth:`~config.basic.ComponentConfigData.get`, :py:meth:`~config.basic.ComponentConfigData.setdefault`
