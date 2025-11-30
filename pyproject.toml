@@ -23,7 +23,9 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",  # todo add 3.14 when it's released
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: Free Threading",
     "Programming Language :: Python :: Implementation :: CPython",
     "Topic :: Software Development :: Libraries :: Application Frameworks",
     "Topic :: Software Development :: Libraries :: Python Modules",
@@ -232,8 +234,7 @@ exclude_also = [
 ]
 
 [tool.tox]
-envlist = ["py312", "py313", "lint", "mypy"]
-#envlist = ["py312", "py313", "py314", "lint", "mypy"]  # todo uncomment when pydantic supports 3.14
+envlist = ["py312", "py313", "py314", "py314t", "lint", "mypy"]
 
 [tool.tox.env_run_base]
 description = "Run tests"

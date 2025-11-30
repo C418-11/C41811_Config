@@ -11,6 +11,6 @@ cbor2~=5.7.0          # CBOR2SL
 hjson~=3.1.0          # HJsonSL
 jproperties~=2.1.2    # JPropertiesSL
 PyYAML~=6.0.2         # PyYamlSL
-rtoml>=0.12,<0.14         # RTomlSL
+rtoml>=0.12,<0.14     # RTomlSL
 ruamel.yaml~=0.18.10  # RuamelYamlSL
 tomlkit~=0.13.3       # TomlKitSL
