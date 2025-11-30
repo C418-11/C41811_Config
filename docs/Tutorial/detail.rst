@@ -874,7 +874,7 @@ SL处理器
    * - PlainText
      - :py:class:`~config.processor.plaintext.PlainTextSL`
      - plaintext
-     - .txt
+     - .md .markdown .rst .txt
      - 纯文本格式，支持额外参数
        ``linesep: str`` 在保存时额外添加换行符，
        ``split_line: bool`` 加载时使用 :py:meth:`~typing.TextIO.readlines`，

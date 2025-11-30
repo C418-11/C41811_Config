@@ -32,7 +32,7 @@ class PlainTextSL(BasicLocalFileConfigSL):
     @property
     @override
     def supported_file_patterns(self) -> tuple[str, ...]:
-        return (".txt",)
+        return ".md", ".markdown", ".rst", ".txt"
 
     supported_file_classes = [ConfigFile]  # noqa: RUF012
 

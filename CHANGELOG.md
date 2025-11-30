@@ -49,6 +49,7 @@
 * 更改只读属性ObjectConfigData.data为可写
 * 更改只读属性StringConfigData.data为可写
 * 更改属性为只读UnsupportedConfigFormatError.format
+* 更改属性默认值PlainTextSL.supported_file_patterns为`(".md", ".markdown", ".rst", ".txt")`以默认支持自动推导更多文件后缀格式
 * 更改泛型NumberConfigData的D为`int | float | Number`
 * 更改自定义验证器工厂使其逻辑更符合预期,validator为`None`时不进行验证否则将验证器作为`Callable[[Ref[D], ValidatorOptions], D]`
 * 更符合最佳实践的tox依赖安装
