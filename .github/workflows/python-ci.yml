@@ -48,6 +48,10 @@ jobs:
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
         python-version: [ '3.12', '3.13', '3.14', '3.14t' ]
+        exclude:
+          # 排除 Windows + Python 3.14t 的组合，因为pywin32不支持
+          - os: windows-latest
+            python-version: '3.14t'
       fail-fast: false
     name: 🧪 PyTest py${{ matrix.python-version }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
