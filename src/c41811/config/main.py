@@ -25,20 +25,19 @@ from typing import override
 import wrapt
 from mypy_extensions import KwArg
 from mypy_extensions import VarArg
-from pyrsistent import PMap
-from pyrsistent import pmap
 
 from .abc import ABCConfigData
 from .abc import ABCConfigFile
 from .abc import ABCConfigPool
 from .abc import ABCConfigSL
 from .abc import ABCSLProcessorPool
-from .abc import SLArgument
+from .abc import SLArgumentType
 from .basic.core import BasicConfigPool
 from .basic.core import ConfigFile
 from .basic.factory import ConfigDataFactory
 from .errors import FailedProcessConfigFileError
 from .safe_writer import safe_open
+from .utils import FrozenArguments
 from .utils import Ref
 from .validators import ComponentValidatorFactory
 from .validators import DefaultValidatorFactory
@@ -399,34 +398,6 @@ class BasicConfigSL(ABCConfigSL, ABC):
         return ConfigFile(ConfigDataFactory(), config_format=self.reg_name)
 
 
-def _merge_args(
-    base_arguments: tuple[tuple[Any, ...], PMap[str, Any]], args: tuple[Any, ...], kwargs: dict[str, Any]
-) -> tuple[tuple[Any, ...], PMap[str, Any]]:
-    # noinspection GrazieInspection
-    """
-    合并参数
-
-    :param base_arguments: 基础参数
-    :type base_arguments: tuple[tuple, PMap[str, Any]]
-    :param args: 新参数
-    :type args: tuple
-    :param kwargs: 新参数
-    :type kwargs: dict[str, Any]
-
-    :return: 合并后的参数
-    :rtype: tuple[tuple, PMap[str, Any]]
-
-    .. versionchanged:: 0.2.0
-       提取为函数
-    """
-    merged_args = list(deepcopy(base_arguments[0]))
-    merged_args[: len(args)] = args
-
-    merged_kwargs = dict(deepcopy(base_arguments[1])) | kwargs
-
-    return tuple(merged_args), pmap(merged_kwargs)
-
-
 @contextmanager
 def raises(excs: type[Exception] | tuple[type[Exception], ...] = Exception) -> Generator[None, Any, None]:
     """
@@ -463,8 +434,8 @@ class BasicLocalFileConfigSL(BasicConfigSL, ABC):
 
     def __init__(
         self,
-        s_arg: SLArgument = None,
-        l_arg: SLArgument = None,
+        s_arg: SLArgumentType = None,
+        l_arg: SLArgumentType = None,
         *,
         reg_alias: str | None = None,
         create_dir: bool = True,
@@ -472,9 +443,9 @@ class BasicLocalFileConfigSL(BasicConfigSL, ABC):
         # noinspection GrazieInspection
         """
         :param s_arg: 保存器默认参数
-        :type s_arg: SLArgument
+        :type s_arg: SLArgumentType
         :param l_arg: 加载器默认参数
-        :type l_arg: SLArgument
+        :type l_arg: SLArgumentType
         :param reg_alias: sl处理器注册别名
         :type reg_alias: Optional[str]
         :param create_dir: 是否允许创建目录
@@ -484,30 +455,33 @@ class BasicLocalFileConfigSL(BasicConfigSL, ABC):
            将 ``保存加载器参数`` 相关从 :py:class:`BasicConfigSL` 移动到此类
         """  # noqa: D205
 
-        def _build_arg(value: SLArgument) -> tuple[tuple[Any, ...], PMap[str, Any]]:
+        def _build_arg(value: SLArgumentType) -> FrozenArguments:
+            sl_args: tuple[()] | tuple[Sequence[Any] | None, Mapping[str, Any] | None]
             if value is None:
-                return (), pmap()
-            if isinstance(value, Sequence):
-                return tuple(value), pmap()
-            if isinstance(value, Mapping):
-                return (), pmap(value)
-            msg = f"Invalid argument type, must be '{SLArgument}'"
-            raise TypeError(msg)
+                sl_args = ()
+            elif isinstance(value, Sequence):
+                sl_args = value, None
+            elif isinstance(value, Mapping):
+                sl_args = None, value
+            else:
+                msg = f"Invalid argument type, must be '{SLArgumentType}'"
+                raise TypeError(msg)
+            return FrozenArguments(*sl_args)
 
-        self._saver_args: tuple[tuple[Any, ...], PMap[str, Any]] = _build_arg(s_arg)
-        self._loader_args: tuple[tuple[Any, ...], PMap[str, Any]] = _build_arg(l_arg)
+        self._saver_args: FrozenArguments = _build_arg(s_arg)
+        self._loader_args: FrozenArguments = _build_arg(l_arg)
 
         super().__init__(reg_alias=reg_alias)
 
         self.create_dir = create_dir
 
     @property
-    def saver_args(self) -> tuple[tuple[Any, ...], PMap[str, Any]]:
+    def saver_args(self) -> FrozenArguments:
         """保存器默认参数"""
         return self._saver_args
 
     @property
-    def loader_args(self) -> tuple[tuple[Any, ...], PMap[str, Any]]:
+    def loader_args(self) -> FrozenArguments:
         """加载器默认参数"""
         return self._loader_args
 
@@ -547,13 +521,13 @@ class BasicLocalFileConfigSL(BasicConfigSL, ABC):
 
            添加参数 ``processor_pool``
         """
-        merged_args, merged_kwargs = _merge_args(self._saver_args, args, kwargs)
+        merged_arguments: FrozenArguments = self._saver_args | (args, kwargs)
 
         file_path = processor_pool.helper.calc_path(root_path, namespace, file_name)
         if self.create_dir:
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
         with safe_open(file_path, **self._s_open_kwargs) as f:
-            self.save_file(config_file, f, *merged_args, **merged_kwargs)
+            self.save_file(config_file, f, *merged_arguments.args, **merged_arguments.kwargs)
 
     @override
     def load(
@@ -591,13 +565,13 @@ class BasicLocalFileConfigSL(BasicConfigSL, ABC):
 
            添加参数 ``processor_pool``
         """
-        merged_args, merged_kwargs = _merge_args(self._loader_args, args, kwargs)
+        merged_arguments: FrozenArguments = self._loader_args | (args, kwargs)
 
         file_path = processor_pool.helper.calc_path(root_path, namespace, file_name)
         if self.create_dir:
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
         with safe_open(file_path, **self._l_open_kwargs) as f:
-            return self.load_file(f, *merged_args, **merged_kwargs)
+            return self.load_file(f, *merged_arguments.args, **merged_arguments.kwargs)
 
     @abstractmethod
     def save_file(

@@ -1007,7 +1007,11 @@ class ABCConfigPool(ABCSLProcessorPool):
         """
 
 
-type SLArgument = Sequence[Any] | Mapping[str, Any] | tuple[Sequence[Any], Mapping[str, Any]] | None
+type SLArgumentType = Sequence[Any] | Mapping[str, Any] | tuple[Sequence[Any], Mapping[str, Any]] | None
+"""
+.. versionchanged:: 0.3.0
+   重命名 ``SLArgument`` 为 ``SLArgumentType``
+"""
 
 
 class ABCConfigSL(ABC):
@@ -1250,5 +1254,5 @@ __all__ = (
     "ABCSLProcessorPool",
     "AnyKey",
     "PathLike",
-    "SLArgument",
+    "SLArgumentType",
 )

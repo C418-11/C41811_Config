@@ -29,6 +29,7 @@
 * 新增支持TypeAliasType在DefaultValidatorFactory
 * 新增方法BasicSingleConfigData.\_\_bool\_\_以实现对内容配置数据的真值检查
 * 新增特殊类UnavailableAttribute以作为懒加载发现依赖未满足无法导入时的占位符
+* 新增类FrozenArguments以作为存储冻结的参数的容器
 * 新增贡献指南
 * 补充emoji图标到工作流
 
@@ -70,6 +71,7 @@
 ## 移除
 
 * 不再使用flake8进行代码检查
+* 移除生产依赖项pyrsistent
 * 移除冗余属性FailedProcessConfigFileError.reasons
 * 移除功能不完善的TomlSL
 

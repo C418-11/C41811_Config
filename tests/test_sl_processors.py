@@ -53,11 +53,11 @@ from c41811.config import TomlKitSL
 from c41811.config import ZipCompressionTypes
 from c41811.config import ZipFileSL
 from c41811.config.abc import ABCConfigSL
-from c41811.config.abc import SLArgument
+from c41811.config.abc import SLArgumentType
 from c41811.config.errors import ComponentMetadataException
 from c41811.config.errors import FailedProcessConfigFileError
 
-type LFTests = tuple[tuple[Any, tuple[EE, ...], tuple[SLArgument, ...]], ...]
+type LFTests = tuple[tuple[Any, tuple[EE, ...], tuple[SLArgumentType, ...]], ...]
 JsonTests: LFTests = (
     ({"a": 1, "b": {"c": 2}}, (), ()),
     ({"a": 1, "b": {"c": 2}}, (), ({"indent": 4}, {})),
