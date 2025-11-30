@@ -274,7 +274,7 @@ commands = [
 
 [tool.tox.env.prepare-doc]
 description = "Prepare documentation"
-base_python = ["py313"]
+base_python = ["py314"]
 allowlist_externals = ["npm", "lessc"]
 dependency_groups = ["dev", "test", "ruff"]
 commands_pre = [
