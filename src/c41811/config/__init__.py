@@ -51,7 +51,7 @@ else:
             "ComponentValidatorFactory": ".validators",
             "DefaultValidatorFactory": ".validators",
             "FieldDefinition": ".validators",
-            "ValidatorFactoryConfig": ".validators",
+            "ValidatorOptions": ".validators",
             "ValidatorTypes": ".validators",
             "pydantic_validator": ".validators",
         }

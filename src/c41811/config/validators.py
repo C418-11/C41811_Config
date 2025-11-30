@@ -72,8 +72,14 @@ class ValidatorTypes(Enum):
 
 
 @dataclass(kw_only=True)
-class ValidatorFactoryConfig:
-    """验证器配置"""
+class ValidatorOptions:
+    # noinspection GrazieInspection
+    """
+    验证器选项
+
+    .. versionchanged:: 0.3.0
+       重命名 ``ValidatorFactoryConfig`` 为 ``ValidatorOptions``
+    """
 
     allow_modify: bool = True
     """
@@ -404,15 +410,15 @@ def _convert2definition(value: Any, typehint_types: tuple[type, ...]) -> FieldDe
 class DefaultValidatorFactory[D: MCD]:
     """默认的验证器工厂"""
 
-    def __init__(self, validator: Iterable[str] | Mapping[str, Any], validator_config: ValidatorFactoryConfig):
+    def __init__(self, validator: Iterable[str] | Mapping[str, Any], validator_options: ValidatorOptions):
         # noinspection GrazieInspection
         """
         :param validator: 用于生成验证器的数据
         :type validator: Iterable[str] | Mapping[str, Any]
-        :param validator_config: 验证器配置
-        :type validator_config: ValidatorFactoryConfig
+        :param validator_options: 验证器选项
+        :type validator_options: ValidatorOptions
 
-        额外验证器工厂配置参数
+        额外验证器选项
         -----------------------
         .. list-table::
            :widths: auto
@@ -444,10 +450,10 @@ class DefaultValidatorFactory[D: MCD]:
             msg = f"Invalid validator type '{type(validator).__name__}'"
             raise TypeError(msg)
         self.validator = validator
-        self.validator_config = validator_config
+        self.validator_options = validator_options
 
         self.typehint_types = (type, types.UnionType, types.EllipsisType, types.GenericAlias, TypeAliasType)
-        self.model_config_key = validator_config.extra.get("model_config_key", ".__model_config__")
+        self.model_config_key = validator_options.extra.get("model_config_key", ".__model_config__")
         self._compile()
         self.model: type[BaseModel]
 
@@ -554,7 +560,7 @@ class DefaultValidatorFactory[D: MCD]:
                 definition = FieldDefinition(model_cls, FieldInfo(default_factory=model_cls))
 
             # 如果忽略不存在的键则填充特殊值
-            if all((self.validator_config.skip_missing, definition.value.is_required())):
+            if all((self.validator_options.skip_missing, definition.value.is_required())):
                 definition = FieldDefinition(definition.annotation | SkipMissingType, FieldInfo(default=SkipMissing))
 
             fmt_data[key] = (definition.annotation, definition.value)
@@ -598,11 +604,11 @@ class DefaultValidatorFactory[D: MCD]:
             raise _process_pydantic_exceptions(err) from err
 
         # 处理 SkipMissing 项
-        if self.validator_config.skip_missing:
+        if self.validator_options.skip_missing:
             dict_obj = _remove_skip_missing(dict_obj)
 
         # 完全替换原始数据
-        if self.validator_config.allow_modify:
+        if self.validator_options.allow_modify:
             data._data = dict_obj  # noqa: SLF001
             return data
         return data.from_data(dict_obj)
@@ -610,15 +616,15 @@ class DefaultValidatorFactory[D: MCD]:
 
 # noinspection PyTypeHints
 def pydantic_validator[D: MCD](
-    validator: type[BaseModel], cfg: ValidatorFactoryConfig
+    validator: type[BaseModel], cfg: ValidatorOptions
 ) -> Callable[[Ref[D | NoneConfigData]], D]:
     """
-    验证器工厂配置 ``skip_missing`` 无效
+    验证器选项 ``skip_missing`` 无效
 
     :param validator: :py:class:`~pydantic.main.BaseModel` 的子类
     :type validator: type[BaseModel]
-    :param cfg: 验证器配置
-    :type cfg: ValidatorFactoryConfig
+    :param cfg: 验证器选项
+    :type cfg: ValidatorOptions
 
     :return: 验证器
     :rtype: Callable[[Ref[D | NoneConfigData]], D]
@@ -665,14 +671,14 @@ class ComponentValidatorFactory[D: ComponentConfigData[Any, Any]]:
     .. versionadded:: 0.2.0
     """
 
-    def __init__(self, validator: Mapping[str | None, Any], validator_config: ValidatorFactoryConfig):
+    def __init__(self, validator: Mapping[str | None, Callable[[Ref[ICD]], ICD]], validator_options: ValidatorOptions):
         """
         :param validator: 组件验证器
-        :type validator: Mapping[str | None, Any]
-        :param validator_config: 验证器配置
-        :type validator_config: ValidatorFactoryConfig
+        :type validator: Mapping[str | None, Callable[[Ref[ICD]], ICD]]
+        :param validator_options: 验证器选项
+        :type validator_options: ValidatorOptions
 
-        额外验证器工厂配置参数
+        额外验证器选项
         -----------------------
 
         .. list-table::
@@ -695,7 +701,7 @@ class ComponentValidatorFactory[D: ComponentConfigData[Any, Any]]:
            更改参数 ``validator`` 类型为 ``Mapping[str | None, Callable[[Ref[ICD]], ICD]]``
            并移除因此冗余的移除额外验证器选项 ``validator_factory``
         """  # noqa: RUF002, D205
-        self.validator_config = validator_config
+        self.validator_options = validator_options
         self.validators = validator
 
     def _validate_member_metadata(self, component_data: D) -> dict[str, ICD]:
@@ -715,9 +721,9 @@ class ComponentValidatorFactory[D: ComponentConfigData[Any, Any]]:
 
             member_not_exists = member not in component_data
             member_data_ref: Ref[ICD]
-            if member_not_exists and self.validator_config.extra.get("allow_initialize", True):
+            if member_not_exists and self.validator_options.extra.get("allow_initialize", True):
                 member_data_ref = Ref(MappingConfigData())
-                if self.validator_config.allow_modify:
+                if self.validator_options.allow_modify:
                     component_data[member] = member_data_ref.value
             elif member_not_exists:
                 raise ComponentMemberMismatchError(missing={member}, redundant=set())
@@ -727,7 +733,7 @@ class ComponentValidatorFactory[D: ComponentConfigData[Any, Any]]:
             validated_members[member] = validated_member
 
             # 完全替换成员数据
-            if self.validator_config.allow_modify:
+            if self.validator_options.allow_modify:
                 component_data[member] = validated_member
         return validated_members
 
@@ -758,12 +764,12 @@ class ComponentValidatorFactory[D: ComponentConfigData[Any, Any]]:
 
             # noinspection PyUnresolvedReferences
             meta_validator = None if meta.parser is None else meta.parser.validator
-            meta_validator = self.validator_config.extra.get("meta_validator", meta_validator)
+            meta_validator = self.validator_options.extra.get("meta_validator", meta_validator)
             if meta_validator is not None:
-                meta = meta_validator(meta, self.validator_config)
+                meta = meta_validator(meta, self.validator_options)
 
         # 完全替换元数据
-        if self.validator_config.allow_modify:
+        if self.validator_options.allow_modify:
             component_data._meta = meta  # noqa: SLF001
 
         return component_data.from_data(meta, validated_members)
@@ -773,7 +779,7 @@ __all__ = (
     "ComponentValidatorFactory",
     "DefaultValidatorFactory",
     "FieldDefinition",
-    "ValidatorFactoryConfig",
+    "ValidatorOptions",
     "ValidatorTypes",
     "pydantic_validator",
 )

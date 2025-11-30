@@ -31,7 +31,7 @@ from ..errors import ComponentMetadataException
 from ..main import BasicChainConfigSL
 from ..main import RequiredPath
 from ..utils import Ref
-from ..validators import ValidatorFactoryConfig
+from ..validators import ValidatorOptions
 
 
 class ComponentMetaParser[D: MappingConfigData[Any]](ABCMetaParser[D, ComponentMeta[D]]):
@@ -43,7 +43,7 @@ class ComponentMetaParser[D: MappingConfigData[Any]](ABCMetaParser[D, ComponentM
             "order": list[str],
             "orders": dict[Literal["create", "read", "update", "delete"], list[str]],
         },
-        static_config=ValidatorFactoryConfig(allow_modify=True, skip_missing=True),
+        static_config=ValidatorOptions(allow_modify=True, skip_missing=True),
     )
 
     @override
@@ -214,7 +214,7 @@ class ComponentSL(BasicChainConfigSL):
     def save_file(
         self,
         config_pool: ABCConfigPool,
-        config_file: ABCConfigFile[ComponentConfigData[Any, Any]],
+        config_file: ABCConfigFile[ComponentConfigData[Any, Any] | NoneConfigData],
         namespace: str,
         file_name: str,
         *args: Any,

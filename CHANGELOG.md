@@ -48,7 +48,7 @@
 * 更改只读属性StringConfigData.data为可写
 * 更改属性为只读UnsupportedConfigFormatError.format
 * 更改泛型NumberConfigData的D为`int | float | Number`
-* 更改自定义验证器工厂使其逻辑更符合预期,validator为`None`时不进行验证否则将验证器作为`Callable[[Ref[D], ValidatorFactoryConfig], D]`
+* 更改自定义验证器工厂使其逻辑更符合预期,validator为`None`时不进行验证否则将验证器作为`Callable[[Ref[D], ValidatorOptions], D]`
 * 更符合最佳实践的tox依赖安装
 * 消除类操作符生成装饰器generate内的exec
 * 统一所有文档命令行高亮为shell
@@ -63,6 +63,7 @@
 * 重命名子包base为basic
 * 重命名字段CellType.cell_contents为value
 * 重命名属性ComponentSL.initial_file为参数meta_file并变更默认值`__init__`为`__meta__`
+* 重命名数据类ValidatorFactoryConfig为ValidatorOptions
 * 重命名枚举ValidatorTypes.NO_VALIDATION为CUSTOM
 
 ## 移除

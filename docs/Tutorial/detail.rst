@@ -148,7 +148,7 @@ Pydantic验证器工厂
 ^^^^^^^^^^^^^^^^^^
 
 .. hint::
-   pydantic 验证器工厂不支持 ``skip_missing`` 配置选项
+   pydantic 验证器工厂不支持 ``skip_missing`` 选项
    这是因为pydantic自带该功能
    如果提供了该参数会产生一个警告 不会起到任何实际作用
 
@@ -511,7 +511,7 @@ Mapping[str | ABCPath, Any]
 
 ``validator_factory`` 参数设为 :py:attr:`~config.validators.ValidatorTypes.CUSTOM` 或 ``"custom"`` 时采用该策略
 
-这将直接把 ``validator`` 参数当作验证器 ``Callable[[Ref[D], ValidatorFactoryConfig], D]`` 来使用，如果 ``validator`` 为 ``None``
+这将直接把 ``validator`` 参数当作验证器 ``Callable[[Ref[D], ValidatorOptions], D]`` 来使用，如果 ``validator`` 为 ``None``
 则验证器默认为 ``lambda ref:ref.value`` ，即无验证
 
 .. code-block:: python
@@ -524,13 +524,13 @@ Mapping[str | ABCPath, Any]
     from c41811.config import ConfigFile
     from c41811.config import JsonSL
     from c41811.config import MappingConfigData
-    from c41811.config import ValidatorFactoryConfig
+    from c41811.config import ValidatorOptions
     from c41811.config import requireConfig
     from c41811.config import save
     from c41811.config.utils import Ref
 
 
-    def modify_value_validator[D: MappingConfigData[Any]](ref: Ref[D], cfg: ValidatorFactoryConfig) -> D:
+    def modify_value_validator[D: MappingConfigData[Any]](ref: Ref[D], cfg: ValidatorOptions) -> D:
         data = deepcopy(ref.value)
         for path in data.keys(recursive=True, end_point_only=True):
             data.modify(path, "modified!")
@@ -562,7 +562,7 @@ Mapping[str | ABCPath, Any]
    永远不应该尝试验证 :py:class:`~config.basic.object.NoneConfigData` ，这将创建一个
    :py:attr:`~config.basic.component.ComponentMeta.parser` 为
    :py:const:`None` 的 :py:class:`~config.basic.component.ComponentMeta`，如果你没有在
-   :py:class:`额外验证器工厂配置参数 <Config.validators.ComponentValidatorFactory>` 传入默认的
+   :py:class:`额外验证器选项 <Config.validators.ComponentValidatorFactory>` 传入默认的
    `组件元数据验证器` 这将可能导致(至少目前默认情况下会)无法将组件元配置同步到组件元信息，最终导致元信息和组件成员不匹配抛出错误
 
 .. seealso::

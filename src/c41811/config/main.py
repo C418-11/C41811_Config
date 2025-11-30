@@ -42,11 +42,15 @@ from .safe_writer import safe_open
 from .utils import Ref
 from .validators import ComponentValidatorFactory
 from .validators import DefaultValidatorFactory
-from .validators import ValidatorFactoryConfig
+from .validators import ValidatorOptions
 from .validators import ValidatorTypes
 from .validators import pydantic_validator
 
-type VALIDATOR_FACTORY[V, D: ABCConfigData] = Callable[[V, ValidatorFactoryConfig], Callable[[Ref[D]], D]]
+type ValidatorFactoryType[V, D: ABCConfigData] = Callable[[V, ValidatorOptions], Callable[[Ref[D]], D]]
+"""
+.. versionchanged:: 0.3.0
+   重命名 ``VALIDATOR_FACTORY`` 为 ``ValidatorFactoryType``
+"""
 
 
 class RequiredPath[V, D: ABCConfigData]:
@@ -55,21 +59,21 @@ class RequiredPath[V, D: ABCConfigData]:
     def __init__(
         self,
         validator: V,
-        validator_factory: VALIDATOR_FACTORY[V, D]
+        validator_factory: ValidatorFactoryType[V, D]
         | ValidatorTypes
         | Literal["custom", "pydantic", "component"]
         | None = ValidatorTypes.DEFAULT,
-        static_config: ValidatorFactoryConfig | None = None,
+        static_config: ValidatorOptions | None = None,
     ):
         """
         :param validator: 数据验证器
         :type validator: Any
         :param validator_factory: 数据验证器工厂
         :type validator_factory:
-            VALIDATOR_FACTORY[V, D]
+            ValidatorFactoryType[V, D]
             | validators.ValidatorTypes | Literal["custom", "pydantic", "component"] | None
         :param static_config: 静态配置
-        :type static_config: ValidatorFactoryConfig | None
+        :type static_config: ValidatorOptions | None
 
         .. tip::
            提供 ``static_config`` 参数可以避免在 :py:meth:`~RequiredPath.filter` 中反复调用 ``validator_factory``
@@ -81,7 +85,7 @@ class RequiredPath[V, D: ABCConfigData]:
             validator_factory = self.ValidatorFactories[validator_factory]
 
         self._validator = deepcopy(validator)
-        self._validator_factory: VALIDATOR_FACTORY[V, D] = validator_factory
+        self._validator_factory: ValidatorFactoryType[V, D] = validator_factory
         if static_config is not None:
             self._static_validator: Callable[[Ref[D]], D] | None = self._validator_factory(
                 self._validator, static_config
@@ -89,11 +93,11 @@ class RequiredPath[V, D: ABCConfigData]:
         else:
             self._static_validator = None
 
-    ValidatorFactories: ClassVar[dict[ValidatorTypes, VALIDATOR_FACTORY[Any, Any]]] = {
-        ValidatorTypes.DEFAULT: cast(VALIDATOR_FACTORY[V, D], DefaultValidatorFactory),
+    ValidatorFactories: ClassVar[dict[ValidatorTypes, ValidatorFactoryType[Any, Any]]] = {
+        ValidatorTypes.DEFAULT: cast(ValidatorFactoryType[V, D], DefaultValidatorFactory),
         ValidatorTypes.CUSTOM: lambda v, cfg: (lambda ref: ref.value) if v is None else lambda ref: v(ref, cfg),
-        ValidatorTypes.PYDANTIC: cast(VALIDATOR_FACTORY[V, D], pydantic_validator),
-        ValidatorTypes.COMPONENT: cast(VALIDATOR_FACTORY[V, D], ComponentValidatorFactory),
+        ValidatorTypes.PYDANTIC: cast(ValidatorFactoryType[V, D], pydantic_validator),
+        ValidatorTypes.COMPONENT: cast(ValidatorFactoryType[V, D], ComponentValidatorFactory),
     }
     """
     验证器工厂注册表
@@ -153,7 +157,7 @@ class RequiredPath[V, D: ABCConfigData]:
             data = Ref(data)
 
         if (self._static_validator is None) or config_kwargs:
-            config = ValidatorFactoryConfig(**config_kwargs)
+            config = ValidatorOptions(**config_kwargs)
             validator: Callable[[Ref[D]], D] = self._validator_factory(self._validator, config)
         else:
             validator = self._static_validator
@@ -214,6 +218,7 @@ class ConfigRequirementDecorator:
         )
         self._required = required
         self._filter_kwargs = filter_kwargs
+        # noinspection PyInvalidCast
         self._config_cacher: Callable[[Callable[..., D], VarArg(), KwArg()], D] = (
             cast(
                 Callable[[Callable[..., D], VarArg(), KwArg()], D], lambda func, *args, **kwargs: func(*args, **kwargs)
