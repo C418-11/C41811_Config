@@ -36,7 +36,7 @@ from c41811.config import MappingConfigData
 from c41811.config import NoneConfigData
 from c41811.config import Path as DPath
 from c41811.config import RequiredPath
-from c41811.config import ValidatorFactoryConfig
+from c41811.config import ValidatorOptions
 from c41811.config.abc import ABCConfigFile
 from c41811.config.errors import ComponentMemberMismatchError
 from c41811.config.errors import ComponentMetadataException
@@ -747,7 +747,7 @@ class TestRequiredPath:
         tuple[
             tuple[
                 ComponentConfigData[MappingConfigData[Any], ComponentMeta[MCD]] | NoneConfigData,
-                dict[str | None, dict[str, Any]],
+                dict[str | None, tuple[Any] | tuple[Any, str]],
                 ComponentConfigData[MappingConfigData[Any], ComponentMeta[MCD]] | None,
                 dict[str, Any],
                 tuple[type[Warning | BaseException], ...],
@@ -761,13 +761,17 @@ class TestRequiredPath:
                 ComponentConfigData(ComponentMeta(parser=ComponentMetaParser()), {}),
                 #                                   ↑ 一般情况是由ComponentSL的initialize|load在构造时自动传入parser参数
                 {
-                    None: {"members": ["foo.json", "bar.json"]},
-                    "foo.json": {
-                        "first\\.second\\.third": 4,
-                    },
-                    "bar.json": {
-                        "key": {"value"},
-                    },
+                    None: ({"members": ["foo.json", "bar.json"]},),
+                    "foo.json": (
+                        {
+                            "first\\.second\\.third": 4,
+                        },
+                    ),
+                    "bar.json": (
+                        {
+                            "key": {"value"},
+                        },
+                    ),
                 },
                 ComponentConfigData(
                     ComponentMeta(
@@ -786,13 +790,17 @@ class TestRequiredPath:
                 ComponentConfigData(ComponentMeta(parser=ComponentMetaParser()), {}),
                 #                                   ↑ 一般情况是由ComponentSL的initialize|load在构造时自动传入parser参数
                 {
-                    None: {"members": ["foo.json", "bar.json"]},
-                    "foo.json": {
-                        "first\\.second\\.third": 4,
-                    },
-                    "bar.json": {
-                        "key": {"value"},
-                    },
+                    None: ({"members": ["foo.json", "bar.json"]},),
+                    "foo.json": (
+                        {
+                            "first\\.second\\.third": 4,
+                        },
+                    ),
+                    "bar.json": (
+                        {
+                            "key": {"value"},
+                        },
+                    ),
                 },
                 ComponentConfigData(
                     ComponentMeta(
@@ -837,14 +845,18 @@ class TestRequiredPath:
                     },
                 ),
                 {
-                    None: {"members": ["foo.json", "bar.json", "baz.json"]},
-                    "foo.json": {
-                        "first\\.second\\.third": 4,
-                    },
-                    "bar.json": {
-                        "key": {"value"},
-                    },
-                    "baz.json": {},
+                    None: ({"members": ["foo.json", "bar.json", "baz.json"]},),
+                    "foo.json": (
+                        {
+                            "first\\.second\\.third": 4,
+                        },
+                    ),
+                    "bar.json": (
+                        {
+                            "key": {"value"},
+                        },
+                    ),
+                    "baz.json": ({},),
                 },
                 ComponentConfigData(
                     ComponentMeta(
@@ -863,10 +875,12 @@ class TestRequiredPath:
             (
                 NoneConfigData(),
                 {
-                    None: {"members": ["foo.json"]},
-                    "foo.json": {
-                        "first\\.second\\.third": 4,
-                    },
+                    None: ({"members": ["foo.json"]},),
+                    "foo.json": (
+                        {
+                            "first\\.second\\.third": 4,
+                        },
+                    ),
                 },
                 ComponentConfigData(
                     ComponentMeta(members=[ComponentMember("foo.json")], orders=ComponentOrders(*([["foo.json"]] * 4))),
@@ -880,10 +894,12 @@ class TestRequiredPath:
             (
                 NoneConfigData(),
                 {
-                    None: {"members": ["foo.json"]},
-                    "foo.json": {
-                        "first\\.second\\.third": 4,
-                    },
+                    None: ({"members": ["foo.json"]},),
+                    "foo.json": (
+                        {
+                            "first\\.second\\.third": 4,
+                        },
+                    ),
                 },
                 ComponentConfigData(
                     ComponentMeta(members=[ComponentMember("foo.json")], orders=ComponentOrders(*([["foo.json"]] * 4))),
@@ -897,10 +913,12 @@ class TestRequiredPath:
             (
                 NoneConfigData(),
                 {
-                    None: {"members": ["foo.json"]},
-                    "foo.json": {
-                        "first\\.second\\.third": 4,
-                    },
+                    None: ({"members": ["foo.json"]},),
+                    "foo.json": (
+                        {
+                            "first\\.second\\.third": 4,
+                        },
+                    ),
                 },
                 None,
                 {},
@@ -909,10 +927,12 @@ class TestRequiredPath:
             (
                 NoneConfigData(),
                 {
-                    None: {"members": ["foo.json", {"filename": "bar.json", "alias": "bar.json"}]},
-                    "foo.json": {
-                        "first\\.second\\.third": 4,
-                    },
+                    None: ({"members": ["foo.json", {"filename": "bar.json", "alias": "bar.json"}]},),
+                    "foo.json": (
+                        {
+                            "first\\.second\\.third": 4,
+                        },
+                    ),
                 },
                 None,
                 {"meta_validator": ComponentMetaParser().validator},
@@ -921,10 +941,12 @@ class TestRequiredPath:
             (
                 NoneConfigData(),
                 {
-                    None: {"members": [{"filename": "foo.json", "alias": "bar.json"}, {"filename": "bar.json"}]},
-                    "foo.json": {
-                        "first\\.second\\.third": 4,
-                    },
+                    None: ({"members": [{"filename": "foo.json", "alias": "bar.json"}, {"filename": "bar.json"}]},),
+                    "foo.json": (
+                        {
+                            "first\\.second\\.third": 4,
+                        },
+                    ),
                 },
                 None,
                 {"meta_validator": ComponentMetaParser().validator},
@@ -933,15 +955,19 @@ class TestRequiredPath:
             (
                 NoneConfigData(),
                 {
-                    None: {
-                        "members": [
-                            {"filename": "foo.json", "alias": "repeated"},
-                            {"filename": "bar.json", "alias": "repeated"},
-                        ]
-                    },
-                    "foo.json": {
-                        "first\\.second\\.third": 4,
-                    },
+                    None: (
+                        {
+                            "members": [
+                                {"filename": "foo.json", "alias": "repeated"},
+                                {"filename": "bar.json", "alias": "repeated"},
+                            ]
+                        },
+                    ),
+                    "foo.json": (
+                        {
+                            "first\\.second\\.third": 4,
+                        },
+                    ),
                 },
                 None,
                 {"meta_validator": ComponentMetaParser().validator},
@@ -950,10 +976,12 @@ class TestRequiredPath:
             (
                 NoneConfigData(),
                 {
-                    None: {"members": ["foo.json", "foo.json"]},
-                    "foo.json": {
-                        "first\\.second\\.third": 4,
-                    },
+                    None: ({"members": ["foo.json", "foo.json"]},),
+                    "foo.json": (
+                        {
+                            "first\\.second\\.third": 4,
+                        },
+                    ),
                 },
                 None,
                 {"meta_validator": ComponentMetaParser().validator},
@@ -962,10 +990,12 @@ class TestRequiredPath:
             (
                 NoneConfigData(),
                 {
-                    None: {"members": ["foo.json", {"filename": "bar.json", "alias": "foo.json"}]},
-                    "foo.json": {
-                        "first\\.second\\.third": 4,
-                    },
+                    None: ({"members": ["foo.json", {"filename": "bar.json", "alias": "foo.json"}]},),
+                    "foo.json": (
+                        {
+                            "first\\.second\\.third": 4,
+                        },
+                    ),
                 },
                 None,
                 {"meta_validator": ComponentMetaParser().validator},
@@ -974,10 +1004,12 @@ class TestRequiredPath:
             (
                 NoneConfigData(),
                 {
-                    None: {"members": ["foo.json"]},
-                    "foo.json": {
-                        "first\\.second\\.third": 4,
-                    },
+                    None: ({"members": ["foo.json"]},),
+                    "foo.json": (
+                        {
+                            "first\\.second\\.third": 4,
+                        },
+                    ),
                 },
                 None,
                 {"allow_initialize": False},  # 没有传入元数据验证器是因为该错误在元数据验证之前触发
@@ -990,7 +1022,7 @@ class TestRequiredPath:
     @mark.parametrize(*ComponentTests)
     def test_component[CCD: ComponentConfigData[MappingConfigData[Any], ComponentMeta[MCD]]](
         data: CCD,
-        validator: dict[str | None, dict[str, Any]],
+        validator: dict[str | None, tuple[Any] | tuple[Any, str]],
         result: CCD,
         kwargs: dict[str, Any],
         ignores: tuple[type[Warning | BaseException], ...],
@@ -1001,11 +1033,13 @@ class TestRequiredPath:
         allow_modify = kwargs.get("allow_modify", True)
         copied_data = deepcopy(data)
 
+        def curring_filter(freeze_validator: tuple[Any] | tuple[Any, str]) -> Callable[[CCD], CCD]:
+            return lambda cfg: RequiredPath(*freeze_validator).filter(cfg, **kwargs)
+
+        processed_validators = {k: curring_filter(v) for k, v in validator.items()}
+
         with safe_raises(ignore_excs), safe_warns(ignore_warns):
-            validated_data = cast(
-                CCD,
-                RequiredPath(validator, "component").filter(copied_data, **kwargs),  # type: ignore[arg-type]
-            )
+            validated_data = cast(CCD, RequiredPath(processed_validators, "component").filter(copied_data, **kwargs))  # type: ignore[arg-type]
             # noinspection PyUnresolvedReferences
             assert validated_data.meta.orders == result.meta.orders
             # noinspection PyUnresolvedReferences
@@ -1020,7 +1054,7 @@ class TestRequiredPath:
         (
             (
                 {"foo\\.bar": int, "foo": dict, "foo1": int, "foo2": list[str]},
-                ValidatorFactoryConfig(),
+                ValidatorOptions(),
                 100,
             ),
             (
@@ -1042,7 +1076,7 @@ class TestRequiredPath:
                         },
                     },
                 },
-                ValidatorFactoryConfig(),
+                ValidatorOptions(),
                 100,
             ),
         ),
@@ -1050,7 +1084,7 @@ class TestRequiredPath:
     def test_static_config_usetime(
         data: MCD,
         validator: dict[str, Any],
-        static_config: ValidatorFactoryConfig,
+        static_config: ValidatorOptions,
         times: int,
     ) -> None:
         static_filter = cast(Callable[[MCD], MCD], RequiredPath(validator, static_config=static_config).filter)

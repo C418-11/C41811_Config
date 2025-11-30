@@ -42,6 +42,7 @@ from c41811.config import PlainTextSL
 from c41811.config import PythonLiteralSL
 from c41811.config import PythonSL
 from c41811.config import PyYamlSL
+from c41811.config import RequiredPath
 from c41811.config import RTomlSL
 from c41811.config import RuamelYamlSL
 from c41811.config import SequenceConfigData
@@ -698,15 +699,17 @@ def test_compressed_component(pool: ConfigPool) -> None:
     fn_b = f"b{json_sl.supported_file_patterns[0]}{zip_sl.supported_file_patterns[0]}"
     fn_c = f"c{json_sl.supported_file_patterns[0]}{tar_sl.supported_file_patterns[0]}"
 
+    validator = {
+        None: {"members": [fn_a, fn_b, fn_c]},
+        fn_a: {"key": None},
+        fn_b: {"key": True},
+        fn_c: {"key": False},
+    }
+
     cfg: MappingConfigData[Any] = pool.require(
         "",
         file_name,
-        {
-            None: {"members": [fn_a, fn_b, fn_c]},
-            fn_a: {"key": None},
-            fn_b: {"key": True},
-            fn_c: {"key": False},
-        },
+        {k: RequiredPath(v).filter for k, v in validator.items()},
         "component",
     ).check()
     assert cfg.retrieve(rf"\{{{fn_a}\}}\.key") is None

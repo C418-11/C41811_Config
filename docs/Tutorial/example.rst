@@ -96,99 +96,108 @@
 .. code-block:: python
    :caption: main.py
 
+   import json
+   from typing import Any
+
+   from c41811.config import ComponentConfigData
    from c41811.config import ComponentSL
    from c41811.config import JsonSL
    from c41811.config import MappingConfigData
+   from c41811.config import RequiredPath
    from c41811.config import TarFileSL
    from c41811.config import requireConfig
    from c41811.config import saveAll
 
-   ComponentSL().register_to()
+   ComponentSL().register_to()  # 注册处理器
    TarFileSL(compression="gz").register_to()
    JsonSL(s_arg=dict(indent=4)).register_to()
 
-   cfg: MappingConfigData = requireConfig(
-       "", "config.json.comp.tar.gz", {
-           None: {
-               "members": [
-                   {"filename": "production.json", "alias": "product"},
-                   {"filename": "develop.json", "alias": "dev"},
-                   {"filename": "basic.json", "alias": "basic"},
-                   {"filename": "default.json", "alias": "default"},
-               ],
-               "order": ["product"],
-               "orders": {
-                   "read": ["product", "basic", "default"],
-               },
-           },
-           "default.json": {
-               "project-name": "C41811.Config-Example",
-               "re-try-interval": {
-                   "duration": 10,
-                   "unit": "second",
-                   "random": 0
-               },
-           },
-           "basic.json": {
-               "project-name": "Example Document",
-               "re-try-interval": {
-                   "random": 3
-               }
-           },
-           "production.json": {
-               "project-name": "Product !",
-               "re-try-interval": {
-                   "duration": 2,
-                   "unit": ".1s",
-               }
-           },
-           "develop.json": {
-               "project-name": "Develop !",
-               "re-try-interval": {
-                   "unit": "$breakpoint",
-               },
-               "debug": True,
+   schemas = {  # 定义组件架构
+       None: {
+           "members": [
+               {"filename": "production.json", "alias": "product"},
+               {"filename": "develop.json", "alias": "dev"},
+               {"filename": "basic.json", "alias": "basic"},
+               {"filename": "default.json", "alias": "default"},
+           ],
+           "order": ["product"],
+           "orders": {
+               "read": ["product", "basic", "default"],
            },
        },
-       "component"
+       "default.json": {
+           "project-name": "C41811.Config-Example",
+           "re-try-interval": {
+               "duration": 10,
+               "unit": "second",
+               "random": 0
+           },
+       },
+       "basic.json": {
+           "project-name": "Example Document",
+           "re-try-interval": {
+               "random": 3
+           }
+       },
+       "production.json": {
+           "project-name": "Product !",
+           "re-try-interval": {
+               "duration": 2,
+               "unit": ".1s",
+           }
+       },
+       "develop.json": {
+           "project-name": "Develop !",
+           "re-try-interval": {
+               "unit": "$breakpoint",
+           },
+           "debug": True,
+       },
+   }
+
+   # 将元/成员架构转换为验证器
+   validators = {k: (lambda v: RequiredPath(v).filter)(v) for k, v in schemas.items()}
+   # 验证组件
+   cfg: ComponentConfigData[MappingConfigData[Any], Any] = requireConfig(
+       "", "config.json.comp.tar.gz", validators, "component"
    ).check()
 
    print(cfg.retrieve(r"re-try-interval\.unit"))  # .1s
    print(cfg.retrieve(r"\{default\}\.re-try-interval\.unit"))  # second
-   print(cfg.retrieve(r"\{dev\}\.re-try-interval\.unit")) # $breakpoint
-   print(cfg.retrieve(r"\{develop.json\}\.re-try-interval\.unit")) # $breakpoint
+   print(cfg.retrieve(r"\{dev\}\.re-try-interval\.unit"))  # $breakpoint
+   print(cfg.retrieve(r"\{develop.json\}\.re-try-interval\.unit"))  # $breakpoint
 
    saveAll()
-   print(cfg)
+   print(json.dumps({member: config.data for member, config in cfg.members.items()}, indent=4))
    # {
-   #     'default.json': MappingConfigData({
-   #         'project-name': 'C41811.Config-Example',
-   #         're-try-interval': {
-   #             'duration': 10,
-   #             'unit': 'second',
-   #             'random': 0
+   #     "default.json": {
+   #         "project-name": "C41811.Config-Example",
+   #         "re-try-interval": {
+   #             "duration": 10,
+   #             "unit": "second",
+   #             "random": 0
    #         }
-   #     }),
-   #     'basic.json': MappingConfigData({
-   #         'project-name': 'Example Document',
-   #         're-try-interval': {
-   #             'random': 3
+   #     },
+   #     "basic.json": {
+   #         "project-name": "Example Document",
+   #         "re-try-interval": {
+   #             "random": 3
    #         }
-   #     }),
-   #     'production.json': MappingConfigData({
-   #         'project-name': 'Product !',
-   #         're-try-interval': {
-   #             'duration': 2,
-   #             'unit': '.1s'
+   #     },
+   #     "production.json": {
+   #         "project-name": "Product !",
+   #         "re-try-interval": {
+   #             "duration": 2,
+   #             "unit": ".1s"
    #         }
-   #     }),
-   #     'develop.json': MappingConfigData({
-   #         'project-name': 'Develop !',
-   #         're-try-interval': {
-   #             'unit': '$breakpoint'
+   #     },
+   #     "develop.json": {
+   #         "project-name": "Develop !",
+   #         "re-try-interval": {
+   #             "unit": "$breakpoint"
    #         },
-   #         'debug': True
-   #     })
+   #         "debug": true
+   #     }
    # }
 
 .. code-block:: text

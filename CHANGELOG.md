@@ -40,6 +40,7 @@
 * 工作流提升工作流运行速度使用setup-python内置依赖缓存
 * 工作流添加缓存mypy检查
 * 更改为关键字参数ABCConfigPool.save_all的ignore_err
+* 更改参数类型ComponentValidatorFactory.__init__的validator为`Mapping[str | None, Callable[[Ref[ICD]], ICD]]`并移除因此冗余的移除额外验证器选项validator_factory
 * 更改参数类型FailedProcessConfigFileError.__new__的reason从BaseException改为Exception
 * 更改参数类型UnsupportedConfigFormatError.__init__的_format为`str | None`
 * 更改只读属性NumberConfigData.data为可写

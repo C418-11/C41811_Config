@@ -11,7 +11,6 @@ from collections import OrderedDict
 from collections.abc import Callable
 from collections.abc import Iterable
 from collections.abc import Mapping
-from collections.abc import MutableMapping
 from contextlib import suppress
 from copy import deepcopy
 from dataclasses import dataclass
@@ -683,10 +682,6 @@ class ComponentValidatorFactory[D: ComponentConfigData[Any, Any]]:
              - 描述
              - 默认值
              - 类型
-           * - validator_factory
-             - 处理组件成员的验证器工厂
-             - :py:class:`DefaultValidatorFactory`
-             - Callable[[Any, ValidatorFactoryConfig], Callable[[ComponentConfigData], ComponentConfigData]]
            * - allow_initialize
              - 是否允许初始化不存在的组件成员(注意！ 现在的实现方式会强制初始化成员为 :py:class:`MappingConfigData`)
              - True
@@ -694,20 +689,14 @@ class ComponentValidatorFactory[D: ComponentConfigData[Any, Any]]:
            * - meta_validator
              - 组件元数据验证器
              - 尝试从传入的组件元数据获得，若不存在(值为None)则放弃验证
-             - Callable[[ComponentMeta, ValidatorFactoryConfig], ComponentMeta]
+             - Callable[[ComponentMeta, ValidatorOptions], ComponentMeta]
+
+        .. versionchanged:: 0.3.0
+           更改参数 ``validator`` 类型为 ``Mapping[str | None, Callable[[Ref[ICD]], ICD]]``
+           并移除因此冗余的移除额外验证器选项 ``validator_factory``
         """  # noqa: RUF002, D205
-        self.validator = validator
         self.validator_config = validator_config
-
-        self.validator_factory = validator_config.extra.get("validator_factory", DefaultValidatorFactory)
-        self.validators: MutableMapping[str | None, Callable[[Ref[ICD]], ICD]] = {}
-
-        self._compile()
-
-    def _compile(self) -> None:
-        """编译模板"""
-        for member, validator in self.validator.items():
-            self.validators[member] = self.validator_factory(validator, self.validator_config)
+        self.validators = validator
 
     def _validate_member_metadata(self, component_data: D) -> dict[str, ICD]:
         """
