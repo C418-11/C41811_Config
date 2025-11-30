@@ -183,6 +183,7 @@ class ConfigRequirementDecorator:
         file_name: str,
         required: RequiredPath[Any, D],
         *,
+        validate_only: bool = True,
         config_formats: str | Iterable[str] | None = None,
         allow_initialize: bool = True,
         config_cacher: Callable[[Callable[..., D], VarArg(), KwArg()], D] | None = None,
@@ -196,6 +197,10 @@ class ConfigRequirementDecorator:
         :param file_name: 详见 :py:meth:`ConfigPool.load`
         :param required: 需求的键
         :type required: RequiredPath[Any, D]
+        :param validate_only:
+           如果为 :py:const:`True` 则返回配置池中完整的配置数据（按引用传递），否则返回验证后的数据（按值传递），
+           此选项有助于避免意外修改配置池中的数据
+        :type validate_only: bool
         :param config_formats: 详见 :py:meth:`ConfigPool.load`
         :param allow_initialize: 详见 :py:meth:`ConfigPool.load`
         :param config_cacher: 缓存配置的装饰器，默认为None，即不缓存
@@ -209,6 +214,9 @@ class ConfigRequirementDecorator:
            重命名参数 ``cache_config`` 为 ``config_cacher``
 
            重命名参数 ``allow_create`` 为 ``allow_initialize``
+
+        .. versionadded:: 0.3.0
+           添加参数 ``validate_only``
         """  # noqa: RUF002, D205
         if filter_kwargs is None:
             filter_kwargs = {}
@@ -217,6 +225,7 @@ class ConfigRequirementDecorator:
             namespace, file_name, config_formats=config_formats, allow_initialize=allow_initialize
         )
         self._required = required
+        self._validate_only = validate_only
         self._filter_kwargs = filter_kwargs
         # noinspection PyInvalidCast
         self._config_cacher: Callable[[Callable[..., D], VarArg(), KwArg()], D] = (
@@ -278,7 +287,9 @@ class ConfigRequirementDecorator:
 
         result = self._config_cacher(self._required.filter, config_ref, **kwargs)
         config_file._config = config_ref.value  # noqa: SLF001
-        return result
+        if self._validate_only:
+            return config_file.config
+        return deepcopy(result) if config_file.config is result else result
 
 
 class ConfigPool(BasicConfigPool):

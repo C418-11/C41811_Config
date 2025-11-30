@@ -15,6 +15,7 @@
 * 新增sphinx扩展sphinx.ext.doctest
 * 新增TomlKitSL以更完善的处理toml格式
 * 新增tox环境format以使用ruff检测并格式化代码
+* 新增参数ConfigRequirementDecorator.__init__的validate_only以支持语义化的强制定义则按引用传递返回值或按值传递
 * 新增参数OSEnvSL.__init__的prefix,strip_prefix以实现导出特定前缀环境变量
 * 新增反馈错误issue模板
 * 新增可选参数ComponentSL.load_file的config_formats以支持指定成员的配置解析格式

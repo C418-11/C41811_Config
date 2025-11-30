@@ -181,17 +181,39 @@ class TestConfigPool:
     @staticmethod
     def test_require(pool: ConfigPool) -> None:
         cfg_data: MCD = pool.require("", "test.json", {"foo\\.bar": "test", "foo\\.baz": "test"}).check()
-        assert cfg_data == ConfigDataFactory({"foo": {"bar": "test", "baz": "test"}})
+        assert cfg_data == MappingConfigData({"foo": {"bar": "test", "baz": "test"}})
         cfg_data = pool.require("", "test.json", {"foo\\.bar": "test", "foo\\.baz": "test"}).check(ignore_cache=True)
-        assert cfg_data == ConfigDataFactory({"foo": {"bar": "test", "baz": "test"}})
+        assert cfg_data == MappingConfigData({"foo": {"bar": "test", "baz": "test"}})
 
         @pool.require(  # type: ignore[arg-type]
             "", "test.json", {"foo\\.bar": "test", "foo\\.baz": "test"}
         )
         def func(cfg: MCD) -> None:
-            assert cfg == ConfigDataFactory({"foo": {"bar": "test", "baz": "test"}})
+            assert cfg == MappingConfigData({"foo": {"bar": "test", "baz": "test"}})
 
         func()
+
+    @staticmethod
+    def test_require_result_reference(pool: ConfigPool) -> None:
+        cfg_data: MCD = pool.require("", "a.json", {"foo": {"bar": "test", "baz": "test"}}, validate_only=False).check(
+            allow_modify=True
+        )
+        assert cfg_data is not pool.get("", "a.json").config  # type: ignore[union-attr]
+        pool.remove("", "a.json")
+        cfg_data: MCD = pool.require("", "b.json", {"foo": {"bar": "test", "baz": "test"}}, validate_only=False).check(
+            allow_modify=False
+        )
+        assert cfg_data is not pool.get("", "b.json").config  # type: ignore[union-attr]
+        pool.remove("", "b.json")
+        cfg_data: MCD = pool.require("", "c.json", {"foo": {"bar": "test", "baz": "test"}}, validate_only=True).check(
+            allow_modify=True
+        )
+        assert cfg_data is pool.get("", "c.json").config  # type: ignore[union-attr]
+        pool.remove("", "c.json")
+        cfg_data: MCD = pool.require("", "d.json", {"foo": {"bar": "test", "baz": "test"}}, validate_only=True).check(
+            allow_modify=False
+        )
+        assert cfg_data is pool.get("", "d.json").config  # type: ignore[union-attr]
 
     @staticmethod
     def test_getitem(pool: ConfigPool, file: ConfigFile[MCD]) -> None:
