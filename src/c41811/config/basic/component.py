@@ -471,11 +471,19 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
     @override
     @check_read_only
     def __setitem__(self, index: Any, value: D) -> None:
+        """
+        .. danger::
+           使用此操作可能会导致与元数据不同步且不经过校验！
+        """  # noqa: RUF002, D205
         self._members[index] = value  # type: ignore[index]
 
     @override
     @check_read_only
     def __delitem__(self, index: Any) -> None:
+        """
+        .. danger::
+           使用此操作可能会导致与元数据不同步且不经过校验！
+        """  # noqa: RUF002, D205
         del self._members[index]  # type: ignore[attr-defined]
 
 
