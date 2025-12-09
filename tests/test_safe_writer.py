@@ -64,6 +64,10 @@ class TestSafeOpen:
         with cleanup(file):
             assert not (tmp_path / "test.txt").exists()
 
+    def test_file_not_found(self, tmp_path: Path) -> None:
+        with raises(FileNotFoundError), safe_open(tmp_path / "test.txt", mode="r"):
+            pass
+
     if os.name == "nt":
 
         def test_lock(self, tmp_path: Path) -> None:

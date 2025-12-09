@@ -278,7 +278,7 @@ class TempTextIOManager[F: TextIO](ABCTempIOManager[F]):
     @override
     def from_path(self, path: Path | str, mode: str) -> F:
         f_path = f"{path}{self._suffix}"
-        if os.path.exists(path):
+        if "r" in mode or os.path.exists(path):
             shutil.copyfile(path, f_path)
         return cast(F, open(f_path, mode=mode, **self._open_kwargs))
 
