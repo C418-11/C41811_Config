@@ -23,19 +23,23 @@
 通过属性快速获得ext
 或许应该先做一个单独注册库用于处理灵活的注册，太多地方用得上了
 
-实现TextDefaultValidatorFactory从StringConfigData
+实现DocumentSL以从文档中提取配置数据
 -------------------------------------------------------------
 .. note::
    已有测试性实现
 
-中通过re/314 t-string匹配以从任意字符串(如文档文件)中
+通过re+py3.14 t-string匹配以从任意字符串(如文档文件)中
 提取并验证配置数据
 检查版本并抛出DependencyNotFoundError("python>=3.14", False)
 
-ConfigPool.exists,delete,unset方法操作文件
+加载行为：re.search | re.findall | re.match | re.fullmatch
+保存行为：re.sub
+
+ConfigPool.stored,destroy,purge方法操作文件
 ------------------------------------------------------------
-SL提供delete以移除文件
-SL提供exists以检查文件存在
+SL提供destroy以移除文件
+SL提供purge以静默移除文件（不存在时不进行报错）
+SL提供stored以检查文件存在
 
 采用watchdog库实现ConfigPool当文件/目录变更时自动重载
 ------------------------------------------------------------
@@ -76,7 +80,11 @@ ConfigPool.require
 完全无认证（返回原始数据），根据validator类型选择validatorfactory
 ValidatorTypes.DEFAULT不再为None而是实际名称，改为StrEnum
 
-C41811.Config ABCSLProcessorPool
+DefaultValidatorFactory重命名为PythonicValidatorFactory
+--------------------------------------------------------------
+记得更新相关文档和Enum
+
+ABCSLProcessorPool
 ------------------------------------------------------------
 更改为ABCRegistry，并不再被ABCConfigPool继承而是组合
 所有的信息通过注册表存储，ConfigPool持有一个ROOTRegistry
@@ -157,14 +165,6 @@ deepcopy还是太多了必须得清
 ------------------------------------------------------------
 ...
 
-重命名ValidatorFactoryConfig为ValidatorOptions
--------------------------------------------------------------
-REF: https://deepwiki.com/search/validatorfactoryconfigvalidato_cbd9e80d-3b64-4e22-bbca-b0cb59af53a2
-
-好像没必要大驼峰命名SaveAll啥的全局函数
-------------------------------------------------
-...
-
 添加README声明可以“一次学习，处处使用”
 --------------------------------------------------
 声明口号含义为：适用于需求频繁变更无需大规模改动（如配置格式切换
@@ -173,12 +173,6 @@ REF: https://deepwiki.com/search/validatorfactoryconfigvalidato_cbd9e80d-3b64-4e
 
 添加示例和详细文档说明如何几乎不影响无关业务代码的情况下切换格式/新项目低学习成本
 
-
 添加一个用于格式迁移的SL处理器
 ----------------------------------------
 当一个文件被读取时优先读取旧格式，写入时写入新格式并删除旧格式配置做到无缝迁移
-
-
-DefaultValidatorFactory重命名为PythonicValidatorFactory
---------------------------------------------------------------
-记得更新相关文档和Enum
