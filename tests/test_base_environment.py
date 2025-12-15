@@ -9,6 +9,9 @@ from c41811.config import EnvironmentConfigData
 from c41811.config import MappingConfigData
 from c41811.config.basic.environment import Difference
 
+# noinspection PyProtectedMember
+from c41811.config.basic.environment import diff_keys
+
 type ECD = EnvironmentConfigData
 type DIFF = tuple[set[str], set[str]]
 
@@ -64,6 +67,15 @@ class TestDifference:
         if info:
             return
         assert diff == Difference(*result)
+
+
+def test_wrap_wrong_type() -> None:
+    class MyCls:
+        @diff_keys
+        def method(self) -> None: ...
+
+    with safe_raises(TypeError, match="instance must be"):
+        MyCls().method()
 
 
 class TestEnvironmentConfigData:

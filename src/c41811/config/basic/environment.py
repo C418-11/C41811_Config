@@ -80,7 +80,7 @@ def diff_keys[F: Callable[..., Any]](func: F) -> F:
 
     @wrapt.decorator  # type: ignore[arg-type]
     def wrapper(wrapped: F, instance: Any, args: tuple[Any, ...], kwargs: dict[str, Any]) -> Any:
-        if not isinstance(instance, EnvironmentConfigData):  # pragma: no cover
+        if not isinstance(instance, EnvironmentConfigData):
             msg = f"instance must be {EnvironmentConfigData.__name__} but got {type(instance).__name__}"
             raise TypeError(msg)
 
