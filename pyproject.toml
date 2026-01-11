@@ -46,43 +46,43 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "PyYAML~=6.0.2",
-    "ruamel.yaml~=0.18.10",
+    "ruamel.yaml>=0.18.10,<0.20.0",
     "rtoml>=0.12,<0.14",
     "tomlkit~=0.13.3",
-    "cbor2~=5.7.0",
+    "cbor2>=5.7,<5.9",
     "jproperties~=2.1.2",
     "hjson~=3.1.0",
 
-    "tox>=4.26,<4.33",
+    "tox>=4.26,<4.34",
     "pre-commit>=4.2,<4.6"
 ]
 PyYamlSL = ["PyYAML~=6.0.2"]
-RuamelYamlSL = ["ruamel.yaml~=0.18.10"]
+RuamelYamlSL = ["ruamel.yaml>=0.18.10,<0.20.0"]
 RTomlSL = ["rtoml>=0.12,<0.14"]
 TomlKitSL = ["tomlkit~=0.13.3"]
-CBOR2SL = ["cbor2~=5.7.0"]
+CBOR2SL = ["cbor2>=5.7,<5.9"]
 JPropertiesSL = ["jproperties~=2.1.2"]
 HJsonSL = ["hjson~=3.1.0"]
 
 [dependency-groups]
 dev = [
     "PyYAML~=6.0.2",
-    "ruamel.yaml~=0.18.10",
+    "ruamel.yaml>=0.18.10,<0.20.0",
     "rtoml>=0.12,<0.14",
     "tomlkit~=0.13.3",
-    "cbor2~=5.7.0",
+    "cbor2>=5.7,<5.9",
     "jproperties~=2.1.2",
     "hjson~=3.1.0",
 ]
 docs = [
     "setuptools-scm>=8.2,<9.3",
-    "sphinx>=8.2.3,<9.1.0",
+    "sphinx>=8.2.3,<9.2.0",
     "sphinx-autoapi~=3.6.0",
     "sphinx-copybutton~=0.5.2",
-    "furo==2025.9.25",
+    "furo==2025.12.19",
 ]
 tox = [
-    "tox>=4.26,<4.33",
+    "tox>=4.26,<4.34",
 ]
 test = [
     "pytest>=8.3.5,<9.1.0",
@@ -97,9 +97,9 @@ mypy = [
     "mypy~=1.17",
     "pytest>=8.3.5,<9.1.0",
     "pyrsistent~=0.20.0",
-    "cbor2~=5.7.0",
+    "cbor2>=5.7,<5.9",
     "rtoml>=0.12,<0.14",
-    "ruamel.yaml~=0.18.10",
+    "ruamel.yaml>=0.18.10,<0.20.0",
     "tomlkit~=0.13.3",
     "types-PyYAML",
     "types-setuptools",
