@@ -33,7 +33,7 @@ classifiers = [
 ]
 dependencies = [
     "pydantic>=2.11.1,<2.13.0",
-    "wrapt~=2.0.0",
+    "wrapt>=2.0,<2.2",
     "portalocker>=3.1.1,<3.3.0",
     "mypy-extensions>=1.0,<1.2",
 ]
@@ -77,7 +77,7 @@ dev = [
 docs = [
     "setuptools-scm>=8.2,<9.3",
     "sphinx>=8.2.3,<9.2.0",
-    "sphinx-autoapi~=3.6.0",
+    "sphinx-autoapi>=3.6,<3.8",
     "sphinx-copybutton~=0.5.2",
     "furo==2025.12.19",
 ]
@@ -91,7 +91,7 @@ test = [
     "pyrsistent~=0.20.0",
 ]
 ruff = [
-    "ruff>=0.12.1,<0.15.0",
+    "ruff>=0.12.1,<0.16.0",
 ]
 mypy = [
     "mypy~=1.17",
