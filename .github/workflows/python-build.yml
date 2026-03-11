@@ -32,7 +32,7 @@ jobs:
           python -m build --wheel --sdist
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: python-package-raw
           path: dist
@@ -61,14 +61,14 @@ jobs:
           path: dist
 
       - name: Sig package
-        uses: sigstore/gh-action-sigstore-python@7b8cfcba45e769065eb4bf410ccf1dcb13b8b24f
+        uses: sigstore/gh-action-sigstore-python@d6afa45028f8f3267579622481e7344f447528ca
         with:
           inputs: |
             dist/*.tar.gz
             dist/*.whl
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: python-package-signed
           path: dist
