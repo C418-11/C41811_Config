@@ -22,4 +22,4 @@ jobs:
           persist-credentials: false
 
       - name: Run Codespell
-        uses: codespell-project/actions-codespell@bca0a5887de255a8903221c67b6478c7501c5edc
+        uses: codespell-project/actions-codespell@cf810cf4cbd6cdefe6ef86e55b64d524a16654a7
