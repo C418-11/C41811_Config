@@ -32,8 +32,8 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "pydantic>=2.11.1,<2.13.0",
-    "wrapt~=2.0.0",
+    "pydantic>=2.11.1,<2.14.0",
+    "wrapt>=2.0,<2.2",
     "portalocker>=3.1.1,<3.3.0",
     "mypy-extensions>=1.0,<1.2",
 ]
@@ -53,8 +53,8 @@ dev = [
     "jproperties~=2.1.2",
     "hjson~=3.1.0",
 
-    "tox>=4.26,<4.35",
-    "pre-commit>=4.2,<4.6"
+    "tox>=4.26,<4.54",
+    "pre-commit>=4.2,<4.7"
 ]
 PyYamlSL = ["PyYAML~=6.0.2"]
 RuamelYamlSL = ["ruamel.yaml>=0.18.10,<0.20.0"]
@@ -75,23 +75,23 @@ dev = [
     "hjson~=3.1.0",
 ]
 docs = [
-    "setuptools-scm>=8.2,<9.3",
+    "setuptools-scm>=8.2,<10.1",
     "sphinx>=8.2.3,<9.2.0",
-    "sphinx-autoapi~=3.6.0",
+    "sphinx-autoapi>=3.6,<3.9",
     "sphinx-copybutton~=0.5.2",
     "furo==2025.12.19",
 ]
 tox = [
-    "tox>=4.26,<4.35",
+    "tox>=4.26,<4.54",
 ]
 test = [
     "pytest>=8.3.5,<9.1.0",
     "pytest-html>=4.1.1,<4.3.0",
-    "pytest-cov>=6.0,<7.1",
+    "pytest-cov>=6.0,<7.2",
     "pyrsistent~=0.20.0",
 ]
 ruff = [
-    "ruff>=0.12.1,<0.15.0",
+    "ruff>=0.12.1,<0.16.0",
 ]
 mypy = [
     "mypy~=1.17",
