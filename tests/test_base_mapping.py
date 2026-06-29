@@ -243,7 +243,7 @@ class TestMappingConfigData:
     )
 
     @staticmethod
-    @mark.parametrize(*GetTests)
+    @mark.parametrize(*SetDefaultTests)
     def test_set_default(data: M_MCD, path: str, value: Any, ignore_excs: EE, kwargs: dict[str, Any]) -> None:
         if ignore_excs is None:
             ignore_excs = ()
