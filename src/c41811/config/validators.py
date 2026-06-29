@@ -43,8 +43,6 @@ from .errors import ConfigOperate
 from .errors import KeyInfo
 from .errors import RequiredPathNotFoundError
 from .errors import UnknownErrorDuringValidateError
-from .path import AttrKey
-from .path import IndexKey
 from .path import Path
 from .utils import Ref
 from .utils import Unset
@@ -135,20 +133,9 @@ def _process_pydantic_exceptions(err: ValidationError) -> Exception:
     """
     e = err.errors()[0]
 
-    locate = list(e["loc"])
-    locate_keys: list[AttrKey | IndexKey] = []
-    for key in locate:
-        if isinstance(key, str):
-            locate_keys.append(AttrKey(key))
-        elif isinstance(key, int):
-            locate_keys.append(IndexKey(key))
-        else:  # pragma: no cover
-            msg = "Cannot convert pydantic index to string"
-            raise UnknownErrorDuringValidateError(msg) from err
+    path = Path.from_locate(e["loc"])
 
-    kwargs: dict[str, Any] = {
-        "key_info": KeyInfo(path=Path(locate_keys), current_key=locate_keys[-1], index=len(locate_keys) - 1)
-    }
+    kwargs: dict[str, Any] = {"key_info": KeyInfo(path=path, current_key=path[-1], index=len(path) - 1)}
 
     class ErrInfo(NamedTuple):
         err_type: type[Exception] | Callable[..., Exception]
