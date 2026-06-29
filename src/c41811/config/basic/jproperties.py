@@ -46,6 +46,7 @@ class JPropertiesConfigData(MappingConfigData[jproperties.Properties]):
         if not_property:
             for key, value in data.items():  # type: ignore[union-attr]
                 prop[key] = value  # type: ignore[index]
+                # jproperties没提供接口只能破坏封装性了
                 # noinspection PyProtectedMember
                 prop._key_order.append(key)  # type: ignore[union-attr]  # noqa: SLF001
 

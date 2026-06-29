@@ -22,7 +22,7 @@ class PythonSL(BasicLocalFileConfigSL):
     """
     Python格式处理器
 
-    .. caution::
+    .. danger::
        非安全沙箱执行！确保文件为受信任来源！
 
     .. hint::

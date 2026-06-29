@@ -41,7 +41,7 @@ verification functions to ensure the accuracy and consistency of configuration d
 * Easy to use: Provides a unified and concise API with comprehensive type annotation support, allowing developers to
   easily load, modify, and save configuration files.
 
-## Characteristics
+## ApplicableScenarios
 
 C41811.Config is suitable for a variety of configuration management scenarios, especially in the following situations:
 

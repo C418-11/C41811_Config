@@ -42,7 +42,6 @@ def _generate_operators[S: Any](
     def reverse_op(self: Any, other: Any) -> Any:
         return ConfigDataFactory(operate_func(other, self._data))
 
-    # noinspection PyTypeHints
     def inplace_op(self: S, other: Any) -> S:
         self._data = inplace_func(self._data, other)
         return self

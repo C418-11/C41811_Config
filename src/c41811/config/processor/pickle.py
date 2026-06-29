@@ -18,9 +18,14 @@ class PickleSL(BasicLocalFileConfigSL):
     """
     pickle格式处理器
 
+    .. danger::
+       pickle文件存在安全风险，请勿在不可信的文件上使用该处理器
+
+       参见 `pickle文档 <https://docs.python.org/zh-cn/3/library/pickle.html>`_ 的置顶警告
+
     .. versionchanged:: 0.2.0
        添加 ``.pkl`` 文件后缀支持
-    """
+    """  # noqa: RUF002
 
     @property
     @override
