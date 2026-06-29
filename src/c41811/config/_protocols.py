@@ -5,6 +5,7 @@ from typing import Protocol
 from typing import TypeVar
 from typing import overload
 
+_T = TypeVar("_T")
 _T_co = TypeVar("_T_co", covariant=True)
 _T_contra = TypeVar("_T_contra", contravariant=True)
 
@@ -37,7 +38,7 @@ class Indexed(Protocol[_T_contra, _T_co]):
     def __getitem__(self, __index: _T_contra) -> _T_co: ...
 
 
-class MutableIndexed(Indexed[_T_contra, _T_co]):
+class MutableIndexed(Protocol[_T_contra, _T]):
     # noinspection GrazieInspection
     """
     可变可索引
@@ -46,7 +47,9 @@ class MutableIndexed(Indexed[_T_contra, _T_co]):
        重命名 ``SupportsWriteIndex`` 为 ``MutableIndexed``
     """
 
-    def __setitem__(self, __index: _T_contra, __value: _T_contra) -> None: ...
+    def __getitem__(self, item: _T_contra) -> _T: ...
+
+    def __setitem__(self, __index: _T_contra, __value: _T) -> None: ...
 
     def __delitem__(self, __index: _T_contra) -> None: ...
 
