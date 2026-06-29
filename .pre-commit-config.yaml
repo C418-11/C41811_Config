@@ -10,7 +10,7 @@ repos:
       - id: detect-private-key
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.14
+    rev: v0.15.20
     hooks:
       - id: ruff-check
         args: [ --no-fix ]
@@ -18,12 +18,12 @@ repos:
         args: [ --check ]
 
   - repo: https://github.com/zizmorcore/zizmor-pre-commit
-    rev: v1.22.0
+    rev: v1.26.1
     hooks:
       - id: zizmor
 
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.4.1
+    rev: v2.4.2
     hooks:
       - id: codespell
 
