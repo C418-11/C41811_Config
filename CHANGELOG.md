@@ -17,6 +17,7 @@
 
 ## 修复
 
+* 修正BasicIndexedConfigData.__iter__错误的类型注解
 * 修正MutableIndexed错误的类型注解
 
 ## 常规

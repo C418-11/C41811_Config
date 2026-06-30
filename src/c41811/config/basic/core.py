@@ -291,7 +291,7 @@ class BasicIndexedConfigData[D: Indexed[Any, Any]](BasicSingleConfigData[D], ABC
         return key in self._data  # type: ignore[operator]
 
     @override
-    def __iter__(self) -> Iterator[D]:
+    def __iter__(self) -> Iterator[Any]:
         return iter(self._data)
 
     @override
