@@ -67,7 +67,7 @@ class ComponentMetaParser[D: MappingConfigData[Any]](ABCMetaParser[D, ComponentM
                 members[i] = ComponentMember(**member)
 
         orders: ComponentOrders = ComponentOrders(**meta.get("orders", MappingConfigData()).data)
-        order = meta.setdefault("order", [member.alias if member.alias else member.filename for member in members])
+        order = meta.setdefault("order", [member.alias or member.filename for member in members])
         if not isinstance(order, list):
             order = order.data
         for name in order:
