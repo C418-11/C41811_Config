@@ -15,6 +15,7 @@
 * PathSyntaxParser.parse更改返回值类型为tuple[AttrKey | IndexKey, ...]
 * PathSyntaxParser.parse添加缓存
 * 字段TokenInfo.current_token由传入变为自动推导
+* 现在懒加载在导入不可用的字段时会抛出更明确的错误
 * 现在路径语法解析器发现孤立的键元信息会警告"Isolate meta found"
 * 现在路径语法解析器对无效的转义序列有更好的提示信息
 

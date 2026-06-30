@@ -1,3 +1,4 @@
+import importlib
 from typing import Any
 from typing import cast
 
@@ -5,6 +6,7 @@ from pytest import mark
 from pytest import raises
 
 from c41811.config import ComponentMember
+from c41811.config.errors import DependencyNotFoundError
 
 # noinspection PyProtectedMember
 from c41811.config.processor.component import _component_loader_kwargs_builder as component_loader_kwargs_builder
@@ -56,7 +58,7 @@ def test_lazy_import() -> None:
     assert mock_lazy_import.__all__ == ["Available", "MissingDependency", "SubAvailable", "SubMissingDependency"]
     assert mock_lazy_import.sub_pkg.__all__ == ["SubAvailable", "SubMissingDependency"]
 
-    with raises(ImportError, match="MissingDependency"):
+    with raises(DependencyNotFoundError, match="dependency"):
         from fixtures.mock_lazy_import import MissingDependency  # noqa: PLC0415, F401
     assert mock_lazy_import.__all__ == ["Available", "SubAvailable", "SubMissingDependency"]
     assert mock_lazy_import.sub_pkg.__all__ == ["SubAvailable", "SubMissingDependency"]
@@ -67,10 +69,17 @@ def test_lazy_import() -> None:
     assert mock_lazy_import.__all__ == ["Available", "SubAvailable", "SubMissingDependency"]
     assert mock_lazy_import.sub_pkg.__all__ == ["SubAvailable", "SubMissingDependency"]
 
-    with raises(ImportError, match="SubMissingDependency"):
+    with raises(DependencyNotFoundError, match="sub_dependency"):
         from fixtures.mock_lazy_import import SubMissingDependency  # noqa: PLC0415, F401
     assert mock_lazy_import.__all__ == ["Available", "SubAvailable"]
     assert mock_lazy_import.sub_pkg.__all__ == ["SubAvailable"]
+
+    importlib.reload(mock_lazy_import.sub_pkg)
+    importlib.reload(mock_lazy_import)
+    assert mock_lazy_import.__all__ == ["Available", "MissingDependency", "SubAvailable", "SubMissingDependency"]
+    namespace: dict[str, Any] = {}
+    exec("from fixtures.mock_lazy_import import *", {}, namespace)  # noqa: S102
+    assert list(namespace.keys()) == ["Available", "SubAvailable"]
 
 
 @mark.parametrize(

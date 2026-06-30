@@ -35,6 +35,7 @@ def lazy_import(properties: dict[str, str], /) -> tuple[list[str], Callable[[str
         raise RuntimeError(msg)
     caller_package = caller_module.__name__
     property_list = list(properties.keys())
+    unavailable_properties: dict[str, Exception] = {}
 
     def attr_getter(name: str) -> Any:
         from .errors import DependencyNotFoundError  # noqa: PLC0415
@@ -43,6 +44,8 @@ def lazy_import(properties: dict[str, str], /) -> tuple[list[str], Callable[[str
         try:
             sub_pkg = properties[name]
         except KeyError:
+            if name in unavailable_properties:
+                raise unavailable_properties[name] from None
             # noinspection PyShadowingNames
             msg = f"module '{caller_package}' has no attribute '{name}'"
             raise AttributeError(msg) from None
@@ -51,11 +54,14 @@ def lazy_import(properties: dict[str, str], /) -> tuple[list[str], Callable[[str
         except DependencyNotFoundError as err:
             property_list.remove(name)
             del properties[name]
+            unavailable_properties[name] = err
             return UnavailableAttribute(name, err)
         attr = getattr(module, name)
         if isinstance(attr, UnavailableAttribute):
             property_list.remove(name)
             del properties[name]
+            # 绕过UnavailableAttribute复写的__getattribute__防止异常被提前抛出
+            unavailable_properties[name] = object.__getattribute__(attr, "_reason")
         return attr
 
     attr_getter.__name__ = "__getattr__"

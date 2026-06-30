@@ -115,6 +115,34 @@ class UnavailableAttribute:
     @_unavailable_method
     def __next__(self) -> Never: ...  # type: ignore[empty-body]
 
+    @_unavailable_method
+    def __get__(self, instance: object, owner: type[object]) -> Never: ...  # type: ignore[empty-body]
+
+    @_unavailable_method
+    def __set__(self, instance: object, value: object) -> Never: ...  # type: ignore[empty-body]
+
+    @_unavailable_method
+    def __delete__(self, instance: object) -> Never: ...  # type: ignore[empty-body]
+
+    @_unavailable_method
+    def __copy__(self) -> Never: ...  # type: ignore[empty-body]
+
+    @_unavailable_method
+    def __deepcopy__(self, memo: dict[object, object]) -> Never: ...  # type: ignore[empty-body]
+
+    @_unavailable_method
+    @override
+    def __hash__(self) -> Never: ...  # type: ignore[empty-body]
+
+    @_unavailable_method
+    def __bool__(self) -> Never: ...  # type: ignore[empty-body]
+
+    @_unavailable_method
+    def __len__(self) -> Never: ...  # type: ignore[empty-body]
+
+    @_unavailable_method
+    def __contains__(self, item: object) -> Never: ...  # type: ignore[empty-body]
+
     @override
     def __repr__(self) -> str:
         return f"<{type(self).__name__} {object.__getattribute__(self, '_name')}>"
