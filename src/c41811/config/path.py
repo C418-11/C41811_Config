@@ -226,7 +226,7 @@ class PathSyntaxParser:
         .. versionchanged:: 0.1.4
            允许省略字符串开头的 ``\.``
 
-           更改返回值类型为 ``tuple[str, ...]``
+           更改返回值类型 ``Generator[str, None, None]`` 为 ``tuple[str, ...]``
 
            添加缓存
         """  # noqa: RUF002
@@ -281,7 +281,8 @@ class PathSyntaxParser:
         return final_tokens
 
     @classmethod
-    def parse(cls, string: str) -> list[AttrKey | IndexKey]:  # noqa: C901 (ignore complexity)
+    @lru_cache
+    def parse(cls, string: str) -> tuple[AttrKey | IndexKey, ...]:  # noqa: C901 (ignore complexity)
         """
         解析字符串为键列表
 
@@ -290,6 +291,11 @@ class PathSyntaxParser:
 
         :return: 键列表
         :rtype: list[AttrKey | IndexKey]
+
+        .. versionchanged:: 0.3.2
+           更改返回值类型 ``list[AttrKey | IndexKey]`` 为 ``tuple[AttrKey | IndexKey, ...]``
+
+           添加缓存
         """
         path: list[AttrKey | IndexKey] = []
         item: str | None = None
@@ -358,7 +364,7 @@ class PathSyntaxParser:
                 ConfigDataPathSyntaxWarning(r"Isolate meta found", TokenInfo(tokenized_path, -1)), stacklevel=2
             )
 
-        return path
+        return tuple(path)
 
 
 __all__ = (

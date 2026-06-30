@@ -234,6 +234,7 @@ class TestPathSyntaxParser:
     @fixture(autouse=True, scope="function")
     def _clear_cache() -> None:
         PathSyntaxParser.tokenize.cache_clear()
+        PathSyntaxParser.parse.cache_clear()
 
     TokenizeTests: tuple[str, tuple[tuple[str, list[str], EW], ...]] = (
         "string, result, ignore_warns",
@@ -262,7 +263,7 @@ class TestPathSyntaxParser:
         assert tokenized == result
 
     ParseTests: tuple[str, tuple[tuple[str, list[AnyKey] | None, EE, EW], ...]] = (
-        "string, path_obj, ignore_excs, ignore_warns",
+        "string, result, ignore_excs, ignore_warns",
         (
             (
                 r"\.a.a\\.a\.b\[18\]\[07\]\.e",
@@ -307,8 +308,10 @@ class TestPathSyntaxParser:
 
     @staticmethod
     @mark.parametrize(*ParseTests)
-    def test_parse(parser: PathSyntaxParser, string: str, path_obj: Path, ignore_excs: EE, ignore_warns: EW) -> None:
+    def test_parse(
+        parser: PathSyntaxParser, string: str, result: list[AnyKey], ignore_excs: EE, ignore_warns: EW
+    ) -> None:
         with safe_raises(ignore_excs) as e_info, safe_warns(ignore_warns):
             path = parser.parse(string)
         if not e_info:
-            assert path == path_obj
+            assert path == tuple(result)
