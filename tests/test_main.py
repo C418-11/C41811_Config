@@ -200,17 +200,17 @@ class TestConfigPool:
         )
         assert cfg_data is not pool.get("", "a.json").config  # type: ignore[union-attr]
         pool.remove("", "a.json")
-        cfg_data: MCD = pool.require("", "b.json", {"foo": {"bar": "test", "baz": "test"}}, validate_only=False).check(
+        cfg_data = pool.require("", "b.json", {"foo": {"bar": "test", "baz": "test"}}, validate_only=False).check(
             allow_modify=False
         )
         assert cfg_data is not pool.get("", "b.json").config  # type: ignore[union-attr]
         pool.remove("", "b.json")
-        cfg_data: MCD = pool.require("", "c.json", {"foo": {"bar": "test", "baz": "test"}}, validate_only=True).check(
+        cfg_data = pool.require("", "c.json", {"foo": {"bar": "test", "baz": "test"}}, validate_only=True).check(
             allow_modify=True
         )
         assert cfg_data is pool.get("", "c.json").config  # type: ignore[union-attr]
         pool.remove("", "c.json")
-        cfg_data: MCD = pool.require("", "d.json", {"foo": {"bar": "test", "baz": "test"}}, validate_only=True).check(
+        cfg_data = pool.require("", "d.json", {"foo": {"bar": "test", "baz": "test"}}, validate_only=True).check(
             allow_modify=False
         )
         assert cfg_data is pool.get("", "d.json").config  # type: ignore[union-attr]
