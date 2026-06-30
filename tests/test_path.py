@@ -14,8 +14,7 @@ from c41811.config import IndexKey
 from c41811.config import Path
 from c41811.config import PathSyntaxParser
 from c41811.config.abc import AnyKey
-from c41811.config.errors import ConfigDataPathSyntaxException
-from c41811.config.errors import UnknownTokenTypeError
+from c41811.config.errors import ConfigDataPathSyntaxError
 
 
 class TestKey:
@@ -286,23 +285,23 @@ class TestPathSyntaxParser:
             (r"\.\a", [AttrKey(r"\a")], (), (SyntaxWarning,)),
             (r"\a", [AttrKey(r"\a")], (), (SyntaxWarning,)),
             (r"\a\a", [AttrKey(r"\a\a")], (), (SyntaxWarning,)),
-            (r"\{", None, (ConfigDataPathSyntaxException,), ()),
-            (r"\{\{", None, (ConfigDataPathSyntaxException,), ()),
-            (r"\{\[", None, (ConfigDataPathSyntaxException,), ()),
-            (r"\[\{", None, (ConfigDataPathSyntaxException,), ()),
-            (r"\[\}", None, (ConfigDataPathSyntaxException,), ()),
-            (r"\{\]", None, (ConfigDataPathSyntaxException,), ()),
-            (r"\}", None, (ConfigDataPathSyntaxException,), ()),
-            (r"[2\]\[3\]", None, (ConfigDataPathSyntaxException,), ()),
-            (r"\[2\[3\]", None, (ConfigDataPathSyntaxException,), ()),
-            (r"\[2\]\.3\]", None, (ConfigDataPathSyntaxException,), ()),
-            (r"\[2\.3", None, (ConfigDataPathSyntaxException,), ()),
-            (r"\[2", None, (ConfigDataPathSyntaxException,), ()),
-            (r"\[a\]", None, (ConfigDataPathSyntaxException,), ()),
-            (r"\[4\]abc\[9\]", None, (UnknownTokenTypeError,), ()),
-            (r"\[5\]abc", None, (UnknownTokenTypeError,), ()),
-            (r"\[5\]\abc", None, (UnknownTokenTypeError,), (SyntaxWarning,)),
-            (r"\{meta\}aaa", None, (UnknownTokenTypeError,), ()),
+            (r"\{", None, (ConfigDataPathSyntaxError,), ()),
+            (r"\{\{", None, (ConfigDataPathSyntaxError,), ()),
+            (r"\{\[", None, (ConfigDataPathSyntaxError,), ()),
+            (r"\[\{", None, (ConfigDataPathSyntaxError,), ()),
+            (r"\[\}", None, (ConfigDataPathSyntaxError,), ()),
+            (r"\{\]", None, (ConfigDataPathSyntaxError,), ()),
+            (r"\}", None, (ConfigDataPathSyntaxError,), ()),
+            (r"[2\]\[3\]", None, (ConfigDataPathSyntaxError,), ()),
+            (r"\[2\[3\]", None, (ConfigDataPathSyntaxError,), ()),
+            (r"\[2\]\.3\]", None, (ConfigDataPathSyntaxError,), ()),
+            (r"\[2\.3", None, (ConfigDataPathSyntaxError,), ()),
+            (r"\[2", None, (ConfigDataPathSyntaxError,), ()),
+            (r"\[a\]", None, (ConfigDataPathSyntaxError,), ()),
+            (r"\[4\]abc\[9\]", None, (ConfigDataPathSyntaxError,), ()),
+            (r"\[5\]abc", None, (ConfigDataPathSyntaxError,), ()),
+            (r"\[5\]\abc", None, (ConfigDataPathSyntaxError,), (SyntaxWarning,)),
+            (r"\{meta\}aaa", None, (ConfigDataPathSyntaxError,), ()),
         ),
     )
 

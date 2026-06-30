@@ -7,6 +7,7 @@
 ## 新增
 
 * 新增字段TokenInfo.pos_index以便于获取对应的正数index便于后续处理
+* 新增异常类ConfigDataPathSyntaxError以替代ConfigDataPathSyntaxException和UnknownTokenTypeError
 * 新增警告类ConfigDataPathSyntaxWarning以提供更好的配置路径语法警告信息
 
 ## 变更
@@ -14,6 +15,11 @@
 * 字段TokenInfo.current_token由传入变为自动推导
 * 现在路径语法解析器发现孤立的键元信息会警告"Isolate meta found"
 * 现在路径语法解析器对无效的转义序列有更好的提示信息
+
+## 移除
+
+* 移除异常类ConfigDataPathSyntaxException
+* 移除异常类UnknownTokenTypeError
 
 ## 修复
 

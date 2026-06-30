@@ -19,10 +19,9 @@ from typing import override
 from ._protocols import Indexed
 from .abc import ABCKey
 from .abc import ABCPath
-from .errors import ConfigDataPathSyntaxException
+from .errors import ConfigDataPathSyntaxError
 from .errors import ConfigDataPathSyntaxWarning
 from .errors import TokenInfo
-from .errors import UnknownTokenTypeError
 
 
 class IndexMixin[K, D: Indexed[Any, Any]](ABCKey[K, D], ABC):
@@ -300,7 +299,8 @@ class PathSyntaxParser:
         tokenized_path = cls.tokenize(string)
         for index, token in enumerate(tokenized_path):
             if not token.startswith("\\"):
-                raise UnknownTokenTypeError(TokenInfo(tokenized_path, index))
+                msg = r"Unexpected token. Did you missed `\.` `\[` or `\{` before it?"
+                raise ConfigDataPathSyntaxError(msg, TokenInfo(tokenized_path, index))
 
             token_type = token[1]
             content = token[2:].replace("\\\\", "\\")
@@ -309,14 +309,11 @@ class PathSyntaxParser:
                 try:
                     top = token_stack.pop()
                 except IndexError:
-                    raise ConfigDataPathSyntaxException(
-                        TokenInfo(tokenized_path, i), f"unmatched '{tk_close}'"
-                    ) from None
+                    m = f"unmatched '{tk_close}'"
+                    raise ConfigDataPathSyntaxError(m, TokenInfo(tokenized_path, i)) from None
                 if top != tk_typ:
-                    raise ConfigDataPathSyntaxException(
-                        TokenInfo(tokenized_path, i),
-                        f"closing parenthesis '{tk_close}' does not match opening parenthesis '{top}'",
-                    )
+                    m = f"closing parenthesis '{tk_close}' does not match opening parenthesis '{top}'"
+                    raise ConfigDataPathSyntaxError(m, TokenInfo(tokenized_path, i))
 
             if token_type == "}":  # noqa: S105
                 _token_closed("{", "}", index)
@@ -326,17 +323,15 @@ class PathSyntaxParser:
                 try:
                     path.append(IndexKey(int(item), meta))  # type: ignore[arg-type]
                 except ValueError:
-                    raise ConfigDataPathSyntaxException(
-                        TokenInfo(tokenized_path, index), f"index key '{item}' must be numeric"
-                    ) from None
+                    msg = f"index key '{item}' must be numeric"
+                    raise ConfigDataPathSyntaxError(msg, TokenInfo(tokenized_path, index)) from None
                 item = None
                 meta = None
                 continue
 
             if token_stack:
-                raise ConfigDataPathSyntaxException(
-                    TokenInfo(tokenized_path, index), f"'{token_stack.pop()}' was never closed"
-                )
+                msg = f"'{token_stack.pop()}' was never closed"
+                raise ConfigDataPathSyntaxError(msg, TokenInfo(tokenized_path, index))
 
             if token_type == "[":  # noqa: S105
                 token_stack.append("[")
@@ -351,13 +346,12 @@ class PathSyntaxParser:
                 meta = None
                 continue
 
-            raise UnknownTokenTypeError(TokenInfo(tokenized_path, index))
+            msg = r"Unexpected token. Did you missed `\.` `\[` or `\{` before it?"
+            raise ConfigDataPathSyntaxError(msg, TokenInfo(tokenized_path, index))
 
         if token_stack:
-            raise ConfigDataPathSyntaxException(
-                TokenInfo(tokenized_path, -1),
-                f"'{token_stack.pop()}' was never closed",
-            )
+            msg = f"'{token_stack.pop()}' was never closed"
+            raise ConfigDataPathSyntaxError(msg, TokenInfo(tokenized_path, -1))
 
         if meta:
             warnings.warn(

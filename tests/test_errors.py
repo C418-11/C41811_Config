@@ -14,7 +14,6 @@ from c41811.config import IndexKey
 from c41811.config import Path
 from c41811.config.abc import ABCPath
 from c41811.config.errors import ComponentMemberMismatchError
-from c41811.config.errors import ConfigDataPathSyntaxException
 from c41811.config.errors import ConfigDataReadOnlyError
 from c41811.config.errors import ConfigDataTypeError
 from c41811.config.errors import ConfigOperate
@@ -25,7 +24,6 @@ from c41811.config.errors import RequiredPathNotFoundError
 from c41811.config.errors import TokenInfo
 from c41811.config.errors import UnavailableAttribute
 from c41811.config.errors import UnknownErrorDuringValidateError
-from c41811.config.errors import UnknownTokenTypeError
 from c41811.config.errors import UnsupportedConfigFormatError
 
 
@@ -61,38 +59,6 @@ def test_unavailable_attribute() -> None:
 def test_token_info(args: tuple[tuple[str, ...], int], raw_string: str) -> None:
     ti = TokenInfo(*args)
     assert ti.raw_string == raw_string
-
-
-@fixture
-def token_info() -> TokenInfo:
-    return TokenInfo(("abc",), 0)
-
-
-# noinspection PyUnreachableCode
-def test_config_data_path_syntax_exception(token_info: TokenInfo) -> None:
-    with raises(ConfigDataPathSyntaxException):
-        raise ConfigDataPathSyntaxException(token_info)
-
-    with raises(ConfigDataPathSyntaxException, match=r"\$\$message\$\$"):
-        raise ConfigDataPathSyntaxException(token_info, "$$message$$")
-
-    class Subclass(ConfigDataPathSyntaxException):
-        msg = "$$subclass$$"
-
-    with raises(ConfigDataPathSyntaxException, match=r"\$\$subclass\$\$"):
-        raise Subclass(token_info)
-
-    with raises(ConfigDataPathSyntaxException, match=r"\$\$override\$\$"):
-        raise Subclass(token_info, "$$override$$")
-
-
-# noinspection PyUnreachableCode
-def test_unknown_token_type_error(token_info: TokenInfo) -> None:
-    with raises(UnknownTokenTypeError, match=UnknownTokenTypeError.msg):
-        raise UnknownTokenTypeError(token_info)
-
-    with raises(UnknownTokenTypeError, match=r"\$\$override\$\$"):
-        raise UnknownTokenTypeError(token_info, "$$override$$")
 
 
 @mark.parametrize(

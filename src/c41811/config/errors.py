@@ -186,34 +186,22 @@ class ConfigDataPathSyntaxWarning(SyntaxWarning):
         )
 
 
-class ConfigDataPathSyntaxException(Exception):  # noqa: N818
-    """配置数据检索路径语法错误"""
+class ConfigDataPathSyntaxError(Exception):
+    """
+    配置数据检索路径语法错误
 
-    msg: str
+    .. versionadded:: 0.3.2
+    """
 
-    def __init__(self, token_info: TokenInfo, msg: str | None = None):
+    def __init__(self, msg: str, token_info: TokenInfo):
         """
+        :param msg: 错误信息
+        :type msg: str
         :param token_info: token相关信息
         :type token_info: TokenInfo
-        :param msg: 错误信息
-        :type msg: str | None
-
-        .. tip::
-           错误信息获取优先级
-
-           1.msg参数
-
-           2.类字段msg (供快速创建子类)
-
-        .. versionchanged:: 0.3.0
-           现在传入的错误消息不再软要求带冒号
         """  # noqa: D205
+        self.msg = msg
         self.token_info = token_info
-
-        if msg is not None:
-            self.msg = msg
-        elif not hasattr(self, "msg"):
-            self.msg = "Configuration data path syntax error"
 
     @override
     def __str__(self) -> str:
@@ -222,18 +210,6 @@ class ConfigDataPathSyntaxException(Exception):  # noqa: N818
             f"{self.token_info.raw_string} -> {self.token_info.current_token}"
             f" ({self.token_info.pos_index + 1} / {len(self.token_info.tokens)})"
         )
-
-
-class UnknownTokenTypeError(ConfigDataPathSyntaxException):
-    # noinspection GrazieInspection
-    """
-    未知的标志类型
-
-    .. versionchanged:: 0.1.3
-       重命名 ``UnknownTokenType`` 为 ``UnknownTokenTypeError``
-    """
-
-    msg = "Unknown token type"
 
 
 class ConfigOperate(Enum):
@@ -513,7 +489,7 @@ class ComponentMemberMismatchError(ComponentMetadataException):
 __all__ = (
     "ComponentMemberMismatchError",
     "ComponentMetadataException",
-    "ConfigDataPathSyntaxException",
+    "ConfigDataPathSyntaxError",
     "ConfigDataPathSyntaxWarning",
     "ConfigDataReadOnlyError",
     "ConfigDataTypeError",
@@ -526,6 +502,5 @@ __all__ = (
     "TokenInfo",
     "UnavailableAttribute",
     "UnknownErrorDuringValidateError",
-    "UnknownTokenTypeError",
     "UnsupportedConfigFormatError",
 )
