@@ -63,7 +63,7 @@ class Difference:
         return self
 
     def __bool__(self) -> bool:
-        return bool(self.updated and self.removed)
+        return bool(self.updated or self.removed)
 
 
 # noinspection PyNewStyleGenericSyntax
