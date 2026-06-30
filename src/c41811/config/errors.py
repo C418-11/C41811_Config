@@ -126,7 +126,7 @@ class TokenInfo:
     一段标记的相关信息 用于快速定位到指定标记
 
     .. versionchanged:: 0.3.2
-       字段current_token由传入变为自动推导
+       字段 ``current_token`` 由传入变为自动推导
     """
 
     tokens: tuple[str, ...]
@@ -170,7 +170,7 @@ class ConfigDataPathSyntaxWarning(SyntaxWarning):
     def __init__(self, msg: str, token_info: TokenInfo):
         """
         :param msg: 警告信息
-        :type msg: str | None
+        :type msg: str
         :param token_info: token相关信息
         :type token_info: TokenInfo
         """  # noqa: D205

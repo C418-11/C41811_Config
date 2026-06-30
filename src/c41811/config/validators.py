@@ -198,10 +198,10 @@ class FieldDefinition[T: AnyTypeHint]:
     字段定义，包含类型注解和默认值
 
     .. versionchanged:: 0.1.4
-       新增 ``allow_recursive`` 字段
+       新增字段 ``allow_recursive``
 
     .. versionchanged:: 0.3.0
-       新增对 :py:class:`TypeAliasType` 支持
+       新增支持 :py:class:`TypeAliasType`
     """  # noqa: RUF002
 
     @overload
