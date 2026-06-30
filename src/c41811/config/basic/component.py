@@ -231,6 +231,25 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
 
     @override
     def retrieve(self, path: PathLike, *args: Any, **kwargs: Any) -> Any:
+        """
+        获取路径的值的*快照*
+
+        操作顺序由 :py:attr:`~ComponentOrders.read` 指定
+
+        :param path: 路径
+        :type path: PathLike
+        :param return_raw_value: 是否获取原始值，为 :py:const:`False` 时，会将Mapping | Sequence转换为对应类
+        :type return_raw_value: bool
+
+        :return: 路径的值
+        :rtype: Any
+
+        :raise ConfigDataTypeError: 配置数据类型错误
+        :raise RequiredPathNotFoundError: 需求的键不存在
+
+        .. versionchanged:: 0.2.0
+           重命名参数 ``get_raw`` 为 ``return_raw_value``
+        """  # noqa: RUF002
         path = fmt_path(path)
 
         def processor(pth: ABCPath[Any], member: D) -> Any:
@@ -253,6 +272,9 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
         """
         修改路径的值
 
+        操作顺序由 :py:attr:`~ComponentOrders.update` 先尝试对现有数据进行更新再由
+        :py:attr:`~ComponentOrders.create` 尝试创建新数据
+
         :param path: 路径
         :type path: PathLike
         :param value: 值
@@ -274,8 +296,8 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
            ``allow_create`` 时，使用与 `self.data` 一样的类型新建路径
 
         .. versionchanged:: 0.3.0
-           现在正确的先尝试使用 :py:attr:`~ComponentOrders.update` 对现有数据进行更新再尝试通过
-           :py:attr:`~ComponentOrders.create` 创建新数据
+           现在正确的由 :py:attr:`~ComponentOrders.update` 先尝试对现有数据进行更新再由
+           :py:attr:`~ComponentOrders.create` 尝试创建新数据
         """  # noqa: RUF002
         path = fmt_path(path)
 
@@ -318,6 +340,21 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
     @override
     @check_read_only
     def delete(self, path: PathLike, *args: Any, **kwargs: Any) -> Self:
+        """
+        删除路径
+
+        操作顺序由 :py:attr:`~ComponentOrders.delete` 指定
+
+        :param path: 路径
+        :type path: PathLike
+
+        :return: 返回当前实例便于链式调用
+        :rtype: Self
+
+        :raise ConfigDataReadOnlyError: 配置数据为只读
+        :raise ConfigDataTypeError: 配置数据类型错误
+        :raise RequiredPathNotFoundError: 需求的键不存在
+        """
         path = fmt_path(path)
 
         def processor(pth: ABCPath[Any], member: D) -> None:
@@ -338,6 +375,22 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
     @override
     @check_read_only
     def unset(self, path: PathLike, *args: Any, **kwargs: Any) -> Self:
+        """
+        确保路径不存在 (删除路径，但是找不到路径时不会报错)
+
+        操作顺序由 :py:attr:`~ComponentOrders.delete` 指定
+
+        :param path: 路径
+        :type path: PathLike
+
+        :return: 返回当前实例便于链式调用
+        :rtype: Self
+
+        :raise ConfigDataReadOnlyError: 配置数据为只读
+        :raise ConfigDataTypeError: 配置数据类型错误
+
+        .. versionadded:: 0.1.2
+        """  # noqa: RUF002
         path = fmt_path(path)
 
         def processor(pth: ABCPath[Any], member: D) -> None:
@@ -358,6 +411,21 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
 
     @override
     def exists(self, path: PathLike, *args: Any, **kwargs: Any) -> bool:
+        """
+        判断路径是否存在
+
+        操作顺序由 :py:attr:`~ComponentOrders.read` 指定
+
+        :param path: 路径
+        :type path: PathLike
+        :param ignore_wrong_type: 忽略配置数据类型错误
+        :type ignore_wrong_type: bool
+
+        :return: 路径是否存在
+        :rtype: bool
+
+        :raise ConfigDataTypeError: 配置数据类型错误
+        """
         if not self._meta.orders.read:
             return False
         path = fmt_path(path)
@@ -381,6 +449,27 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
     def get[V](
         self, path: PathLike, default: V | None = None, *args: Any, return_raw_value: bool = False, **kwargs: Any
     ) -> V | Any:
+        """
+        获取路径的值的*快照*，路径不存在时填充默认值
+
+        操作顺序由 :py:attr:`~ComponentOrders.read` 指定
+
+        :param path: 路径
+        :type path: PathLike
+
+        :param default: 默认值
+        :type default: V
+        :param return_raw_value: 是否获取原始值
+        :type return_raw_value: bool
+
+        :return: 路径的值
+        :rtype: V | Any
+
+        :raise ConfigDataTypeError: 配置数据类型错误
+
+        .. versionchanged:: 0.2.0
+           重命名参数 ``get_raw`` 为 ``return_raw_value``
+        """  # noqa: RUF002
         path = fmt_path(path)
 
         def processor(pth: ABCPath[Any], member: D) -> Any:
@@ -403,6 +492,30 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
     def setdefault[V](
         self, path: PathLike, default: V | None = None, *args: Any, return_raw_value: bool = False, **kwargs: Any
     ) -> V | Any:
+        """
+        如果路径不在配置数据中则填充默认值到配置数据并返回
+
+        操作顺序由 :py:attr:`~ComponentOrders.read` 先尝试对现有数据进行读取再由
+        :py:attr:`~ComponentOrders.create` 尝试创建新数据
+
+        :param path: 路径
+        :type path: PathLike
+        :param default: 默认值
+        :type default: V
+        :param return_raw_value: 是否获取原始值
+        :type return_raw_value: bool
+
+        :return: 路径的值
+        :rtype: V | Any
+
+        :raise ConfigDataReadOnlyError: 配置数据为只读
+        :raise ConfigDataTypeError: 配置数据类型错误
+
+        .. versionchanged:: 0.2.0
+           重命名参数 ``get_raw`` 为 ``return_raw_value``
+
+           重命名 ``set_default`` 为 ``setdefault``
+        """
         path = fmt_path(path)
 
         def _retrieve_processor(pth: ABCPath[Any], member: D) -> Any:

@@ -1,5 +1,4 @@
 from collections import OrderedDict
-from collections.abc import Generator
 from collections.abc import Iterable
 from collections.abc import Mapping
 from copy import deepcopy
@@ -415,10 +414,10 @@ class TestMappingConfigData:
     ) -> None:
         cls.test_retrieve(cast(M_MCD, readonly_data), path, value, ignore_excs, kwargs)
 
-    ReadOnlyModifyTests: tuple[str, Generator[tuple[str, Any, dict[str, Any]], Any, None]] = (
+    ReadOnlyModifyTests: tuple[str, tuple[tuple[str, Any, dict[str, Any]], ...]] = (
         # 从中剔除ignore_excs参数
         ",".join(arg for arg in ModifyTests[0].split(",") if "ignore_excs" not in arg),
-        ((*x[:-2], x[-1]) for x in ModifyTests[1]),
+        tuple((*x[:-2], x[-1]) for x in ModifyTests[1]),
     )
 
     @classmethod

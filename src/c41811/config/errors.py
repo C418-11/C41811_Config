@@ -80,7 +80,7 @@ class UnavailableAttribute:
         :param name: 属性名
         :type name: str
         :param reason: 抛出的异常
-        :type reason: DependencyNotFoundError
+        :type reason: Exception
         """  # noqa: D205
         object.__setattr__(self, "_name", name)
         object.__setattr__(self, "_reason", reason)

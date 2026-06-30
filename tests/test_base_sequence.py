@@ -422,9 +422,9 @@ class TestSequenceConfigData:
     ) -> None:
         cls.test_retrieve(readonly_data, path, value, ignore_excs, kwargs)
 
-    ReadOnlyModifyTests = (
+    ReadOnlyModifyTests: tuple[str, tuple[tuple[str, Any, dict[str, Any]], ...]] = (
         ",".join(arg for arg in ModifyTests[0].split(",") if "ignore_excs" not in arg),
-        ((*x[:-2], x[-1]) for x in ModifyTests[1]),
+        tuple((*x[:-2], x[-1]) for x in ModifyTests[1]),
     )
 
     @classmethod

@@ -26,7 +26,6 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: Free Threading",
-    "Programming Language :: Python :: Implementation :: CPython",
     "Topic :: Software Development :: Libraries :: Application Frameworks",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Typing :: Typed",
@@ -303,10 +302,13 @@ commands = [
         "python",
         "-c",
         """
-import os
-pth = os.path.abspath("./docs/_build/index.html").replace("\\\\", "/")
-print("\\n\\033[96mDocumentation build complete.\\033[0m")
-print(f"\\033[96mOpen \\033[35m\\{pth\\}\\033[96m in your browser to view.\\033[0m")
+from pathlib import Path
+pth = Path("./docs/_build/index.html").absolute()
+if pth.is_file():
+    print("\\n\\033[96mDocumentation build complete.\\033[0m")
+    print(f"\\033[96mOpen \\033[35m\\{pth.as_posix()\\}\\033[96m in your browser to view.\\033[0m")
+else:
+    print("\\n\\033[91mDocumentation build failed.\\033[0m")
 """,
     ],
 ]
