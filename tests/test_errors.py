@@ -47,25 +47,25 @@ def test_unavailable_attribute() -> None:
 @mark.parametrize(
     "args, raw_string",
     (
-        ((["\\[2", "\\[3", "\\]"], "\\[3", 1), "\\[2\\[3\\]"),
-        ((["\\[2", "\\]", "\\.3", "\\]"], "\\]", 3), "\\[2\\]\\.3\\]"),
-        ((["\\[2", "\\.3"], ".3", 1), "\\[2\\.3"),
-        ((["\\[2"], "\\[2", 0), "\\[2"),
-        ((["\\[4", "\\]abc", "\\[9", "\\]"], "abc", 2), "\\[4\\]abc\\[9\\]"),
-        ((["\\[5", "\\]", "abc"], "abc", 2), "\\[5\\]abc"),
-        ((["abc", "\\[2", "\\]"], "abc", 0), "abc\\[2\\]"),
-        ((["abc"], "abc", 0), "abc"),
-        ((["\\a\\a"], "\\a\\a", 0), "\\a\\a"),
+        ((["\\[2", "\\[3", "\\]"], 1), "\\[2\\[3\\]"),
+        ((["\\[2", "\\]", "\\.3", "\\]"], 3), "\\[2\\]\\.3\\]"),
+        ((["\\[2", "\\.3"], 1), "\\[2\\.3"),
+        ((["\\[2"], 0), "\\[2"),
+        ((["\\[4", "\\]abc", "\\[9", "\\]"], 2), "\\[4\\]abc\\[9\\]"),
+        ((["\\[5", "\\]", "abc"], 2), "\\[5\\]abc"),
+        ((["abc", "\\[2", "\\]"], 0), "abc\\[2\\]"),
+        ((["abc"], 0), "abc"),
+        ((["\\a\\a"], 0), "\\a\\a"),
     ),
 )
-def test_token_info(args: tuple[tuple[str, ...], str, int], raw_string: str) -> None:
+def test_token_info(args: tuple[tuple[str, ...], int], raw_string: str) -> None:
     ti = TokenInfo(*args)
     assert ti.raw_string == raw_string
 
 
 @fixture
 def token_info() -> TokenInfo:
-    return TokenInfo(("abc",), "abc", 0)
+    return TokenInfo(("abc",), 0)
 
 
 # noinspection PyUnreachableCode

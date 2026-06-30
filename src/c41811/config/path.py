@@ -20,6 +20,7 @@ from ._protocols import Indexed
 from .abc import ABCKey
 from .abc import ABCPath
 from .errors import ConfigDataPathSyntaxException
+from .errors import ConfigDataPathSyntaxWarning
 from .errors import TokenInfo
 from .errors import UnknownTokenTypeError
 
@@ -201,7 +202,7 @@ class PathSyntaxParser:
 
     @staticmethod
     @lru_cache
-    def tokenize(string: str) -> tuple[str, ...]:
+    def tokenize(string: str) -> tuple[str, ...]:  # noqa: C901 (ignore complexity)
         # noinspection GrazieInspection
         r"""
         将字符串分词为以\开头的有意义片段
@@ -235,21 +236,26 @@ class PathSyntaxParser:
             string = rf"\.{string}"
 
         tokens: list[str] = [""]
+        invalid_escape_indexes: dict[int, list[str]] = {}
         while string:
             string, sep, token = string.rpartition("\\")
 
+            invalid_escape = False
             # 处理r"\\"防止转义
             if not token:
                 token += tokens.pop()
-
             # 对不存在的转义进行警告                                             # 检查这个转义符号是否已经被转义
-            elif sep and (token[0] not in {".", "\\", "[", "]", "{", "}"}) and _count_backslash(string) % 2:
-                warnings.warn(rf"invalid escape sequence '\{token[0]}'", SyntaxWarning, stacklevel=2)
+            elif (token[0] not in {".", "\\", "[", "]", "{", "}"}) and _count_backslash(string) % 2:
+                invalid_escape = True
 
             # 连接不应单独存在的token
-            index_safe = (len(tokens) > 0) and (len(tokens[-1]) > 1)
+            index_safe = tokens and (len(tokens[-1]) > 1)
             if index_safe and (tokens[-1][1] not in {".", "[", "]", "{", "}"}):
                 token += tokens.pop()
+            if invalid_escape:
+                invalid_escape_indexes.setdefault(len(tokens) - 1 if "" in tokens else len(tokens), []).append(
+                    f"\\{token[0]}"
+                )
 
             # 将 r"\]" 和 r"\}" 后面紧随的字符单独切割出来
             if token.startswith(("]", "}")) and token[1:]:
@@ -262,7 +268,18 @@ class PathSyntaxParser:
         if tokens[-1] == "":
             tokens.pop()
 
-        return tuple(tokens)
+        final_tokens = tuple(tokens)
+
+        for invalid_token_index, invalid_sequences in invalid_escape_indexes.items():
+            if len(invalid_sequences) > 1:
+                msg = f"Invalid escape sequences ('{"', '".join(invalid_sequences)}')"
+            else:
+                msg = f"Invalid escape sequence ('{invalid_sequences[0]}')"
+            warnings.warn(
+                ConfigDataPathSyntaxWarning(msg, TokenInfo(final_tokens, invalid_token_index * -1 - 1)), stacklevel=2
+            )
+
+        return final_tokens
 
     @classmethod
     def parse(cls, string: str) -> list[AttrKey | IndexKey]:  # noqa: C901 (ignore complexity)
@@ -283,34 +300,34 @@ class PathSyntaxParser:
         tokenized_path = cls.tokenize(string)
         for index, token in enumerate(tokenized_path):
             if not token.startswith("\\"):
-                raise UnknownTokenTypeError(TokenInfo(tokenized_path, token, index))
+                raise UnknownTokenTypeError(TokenInfo(tokenized_path, index))
 
             token_type = token[1]
             content = token[2:].replace("\\\\", "\\")
 
-            def _token_closed(tk_typ: str, tk_close: str, tk: str, i: int) -> None:
+            def _token_closed(tk_typ: str, tk_close: str, i: int) -> None:
                 try:
                     top = token_stack.pop()
                 except IndexError:
                     raise ConfigDataPathSyntaxException(
-                        TokenInfo(tokenized_path, tk, i), f"unmatched '{tk_close}'"
+                        TokenInfo(tokenized_path, i), f"unmatched '{tk_close}'"
                     ) from None
                 if top != tk_typ:
                     raise ConfigDataPathSyntaxException(
-                        TokenInfo(tokenized_path, tk, i),
+                        TokenInfo(tokenized_path, i),
                         f"closing parenthesis '{tk_close}' does not match opening parenthesis '{top}'",
                     )
 
             if token_type == "}":  # noqa: S105
-                _token_closed("{", "}", token, index)
+                _token_closed("{", "}", index)
                 continue
             if token_type == "]":  # noqa: S105
-                _token_closed("[", "]", token, index)
+                _token_closed("[", "]", index)
                 try:
                     path.append(IndexKey(int(item), meta))  # type: ignore[arg-type]
                 except ValueError:
                     raise ConfigDataPathSyntaxException(
-                        TokenInfo(tokenized_path, token, index), f"index key '{item}' must be numeric"
+                        TokenInfo(tokenized_path, index), f"index key '{item}' must be numeric"
                     ) from None
                 item = None
                 meta = None
@@ -318,7 +335,7 @@ class PathSyntaxParser:
 
             if token_stack:
                 raise ConfigDataPathSyntaxException(
-                    TokenInfo(tokenized_path, token, index), f"'{token_stack.pop()}' was never closed"
+                    TokenInfo(tokenized_path, index), f"'{token_stack.pop()}' was never closed"
                 )
 
             if token_type == "[":  # noqa: S105
@@ -334,12 +351,17 @@ class PathSyntaxParser:
                 meta = None
                 continue
 
-            raise UnknownTokenTypeError(TokenInfo(tokenized_path, token, index))
+            raise UnknownTokenTypeError(TokenInfo(tokenized_path, index))
 
         if token_stack:
             raise ConfigDataPathSyntaxException(
-                TokenInfo(tokenized_path, tokenized_path[-1], len(tokenized_path) - 1),
+                TokenInfo(tokenized_path, -1),
                 f"'{token_stack.pop()}' was never closed",
+            )
+
+        if meta:
+            warnings.warn(
+                ConfigDataPathSyntaxWarning(r"Isolate meta found", TokenInfo(tokenized_path, -1)), stacklevel=2
             )
 
         return path

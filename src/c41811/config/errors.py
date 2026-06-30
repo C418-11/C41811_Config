@@ -122,15 +122,16 @@ class UnavailableAttribute:
 
 @dataclass
 class TokenInfo:
-    """一段标记的相关信息 用于快速定位到指定标记"""
+    """
+    一段标记的相关信息 用于快速定位到指定标记
+
+    .. versionchanged:: 0.3.2
+       字段current_token由传入变为自动推导
+    """
 
     tokens: tuple[str, ...]
     """
     当前完整标记列表
-    """
-    current_token: str
-    """
-    当前标记
     """
     index: int
     """
@@ -138,9 +139,51 @@ class TokenInfo:
     """
 
     @property
+    def pos_index(self) -> int:
+        """
+        current_token在tokens的正数下标
+
+        .. versionadded:: 0.3.2
+        """
+        if self.index < 0:
+            return len(self.tokens) + self.index
+        return self.index
+
+    @property
+    def current_token(self) -> str:
+        """当前标记"""
+        return self.tokens[self.index]
+
+    @property
     def raw_string(self) -> str:
         """标记的原始字符串"""
         return "".join(self.tokens)
+
+
+class ConfigDataPathSyntaxWarning(SyntaxWarning):
+    """
+    配置数据检索路径语法警告
+
+    .. versionadded:: 0.3.2
+    """
+
+    def __init__(self, msg: str, token_info: TokenInfo):
+        """
+        :param msg: 警告信息
+        :type msg: str | None
+        :param token_info: token相关信息
+        :type token_info: TokenInfo
+        """  # noqa: D205
+        self.msg = msg
+        self.token_info = token_info
+
+    @override
+    def __str__(self) -> str:
+        return (
+            f"{self.msg}: "
+            f"{self.token_info.raw_string} -> {self.token_info.current_token}"
+            f" ({self.token_info.pos_index + 1} / {len(self.token_info.tokens)})"
+        )
 
 
 class ConfigDataPathSyntaxException(Exception):  # noqa: N818
@@ -177,7 +220,7 @@ class ConfigDataPathSyntaxException(Exception):  # noqa: N818
         return (
             f"{self.msg}: "
             f"{self.token_info.raw_string} -> {self.token_info.current_token}"
-            f" ({self.token_info.index + 1} / {len(self.token_info.tokens)})"
+            f" ({self.token_info.pos_index + 1} / {len(self.token_info.tokens)})"
         )
 
 
@@ -471,6 +514,7 @@ __all__ = (
     "ComponentMemberMismatchError",
     "ComponentMetadataException",
     "ConfigDataPathSyntaxException",
+    "ConfigDataPathSyntaxWarning",
     "ConfigDataReadOnlyError",
     "ConfigDataTypeError",
     "ConfigOperate",
