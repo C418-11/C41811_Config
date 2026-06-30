@@ -37,7 +37,7 @@ class NumberConfigData[D: int | float | Number](BasicSingleConfigData[D]):
         :type data: D | None
         """  # noqa: D205
         if data is None:
-            data = 0  # type: ignore[assignment]
+            data = 0
         super().__init__(cast(D, data))
 
     @property

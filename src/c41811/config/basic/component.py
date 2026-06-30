@@ -87,7 +87,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
     .. versionadded:: 0.2.0
     """
 
-    def __init__(self, meta: M | None = None, members: Mapping[str, D] | None = None):
+    def __init__(self, meta: M | None = None, members: Mapping[str, D] | None = None):  # type: ignore[var-annotated]  # mypy抽风
         """
         :param meta: 组件元数据
         :type meta: M | None
@@ -95,7 +95,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
         :type members: Mapping[str, D] | None
         """  # noqa: D205
         if meta is None:
-            meta = ComponentMeta()  # type: ignore[assignment]
+            meta = ComponentMeta()
         if members is None:
             members = {}
 

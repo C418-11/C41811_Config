@@ -107,13 +107,13 @@ class MappingConfigData[D: Mapping[Any, Any]](BasicIndexedConfigData[D], Mutable
     _data: D
     data: D
 
-    def __init__(self, data: D | None = None):
+    def __init__(self, data: D | None = None):  # type: ignore[var-annotated]  # mypy抽风
         """
         :param data: 映射数据
         :type data: D | None
         """  # noqa: D205
         if data is None:
-            data = {}  # type: ignore[assignment]
+            data = {}
         super().__init__(cast(D, data))
 
     @property

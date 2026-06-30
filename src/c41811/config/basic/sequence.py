@@ -36,13 +36,13 @@ class SequenceConfigData[D: Sequence[Any]](BasicIndexedConfigData[D], MutableSeq
     _data: D
     data: D
 
-    def __init__(self, data: D | None = None):
+    def __init__(self, data: D | None = None):  # type: ignore[var-annotated]  # mypy抽风
         """
         :param data: 序列数据
         :type data: D | None
         """  # noqa: D205
         if data is None:
-            data = []  # type: ignore[assignment]
+            data = []
         super().__init__(cast(D, data))
 
     @property
@@ -124,7 +124,7 @@ class StringConfigData[D: str | bytes](BasicSingleConfigData[D]):
         :type data: D | None
         """  # noqa: D205
         if data is None:
-            data = ""  # type: ignore[assignment]
+            data = ""
         super().__init__(cast(D, data))
 
     @property
