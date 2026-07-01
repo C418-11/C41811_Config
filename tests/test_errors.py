@@ -14,6 +14,7 @@ from c41811.config import IndexKey
 from c41811.config import Path
 from c41811.config.abc import ABCPath
 from c41811.config.errors import ComponentMemberMismatchError
+from c41811.config.errors import ConfigDataPathSyntaxError
 from c41811.config.errors import ConfigDataReadOnlyError
 from c41811.config.errors import ConfigDataTypeError
 from c41811.config.errors import ConfigOperate
@@ -61,6 +62,10 @@ def test_token_info(args: tuple[tuple[str, ...], int], raw_string: str) -> None:
     ti = TokenInfo(*args)
     assert ti.raw_string == raw_string
     assert ti.index >= 0
+
+
+def test_config_data_path_syntax_error() -> None:
+    assert "msg" in str(ConfigDataPathSyntaxError("msg", TokenInfo(("\\[2", "\\]"), 1)))
 
 
 @mark.parametrize(
