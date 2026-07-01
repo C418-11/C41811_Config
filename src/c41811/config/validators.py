@@ -135,7 +135,7 @@ def _process_pydantic_exceptions(err: ValidationError) -> Exception:
 
     path = Path.from_locate(e["loc"])
 
-    kwargs: dict[str, Any] = {"key_info": KeyInfo(path=path, current_key=path[-1], index=len(path) - 1)}
+    kwargs: dict[str, Any] = {"key_info": KeyInfo(path, -1)}
 
     class ErrInfo(NamedTuple):
         err_type: type[Exception] | Callable[..., Exception]

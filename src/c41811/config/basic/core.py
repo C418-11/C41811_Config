@@ -175,12 +175,10 @@ class BasicIndexedConfigData[D: Indexed[Any, Any]](BasicSingleConfigData[D], ABC
             missing_protocol = current_key.__supports__(current_data)
             if missing_protocol:
                 raise ConfigDataTypeError(
-                    KeyInfo(cast(ABCPath[Any], path), current_key, key_index), missing_protocol, type(current_data)
+                    KeyInfo(cast(ABCPath[Any], path), key_index), missing_protocol, type(current_data)
                 )
             if not current_key.__contains_inner_element__(current_data):
-                raise RequiredPathNotFoundError(
-                    KeyInfo(cast(ABCPath[Any], path), current_key, key_index), ConfigOperate.Read
-                )
+                raise RequiredPathNotFoundError(KeyInfo(cast(ABCPath[Any], path), key_index), ConfigOperate.Read)
 
         def process_return[V: Any](current_data: V) -> V | ABCConfigData:
             if return_raw_value:
@@ -203,13 +201,11 @@ class BasicIndexedConfigData[D: Indexed[Any, Any]](BasicSingleConfigData[D], ABC
             missing_protocol = current_key.__supports_modify__(current_data)
             if missing_protocol:
                 raise ConfigDataTypeError(
-                    KeyInfo(cast(ABCPath[Any], path), current_key, key_index), missing_protocol, type(current_data)
+                    KeyInfo(cast(ABCPath[Any], path), key_index), missing_protocol, type(current_data)
                 )
             if not current_key.__contains_inner_element__(current_data):
                 if not allow_create:
-                    raise RequiredPathNotFoundError(
-                        KeyInfo(cast(ABCPath[Any], path), current_key, key_index), ConfigOperate.Write
-                    )
+                    raise RequiredPathNotFoundError(KeyInfo(cast(ABCPath[Any], path), key_index), ConfigOperate.Write)
                 current_key.__set_inner_element__(current_data, type(self._data)())
 
             if not last_path:
@@ -232,12 +228,10 @@ class BasicIndexedConfigData[D: Indexed[Any, Any]](BasicSingleConfigData[D], ABC
             missing_protocol = current_key.__supports_modify__(current_data)
             if missing_protocol:
                 raise ConfigDataTypeError(
-                    KeyInfo(cast(ABCPath[Any], path), current_key, key_index), missing_protocol, type(current_data)
+                    KeyInfo(cast(ABCPath[Any], path), key_index), missing_protocol, type(current_data)
                 )
             if not current_key.__contains_inner_element__(current_data):
-                raise RequiredPathNotFoundError(
-                    KeyInfo(cast(ABCPath[Any], path), current_key, key_index), ConfigOperate.Delete
-                )
+                raise RequiredPathNotFoundError(KeyInfo(cast(ABCPath[Any], path), key_index), ConfigOperate.Delete)
 
             if not last_path:
                 current_key.__delete_inner_element__(current_data)
@@ -263,7 +257,7 @@ class BasicIndexedConfigData[D: Indexed[Any, Any]](BasicSingleConfigData[D], ABC
                 if ignore_wrong_type:
                     return False
                 raise ConfigDataTypeError(
-                    KeyInfo(cast(ABCPath[Any], path), current_key, key_index), missing_protocol, type(current_data)
+                    KeyInfo(cast(ABCPath[Any], path), key_index), missing_protocol, type(current_data)
                 )
             if not current_key.__contains_inner_element__(current_data):
                 return False

@@ -260,7 +260,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
             order=self._meta.orders.read,
             processor=processor,
             exception=RequiredPathNotFoundError(
-                key_info=KeyInfo(path, path[0], 0),
+                key_info=KeyInfo(path, 0),
                 operate=ConfigOperate.Read,
             ),
         )
@@ -317,7 +317,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
                 order=self._meta.orders.update,
                 processor=_update_processor,
                 exception=RequiredPathNotFoundError(
-                    key_info=KeyInfo(path, path[0], 0),
+                    key_info=KeyInfo(path, 0),
                     operate=ConfigOperate.Write,
                 ),
             )
@@ -331,7 +331,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
             order=self._meta.orders.create,
             processor=_create_processor,
             exception=RequiredPathNotFoundError(
-                key_info=KeyInfo(path, path[0], 0),
+                key_info=KeyInfo(path, 0),
                 operate=ConfigOperate.Write,
             ),
         )
@@ -366,7 +366,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
             order=self._meta.orders.delete,
             processor=processor,
             exception=RequiredPathNotFoundError(
-                key_info=KeyInfo(path, path[0], 0),
+                key_info=KeyInfo(path, 0),
                 operate=ConfigOperate.Delete,
             ),
         )
@@ -403,7 +403,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
                 order=self._meta.orders.delete,
                 processor=processor,
                 exception=RequiredPathNotFoundError(
-                    key_info=KeyInfo(path, path[0], 0),
+                    key_info=KeyInfo(path, 0),
                     operate=ConfigOperate.Delete,
                 ),
             )
@@ -439,7 +439,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
                 order=self._meta.orders.read,
                 processor=processor,
                 exception=RequiredPathNotFoundError(
-                    key_info=KeyInfo(path, path[0], 0),
+                    key_info=KeyInfo(path, 0),
                     operate=ConfigOperate.Delete,
                 ),
             )
@@ -481,7 +481,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
                 order=self._meta.orders.read,
                 processor=processor,
                 exception=RequiredPathNotFoundError(
-                    key_info=KeyInfo(path, path[0], 0),
+                    key_info=KeyInfo(path, 0),
                     operate=ConfigOperate.Read,
                 ),
             )
@@ -527,7 +527,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
                 order=self._meta.orders.read,
                 processor=_retrieve_processor,
                 exception=RequiredPathNotFoundError(
-                    key_info=KeyInfo(path, path[0], 0),
+                    key_info=KeyInfo(path, 0),
                     operate=ConfigOperate.Read,
                 ),
             )
@@ -541,7 +541,7 @@ class ComponentConfigData[D: ABCIndexedConfigData[Any], M: ComponentMeta[Any]](
             order=self._meta.orders.create,
             processor=_modify_processor,
             exception=RequiredPathNotFoundError(
-                key_info=KeyInfo(path, path[0], 0),
+                key_info=KeyInfo(path, 0),
                 operate=ConfigOperate.Write,
             ),
         )

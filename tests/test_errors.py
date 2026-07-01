@@ -47,6 +47,7 @@ def test_unavailable_attribute() -> None:
     (
         ((["\\[2", "\\[3", "\\]"], 1), "\\[2\\[3\\]"),
         ((["\\[2", "\\]", "\\.3", "\\]"], 3), "\\[2\\]\\.3\\]"),
+        ((["\\[2", "\\]", "\\.3", "\\]"], -1), "\\[2\\]\\.3\\]"),
         ((["\\[2", "\\.3"], 1), "\\[2\\.3"),
         ((["\\[2"], 0), "\\[2"),
         ((["\\[4", "\\]abc", "\\[9", "\\]"], 2), "\\[4\\]abc\\[9\\]"),
@@ -59,32 +60,29 @@ def test_unavailable_attribute() -> None:
 def test_token_info(args: tuple[tuple[str, ...], int], raw_string: str) -> None:
     ti = TokenInfo(*args)
     assert ti.raw_string == raw_string
+    assert ti.index >= 0
 
 
 @mark.parametrize(
-    "kwargs, relative_keys",
+    "keys, index, relative_keys",
     (
-        (
-            {"path": Path((AttrKey("foo2"), AttrKey("bar"))), "current_key": AttrKey("bar"), "index": 1},
-            (AttrKey("foo2"),),
-        ),
-        ({"path": Path((AttrKey("foo3"),)), "current_key": AttrKey("foo3"), "index": 0}, ()),
-        ({"path": Path((AttrKey("not exist"),)), "current_key": AttrKey("not exist"), "index": 0}, ()),
-        ({"path": Path((AttrKey("foo.not exist"),)), "current_key": AttrKey("foo.not exist"), "index": 0}, ()),
-        (
-            {"path": Path((AttrKey("foo2"), AttrKey("not exist"))), "current_key": AttrKey("not exist"), "index": 1},
-            (AttrKey("foo2"),),
-        ),
+        ([AttrKey("foo2"), AttrKey("bar")], 1, (AttrKey("foo2"),)),
+        ([AttrKey("foo3")], 0, ()),
+        ([AttrKey("not exist")], 0, ()),
+        ([AttrKey("foo.not exist")], 0, ()),
+        ([AttrKey("foo2"), AttrKey("not exist")], 1, (AttrKey("foo2"),)),
+        ([AttrKey("foo2"), AttrKey("not exist")], -1, (AttrKey("foo2"),)),
     ),
 )
-def test_key_info(kwargs: dict[str, Any], relative_keys: tuple[AttrKey | IndexKey, ...]) -> None:
-    ki = KeyInfo(**kwargs)
+def test_key_info(keys: list[AttrKey | IndexKey], index: int, relative_keys: tuple[AttrKey | IndexKey, ...]) -> None:
+    ki = KeyInfo(Path(keys), index)
     assert ki.relative_keys == Path(relative_keys)
+    assert ki.index >= 0
 
 
 @fixture
 def key_info() -> KeyInfo[AttrKey]:
-    return KeyInfo(cast(ABCPath[AttrKey], Path((AttrKey("foo3"),))), AttrKey("foo3"), 0)
+    return KeyInfo(cast(ABCPath[AttrKey], Path((AttrKey("foo3"),))), 0)
 
 
 # noinspection PyUnreachableCode

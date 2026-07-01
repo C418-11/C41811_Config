@@ -67,8 +67,7 @@ def _keys_recursive(
 
     if id(data) in seen:
         if strict:
-            # noinspection PyTypeChecker
-            raise CyclicReferenceError(key_info=KeyInfo(Path([]), None, -1))
+            raise CyclicReferenceError(KeyInfo(Path([]), -1))
         return
     seen.add(id(data))
 
@@ -83,12 +82,7 @@ def _keys_recursive(
                     f"{k}\\.{x}" for x in _keys_recursive(v, seen, strict=strict, end_point_only=end_point_only)
                 )
             except CyclicReferenceError as err:
-                key_info = err.key_info
-                key = AttrKey(k)
-
-                key_info.path = Path((key, *key_info.path))
-                key_info.current_key = key if key_info.current_key is None else key_info.current_key
-                key_info.index += 1
+                err.key_info = KeyInfo(Path((AttrKey(k), *err.key_info.path)), err.key_info.index + 1)
                 raise
             if end_point_only:
                 continue

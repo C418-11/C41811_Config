@@ -148,13 +148,17 @@ class UnavailableAttribute:
         return f"<{type(self).__name__} {object.__getattribute__(self, '_name')}>"
 
 
-@dataclass
+@dataclass(frozen=True)
 class TokenInfo:
     """
     一段标记的相关信息 用于快速定位到指定标记
 
     .. versionchanged:: 0.3.2
        字段 ``current_token`` 由传入变为自动推导
+
+       字段 ``index`` 将始终为正数
+
+       变更为不可变类型
     """
 
     tokens: tuple[str, ...]
@@ -166,16 +170,9 @@ class TokenInfo:
     current_token在tokens的下标
     """
 
-    @property
-    def pos_index(self) -> int:
-        """
-        current_token在tokens的正数下标
-
-        .. versionadded:: 0.3.2
-        """
+    def __post_init__(self) -> None:
         if self.index < 0:
-            return len(self.tokens) + self.index
-        return self.index
+            object.__setattr__(self, "index", self.index + len(self.tokens))
 
     @property
     def current_token(self) -> str:
@@ -210,7 +207,7 @@ class ConfigDataPathSyntaxWarning(SyntaxWarning):
         return (
             f"{self.msg}: "
             f"{self.token_info.raw_string} -> {self.token_info.current_token}"
-            f" ({self.token_info.pos_index + 1} / {len(self.token_info.tokens)})"
+            f" ({self.token_info.index + 1} / {len(self.token_info.tokens)})"
         )
 
 
@@ -236,7 +233,7 @@ class ConfigDataPathSyntaxError(Exception):
         return (
             f"{self.msg}: "
             f"{self.token_info.raw_string} -> {self.token_info.current_token}"
-            f" ({self.token_info.pos_index + 1} / {len(self.token_info.tokens)})"
+            f" ({self.token_info.index + 1} / {len(self.token_info.tokens)})"
         )
 
 
@@ -249,22 +246,37 @@ class ConfigOperate(Enum):
     Unknown = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class KeyInfo[K: AnyKey]:
-    """一段路径的相关信息 用于快速定位到指定键"""
+    """
+    一段路径的相关信息 用于快速定位到指定键
+
+    .. versionchanged:: 0.3.2
+       字段 ``current_key`` 由传入变为自动推导
+
+       字段 ``index`` 将始终为正数
+
+       变更为不可变类型
+    """
 
     path: ABCPath[K]
     """
     当前完整路径
     """
-    current_key: K
-    """
-    当前键
-    """
+
     index: int
     """
     current_key在path的下标
     """
+
+    def __post_init__(self) -> None:
+        if self.index < 0:
+            object.__setattr__(self, "index", self.index + len(self.path))
+
+    @property
+    def current_key(self) -> K:
+        """当前键"""
+        return self.path[self.index]
 
     @property
     def relative_keys(self) -> Iterable[K]:

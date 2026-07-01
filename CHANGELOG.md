@@ -6,7 +6,6 @@
 
 ## 新增
 
-* 新增字段TokenInfo.pos_index以便于获取对应的正数index便于后续处理
 * 新增异常类ConfigDataPathSyntaxError以替代ConfigDataPathSyntaxException和UnknownTokenTypeError
 * 新增警告类ConfigDataPathSyntaxWarning以提供更好的配置路径语法警告信息
 
@@ -14,6 +13,9 @@
 
 * PathSyntaxParser.parse更改返回值类型为tuple[AttrKey | IndexKey, ...]
 * PathSyntaxParser.parse添加缓存
+* TokenInfo/KeyInfo变更为不可变类型
+* TokenInfo/KeyInfo的index字段将始终为正数
+* 字段KeyInfo.current_key由传入变为自动推导
 * 字段TokenInfo.current_token由传入变为自动推导
 * 现在懒加载在导入不可用的字段时会抛出更明确的错误
 * 现在路径语法解析器发现孤立的键元信息会警告"Isolate meta found"
