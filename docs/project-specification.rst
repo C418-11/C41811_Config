@@ -206,7 +206,7 @@
 .. code-block:: shell
    :caption: 安装ruff
 
-   pip install -e . --group ruff
+   pip install --group ruff
 
 .. rubric:: 使用
 
@@ -235,7 +235,7 @@
    tox -e format
 
 .. important::
-   以防你忘了安装项目开发依赖，我把安装开发依赖的命令放在了下面
+   如果你忘了安装项目开发依赖，执行下面这条指令
 
    .. code-block:: shell
       :caption: 安装项目开发依赖
