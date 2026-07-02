@@ -36,14 +36,14 @@ class JPropertiesConfigData(MappingConfigData[jproperties.Properties]):
         """  # noqa: RUF002, D205
         super().__init__()
 
+        if data is None:
+            data = jproperties.Properties()
         prop = data
-        is_none = data is None
-        not_property = not isinstance(data, jproperties.Properties)
-        if is_none or not_property:
+        if not isinstance(data, jproperties.Properties):
             prop = jproperties.Properties()
-        if is_none:
-            data = {}
-        if not_property:
+            if not isinstance(data, Mapping):
+                msg = f"must be mapping, not {type(data).__name__}"
+                raise TypeError(msg)
             for key, value in data.items():  # type: ignore[union-attr]
                 prop[key] = value  # type: ignore[index]
                 # jproperties没提供接口只能破坏封装性了

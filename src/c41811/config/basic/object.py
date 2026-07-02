@@ -26,7 +26,7 @@ class NoneConfigData(BasicSingleConfigData[None]):
         :type data: None
         """  # noqa: D205
         if data is not None:
-            msg = f"{type(self).__name__} can only accept None as data"
+            msg = f"must NoneType, not {type(data).__name__}"
             raise ValueError(msg)
 
         super().__init__(data)

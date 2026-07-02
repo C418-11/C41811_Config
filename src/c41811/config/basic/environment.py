@@ -126,6 +126,11 @@ class EnvironmentConfigData(MappingConfigData[MutableMapping[str, str]]):
         :param data: 环境变量数据
         :type data: MutableMapping[str, str] | None
         """  # noqa: D205
+        if data is None:
+            data = {}
+        if not isinstance(data, MutableMapping):
+            msg = f"must be mutable mapping, not {type(data).__name__}"
+            raise TypeError(msg)
         super().__init__(data)
         self.difference = Difference()
 

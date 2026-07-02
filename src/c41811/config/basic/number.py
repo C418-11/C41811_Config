@@ -38,6 +38,9 @@ class NumberConfigData[D: int | float | Number](BasicSingleConfigData[D]):
         """  # noqa: D205
         if data is None:
             data = 0
+        if not isinstance(data, Number):
+            msg = f"must be number, not {type(data).__name__}"
+            raise TypeError(msg)
         super().__init__(cast(D, data))
 
     @property

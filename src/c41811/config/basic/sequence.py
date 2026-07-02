@@ -43,6 +43,9 @@ class SequenceConfigData[D: Sequence[Any]](BasicIndexedConfigData[D], MutableSeq
         """  # noqa: D205
         if data is None:
             data = []
+        if not isinstance(data, Sequence):
+            msg = f"must be sequence, not {type(data).__name__}"
+            raise TypeError(msg)
         super().__init__(cast(D, data))
 
     @property
@@ -125,6 +128,9 @@ class StringConfigData[D: str | bytes](BasicSingleConfigData[D]):
         """  # noqa: D205
         if data is None:
             data = ""
+        if not isinstance(data, str | bytes):
+            msg = f"must be str or bytes, not {type(data).__name__}"
+            raise TypeError(msg)
         super().__init__(cast(D, data))
 
     @property

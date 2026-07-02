@@ -108,6 +108,9 @@ class MappingConfigData[D: Mapping[Any, Any]](BasicIndexedConfigData[D], Mutable
         """  # noqa: D205
         if data is None:
             data = {}
+        if not isinstance(data, Mapping):
+            msg = f"must be mapping, not {type(data).__name__}"
+            raise TypeError(msg)
         super().__init__(cast(D, data))
 
     @property

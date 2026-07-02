@@ -8,14 +8,24 @@ from typing import Any
 from typing import ClassVar
 from typing import cast
 
+from jproperties import Properties as JProperties
 from pytest import fixture
 from pytest import mark
-from pytest import raises
+from utils import EE
+from utils import safe_raises
 
+from c41811.config import BoolConfigData
 from c41811.config import ConfigDataFactory
 from c41811.config import ConfigFile
 from c41811.config import ConfigPool
+from c41811.config import EnvironmentConfigData
+from c41811.config import JPropertiesConfigData
 from c41811.config import MappingConfigData
+from c41811.config import NumberConfigData
+from c41811.config import ObjectConfigData
+from c41811.config import SequenceConfigData
+from c41811.config import StringConfigData
+from c41811.config.abc import ABCConfigData
 from c41811.config.errors import UnsupportedConfigFormatError
 
 type D_MCD = MappingConfigData[dict[Any, Any]]
@@ -25,7 +35,7 @@ def test_wrong_type_config_data() -> None:
     class EmptyTypesConfigDataFactory(ConfigDataFactory):
         TYPES: ClassVar[OrderedDict[tuple[type, ...], Callable[[Any], Any] | type]] = OrderedDict()
 
-    with raises(TypeError, match="Unsupported type"):
+    with safe_raises(TypeError, match="Unsupported type"):
         EmptyTypesConfigDataFactory(type)
 
 
@@ -51,32 +61,32 @@ class TestConfigFile:
     @staticmethod
     def test_attr_readonly(file: ConfigFile[D_MCD], data: D_MCD) -> None:
         assert file.config == data
-        with raises(AttributeError):
+        with safe_raises(AttributeError):
             # noinspection PyPropertyAccess
             file.config = None  # type: ignore[misc, assignment]
 
         assert file.config_format == "json"
-        with raises(AttributeError):
+        with safe_raises(AttributeError):
             # noinspection PyPropertyAccess
             file.config_format = None  # type: ignore[misc]
 
     @staticmethod
     def test_wrong_save(data: D_MCD, pool: P) -> None:
         file: ConfigFile[D_MCD] = ConfigFile(data)
-        with raises(UnsupportedConfigFormatError, match="Unspecified config format"):
+        with safe_raises(UnsupportedConfigFormatError, match="Unspecified config format"):
             file.save(pool, "", ".json")
 
-        with raises(UnsupportedConfigFormatError, match="Unsupported config format: json"):
+        with safe_raises(UnsupportedConfigFormatError, match="Unsupported config format: json"):
             file.save(pool, "", ".json", config_format="json")
 
     @staticmethod
     def test_wrong_load(file: ConfigFile[D_MCD], pool: P) -> None:
-        with raises(UnsupportedConfigFormatError, match="Unsupported config format: json"):
+        with safe_raises(UnsupportedConfigFormatError, match="Unsupported config format: json"):
             file.load(pool, "", ".json", config_format="json")
 
     @staticmethod
     def test_wrong_initialize(file: ConfigFile[D_MCD], pool: P) -> None:
-        with raises(UnsupportedConfigFormatError, match="Unsupported config format: json"):
+        with safe_raises(UnsupportedConfigFormatError, match="Unsupported config format: json"):
             file.initialize(pool, "", ".json", config_format="json")
 
     ExtraKwargs = ({"config_format": "json"},)
@@ -137,3 +147,45 @@ class TestConfigFile:
     def test_repr(file: ConfigFile[D_MCD], data: D_MCD) -> None:
         assert repr(file.config) in repr(file)
         assert repr(data) in repr(ConfigFile(data))
+
+
+@mark.parametrize(
+    "typ, args, target, excs",
+    (
+        (EnvironmentConfigData, (1,), None, (TypeError,)),
+        (EnvironmentConfigData, ({},), EnvironmentConfigData(), ()),
+        (EnvironmentConfigData, (None,), EnvironmentConfigData({}), ()),
+        (JPropertiesConfigData, (1,), None, (TypeError,)),
+        (JPropertiesConfigData, ({}), JPropertiesConfigData(), ()),
+        (JPropertiesConfigData, (JProperties(),), JPropertiesConfigData(), ()),
+        (JPropertiesConfigData, (None,), JPropertiesConfigData(JProperties()), ()),
+        (MappingConfigData, (1,), None, (TypeError,)),
+        (MappingConfigData, ({},), MappingConfigData(), ()),
+        (MappingConfigData, (None,), MappingConfigData({}), ()),
+        (NumberConfigData, ("a",), None, (TypeError,)),
+        (NumberConfigData, ("123",), None, (TypeError,)),
+        (NumberConfigData, (0,), NumberConfigData(), ()),
+        (NumberConfigData, (0.0,), NumberConfigData(0), ()),
+        (NumberConfigData, (None,), NumberConfigData(0), ()),
+        (BoolConfigData, ("",), BoolConfigData(False), ()),  # noqa: FBT003
+        (BoolConfigData, ("abc",), BoolConfigData(True), ()),  # noqa: FBT003
+        (BoolConfigData, (), BoolConfigData(False), ()),  # noqa: FBT003
+        (BoolConfigData, (1,), BoolConfigData(True), ()),  # noqa: FBT003
+        (BoolConfigData, ([],), BoolConfigData(False), ()),  # noqa: FBT003
+        (BoolConfigData, (None,), BoolConfigData(False), ()),  # noqa: FBT003
+        (ObjectConfigData, (), None, (TypeError,)),
+        (ObjectConfigData, (111,), ObjectConfigData(111), ()),
+        (SequenceConfigData, (1,), None, (TypeError,)),
+        (SequenceConfigData, ("123",), SequenceConfigData("123"), ()),
+        (SequenceConfigData, ((2, 1),), SequenceConfigData((2, 1)), ()),
+        (SequenceConfigData, (), SequenceConfigData([]), ()),
+        (SequenceConfigData, (None,), SequenceConfigData([]), ()),
+        (StringConfigData, (1,), None, (TypeError,)),
+        (StringConfigData, (b"",), StringConfigData(b""), (TypeError,)),
+        (StringConfigData, (), StringConfigData(""), (TypeError,)),
+        (StringConfigData, (None,), StringConfigData(""), (TypeError,)),
+    ),
+)
+def test_base_type_init(typ: type, args: tuple[Any, ...], target: ABCConfigData | None, excs: EE):
+    with safe_raises(excs):
+        assert typ(*args) == target
