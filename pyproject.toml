@@ -52,7 +52,7 @@ dev = [
     "jproperties~=2.1.2",
     "hjson~=3.1.0",
 
-    "tox>=4.26,<4.56",
+    "tox>=4.26,<4.57",
     "pre-commit>=4.2,<4.7"
 ]
 PyYamlSL = ["PyYAML~=6.0.2"]
@@ -74,14 +74,14 @@ dev = [
     "hjson~=3.1.0",
 ]
 docs = [
-    "setuptools-scm>=8.2,<10.2",
+    "setuptools-scm>=8.2,<10.3",
     "sphinx>=8.2.3,<9.2.0",
     "sphinx-autoapi>=3.6,<3.9",
     "sphinx-copybutton~=0.5.2",
     "furo==2025.12.19",
 ]
 tox = [
-    "tox>=4.26,<4.56",
+    "tox>=4.26,<4.57",
 ]
 test = [
     "pytest>=8.3.5,<9.2.0",
