@@ -32,8 +32,8 @@ classifiers = [
 ]
 dependencies = [
     "pydantic>=2.11.1,<2.14.0",
-    "wrapt>=2.0,<2.3",
-    "portalocker>=3.1.1,<3.3.0",
+    "wrapt>=2.0,<2.4",
+    "portalocker>=3.1.1,<4.2.0",
     "mypy-extensions>=1.0,<1.2",
 ]
 
@@ -52,7 +52,7 @@ dev = [
     "jproperties~=2.1.2",
     "hjson~=3.1.0",
 
-    "tox>=4.26,<4.56",
+    "tox>=4.26,<4.59",
     "pre-commit>=4.2,<4.7"
 ]
 PyYamlSL = ["PyYAML~=6.0.2"]
@@ -74,14 +74,14 @@ dev = [
     "hjson~=3.1.0",
 ]
 docs = [
-    "setuptools-scm>=8.2,<10.2",
+    "setuptools-scm>=8.2,<10.3",
     "sphinx>=8.2.3,<9.2.0",
     "sphinx-autoapi>=3.6,<3.9",
     "sphinx-copybutton~=0.5.2",
     "furo==2025.12.19",
 ]
 tox = [
-    "tox>=4.26,<4.56",
+    "tox>=4.26,<4.59",
 ]
 test = [
     "pytest>=8.3.5,<9.2.0",
@@ -90,7 +90,7 @@ test = [
     "pyrsistent~=0.20.0",
 ]
 ruff = [
-    "ruff>=0.12.1,<0.16.0",
+    "ruff>=0.12.1,<0.17.0",
 ]
 mypy = [
     "mypy>=1.17,<3.0",
