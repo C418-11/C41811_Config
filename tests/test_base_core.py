@@ -8,7 +8,7 @@ from typing import Any
 from typing import ClassVar
 from typing import cast
 
-from jproperties import Properties as JProperties
+from jproperties import Properties as JProperties  # type: ignore[import-not-found]
 from pytest import fixture
 from pytest import mark
 from utils import EE
@@ -181,11 +181,11 @@ class TestConfigFile:
         (SequenceConfigData, (), SequenceConfigData([]), ()),
         (SequenceConfigData, (None,), SequenceConfigData([]), ()),
         (StringConfigData, (1,), None, (TypeError,)),
-        (StringConfigData, (b"",), StringConfigData(b""), (TypeError,)),
-        (StringConfigData, (), StringConfigData(""), (TypeError,)),
-        (StringConfigData, (None,), StringConfigData(""), (TypeError,)),
+        (StringConfigData, (b"",), StringConfigData(b""), ()),
+        (StringConfigData, (), StringConfigData(""), ()),
+        (StringConfigData, (None,), StringConfigData(""), ()),
     ),
 )
-def test_base_type_init(typ: type, args: tuple[Any, ...], target: ABCConfigData | None, excs: EE):
+def test_base_type_init(typ: type, args: tuple[Any, ...], target: ABCConfigData | None, excs: EE) -> None:
     with safe_raises(excs):
         assert typ(*args) == target

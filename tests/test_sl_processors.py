@@ -170,9 +170,9 @@ CBOR2Tests: LFTests = (
     (NotImplemented, ((FailedProcessConfigFileError,), ()), ()),
 )
 
-# noinspection PyTypeChecker
+
 JPropertiesTests: LFTests = (
-    (JPropCD(None), (), ()),
+    (JPropCD(), (), ()),
     (
         JPropCD(
             {

@@ -44,11 +44,11 @@ class JPropertiesConfigData(MappingConfigData[jproperties.Properties]):
             if not isinstance(data, Mapping):
                 msg = f"must be mapping, not {type(data).__name__}"
                 raise TypeError(msg)
-            for key, value in data.items():  # type: ignore[union-attr]
-                prop[key] = value  # type: ignore[index]
+            for key, value in data.items():
+                prop[key] = value
                 # jproperties没提供接口只能破坏封装性了
                 # noinspection PyProtectedMember
-                prop._key_order.append(key)  # type: ignore[union-attr]  # noqa: SLF001
+                prop._key_order.append(key)  # noqa: SLF001
 
         self._data: jproperties.Properties = prop
 
